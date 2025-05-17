@@ -46,9 +46,9 @@ The meeting ended with a Q&A and closing thoughts. Action items are listed below
 ---
 
 ## Links
-- **PowerPoint:** `Team A Kickoff Meeting_05162025.pptx`  
-- **Project Plan:** `CareConnect_ProjectPlan.docx`  
-- **SRS:** `Team A Software Requirements Specification.docx`
+- **PowerPoint:** [Team A Kickoff Meeting_05162025.pptx](https://umuc365-my.sharepoint.com/:p:/g/personal/aharding25_student_umgc_edu/EWql4wxLXEZNka-4KrtjgqYBrUQ2dCf8oLd_WNgBRzP7mQ?e=NPg8Sq) 
+- **Project Plan:** [CareConnect_ProjectPlan.docx](https://umgcdev361.sharepoint.com/:w:/r/sites/SWEN670Summer2025/Shared%20Documents/Team%20A%20(Care%20Connect)/CareConnect_ProjectPlan.docx?d=w93163c8815024767acccd4e1f963acc8&csf=1&web=1&e=EOTS83) 
+- **SRS:** [Team A Software Requirements Specification.docx](https://umgcdev361.sharepoint.com/:w:/r/sites/SWEN670Summer2025/Shared%20Documents/Team%20A%20(Care%20Connect)/Team%20A%20Software%20Requirements%20Specification.docx?d=w233f3daff1c14a1f966aed1775dc7d5f&csf=1&web=1&e=UmAvID)
 
 ---
 
