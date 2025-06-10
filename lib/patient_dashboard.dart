@@ -13,32 +13,61 @@ class PatientDashboard extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.blue.shade900,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'Patient Dashboard',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue.shade700),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  CircleAvatar(radius: 28, backgroundColor: Colors.white, child: Icon(Icons.person, size: 30)),
+                  SizedBox(height: 8),
+                  Text('Patient Name', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text('Patient', style: TextStyle(color: Colors.white70)),
+                ],
+              ),
+            ),
+            ...[
+              {'icon': Icons.dashboard, 'title': 'Dashboard'},
+              {'icon': Icons.monitor_heart, 'title': 'My Health'},
+              {'icon': Icons.medication, 'title': 'Medications'},
+              {'icon': Icons.calendar_today, 'title': 'Appointments'},
+              {'icon': Icons.notifications, 'title': 'Notifications'},
+              {'icon': Icons.settings, 'title': 'Settings'},
+              {'icon': Icons.help_outline, 'title': 'Help & Support'},
+            ].map((item) => ListTile(
+              leading: Icon(item['icon'] as IconData),
+              title: Text(item['title'] as String),
+              onTap: () {}, // Add navigation here
+            )),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Logout', style: TextStyle(color: Colors.red)),
+              onTap: () {},
+            ),
+          ],
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Dashboard Header
-              Container(
-                color: Colors.blue.shade900,
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                width: double.infinity,
-                child: const Center(
-                  child: Text(
-                    'Patient Dashboard',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Good Morning !!!  Homer Simpson',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
+              const Text('Good Morning !!!  Homer Simpson', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
               const SizedBox(height: 20),
 
-              // Mood Section
               const Text('How are you feeling today?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               SingleChildScrollView(
@@ -56,7 +85,6 @@ class PatientDashboard extends StatelessWidget {
               ),
               const Divider(height: 30, thickness: 2),
 
-              // Pain Scale
               const Text('How is your pain today?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               Row(
@@ -71,7 +99,6 @@ class PatientDashboard extends StatelessWidget {
               ),
               const Divider(height: 30, thickness: 2),
 
-              // Caregivers
               ...caregivers.map((c) => CaregiverCard(
                 name: c['name']!,
                 status: c['status']!,
@@ -80,7 +107,6 @@ class PatientDashboard extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // Task Link
               GestureDetector(
                 onTap: () {},
                 child: const Text(
@@ -91,7 +117,6 @@ class PatientDashboard extends StatelessWidget {
 
               const SizedBox(height: 30),
 
-              // SOS Button
               Align(
                 alignment: Alignment.bottomRight,
                 child: TextButton.icon(
@@ -108,10 +133,11 @@ class PatientDashboard extends StatelessWidget {
   }
 }
 
+// Sub-widgets for mood/pain/caregivers (same as before)
+
 class EmojiLabel extends StatelessWidget {
   final String emoji;
   final String label;
-
   const EmojiLabel({super.key, required this.emoji, required this.label});
 
   @override
@@ -131,7 +157,6 @@ class EmojiLabel extends StatelessWidget {
 class PainEmojiLabel extends StatelessWidget {
   final String emoji;
   final String label;
-
   const PainEmojiLabel({super.key, required this.emoji, required this.label});
 
   @override
@@ -149,13 +174,7 @@ class CaregiverCard extends StatelessWidget {
   final String name;
   final String status;
   final String lastInteraction;
-
-  const CaregiverCard({
-    super.key,
-    required this.name,
-    required this.status,
-    required this.lastInteraction,
-  });
+  const CaregiverCard({super.key, required this.name, required this.status, required this.lastInteraction});
 
   @override
   Widget build(BuildContext context) {
