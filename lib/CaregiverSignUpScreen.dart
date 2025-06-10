@@ -59,7 +59,15 @@ class _CaregiverSignUpScreenState extends State<CaregiverSignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Caregiver registration")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          "Caregiver registration",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.blue.shade900,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -73,7 +81,9 @@ class _CaregiverSignUpScreenState extends State<CaregiverSignUpScreen> {
                 child: Row(
                   children: [
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade900),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade900,
+                      foregroundColor: Colors.white,
+                      ),
                       onPressed: details.onStepContinue,
                       child: Text(_currentStep == 3 ? 'Complete Registration' : 'Continue'),
                     ),

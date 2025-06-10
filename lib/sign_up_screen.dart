@@ -4,10 +4,10 @@ class sign_up_screen extends StatefulWidget {
   const sign_up_screen({super.key});
 
   @override
-  State<sign_up_screen> createState() => _SignUpScreenState();
+  State<sign_up_screen> createState() => _sign_up_screenState();
 }
 
-class _SignUpScreenState extends State<sign_up_screen> {
+class _sign_up_screenState extends State<sign_up_screen> {
   int _currentStep = 0;
   final _formKey = GlobalKey<FormState>();
 
@@ -44,11 +44,12 @@ class _SignUpScreenState extends State<sign_up_screen> {
 
   @override
   Widget build(BuildContext context) {
-    const darkBlue = Color(0xFF0D47A1);
+    final Color darkBlue = Colors.blue.shade900;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Patient registration"),
+        title: const Text("Patient Registration"),
         backgroundColor: darkBlue,
       ),
       body: SafeArea(
@@ -89,21 +90,9 @@ class _SignUpScreenState extends State<sign_up_screen> {
                   isActive: _currentStep >= 0,
                   content: Column(
                     children: [
-                      TextFormField(
-                        controller: _firstNameController,
-                        decoration: const InputDecoration(labelText: 'First Name'),
-                      ),
-                      TextFormField(
-                        controller: _lastNameController,
-                        decoration: const InputDecoration(labelText: 'Last Name'),
-                      ),
-                      TextFormField(
-                        controller: _dobController,
-                        decoration: const InputDecoration(
-                          labelText: 'Date of birth',
-                          hintText: 'mm/dd/yyyy',
-                        ),
-                      ),
+                      TextFormField(controller: _firstNameController, decoration: const InputDecoration(labelText: 'First Name')),
+                      TextFormField(controller: _lastNameController, decoration: const InputDecoration(labelText: 'Last Name')),
+                      TextFormField(controller: _dobController, decoration: const InputDecoration(labelText: 'Date of Birth', hintText: 'mm/dd/yyyy')),
                     ],
                   ),
                 ),
@@ -112,26 +101,11 @@ class _SignUpScreenState extends State<sign_up_screen> {
                   isActive: _currentStep >= 1,
                   content: Column(
                     children: [
-                      TextFormField(
-                        controller: _addressController,
-                        decoration: const InputDecoration(labelText: 'Address'),
-                      ),
-                      TextFormField(
-                        controller: _cityController,
-                        decoration: const InputDecoration(labelText: 'City'),
-                      ),
-                      TextFormField(
-                        controller: _stateController,
-                        decoration: const InputDecoration(labelText: 'State'),
-                      ),
-                      TextFormField(
-                        controller: _zipController,
-                        decoration: const InputDecoration(labelText: 'ZIP Code'),
-                      ),
-                      TextFormField(
-                        controller: _phoneController,
-                        decoration: const InputDecoration(labelText: 'Phone Number'),
-                      ),
+                      TextFormField(controller: _addressController, decoration: const InputDecoration(labelText: 'Address')),
+                      TextFormField(controller: _cityController, decoration: const InputDecoration(labelText: 'City')),
+                      TextFormField(controller: _stateController, decoration: const InputDecoration(labelText: 'State')),
+                      TextFormField(controller: _zipController, decoration: const InputDecoration(labelText: 'ZIP Code')),
+                      TextFormField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Phone Number')),
                     ],
                   ),
                 ),
@@ -140,35 +114,18 @@ class _SignUpScreenState extends State<sign_up_screen> {
                   isActive: _currentStep >= 2,
                   content: Column(
                     children: [
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(labelText: 'Email'),
-                      ),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(labelText: 'Password'),
-                      ),
-                      TextFormField(
-                        controller: _confirmPasswordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(labelText: 'Confirm Password'),
-                      ),
+                      TextFormField(controller: _emailController, decoration: const InputDecoration(labelText: 'Email')),
+                      TextFormField(controller: _passwordController, obscureText: true, decoration: const InputDecoration(labelText: 'Password')),
+                      TextFormField(controller: _confirmPasswordController, obscureText: true, decoration: const InputDecoration(labelText: 'Confirm Password')),
                       const SizedBox(height: 10),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Checkbox(value: true, onChanged: (val) {}),
-                            Expanded(
-                              child: Text(
-                                "I understand and agree to the Terms & Conditions and Privacy Policy.",
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ),
-                          ],
-                        ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Checkbox(value: true, onChanged: (val) {}),
+                          const Expanded(
+                            child: Text("I understand and agree to the Terms & Conditions and Privacy Policy."),
+                          ),
+                        ],
                       ),
                     ],
                   ),

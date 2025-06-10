@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:care_connect_app/sign_up_screen.dart';
 import 'package:care_connect_app/reset_password_screen.dart';
+import 'package:care_connect_app/patient_dashboard.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -77,8 +78,13 @@ class LoginScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  onPressed: () {},
-                  child: const Text('Log in', style: TextStyle(fontSize: 16)),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const PatientDashboard()),
+                    );
+                  },
+                  child: const Text('Log in', style: TextStyle(fontSize: 16, color: Colors.white)),
                 ),
               ),
               const SizedBox(height: 10),
