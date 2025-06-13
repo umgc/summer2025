@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:care_connect_app/gamification_screen.dart';
+
 
 class PatientDashboard extends StatelessWidget {
   const PatientDashboard({super.key});
@@ -38,18 +40,32 @@ class PatientDashboard extends StatelessWidget {
               ),
             ),
             ...[
-              {'icon': Icons.dashboard, 'title': 'Dashboard'},
-              {'icon': Icons.monitor_heart, 'title': 'My Health'},
-              {'icon': Icons.medication, 'title': 'Medications'},
-              {'icon': Icons.calendar_today, 'title': 'Appointments'},
-              {'icon': Icons.notifications, 'title': 'Notifications'},
+              {'icon': Icons.group, 'title': 'Caregiver Management'},
+              {'icon': Icons.video_camera_front, 'title': 'Virtual Check-In'},
+              {'icon': Icons.medical_services, 'title': 'TeleHealth'},
+              {'icon': Icons.note_alt, 'title': 'Health Care Note'},
+              {
+                'icon': Icons.emoji_events,
+                'title': 'Gamification',
+                'route': (BuildContext context) {
+                  Navigator.pop(context); // Close drawer
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const GamificationScreen()));
+                },
+              },
               {'icon': Icons.settings, 'title': 'Settings'},
               {'icon': Icons.help_outline, 'title': 'Help & Support'},
-            ].map((item) => ListTile(
-              leading: Icon(item['icon'] as IconData),
-              title: Text(item['title'] as String),
-              onTap: () {}, // Add navigation here
-            )),
+            ].map((item) {
+              return ListTile(
+                leading: Icon(item['icon'] as IconData),
+                title: Text(item['title'] as String),
+                onTap: () {
+                  final Function? routeFn = item['route'] as Function?;
+                  if (routeFn != null) {
+                    routeFn(context);
+                  }
+                },
+              );
+            }),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
