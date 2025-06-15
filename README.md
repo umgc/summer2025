@@ -6,14 +6,14 @@ SWEN 670: Software Engineering Capstone
 ## Team D Members
 | Id | Role                | Name               | GitHub                  |
 |----|---------------------|--------------------|-------------------------|
-| 1  | Team Lead           | Steven Edwards     | Edwards97               |
+| 1  | Team Lead & Project Manager | Steven Edwards  | Edwards97          |
 | 2  | Technical Architect | David Aaron        | ddaaron                 |
 | 3  | Programmer          | Myles Davis        | theburninginferno       |
 | 4  | Programmer          | Bethelehem Gessese | Abysinia2511            |
-| 6  | Open                | Nicole Pope        | nicolefpope             |
-| 7  | Open                | Justin Adkins      | TBD                     |
-| 8  | Open                | Brandon Sutan      | UnmedicatedAndDoingFIne |
-
+| 6  | Testing & Analyst   | Nicole Pope        | nicolefpope             |
+| 7  | Support             | Justin Adkins      | TBD                     |
+| 8  | UI/UX Designer      | Brandon Sutan      | UnmedicatedAndDoingFIne |
+| 9  | Supplemental Developer | Alireza Minargar | TBD                    |
 
 Last Edited: 06/15/2025
 
