@@ -18,8 +18,8 @@ const sizeMap = {
   },
   large: {
     padding: '8px 14px',
-    fontSize: '.65vw',
-    iconSize: '.9vw',
+    fontSize: '1rem',
+    iconSize: '0.9vw',
     dimension: 52,
   },
   xlarge2: {

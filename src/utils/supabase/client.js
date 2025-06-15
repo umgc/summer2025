@@ -1,4 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr"
+//import { revalidatePath } from 'next/cache'
+import { redirect } from "next/navigation"
 
 export function createClient() {
   return createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
@@ -24,6 +26,61 @@ export async function loginClient({ email, password }) {
     console.error("Unexpected login error:", error)
     return "An unexpected error occurred during login"
   }
+}
+
+function capitalize(str) {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+export async function handleSignup(formData) {
+  const supabase = createClient()
+
+  try {
+    // ✅ Check if email already exists in auth.users
+    const { data: existingUser, error: userCheckError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', formData.email.trim().toLowerCase())
+      .maybeSingle(); // ⬅️ This handles zero rows gracefully
+
+    if (userCheckError && userCheckError.code !== 'PGRST116') {
+      console.error("Unexpected error:", userCheckError);
+      return 'An unexpected error occurred.';
+    }
+
+    if (existingUser) {
+      return 'Email already registered.';
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      //phone: formData.phone,
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: {
+          displayName: `${capitalize(formData.firstName)} ${capitalize(formData.lastName)}`,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          plan: formData.plan || 'free',
+          signup_source: formData.signup_source || 'default',
+          email: formData.email,
+        },
+      },
+    })
+
+    if (error) {
+      console.error("Signup Error:", error.message)
+      return error.message;
+    }
+
+  } catch (e) {
+    console.error("Error:", e)
+    return e;
+  }
+
+  //revalidatePath('/', 'layout')
+  //redirect('/');
 }
 
 // Google OAuth login

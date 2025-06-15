@@ -38,8 +38,8 @@ export default function ProfileMenu({
         xs: "1vw",
         sm: "1vw",
         md: "1vw",
-        lg: "1vw",
-        xl: "2vw",
+        lg: "3rem",
+        xl: "3rem",
     }
 
     const menuItemIconSize = {

@@ -48,16 +48,16 @@ export default function Signin({ tucked = false }) {
 
       <AnimatedButton
         color={tucked ? "white" : "#2563eb"}
-         reverse={true}
+        reverse={true}
         borderRadius="50px"
-       hoverTextColor={tucked ? "#2563eb" : "white"}
+        hoverTextColor={tucked ? "#2563eb" : "white"}
         size="large"
         text="Log In"
         border={`3px solid ${tucked ? "white" : "#2563eb"}`}
         onclick={handleSigninOpen}
       />
 
-      {/*<AnimatedButton
+      <AnimatedButton
         color={tucked ? "white" : "#2563eb"}
         reverse={true}
         borderRadius="50px"
@@ -67,12 +67,12 @@ export default function Signin({ tucked = false }) {
         border={`3px solid ${tucked ? "white" : "#2563eb"}`}
         endIcon={<ArrowForward />}
         onclick={handleSignup}
-      />*/}
+      />
 
       <SigninDialog
-                signinOpen={signinOpen}
-                handleClose={handleClose}
-            />
+        signinOpen={signinOpen}
+        handleClose={handleClose}
+      />
     </Box>
   )
 }

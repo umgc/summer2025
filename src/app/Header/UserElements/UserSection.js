@@ -25,7 +25,7 @@ export default function UserSection({
                 flexDirection: "row",
                 justifyContent: "flex-end",
                 alignItems: "center",
-                gap: 2,
+                gap: 1,
             }}
         >
             <AnimatedButton
