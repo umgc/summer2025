@@ -4,6 +4,8 @@ Summer 2025 Cohort
 
 SWEN 670: Software Engineering Capstone
 
+**You can view the website at this [address](https://swen670-deeptrain.vercel.app/).**
+
 ## Team D Members
 | Id | Role                | Name               | GitHub                  |
 |----|---------------------|--------------------|-------------------------|
@@ -21,9 +23,7 @@ Last Edited: 06/15/2025
 Edited By: Myles Davis
 
 ## Production Website
-The DeepTrain production websites was deployed using [Vercel](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
-
-You can view the website at this [address](https://swen670-deeptrain.vercel.app/).
+The DeepTrain production websites was deployed using [Vercel](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme). You can view the website at this [address](https://swen670-deeptrain.vercel.app/).
 
 # NextJS Deployment
 
