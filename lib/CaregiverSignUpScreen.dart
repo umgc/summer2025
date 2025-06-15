@@ -1,3 +1,4 @@
+import 'package:care_connect_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
 class CaregiverSignUpScreen extends StatefulWidget {
@@ -38,14 +39,40 @@ class _CaregiverSignUpScreenState extends State<CaregiverSignUpScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  void _continue() {
+  void _continue() async {
     if (_currentStep < 3) {
       setState(() => _currentStep += 1);
     } else {
       if (_formKey.currentState!.validate()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Caregiver account created!')),
-        );
+        if (_passwordController.text != _confirmPasswordController.text) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Passwords do not match')),
+          );
+          return;
+        }
+
+        try {
+          final fullName = '${_firstNameController.text} ${_lastNameController.text}';
+
+          // ✅ REGISTER as CAREGIVER
+          await AuthService.register(
+            name: fullName,
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            role: 'caregiver', // 👈 IMPORTANT
+          );
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Caregiver account created! Please log in.')),
+          );
+
+          Navigator.pop(context); // or navigate to caregiver login screen
+
+        } catch (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Registration failed: ${error.toString().replaceAll("Exception: ", "")}')),
+          );
+        }
       }
     }
   }

@@ -108,7 +108,7 @@ class WelcomeScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const caregiver_login_screen()),
+                          MaterialPageRoute(builder: (context) => const CaregiverLoginScreen()),
                         );
                       },
                       child: const Text(

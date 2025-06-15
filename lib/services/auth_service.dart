@@ -1,0 +1,61 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'session_manager.dart';
+
+class AuthService {
+  static const _baseUrl = 'http://10.0.2.2:3000/api/auth';
+
+  static Future<Map<String, dynamic>> login(String email, String password) async {
+    final session = SessionManager();
+    final response = await session.post(
+      '$_baseUrl/login',
+      body: jsonEncode({'email': email, 'password': password}),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      session.updateCookies(response);
+      return data['user']; // ✅ return full user object
+    } else {
+      throw Exception(data['message'] ?? 'Login failed');
+    }
+  }
+
+
+  static Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+    String role = 'patient', // ✅ default role
+  }) async {
+    final session = SessionManager();
+    final response = await session.post(
+      '$_baseUrl/register',
+      body: jsonEncode({
+        'name': name,
+        'email': email,
+        'password': password,
+        'role': role, // ✅ send role
+      }),
+    );
+    if (response.statusCode == 201) {
+      print("✅ Registration successful: ${response.body}");
+    } else {
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['message'] ?? 'Registration failed');
+    }
+  }
+
+  /// Optionally: Logout
+  static Future<void> logout() async {
+    final session = SessionManager();
+    final response = await session.post('$_baseUrl/logout');
+
+    if (response.statusCode == 200) {
+      print("✅ Logout successful");
+    } else {
+      print("❌ Logout failed: ${response.statusCode} - ${response.body}");
+    }
+  }
+}
