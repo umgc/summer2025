@@ -35,7 +35,7 @@ import {
 import { createClient } from "@/utils/supabase/client";
 
 // Custom Components
-import AnimatedButton from "@/app/GlobalComponents/AnimatedButtonDialog";
+import AnimatedButton from "@/app/Buttons/AnimatedButton";
 
 export default function ResetPasswordForm() {
     const searchParams = useSearchParams();

@@ -44,6 +44,7 @@ export async function handleSignup(formData) {
       .eq('email', formData.email.trim().toLowerCase())
       .maybeSingle(); // ⬅️ This handles zero rows gracefully
 
+    console.log("Existing user check result:", existingUser, userCheckError);
     if (userCheckError && userCheckError.code !== 'PGRST116') {
       console.error("Unexpected error:", userCheckError);
       return 'An unexpected error occurred.';

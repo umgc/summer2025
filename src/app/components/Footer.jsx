@@ -15,7 +15,7 @@ export default function Footer() {
     <Box sx={{ backgroundColor: "#1e293b", color: "white", py: 8 }}>
       <Container maxWidth="lg">
         <Grid container spacing={4}>
-          <Grid item xs={12} md={6}>
+          <Grid size={12} md={6}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -51,7 +51,7 @@ export default function Footer() {
             </motion.div>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={12} md={6}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}

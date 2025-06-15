@@ -380,7 +380,7 @@ export default function SigninDialog({ signinOpen, handleClose }) {
 
             <Button variant="text" disabled={loading || googleLoading}>
               <Link
-                //href="/forgot-password"
+                href="/"
                 style={{
                   textDecoration: "none",
                   color: "inherit",

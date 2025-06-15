@@ -34,7 +34,7 @@ import {
 /*import {
     handleSendResetPasswordEmail,
 } from "@/app/Header/Signin/actions";*/
-import AnimatedButton from "@/app/buttons/AnimatedButton";
+import AnimatedButton from "@/app/Buttons/AnimatedButton";
 
 export default function ForgotPasswordForm() {
     const [formValues, setFormValue] = useState({
