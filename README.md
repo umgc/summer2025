@@ -1,7 +1,10 @@
 # SWEN 760 - Summer 2025 - Generative Simulations (Team D) Application
 
 Summer 2025 Cohort
+
 SWEN 670: Software Engineering Capstone
+
+[View Project](https://swen670-deeptrain.vercel.app/)
 
 ## Team D Members
 | Id | Role                | Name               | GitHub                  |
@@ -25,11 +28,15 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+The project is stood up and can be viewed [here](https://swen670-deeptrain.vercel.app/). 
+
 If you are going to run the DeepTrain application locally, you will need to do the following:
 
 Prerequisits: 
 - Access to [Vercel](https://vercel.com/) Project (Deployment Application) for environmental variables
 - Install [Node.js](https://nodejs.org/en), the package manager (Most Recent Version). 
+
+Steps: 
 
 1. Clone Project Repo
 
@@ -39,7 +46,9 @@ Prerequisits:
 npm install
 or 
 npm i
-and 
+```
+and
+```bash
 npm install -g vercel
 ```
 3. Login to Vercel
