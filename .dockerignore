@@ -1,0 +1,23 @@
+# Maven/Gradle build output
+target/
+build/
+
+# Git files
+.git
+.gitignore
+
+# IDE configs
+*.iml
+.idea/
+*.log
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker ignore itself
+.dockerignore
+
+# Node modules (in case frontend code is added)
+node_modules/
