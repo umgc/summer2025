@@ -33,7 +33,9 @@ The project is stood up and can be viewed [here](https://swen670-deeptrain.verce
 If you are going to run the DeepTrain application locally, you will need to do the following:
 
 Prerequisits: 
-- Access to [Vercel](https://vercel.com/) Project (Deployment Application) for environmental variables
+- Access or Download Environment Variables
+    - Download the ".env.local COPY" file from the team's designated development folder
+    - Or gain access to [Vercel](https://vercel.com/) Project (Deployment Application) for environmental variables
 - Install [Node.js](https://nodejs.org/en), the package manager (Most Recent Version). 
 
 Steps: 
@@ -47,23 +49,23 @@ npm install
 or 
 npm i
 ```
-and
-```bash
-npm install -g vercel
-```
-3. Login to Vercel
+
+3. Install & Login to Vercel (Optional)
 
 ```bash
+npm install -g vercel
 vercel login
 ```
 
-4. Link Local Project to Vercel Project
+4. Link Local Project to Vercel Project (Optional)
 
 ```bash
 vercel link
 ```
 
-5. Pull Environmental Variables
+5. Download or Pull Environmental Variables. 
+    - If downloaded ".env.local COPY" file, please rename it to ".env.local". 
+    - Otherwise, pull from Vercel using the following command:
 
 ```bash
 vercel env pull .env.local
