@@ -12,16 +12,16 @@ class AuthService {
       body: jsonEncode({'email': email, 'password': password}),
     );
 
+    session.updateCookies(response); // ✅ Moved before checking status
+
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      session.updateCookies(response);
       return data['user']; // ✅ return full user object
     } else {
       throw Exception(data['message'] ?? 'Login failed');
     }
   }
-
 
   static Future<void> register({
     required String name,
@@ -36,7 +36,7 @@ class AuthService {
         'name': name,
         'email': email,
         'password': password,
-        'role': role, // ✅ send role
+        'role': role,
       }),
     );
     if (response.statusCode == 201) {
@@ -47,7 +47,6 @@ class AuthService {
     }
   }
 
-  /// Optionally: Logout
   static Future<void> logout() async {
     final session = SessionManager();
     final response = await session.post('$_baseUrl/logout');

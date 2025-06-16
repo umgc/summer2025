@@ -3,6 +3,7 @@ import '../services/gamification_service.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'AchievementDetailScreen.dart';
 
 class GamificationScreen extends StatefulWidget {
   const GamificationScreen({super.key});
@@ -15,11 +16,12 @@ class _GamificationScreenState extends State<GamificationScreen> {
   int level = 1;
   int xp = 0;
   int xpTarget = 50;
-  List achievements = [];
+  List<Map<String, dynamic>> allAchievements = [];
+  List<Map<String, dynamic>> earnedAchievements = [];
   bool isLoading = true;
 
   late ConfettiController _confettiController;
-  final int userId = 1; // Replace with dynamic user ID when integrating auth
+  final int userId = 1;
   late SharedPreferences _prefs;
   int previousAchievementCount = 0;
 
@@ -36,7 +38,6 @@ class _GamificationScreenState extends State<GamificationScreen> {
     await loadGamificationData();
   }
 
-
   @override
   void dispose() {
     _confettiController.dispose();
@@ -47,21 +48,36 @@ class _GamificationScreenState extends State<GamificationScreen> {
     try {
       final progress = await GamificationService.fetchXPProgress(userId);
       final earned = await GamificationService.fetchAchievements(userId);
+      final all = await GamificationService.fetchAllAchievements(userId);
 
+      // Confetti trigger
       if (earned.length > previousAchievementCount) {
         _confettiController.play();
       }
 
+      List<Map<String, dynamic>> merged = (all as List<dynamic>).map<Map<String, dynamic>>((a) {
+        final match = earned.firstWhere(
+              (e) => e['title']?.toString().trim() == a['title']?.toString().trim(),
+          orElse: () => null,
+        );
+        return {
+          ...a,
+          'unlocked': match != null,
+        };
+      }).toList();
+
+
       setState(() {
         level = progress['level'];
         xp = progress['xp'];
-        achievements = earned;
+        earnedAchievements = List<Map<String, dynamic>>.from(earned);
+        allAchievements = merged;
         xpTarget = level * 50;
         isLoading = false;
         previousAchievementCount = earned.length;
       });
 
-      // ✅ Save to SharedPreferences
+
       await _prefs.setInt('achievement_count', earned.length);
     } catch (e) {
       print("Error loading gamification data: $e");
@@ -73,14 +89,18 @@ class _GamificationScreenState extends State<GamificationScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade900,
-        title: const Text(
-          'Care Connect',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Icon(Icons.emoji_events, color: Colors.white),
+        title: const Text('Care Connect', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.emoji_events, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AchievementDetailScreen(achievements: allAchievements),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -121,10 +141,10 @@ class _GamificationScreenState extends State<GamificationScreen> {
                 const SizedBox(height: 20),
                 Expanded(
                   child: ListView.builder(
-                    itemCount: achievements.length,
+                    itemCount: allAchievements.length,
                     itemBuilder: (context, index) {
-                      final achievement = achievements[index];
-                      return buildAchievement(achievement['title']);
+                      final achievement = allAchievements[index];
+                      return buildAchievement(achievement);
                     },
                   ),
                 ),
@@ -149,31 +169,45 @@ class _GamificationScreenState extends State<GamificationScreen> {
     );
   }
 
-  Widget buildAchievement(String title) {
+  Widget buildAchievement(Map<String, dynamic> achievement) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-                fontWeight: FontWeight.w500,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AchievementDetailScreen(achievements: allAchievements), // ✅ This must include the `unlocked` key
+            ),
+          );
+        },
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                achievement['title'] ?? 'Unnamed Achievement',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ),
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: Colors.green.shade300,
-              borderRadius: BorderRadius.circular(4),
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: achievement['unlocked'] == true ? Colors.green.shade300 : Colors.grey.shade400,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Icon(
+                achievement['unlocked'] == true ? Icons.check : Icons.lock_outline,
+                size: 16,
+                color: Colors.white,
+              ),
             ),
-            child: const Icon(Icons.check, size: 16, color: Colors.white),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
