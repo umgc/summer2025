@@ -174,7 +174,7 @@ export default function HeroSection() {
                       sizes="100vw"
                       style={{
                         objectFit: 'contain',
-                        borderRadius: "0px 10% 10% 0px"
+                        //borderRadius: "0px 10% 10% 0px"
                       }}
                       priority
                     />

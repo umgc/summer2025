@@ -13,8 +13,8 @@ const footerLinks = [
 export default function Footer() {
   return (
     <Box sx={{ backgroundColor: "#1e293b", color: "white", py: 8 }}>
-      <Container maxWidth="lg">
-        <Grid container spacing={4}>
+      <Container maxWidth="xl">
+        <Grid container spacing={2}>
           <Grid size={6}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}

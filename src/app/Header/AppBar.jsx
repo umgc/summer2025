@@ -120,8 +120,7 @@ export default function AppBarHeader() {
                         transition: "all 0.3s ease",
                       }}
                     >
-                      <Typography
-                        
+                      <Typography                        
                         sx={{
                           fontFamily: 'Poppins',
                           fontWeight: 600,

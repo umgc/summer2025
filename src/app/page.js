@@ -5,7 +5,7 @@ import CssBaseline from "@mui/material/CssBaseline"
 import HeroSection from "./components/HeroSection"
 import FeaturesSection from "./components/FeaturesSection"
 import TestimonialSection from "./components/TestimonialSection"
-import Footer from "./components/Footer"
+import Footer from "./Footer/Footer"
 
 //Custom Components
 import Header from "./Header/Header"
