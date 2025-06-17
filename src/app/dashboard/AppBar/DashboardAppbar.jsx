@@ -16,35 +16,13 @@ import DashboardSearch from './DashboardSearch';
 
 export default function DashboardAppbar({
     drawerWidth, miniDrawerWidth, open, user,
+    drawerHeightApp, drawerWidthApp, miniDrawerWidthApp
 }) {
 
-    const drawerWidthApp = {
-        xs: "85vw",
-        sm: "85vw",
-        md: "85vw",
-        lg: "85vw",
-        xl: "89vw",
-    };
-
-    const drawerHeightApp = {
-        xs: "3vw",
-        sm: "3vw",
-        md: "3vw",
-        lg: "3vw",
-        xl: "3vw",
-    };
-
-    const miniDrawerWidthApp = {
-        xs: "95vw",
-        sm: "95vw",
-        md: "95vw",
-        lg: "95vw",
-        xl: "97vw",
-    };
 
     return (
         <AppBar
-            position="fixed"
+            //position="fixed"
             sx={{
                 height: "100%",
                 ml: open ? drawerWidth : miniDrawerWidth,

@@ -42,19 +42,14 @@ const items = [
 
 const logo = 'https://3vsrvtbwvqgcv6z1.public.blob.vercel-storage.com/DeepTrain_Logo_small.png';
 
-export default function DashboardDrawer({ drawerWidth, miniDrawerWidth, open, setOpen }) {
-
-    const avatarSize = {
-        xs: "1vw",
-        sm: "1vw",
-        md: "1vw",
-        lg: "1vw",
-        xl: "1vw",
-    }
+export default function DashboardDrawer({ 
+    drawerWidth, miniDrawerWidth, open, setOpen, setSelectedPage 
+}) {
 
     return (
         <Box
             sx={{
+                //position: 'fixed',
                 display: 'flex',
                 backgroundColor: 'white',
                 border: '0px solid transparent',
@@ -84,9 +79,10 @@ export default function DashboardDrawer({ drawerWidth, miniDrawerWidth, open, se
                         borderRadius: '25px',
                         border: '0px solid gray',
                         m: 2,
-                        height: '98vh',
+                        height: '97vh',
                         boxShadow: 0,
                     },
+
                 }}
             >
                 <Box
@@ -227,7 +223,7 @@ export default function DashboardDrawer({ drawerWidth, miniDrawerWidth, open, se
                                         //p: .5,
                                     }}
                                 >
-                                    <Tooltip title="Open Panel" placement="right">
+                                    <Tooltip title="Open Panel" placement="bottom">
                                         <IconButton
                                             onClick={() => setOpen(true)}
                                             sx={{
@@ -273,6 +269,9 @@ export default function DashboardDrawer({ drawerWidth, miniDrawerWidth, open, se
                                             mx: open ? 1 : 'auto',
                                             width: 40,
                                             height: 40,
+                                        }}
+                                        onClick={() => {
+                                            setSelectedPage(text.toLowerCase());                                            
                                         }}
                                     >
                                         <ListItemIcon

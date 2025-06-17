@@ -8,12 +8,13 @@
     "start": "next start",
     "lint": "next lint"
   },
-  "dependencies": {
+   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@fontsource/roboto": "^5.2.6",
     "@mui/icons-material": "^7.1.1",
     "@mui/material": "^7.1.1",
+    "@mui/x-charts": "^8.5.2",
     "@radix-ui/react-separator": "^1.1.7",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.0",
