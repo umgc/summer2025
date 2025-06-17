@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'session_manager.dart';
+import 'dart:io';
 
 class GamificationService {
-  static const baseUrl = 'http://10.0.2.2:3000/api/gamification';
+  static final baseUrl = Platform.isAndroid
+      ? 'http://10.0.2.2:3000/api/auth'
+      : 'http://localhost:3000/api/auth';
   static final session = SessionManager();
 
   static Future<Map<String, dynamic>> fetchXPProgress(int userId) async {

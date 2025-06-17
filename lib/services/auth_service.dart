@@ -1,15 +1,21 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'session_manager.dart';
-
+import 'dart:io';
 class AuthService {
-  static const _baseUrl = 'http://10.0.2.2:3000/api/auth';
+  static final _baseUrl = Platform.isAndroid
+      ? 'http://10.0.2.2:3000/api/auth'
+      : 'http://localhost:3000/api/auth';
 
   static Future<Map<String, dynamic>> login(String email, String password) async {
     final session = SessionManager();
     final response = await session.post(
       '$_baseUrl/login',
-      body: jsonEncode({'email': email, 'password': password}),
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+        'role': 'caregiver', // <-- include this!
+      }),
     );
 
     session.updateCookies(response); // ✅ Moved before checking status
