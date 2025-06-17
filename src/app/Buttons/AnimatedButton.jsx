@@ -11,9 +11,9 @@ const sizeMap = {
     dimension: 36,
   },
   medium: {
-    padding: '6px 12px',
-    fontSize: '1rem',
-    iconSize: '1.3rem',
+    padding: '4px 14px',
+    fontSize: '.75rem',
+    iconSize: '.75rem',
     dimension: 44,
   },
   large: {

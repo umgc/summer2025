@@ -18,7 +18,7 @@ SWEN 670: Software Engineering Capstone
 | 8  | UI/UX Designer      | Brandon Sutan      | UnmedicatedAndDoingFIne |
 | 9  | Supplemental Developer | Alireza Minargar |aliminagar              |
 
-Last Edited: 06/15/2025
+Last Edited: 06/17/2025
 
 Edited By: Myles Davis
 
@@ -29,6 +29,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 ## Getting Started
 
 The project is stood up and can be viewed [here](https://swen670-deeptrain.vercel.app/). 
+
+### Deploying the Application Locally
 
 If you are going to run the DeepTrain application locally, you will need to do the following:
 
@@ -79,11 +81,34 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Supabase Database
+# Technology Stack
+
+| Category              | Technology                                     | Purpose             |
+|-----------------------|-----------------------------------------------------|---------------------|
+| **Web/Desktop Frontend Framework**| [Next.js](https://nextjs.org/) (built on React)     | UI rendering, routing, SSR (Server-Side Rendering), and SSG support     |
+| **Mobile Framework** | [Flutter](https://flutter.dev/) / [FlutterFlow](https://flutterflow.io/) | Cross-platform native app development                 |
+| **Web/Desktop UI Libraries**  | [Material UI](https://mui.com/), [Framer Motion](https://www.framer.com/motion/) | Styling, layout, and animations                          |
+| **Web/Desktop Backend/API**       | [Node.js](https://nodejs.org/) (via Next.js API routes) | Backend logic and RESTful API handling            |
+| **Mobile Backend/API**       | [Spring/Spring Boot](https://spring.io/) (via Java API routes) | Backend logic and RESTful API handling            |
+| **Web/Desktop Authentication**    | [Supabase Auth](https://supabase.com/auth)          | User sign-up, login, and session management                            |
+| **Web/Desktop Database**          | [Supabase](https://supabase.com/) (PostgreSQL)      | Storing relational data such as users, projects, etc.                  |
+| **Web/Desktop Asset Storage**           | [Vercel Blobs](https://vercel.com/docs/storage/vercel-blob) | Asset and file storage (images, files, etc.) for quick access |
+| **Web/Desktop Deployment**        | [Vercel](https://vercel.com/)                       | Continuous deployment, hosting, environment variable management         |
+| **Version Control**   | [Git](https://git-scm.com/) + [GitHub](https://github.com/) | Source code management and collaboration                    |
+| **AI Integration**    | [DeepSeek](https://deepseek.com/) | Natural language features or assistant-based tools         |
+| **Web/Desktop Charts & Data Viz** | [MUI X Charts](https://mui.com/x/react-charts/)     | Displaying analytical data (Bar/Line charts)                       |
+| **Web/Desktop Icon Libraries** | [Material UI Icons](https://mui.com/material-ui/material-icons/), [Lucide React](https://lucide.dev/guide/packages/lucide-react), [React Icons](https://react-icons.github.io/react-icons/) | Icons   |
+| **Miscellaneous Libraries** | --- | Other   |
+
+# Learn More
+
+For more information about our different technologies:
+
+## Supabase Database 
 
 Currently, DeepTrain is using [Supabase](https://supabase.com) as it's Postgres database and authentication development platform. You will need access to the database project in order to view contents.
 
-## Learn More
+## Next.js Documentatiion
 
 To learn more about Next.js, take a look at the following resources:
 
@@ -92,7 +117,7 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deployment on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 

@@ -35,7 +35,7 @@ import {
 
 const items = [
     { text: 'Overview', icon: <Home /> },
-    { text: 'Properties', icon: <Business /> },
+    { text: 'Simulations', icon: <Business /> },
     { text: 'Social', icon: <People /> },
     { text: 'Settings', icon: <Settings /> },
 ];
