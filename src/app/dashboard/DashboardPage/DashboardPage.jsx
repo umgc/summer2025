@@ -97,7 +97,7 @@ export default function DashboardPage({
                 height: MainHeight,
                 width: open ? openWidth : closeWidth,
                 zIndex: 2000,
-                overflow: 'hidden',
+                overflow: 'auto',
                 transition: (theme) =>
                     theme.transitions.create(['margin', 'width'], {
                         easing: theme.transitions.easing.sharp,
@@ -107,7 +107,7 @@ export default function DashboardPage({
                 p: 2,
             }}
         >
-            {selectedPage === 'overview' && <OverviewPage user={user} />}
+            {selectedPage === 'overview' && <OverviewPage user={user} MainHeight={MainHeight} />}
         </Box>
 
 

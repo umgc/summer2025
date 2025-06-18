@@ -157,7 +157,7 @@ export default function ProjectList({
                                 }}
                             >
                                 <Typography
-                                    key={index}
+                                   // key={index}
                                     sx={{
                                         textAlign: "left",
                                         color: "black",
@@ -176,7 +176,7 @@ export default function ProjectList({
                                     {item.title}
                                 </Typography>
                                 <Typography
-                                    key={index}
+                                   // key={index}
                                     sx={{
                                         textAlign: "left",
                                         color: "gray",

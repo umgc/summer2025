@@ -81,6 +81,34 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+### Deploying Sentry
+
+If initializing [Sentry](https://sentry.io/welcome/) locally, you will need to do the following:
+
+Prerequisits: 
+- Access or Download Environment Variables
+    - Add Sentry DSN to env.local
+- Sign up for Sentry Accound
+
+Steps: 
+
+1. Make sure Sentry is downloaded
+
+```bash
+npm install @sentry/nextjs
+```
+
+2. Initialize Sentry and Login
+
+```bash
+npx @sentry/wizard -i nextjs
+```
+
+3. Verify Setup and Files
+    - sentry.client.config.js
+    - sentry.server.config.js
+    - next.config.js (if modified)
+
 # Technology Stack
 
 | Category              | Technology                                     | Purpose             |
@@ -98,7 +126,8 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 | **AI Integration**    | [DeepSeek](https://deepseek.com/) | Natural language features or assistant-based tools         |
 | **Web/Desktop Charts & Data Viz** | [MUI X Charts](https://mui.com/x/react-charts/)     | Displaying analytical data (Bar/Line charts)                       |
 | **Web/Desktop Icon Libraries** | [Material UI Icons](https://mui.com/material-ui/material-icons/), [Lucide React](https://lucide.dev/guide/packages/lucide-react), [React Icons](https://react-icons.github.io/react-icons/) | Icons   |
-| **Miscellaneous Libraries** | --- | Other   |
+| **App Monitoring** | [Sentry](https://sentry.io/welcome/) | Monitoring, Error Tracking, etc.    |
+ **Miscellaneous Libraries** | --- | --- |
 
 # Learn More
 

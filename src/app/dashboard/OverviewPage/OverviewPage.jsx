@@ -46,9 +46,12 @@ import ProjectAnalytics from './ProjectAnalytics';
 import StudentStats from './StudentStats';
 import ProjectList from './ProjectList';
 import TeamMembers from './TeamMembers';
+import Reminders from './Calendar/Reminders';
+import QuestionVariety from './QuestionVariety';
+import ClockMain from './Clock/ClockMain';
 
 export default function OverviewPage({
-    user,
+    user, MainHeight
 }) {
 
     return (
@@ -58,6 +61,8 @@ export default function OverviewPage({
             sx={{
                 zIndex: 2001,
                 p: 1,
+                //alignItems: 'stretch',
+                //height: '100%',
             }}
         >
             <Grid size={9}>
@@ -144,7 +149,10 @@ export default function OverviewPage({
             <ProjectAnalytics />
             <ProjectList />
             <TeamMembers user={user} />
-            
+            <QuestionVariety user={user} />
+            <Reminders user={user} />
+            <ClockMain user={user} />
+
         </Grid>
     );
 }

@@ -47,13 +47,14 @@ export default function ProjectAnalytics({
     const values = [60, 20, 10, 70, 50, 60, 40];
 
     return (
-        <Grid size={6}>
+        <Grid size={6} sx={{ height: '100%' }}>
             <Box
                 sx={{
                     backgroundColor: '#f8f9f9',
                     borderRadius: '20px',
                     border: '3px solid #e0e0e0',
                     p: 2,
+                    height: '100%',                    
                 }}
             >
                 <Typography
@@ -78,6 +79,7 @@ export default function ProjectAnalytics({
                     sx={{
                         //pr: 2,
                         //pt: 2,
+                        height: '100%',
                     }}
                 >
                     <BarChart
@@ -118,7 +120,7 @@ export default function ProjectAnalytics({
                                 },
                             },*/
                         }]}
-                        height={300}
+                        height={350}
                         /*slotProps={{
                             legend: { hidden: true },
                         }}*/

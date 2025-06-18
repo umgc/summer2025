@@ -70,7 +70,7 @@ export default function TeamMembers({
     ];
 
     return (
-        <Grid size={4}>
+        <Grid size={4} sx={{height: '100%',}}>
             <Box
                 sx={{
                     backgroundColor: '#f8f9f9',
@@ -78,6 +78,10 @@ export default function TeamMembers({
                     border: '3px solid #e0e0e0',
                     p: 2,
                     height: '100%',
+                    //display: 'flex',
+                    //flexDirection: 'column',
+                    //flexGrow: 1,
+                   minHeight: '30vh',
                 }}
             >
                 <Box
@@ -86,7 +90,7 @@ export default function TeamMembers({
                         flexDirection: 'row',
                         justifyContent: 'space-between',
                         gap: 2,
-                        alignItems: 'center',
+                        alignItems: 'center',                        
                     }}
                 >
                     <Typography
@@ -132,6 +136,7 @@ export default function TeamMembers({
                         //mt: 1,
                         px: 2,
                         pt: 2,
+                        height: '100%',
                     }}
                 >
                     {members.map((item, index) => (
@@ -179,7 +184,7 @@ export default function TeamMembers({
                                     }}
                                 >
                                     <Typography
-                                        key={index}
+                                        //key={index}
                                         sx={{
                                             textAlign: "left",
                                             color: "black",
@@ -198,7 +203,7 @@ export default function TeamMembers({
                                         {item.name}
                                     </Typography>
                                     <Typography
-                                        key={index}
+                                        //key={index}
                                         sx={{
                                             textAlign: "left",
                                             color: "gray",
@@ -230,7 +235,7 @@ export default function TeamMembers({
                                 }}
                             >
                                 <Typography
-                                    key={index}
+                                    //key={index}
                                     sx={{
                                         border: `1px solid ${item.status === 'In Progress' 
                                             ? '#87CEEB' 
