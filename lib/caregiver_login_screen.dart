@@ -28,6 +28,7 @@ class _CaregiverLoginScreenState extends State<CaregiverLoginScreen> {
       final user = await AuthService.login(
         _emailController.text.trim(),
         _passwordController.text,
+        role: 'caregiver', // ✅ Add this line
       );
 
       if (user['role'] == 'caregiver') {

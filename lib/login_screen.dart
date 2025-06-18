@@ -31,6 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final user = await AuthService.login(
         _emailController.text.trim(),
         _passwordController.text,
+        role: 'patient', // Hardcoded for patient login
       );
 
       final prefs = await SharedPreferences.getInstance();

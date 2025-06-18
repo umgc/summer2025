@@ -7,14 +7,14 @@ class AuthService {
       ? 'http://10.0.2.2:3000/api/auth'
       : 'http://localhost:3000/api/auth';
 
-  static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<Map<String, dynamic>> login(String email, String password, {required String role}) async {
     final session = SessionManager();
     final response = await session.post(
       '$_baseUrl/login',
       body: jsonEncode({
         'email': email,
         'password': password,
-        'role': 'caregiver', // <-- include this!
+        'role': role, // <-- include this!
       }),
     );
 

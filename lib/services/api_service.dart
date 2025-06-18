@@ -16,12 +16,12 @@ class ApiService {
     );
   }
 
-  static Future<http.Response> login(String email, String password) async {
+  static Future<http.Response> login(String email, String password, {String role = 'patient'}) async {
     var client = http.Client();
     var response = await client.post(
       Uri.parse('$baseUrl/login'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
+      body: jsonEncode({'email': email, 'password': password, 'role': role}),
     );
 
     if (response.statusCode == 200) {
