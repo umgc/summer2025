@@ -86,6 +86,7 @@ export default function ProfileMenu({
         <Box
             sx={{
                 position: 'relative',
+               // zIndex: 5000,
             }}
         >
             <Tooltip title="Profile settings">
@@ -133,6 +134,7 @@ export default function ProfileMenu({
                             }
                         }
                     }}
+                    //zIndex={5000}
                 >
                     <Box
                         sx={{

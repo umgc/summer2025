@@ -94,7 +94,7 @@ export default function Reminders({
                         hoverTextColor="white"
                         reverseHoverColor="black"
                         size="medium"
-                        text="Add Task"
+                        text="Task"
                         border="2px solid black"
                         fullWidth={false}
                         startIcon={<Add />}

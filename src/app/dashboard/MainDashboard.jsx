@@ -69,7 +69,7 @@ export default function MainDashboard({ user }) {
         setOpen={setOpen}
         setSelectedPage={setSelectedPage}
       />
-
+      
       <DashboardAppbar
         drawerWidth={drawerWidth}
         miniDrawerWidth={miniDrawerWidth}
@@ -78,7 +78,7 @@ export default function MainDashboard({ user }) {
         miniDrawerWidthApp={miniDrawerWidthApp}
         open={open}
         user={user}
-      />
+      />     
       
       <DashboardPage
         open={open}

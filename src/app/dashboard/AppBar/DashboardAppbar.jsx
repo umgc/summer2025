@@ -45,6 +45,8 @@ export default function DashboardAppbar({
                     ml: 1,
                     backgroundColor: "#f0f0f0",
                     borderRadius: "20px",
+                    zIndex: 5000,
+                   
                 }}
             >
                 <Grid
@@ -55,6 +57,7 @@ export default function DashboardAppbar({
                         height: '100%',
                         display: 'flex',
                         alignItems: 'center',
+                        
                     }}
                 >
                     <Grid size={2}>
