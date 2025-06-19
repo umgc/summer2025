@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Box,
     CssBaseline,
@@ -44,6 +44,8 @@ import ReactFlow, {
 //Custom Components
 import AnimatedButton from "@/app/Buttons/AnimatedButton";
 import WorkflowBuilder from './workflow-builder';
+import SaveDialog from './SaveDialog/SaveDialog';
+import LoadDialog from './LoadDialog/LoadDialog';
 
 export default function NodeCreation({
     user,
@@ -52,6 +54,30 @@ export default function NodeCreation({
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" })
+    const [openSaveDialog, setOpenSaveDialog] = useState(false);
+    const [openLoadDialog, setOpenLoadDialog] = useState(false);
+    const [currentNodeId, setCurrentNodeId] = useState(null);
+
+    //Loading
+    const [executeLoading, setExecuteLoading] = useState(false);
+
+    useEffect(() => {
+        setNodes((prevNodes) =>
+            prevNodes.map((node) => ({
+                ...node,
+                style: {
+                    ...node.style,
+                    transition: 'all 0.3s ease',
+                    border: node.id === currentNodeId ? '4px solid #00bcd4' : '1px solid #ccc',
+                    boxShadow: node.id === currentNodeId ? '0 0 15px #00bcd4' : 'none',
+                    backgroundColor: node.id === currentNodeId ? '#00bcd4' : 'white',
+                    borderRadius: '5px',
+                },
+            }))
+        );
+    }, [currentNodeId, setNodes]);
+
+
 
     const showSnackbar = (message, severity = "info") => {
         setSnackbar({ open: true, message, severity })
@@ -75,39 +101,143 @@ export default function NodeCreation({
         const workflowString = JSON.stringify(workflow)
         localStorage.setItem("workflow", workflowString)
 
-        showSnackbar("Your workflow has been saved successfully", "success")
+        setOpenSaveDialog(true); // Open the save dialog
+
+        //showSnackbar("Your workflow has been saved successfully", "success")
     }
 
     const loadWorkflow = () => {
-        const savedWorkflow = localStorage.getItem("workflow")
+        setOpenLoadDialog(true); // Open the load dialog
+    }
 
-        if (!savedWorkflow) {
-            showSnackbar("There is no workflow saved in your browser", "error")
-            return
+    const executeWorkflow = async () => {
+        if (nodes.length === 0) {
+            showSnackbar("Add some nodes to your workflow first", "error");
+            return;
         }
+
+        setExecuteLoading(true);
+        setCurrentNodeId(null); // reset previous highlight
+
+        // Clear all previous highlights
+        setNodes((prevNodes) =>
+            prevNodes.map((node) => ({
+                ...node,
+                style: {
+                    ...node.style,
+                    transition: 'all 0.3s ease',
+                    border: '1px solid #ccc',
+                    boxShadow: 'none',
+                    backgroundColor: 'white',
+                },
+            }))
+        );
 
         try {
-            const { nodes: savedNodes, edges: savedEdges } = JSON.parse(savedWorkflow)
-            setNodes(savedNodes)
-            setEdges(savedEdges)
-            showSnackbar("Your workflow has been loaded successfully", "success")
+            let currentNode = nodes.find((n) => n.type === 'start');
+
+            while (currentNode) {
+                setCurrentNodeId(currentNode.id);
+
+                if (currentNode.type === 'start' || currentNode.type === 'end') {
+                    await new Promise((res) => setTimeout(res, 1000)); // pause 1s
+                }
+
+                if (currentNode.type === 'quiz') {
+                    const result = await simulateNode(currentNode);
+
+                    const correctAnswer = currentNode.data.questions[0]?.answer;
+                    const match = result.match(/\*\*Answer:\s*(.*?)\*\*/i);
+                    const aiAnswer = match ? match[1].trim() : null;
+                    const correct = aiAnswer?.toLowerCase() === correctAnswer.toLowerCase();
+
+                    const expectedLabel = correct ? 'pass' : 'fail';
+                    const nextEdge = edges.find((e) =>
+                        e.source === currentNode.id &&
+                        e.label?.toLowerCase().includes(expectedLabel)
+                    );
+
+                    if (!nextEdge) {
+                        console.warn(`No '${expectedLabel}' edge found for node ${currentNode.id}`);
+                        break; // stops traversal, prevents undefined errors
+                    }
+
+                    currentNode = nodes.find((n) => n.id === nextEdge.target);
+
+                } else {
+                    const nextEdge = edges.find((e) => e.source === currentNode.id);
+                    currentNode = nodes.find((n) => n.id === nextEdge?.target);
+                }
+
+                if (currentNode?.type !== 'end') {
+                    await new Promise((res) => setTimeout(res, 1000)); // optional visual delay between nodes
+                }
+            }
+
+            showSnackbar("Simulation complete", "success");
         } catch (error) {
-            showSnackbar("There was an error loading your workflow", "error")
+            console.error("Execution failed:", error);
+            showSnackbar("Simulation failed", "error");
+        } finally {
+            console.log("Execution finished");
+            setExecuteLoading(false);
+            //setCurrentNodeId(null);
         }
+    };
+
+
+
+    const handleClose = () => {
+        setOpenSaveDialog(false);
+        setOpenLoadDialog(false);
     }
 
-    const executeWorkflow = () => {
-        if (nodes.length === 0) {
-            showSnackbar("Add some nodes to your workflow first", "error")
-            return
+    const simulateNode = async (node) => {
+        console.log("Simulating node:", node);
+        try {
+            setCurrentNodeId(node.id);
+            const res = await fetch('/api/simulateNode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ node }),
+            });
+            console.log("Simulation response:", res);
+
+            if (!res.ok) {
+                throw new Error("Simulation failed");
+            }
+
+            const reader = res.body?.getReader();
+            const decoder = new TextDecoder();
+            let text = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                    text += decoder.decode(); // flush final text
+                    break;
+                }
+                text += decoder.decode(value, { stream: true });
+            }
+
+            console.log("Simulated result:", text);
+            return text;
+            //const match = text.match(/\*\*Answer:\s*(.*?)\*\*/i);
+            /*const aiAnswer = match ? match[1].trim() : null;
+            const correctAnswer = node.data.questions[0]?.answer;
+            const correct = aiAnswer?.toLowerCase() === correctAnswer.toLowerCase();
+            console.log("AI Answer:", aiAnswer, "Correct:", correct);*/
+
+            //showSnackbar(`Simulated result: ${text}`, "success");
+        } catch (err) {
+            console.error(err);
+            showSnackbar("Simulation failed", "error");
+            setExecuteLoading(false);
         }
-
-        showSnackbar("Your workflow is being executed (simulation only in this MVP)", "info")
-
-        setTimeout(() => {
-            showSnackbar("Your workflow has been executed successfully", "success")
-        }, 2000)
+        setCurrentNodeId(null);
     }
+
+
 
     return (
         <Grid
@@ -210,6 +340,7 @@ export default function NodeCreation({
                         fullWidth={false}
                         endIcon={<PlayArrow />}
                         onclick={executeWorkflow}
+                        loading={executeLoading}
                     />
                 </Box>
             </Grid>
@@ -232,6 +363,26 @@ export default function NodeCreation({
                     handleCloseSnackbar={handleCloseSnackbar}
                 />
             </Grid>
+
+            <SaveDialog
+                open={openSaveDialog}
+                onClose={handleClose}
+                user={user}
+                nodes={nodes}
+                edges={edges}
+                showSnackbar={showSnackbar}
+            />
+
+            <LoadDialog
+                open={openLoadDialog}
+                onClose={handleClose}
+                user={user}
+                nodes={nodes}
+                edges={edges}
+                setEdges={setEdges}
+                setNodes={setNodes}
+                showSnackbar={showSnackbar}
+            />
 
         </Grid>
     );

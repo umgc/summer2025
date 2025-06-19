@@ -137,6 +137,10 @@ For more information about our different technologies:
 
 Currently, DeepTrain is using [Supabase](https://supabase.com) as it's Postgres database and authentication development platform. You will need access to the database project in order to view contents.
 
+## DeepSeek AI Integration 
+
+DeepTrain integrates [DeepSeek](https://platform.deepseek.com/) to simulate user interactions (Currently) during workflow execution, ...., and more. DeepSeek is used to generate realistic answers based on the quiz question and options.
+
 ## Next.js Documentatiion
 
 To learn more about Next.js, take a look at the following resources:

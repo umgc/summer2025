@@ -51,13 +51,13 @@ const nodeTypes = {
   process: ProcessNode,
   conditional: ConditionalNode,
   code: CodeNode,
-  start: StartNode, 
+  start: StartNode,
   lesson: LessonNode,
   quiz: QuizNode,
   decision: DecisionNode,
   checkpoint: CheckpointNode,
   end: OutputNode,
-  interactive: InteractiveNode, 
+  interactive: InteractiveNode,
 }
 
 const edgeTypes = {
@@ -75,7 +75,29 @@ export default function WorkflowBuilder({
   const [selectedNode, setSelectedNode] = useState(null)
   const [reactFlowInstance, setReactFlowInstance] = useState(null)
 
-  const onConnect = useCallback((params) => setEdges((eds) => addEdge({ ...params, type: "custom" }, eds)), [setEdges])
+  const onConnect = useCallback(
+    (params) => {
+      const { sourceHandle } = params;
+      let label = '';
+
+      if (sourceHandle === 'pass') label = 'Pass';
+      else if (sourceHandle === 'fail') label = 'Fail';
+
+      setEdges((eds) =>
+        addEdge(
+          {
+            ...params,
+            type: 'custom',
+            label,                 // ✅ used by your logic
+            data: { label },       // ✅ used by CustomEdge for rendering
+          },
+          eds
+        )
+      );
+    },
+    [setEdges]
+  );
+
 
   const onDragOver = useCallback((event) => {
     event.preventDefault()

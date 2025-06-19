@@ -48,12 +48,14 @@ const AnimatedButton = styled(Button, {
 })(({ 
   mainColor, reverse, buttonSize, 
   borderradius, iconOnly, hovertextcolor, fullWidth,
-  reversehovercolor, disabled,
+  reversehovercolor, disabled, loading,
 }) => {
   const { padding, fontSize, iconSize, iconDimension, dimension } = sizeMap[buttonSize] || sizeMap.medium;
 
   return {
     position: 'relative',
+    loading: loading ? 'true' : 'false',
+    loadingPosition: "end",
     zIndex: 0,
     overflow: 'hidden',
     textTransform: 'uppercase',
@@ -143,6 +145,7 @@ export default function ButtonWrapper({
   fullWidth = false,
   reverseHoverColor,
   disabled = false,
+  loading = false,
 }) {
 
   const theme = useTheme();
@@ -185,6 +188,8 @@ export default function ButtonWrapper({
       fullWidth={fullWidth}
       reversehovercolor={reverseHoverColor}
       disabled={disabled}
+      loading={loading}
+      loadingPosition="end"
     >
       {iconOnly ? startIcon : <span>{text}</span>}
     </AnimatedButton>
