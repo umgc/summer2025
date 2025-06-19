@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:care_connect_app/gamification_screen.dart';
+import 'package:care_connect_app/main_feed_screen.dart';
+import 'package:care_connect_app/main.dart'; // for WelcomeScreen
 
+class PatientDashboard extends StatefulWidget {
+  final int userId;
+  const PatientDashboard({super.key, required this.userId});
 
-class PatientDashboard extends StatelessWidget {
-  const PatientDashboard({super.key});
+  @override
+  State<PatientDashboard> createState() => _PatientDashboardState();
+}
 
+class _PatientDashboardState extends State<PatientDashboard> {
   @override
   Widget build(BuildContext context) {
     final caregivers = [
@@ -48,8 +57,18 @@ class PatientDashboard extends StatelessWidget {
                 'icon': Icons.emoji_events,
                 'title': 'Gamification',
                 'route': (BuildContext context) {
-                  Navigator.pop(context); // Close drawer
+                  Navigator.pop(context);
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const GamificationScreen()));
+                },
+              },
+              {
+                'icon': Icons.people_alt,
+                'title': 'Social Network',
+                'route': (BuildContext context) {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => MainFeedScreen(userId: widget.userId),
+                  ));
                 },
               },
               {'icon': Icons.settings, 'title': 'Settings'},
@@ -70,7 +89,17 @@ class PatientDashboard extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text('Logout', style: TextStyle(color: Colors.red)),
-              onTap: () {},
+              onTap: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear();
+
+                if (!mounted) return;
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                      (route) => false,
+                );
+              },
             ),
           ],
         ),
@@ -149,7 +178,7 @@ class PatientDashboard extends StatelessWidget {
   }
 }
 
-// Sub-widgets for mood/pain/caregivers (same as before)
+// Sub-widgets for mood/pain/caregivers
 
 class EmojiLabel extends StatelessWidget {
   final String emoji;

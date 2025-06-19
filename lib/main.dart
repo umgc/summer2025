@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'login_screen.dart';
-
-import 'package:care_connect_app/caregiver_login_screen.dart';
+import 'caregiver_login_screen.dart';
+import 'patient_dashboard.dart'; // Make sure this import path is correct
+import 'caregiver_dashboard.dart'; // Optional if you want to route caregivers
 
 void main() {
   runApp(const CareConnectApp());
@@ -19,8 +21,52 @@ class CareConnectApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const WelcomeScreen(),
+      home: const LaunchRouter(), // 👈 Entry point based on login status
     );
+  }
+}
+
+class LaunchRouter extends StatefulWidget {
+  const LaunchRouter({super.key});
+
+  @override
+  State<LaunchRouter> createState() => _LaunchRouterState();
+}
+
+class _LaunchRouterState extends State<LaunchRouter> {
+  Widget _redirect = const Scaffold(
+    body: Center(child: CircularProgressIndicator()),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+    final role = prefs.getString('role');
+
+    if (userId != null && role == 'patient') {
+      setState(() {
+        _redirect = PatientDashboard(userId: int.parse(userId));
+      });
+    } else if (userId != null && role == 'caregiver') {
+      setState(() {
+        _redirect = const CaregiverDashboard(); // You can pass userId here if needed
+      });
+    } else {
+      setState(() {
+        _redirect = const WelcomeScreen();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _redirect;
   }
 }
 
@@ -39,7 +85,6 @@ class WelcomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 30),
-                // Logo Title
                 Text(
                   'CareConnect',
                   style: TextStyle(
@@ -47,7 +92,7 @@ class WelcomeScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: Colors.blue.shade900,
                     shadows: [
-                      Shadow(
+                      const Shadow(
                         offset: Offset(1.5, 1.5),
                         blurRadius: 2,
                         color: Colors.black26,
@@ -58,10 +103,7 @@ class WelcomeScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 const Text(
                   'Closer Connections. Better Care',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black54,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.black54),
                 ),
                 const SizedBox(height: 20),
                 Image.asset(
@@ -71,16 +113,13 @@ class WelcomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
                 const Text(
-                  'Welcome to CareConnect !',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  'Welcome to CareConnect!',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  "We’re here to help you stay connected, supported, and in control of your care journey. Whether you’re managing a loved one’s health or tracking your own, everything you need is just a tap away.\nLets get started.",
+                  "We’re here to help you stay connected, supported, and in control of your care journey. Whether you’re managing a loved one’s health or tracking your own, everything you need is just a tap away.\nLet's get started.",
                   style: TextStyle(fontSize: 16, color: Colors.black87),
                   textAlign: TextAlign.center,
                 ),

@@ -29,6 +29,8 @@ class CaregiverGamificationLandingScreen extends StatelessWidget {
     },
   ];
 
+  CaregiverGamificationLandingScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

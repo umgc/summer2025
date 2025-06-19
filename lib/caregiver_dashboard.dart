@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:care_connect_app/caregiver_gamification_screen.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'caregiver_gamification_landingpage.dart';
+import 'main.dart'; // for WelcomeScreen
+import 'main_feed_screen.dart'; // ✅ import this
 
 class CaregiverDashboard extends StatelessWidget {
   const CaregiverDashboard({super.key});
@@ -49,16 +50,30 @@ class CaregiverDashboard extends StatelessWidget {
               leading: const Icon(Icons.emoji_events),
               title: const Text('Gamification'),
               onTap: () {
-                Navigator.pop(context); // Close the drawer
+                Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => CaregiverGamificationLandingScreen(), // go to landing page
-                  ),
+                  MaterialPageRoute(builder: (_) => CaregiverGamificationLandingScreen()),
                 );
               },
             ),
-
+            ListTile(
+              leading: const Icon(Icons.people),
+              title: const Text('Social Network'),
+              onTap: () async {
+                final prefs = await SharedPreferences.getInstance();
+                final userId = prefs.getString('userId');
+                if (userId != null && context.mounted) {
+                  Navigator.pop(context); // Close drawer
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MainFeedScreen(userId: int.parse(userId)),
+                    ),
+                  );
+                }
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
@@ -68,7 +83,16 @@ class CaregiverDashboard extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text('Logout', style: TextStyle(color: Colors.red)),
-              onTap: () {},
+              onTap: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear();
+                if (!context.mounted) return;
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                      (route) => false,
+                );
+              },
             ),
           ],
         ),

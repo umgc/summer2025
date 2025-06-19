@@ -55,7 +55,7 @@ class _GamificationScreenState extends State<GamificationScreen> {
         _confettiController.play();
       }
 
-      List<Map<String, dynamic>> merged = (all as List<dynamic>).map<Map<String, dynamic>>((a) {
+      List<Map<String, dynamic>> merged = (all).map<Map<String, dynamic>>((a) {
         final match = earned.firstWhere(
               (e) => e['title']?.toString().trim() == a['title']?.toString().trim(),
           orElse: () => null,

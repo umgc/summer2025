@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'session_manager.dart';
 import 'dart:io';
 class AuthService {

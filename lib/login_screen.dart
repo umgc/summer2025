@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'package:care_connect_app/services/auth_service.dart';
 import 'patient_dashboard.dart';
 import 'sign_up_screen.dart';
@@ -36,10 +34,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('userId', user['id'].toString());
+      await prefs.setString('role', 'patient'); // ✅ Store patient role here
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const PatientDashboard()),
+        MaterialPageRoute(
+          builder: (context) => PatientDashboard(userId: int.parse(user['id'].toString())),
+        ),
       );
     } catch (error) {
       setState(() {
@@ -49,7 +50,6 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => isLoading = false);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
