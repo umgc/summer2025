@@ -103,7 +103,7 @@ export default function ProjectList({
                             },
                         }}
                     >
-                        Recent Simulations
+                        Recent Scenarios
                     </Typography>
 
                     <AnimatedButton

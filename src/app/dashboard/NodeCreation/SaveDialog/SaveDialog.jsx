@@ -111,7 +111,7 @@ export default function SaveDialog({
                 zIndex: 5000,
             }}
         >
-            <DialogTitle>Save Your Simulation</DialogTitle>
+            <DialogTitle>Save Your Scenario</DialogTitle>
             <DialogContent>
 
                 <Box sx={{ mb: 1 }}>

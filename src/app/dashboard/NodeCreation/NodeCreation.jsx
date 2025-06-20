@@ -149,6 +149,7 @@ export default function NodeCreation({
                     const correctAnswer = currentNode.data.questions[0]?.answer;
                     const match = result.match(/\*\*Answer:\s*(.*?)\*\*/i);
                     const aiAnswer = match ? match[1].trim() : null;
+                    showSnackbar(`Simulated Student Answer: ${aiAnswer}`, "warning");
                     const correct = aiAnswer?.toLowerCase() === correctAnswer.toLowerCase();
 
                     const expectedLabel = correct ? 'pass' : 'fail';
@@ -174,10 +175,10 @@ export default function NodeCreation({
                 }
             }
 
-            showSnackbar("Simulation complete", "success");
+            showSnackbar("Scenario complete", "success");
         } catch (error) {
             console.error("Execution failed:", error);
-            showSnackbar("Simulation failed", "error");
+            showSnackbar("Scenario failed", "error");
         } finally {
             console.log("Execution finished");
             setExecuteLoading(false);
@@ -201,10 +202,10 @@ export default function NodeCreation({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ node }),
             });
-            console.log("Simulation response:", res);
+            console.log("Scenario response:", res);
 
             if (!res.ok) {
-                throw new Error("Simulation failed");
+                throw new Error("Scenario failed");
             }
 
             const reader = res.body?.getReader();
@@ -222,16 +223,9 @@ export default function NodeCreation({
 
             console.log("Simulated result:", text);
             return text;
-            //const match = text.match(/\*\*Answer:\s*(.*?)\*\*/i);
-            /*const aiAnswer = match ? match[1].trim() : null;
-            const correctAnswer = node.data.questions[0]?.answer;
-            const correct = aiAnswer?.toLowerCase() === correctAnswer.toLowerCase();
-            console.log("AI Answer:", aiAnswer, "Correct:", correct);*/
-
-            //showSnackbar(`Simulated result: ${text}`, "success");
         } catch (err) {
             console.error(err);
-            showSnackbar("Simulation failed", "error");
+            showSnackbar("Scenario failed", "error");
             setExecuteLoading(false);
         }
         setCurrentNodeId(null);
@@ -268,7 +262,7 @@ export default function NodeCreation({
                         },
                     }}
                 >
-                    Simulation Creation
+                    Scenario Designer
                 </Typography>
                 <Typography
                     sx={{
@@ -335,7 +329,7 @@ export default function NodeCreation({
                         hoverTextColor="black"
                         reverseHoverColor="black"
                         size="large"
-                        text="Execute"
+                        text="Simulate"
                         border="3px solid #87CEEB"
                         fullWidth={false}
                         endIcon={<PlayArrow />}

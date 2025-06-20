@@ -36,6 +36,7 @@ import {
 // Custom Components
 import OverviewPage from '../OverviewPage/OverviewPage';
 import NodeCreation from '../NodeCreation/NodeCreation';
+import CoursePageMain from '../SimulationModule/page';
 
 export default function DashboardPage({
     open, setOpen, user, selectedPage, 
@@ -109,7 +110,8 @@ export default function DashboardPage({
             }}
         >
             {selectedPage === 'overview' && <OverviewPage user={user} MainHeight={MainHeight} />}
-            {selectedPage === 'simulations' && <NodeCreation user={user} />}
+            {selectedPage === 'scenarios' && <NodeCreation user={user} />}
+            {selectedPage === 'simulations' && <CoursePageMain user={user} />}
         </Box>
 
 

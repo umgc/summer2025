@@ -28,15 +28,16 @@ import {
     Business,
     People,
     Settings,
-    ArrowBackIos,
+    Polyline,
     ArrowForwardIos,
     Close,
+    School
 } from '@mui/icons-material';
 
 const items = [
     { text: 'Overview', icon: <Home /> },
-    { text: 'Simulations', icon: <Business /> },
-    { text: 'Social', icon: <People /> },
+    { text: 'Scenarios', icon: <Polyline /> },
+    { text: 'Simulations', icon: <School /> },
     { text: 'Settings', icon: <Settings /> },
 ];
 

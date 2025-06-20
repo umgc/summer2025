@@ -12,7 +12,8 @@ import { Download } from "@mui/icons-material"
 export default function LoadDialog({
     open, onClose,
     nodes, edges,
-    setNodes, setEdges,
+    setNodes, setEdges, 
+    setCurrentProject = () => {},
     user,
     showSnackbar,
 }) {
@@ -34,6 +35,7 @@ export default function LoadDialog({
             }
         }
 
+        // Fetch projects only if user is available and dialog is open
         if (user && open) {
             fetchProjects(user)
         }
@@ -50,6 +52,7 @@ export default function LoadDialog({
                 console.error("Error loading project:", response.statusText);
                 showSnackbar("Error Loading Project", "error");
             } else {
+                setCurrentProject(resp.project);
                 const { nodes: loadedNodes, edges: loadedEdges } = resp.project;
                 console.log("Loaded nodes:", loadedNodes);
                 setNodes(loadedNodes);
@@ -91,7 +94,7 @@ export default function LoadDialog({
                         textDecoration: 'underline',
                     }}
                 >
-                    Saved Simulations
+                    Saved Scenarios
                 </Typography>
             </DialogTitle>
 

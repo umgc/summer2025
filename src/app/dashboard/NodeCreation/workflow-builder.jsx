@@ -88,8 +88,8 @@ export default function WorkflowBuilder({
           {
             ...params,
             type: 'custom',
-            label,                 // ✅ used by your logic
-            data: { label },       // ✅ used by CustomEdge for rendering
+            label,               
+            data: { label },   
           },
           eds
         )
@@ -188,7 +188,7 @@ export default function WorkflowBuilder({
                 fitView
                 snapToGrid
                 snapGrid={[15, 15]}
-                defaultEdgeOptions={{ type: "custom" }}
+                defaultEdgeOptions={{ type: "custom", updatable: true}}
               >
                 <Background />
                 <Controls />
