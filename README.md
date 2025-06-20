@@ -30,8 +30,8 @@ Please install the following before starting:
 ## 1. Clone the Project
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/careconnect.git
-cd care_connect_app
+git clone --branch careconnect-ui-v2 https://github.com/umgc/summer2025.git
+cd summer2025
 ```
 
 ---
