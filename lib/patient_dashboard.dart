@@ -1,6 +1,6 @@
+import 'package:care_connect_app/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:care_connect_app/gamification_screen.dart';
 import 'package:care_connect_app/main_feed_screen.dart';
 import 'package:care_connect_app/main.dart'; // for WelcomeScreen
@@ -71,7 +71,17 @@ class _PatientDashboardState extends State<PatientDashboard> {
                   ));
                 },
               },
-              {'icon': Icons.settings, 'title': 'Settings'},
+              {
+                'icon': Icons.settings,
+                'title': 'Settings',
+                'route': (BuildContext context) {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  );
+                },
+              },
               {'icon': Icons.help_outline, 'title': 'Help & Support'},
             ].map((item) {
               return ListTile(

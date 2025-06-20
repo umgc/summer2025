@@ -21,7 +21,7 @@ class _GamificationScreenState extends State<GamificationScreen> {
   bool isLoading = true;
 
   late ConfettiController _confettiController;
-  final int userId = 1;
+  int userId = 1;
   late SharedPreferences _prefs;
   int previousAchievementCount = 0;
 
@@ -34,6 +34,7 @@ class _GamificationScreenState extends State<GamificationScreen> {
 
   Future<void> initializePrefsAndLoad() async {
     _prefs = await SharedPreferences.getInstance();
+    userId = int.tryParse(_prefs.getString('userId') ?? '') ?? 1; // <-- Get dynamic userId here
     previousAchievementCount = _prefs.getInt('achievement_count') ?? 0;
     await loadGamificationData();
   }
@@ -53,6 +54,8 @@ class _GamificationScreenState extends State<GamificationScreen> {
       // Confetti trigger
       if (earned.length > previousAchievementCount) {
         _confettiController.play();
+        previousAchievementCount = earned.length;
+        await _prefs.setInt('achievement_count', earned.length);
       }
 
       List<Map<String, dynamic>> merged = (all).map<Map<String, dynamic>>((a) {
@@ -74,11 +77,7 @@ class _GamificationScreenState extends State<GamificationScreen> {
         allAchievements = merged;
         xpTarget = level * 50;
         isLoading = false;
-        previousAchievementCount = earned.length;
       });
-
-
-      await _prefs.setInt('achievement_count', earned.length);
     } catch (e) {
       print("Error loading gamification data: $e");
     }
