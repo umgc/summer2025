@@ -1,16 +1,10 @@
-// db.js
-
+require('dotenv').config();
 const { Pool } = require('pg');
 
-
 const pool = new Pool({
-  user: 'postgres',
-  host: 'careconnect-db.cbw6u68qs0cv.us-east-2.rds.amazonaws.com',
-  database: 'careconnect',
-  password: '828798boM',
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false, // Allow self-signed certs if needed
+    rejectUnauthorized: false,
   }
 });
 
