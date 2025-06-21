@@ -1,11 +1,9 @@
 variable "primary_region" {
   description = "The primary AWS region"
+  default = "us-east-1"
 }
 
-variable "alb_vs_lambda" {
-  type = number
-  description = "Do you want to enable an AWS Load Balancer (ALB) or our custom request proxy lambda? \nType\n1- ALB\n2-Custom Proxy Lambda"
-}
+
 
 variable "secondary_region" {
   description = "The secondary AWS region"
