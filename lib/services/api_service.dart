@@ -49,4 +49,18 @@ class ApiService {
     final url = Uri.parse('$_feedBaseUrl/feed/$userId');
     return await http.get(url, headers: {'Content-Type': 'application/json'});
   }
+
+  static Future<http.Response> searchUsers(String query) async {
+    final url = Uri.parse('http://localhost:3000/users/search?query=$query');
+    return await http.get(url);
+  }
+
+  static Future<http.Response> sendFriendRequest(int fromUserId, int toUserId) async {
+    final url = Uri.parse('http://localhost:3000/friends/request');
+    return await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'fromUserId': fromUserId, 'toUserId': toUserId}),
+    );
+  }
 }

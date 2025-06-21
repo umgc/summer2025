@@ -4,7 +4,8 @@ const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const bodyParser = require('body-parser');
 const pool = require('./db');
-
+const userRoutes = require('./routes/users');
+const friendRoutes = require('./routes/friends');
 const authRoutes = require('./routes/auth');
 const gamificationRoutes = require('./routes/gamification');
 const feedRoutes = require('./routes/feed'); // ✅ Import feed routes
@@ -44,6 +45,9 @@ app.use(session({
 app.use('/api/auth', authRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/feed', feedRoutes); // ✅ Feed routes
+app.use('/users', userRoutes); // ✅ users routes
+app.use('/friends', friendRoutes); // ✅ Friends request routes
+
 
 // ✅ Root endpoint
 app.get('/', (req, res) => {

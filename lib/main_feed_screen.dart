@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'new_post_screen.dart';
 import 'comment_screen.dart';
 import 'package:care_connect_app/widgets/user_avatar.dart';
+import 'SearchUserScreen.dart';
+import 'friend_requests_screen.dart';
 
 class MainFeedScreen extends StatefulWidget {
   final int userId;
@@ -157,18 +159,72 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blue.shade900,
-        child: const Icon(Icons.edit),
-        onPressed: () async {
-          final success = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const NewPostScreen()),
-          );
-          if (success == true) {
-            fetchFeed(); // Refresh feed after successful post
-          }
-        },
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        color: Colors.blue.shade900,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Search & Add Friend
+              IconButton(
+                icon: const Icon(Icons.person_search, color: Colors.white),
+                tooltip: 'Add Friend',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SearchUserScreen(userId: widget.userId),
+                    ),
+                  );
+                },
+              ),
+              // Friend Requests
+              IconButton(
+                icon: const Icon(Icons.person_add, color: Colors.white),
+                tooltip: 'Friend Requests',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FriendRequestsScreen(userId: widget.userId),
+                    ),
+                  );
+                },
+              ),
+              // Calendar
+              IconButton(
+                icon: const Icon(Icons.calendar_today, color: Colors.white),
+                tooltip: 'Calendar',
+                onPressed: () {
+                  // TODO
+                },
+              ),
+              // Messages
+              IconButton(
+                icon: const Icon(Icons.chat, color: Colors.white),
+                tooltip: 'Messages',
+                onPressed: () {
+                  // TODO
+                },
+              ),
+              // Create Post
+              IconButton(
+                icon: const Icon(Icons.add_circle, color: Colors.white),
+                tooltip: 'Create Post',
+                onPressed: () async {
+                  final success = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const NewPostScreen()),
+                  );
+                  if (success == true) fetchFeed();
+                },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

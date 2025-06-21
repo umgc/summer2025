@@ -15,5 +15,6 @@ router.post('/', upload.single('image'), feedController.createPost); // 👈 Wit
 router.get('/:userId', feedController.getUserFeed);
 router.get('/:postId/comments', feedController.getComments);
 router.post('/:postId/comments', feedController.createComment);
+router.get('/:userId', feedController.getUserFeed);
 
 module.exports = router;

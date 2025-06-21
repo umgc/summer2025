@@ -7,12 +7,10 @@ exports.getUserFeed = async (req, res) => {
 
   try {
     const friendsQuery = `
-      SELECT friend_id AS friend FROM friendships WHERE user_id = $1 AND status = 'accepted'
-      UNION
-      SELECT user_id AS friend FROM friendships WHERE friend_id = $1 AND status = 'accepted'
+      SELECT user_id_2 AS friend_id FROM friends WHERE user_id_1 = $1
     `;
     const friendsResult = await pool.query(friendsQuery, [userId]);
-    const friendIds = friendsResult.rows.map(row => row.friend);
+    const friendIds = friendsResult.rows.map(row => row.friend_id);
     const idsToQuery = [...friendIds, parseInt(userId)];
 
     if (idsToQuery.length === 0) {
@@ -66,7 +64,7 @@ exports.createPost = async (req, res) => {
   }
 
   try {
-    const imageUrl = imageFile ? `/uploads/${imageFile.filename}` : null;
+    const imageUrl = imageFile ? `/uploads/\${imageFile.filename}` : null;
 
     const query = `
       INSERT INTO posts (user_id, content, image_url, created_at)
