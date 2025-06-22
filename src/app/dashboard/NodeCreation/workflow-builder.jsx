@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import ReactFlow, {
   ReactFlowProvider,
   Background,
@@ -75,6 +75,16 @@ export default function WorkflowBuilder({
   const [selectedNode, setSelectedNode] = useState(null)
   const [reactFlowInstance, setReactFlowInstance] = useState(null)
 
+  //Update Selected Node if it changes in the nodes array
+  useEffect(() => {
+    if (selectedNode) {
+      const latest = nodes.find((n) => n.id === selectedNode.id);
+      if (latest && latest.data !== selectedNode.data) {
+        setSelectedNode(latest);
+      }
+    }
+  }, [nodes, selectedNode]);
+
   const onConnect = useCallback(
     (params) => {
       const { sourceHandle } = params;
@@ -88,8 +98,8 @@ export default function WorkflowBuilder({
           {
             ...params,
             type: 'custom',
-            label,               
-            data: { label },   
+            label,
+            data: { label },
           },
           eds
         )
@@ -188,7 +198,7 @@ export default function WorkflowBuilder({
                 fitView
                 snapToGrid
                 snapGrid={[15, 15]}
-                defaultEdgeOptions={{ type: "custom", updatable: true}}
+                defaultEdgeOptions={{ type: "custom", updatable: true }}
               >
                 <Background />
                 <Controls />

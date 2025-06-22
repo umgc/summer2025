@@ -59,6 +59,7 @@ export default function NodeConfigPanel({ node, updateNodeData, onClose }) {
           <LessonInput
             localData={localData}
             handleChange={handleChange}
+            node={node}
           />
         )
 
@@ -67,6 +68,7 @@ export default function NodeConfigPanel({ node, updateNodeData, onClose }) {
           <QuizInput
             localData={localData}
             handleChange={handleChange}
+            node={node}
           />
         )
 
@@ -75,6 +77,7 @@ export default function NodeConfigPanel({ node, updateNodeData, onClose }) {
           <DecisionInput
             localData={localData}
             handleChange={handleChange}
+            node={node}
           />
         )
 
@@ -83,6 +86,7 @@ export default function NodeConfigPanel({ node, updateNodeData, onClose }) {
           <CheckpointInput
             localData={localData}
             handleChange={handleChange}
+            node={node}
           />
         )
 

@@ -14,11 +14,15 @@ import {
     Typography,
 } from "@mui/material";
 import { useState, useEffect } from "react";
-import { Delete } from "@mui/icons-material";
+import { Delete, Edit } from "@mui/icons-material";
 
-export default function QuizInput({ localData, handleChange }) {
-    const parsedQuestions = Array.isArray(localData.questions)
-        ? localData.questions
+export default function QuizInput({ 
+    localData, handleChange,
+    node,  
+}) {
+    console.log("QuizInput node:", node);
+    const parsedQuestions = Array.isArray(node.data.questions)
+        ? node.data.questions
         : [];
 
     const [questions, setQuestions] = useState(parsedQuestions);
@@ -164,7 +168,7 @@ export default function QuizInput({ localData, handleChange }) {
             <TextField
                 fullWidth
                 label="Quiz Title"
-                value={localData.title || ""}
+                value={node.data.title || localData.title || ""}
                 onChange={(e) => handleChange("title", e.target.value)}
                 sx={{ mb: 2 }}
             />
@@ -172,7 +176,7 @@ export default function QuizInput({ localData, handleChange }) {
                 fullWidth
                 type="number"
                 label="Passing Score (%)"
-                value={localData.passingScore || ""}
+                value={node.data.passingScore || localData.passingScore || ""}
                 onChange={(e) => handleChange("passingScore", e.target.value)}
                 sx={{ mb: 2 }}
             />
@@ -180,7 +184,7 @@ export default function QuizInput({ localData, handleChange }) {
                 fullWidth
                 type="number"
                 label="Time Limit (minutes)"
-                value={localData.timeLimit || ""}
+                value={node.data.timeLimit || localData.timeLimit || ""}
                 onChange={(e) => handleChange("timeLimit", e.target.value)}
                 sx={{ mb: 2 }}
             />
@@ -198,15 +202,47 @@ export default function QuizInput({ localData, handleChange }) {
             </Typography>
 
             {questions.map((q, i) => (
-                <Box key={i} sx={{ mb: 1, display: "flex", justifyContent: "space-between" }}>
-                    <Typography variant="body2">{q.question}</Typography>
-                    <Box>
-                        <Button size="small" onClick={() => { setEditing(i); setQuestionData(q); setDialogOpen(true); }}>
-                            Edit
-                        </Button>
-                        <Button size="small" color="error" onClick={() => deleteQuestion(i)}>
-                            Delete
-                        </Button>
+                <Box
+                    key={i}
+                    sx={{
+                        mb: 1,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
+                >
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            maxWidth: '70%', // or use 'flex: 1' if needed
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                        }}
+                    >
+                        {q.question}
+                    </Typography>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            //gap: 1,
+                            flexDirection: "row",
+                        }}
+                    >
+                        <IconButton
+                            onClick={() => { setEditing(i); setQuestionData(q); setDialogOpen(true); }}
+                            title="Edit Question"
+                            color="info"
+                        >
+                            <Edit />
+                        </IconButton>
+                        <IconButton
+                            onClick={() => deleteQuestion(i)}
+                            title="Delete Question"
+                            color="error"
+                        >
+                            <Delete />
+                        </IconButton>
                     </Box>
                 </Box>
             ))}
