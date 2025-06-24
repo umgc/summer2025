@@ -15,6 +15,6 @@
 #   value = aws_db_instance.postgres.endpoint
 # }
 
-# output "api_gateway_url" {
-#   value = aws_apigatewayv2_stage.main.invoke_url
-# }
+output "api_gateway_url" {
+  value = aws_apigatewayv2_stage.main.invoke_url
+}

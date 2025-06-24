@@ -11,7 +11,7 @@
 	<groupId>com.careconnectpt</groupId>
 	<artifactId>careconnect2025</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>careconnect2025</name>
 	<description>poc for careconnectproject</description>
 	<url/>
