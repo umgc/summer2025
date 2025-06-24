@@ -25,12 +25,6 @@ provider "aws" {
   region = var.secondary_region
 }
 
-module "iac_backend" {
-  source          = "./modules/backend"
-  iac_bucket_name = "cc-iac-${var.primary_region}"
-  iac_table_name  = "cc-iac"
-}
-
 module "vpc" {
   source         = "./modules/vpc"
   default_tags   = var.default_tags
@@ -45,13 +39,13 @@ module "kms" {
   source = "./modules/kms"
 }
 
-module "rds" {
-  source             = "./modules/db"
-  cc_rds_sg_id       = module.vpc.cc_rds_sg
-  cc_sbn_group_name  = module.vpc.cc_db_main_sbn_group
-  cc_rds_kms_key_arn = module.kms.cc_rds_kms_key.arn
-  default_tags       = var.default_tags
-}
+# module "rds" {
+#   source             = "./modules/db"
+#   cc_rds_sg_id       = module.vpc.cc_rds_sg
+#   cc_sbn_group_name  = module.vpc.cc_db_main_sbn_group
+#   cc_rds_kms_key_arn = module.kms.cc_rds_kms_key.arn
+#   default_tags       = var.default_tags
+# }
 
 module "ecr" {
   source = "./modules/ecr"
@@ -70,10 +64,10 @@ module "ecs" {
 }
 
 
-module "cognito" {
-  source       = "./modules/cognito"
-  default_tags = var.default_tags
-}
+# module "cognito" {
+#   source       = "./modules/cognito"
+#   default_tags = var.default_tags
+# }
 
 module "main_api" {
   source                  = "./modules/api"
