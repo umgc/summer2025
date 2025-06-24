@@ -1,0 +1,45 @@
+name: CI - CC Spring Boot Backend
+on:
+    workflow_dispatch:
+      inputs:
+        environment:
+            description: 'Choose the prefered environment to provide the variable needed for this run'
+            required: true
+            default: 'lambda-smart-router'
+            type: choice
+            options:
+                - lambda-smart-router
+                - alb
+                - test
+    push:
+        branches:
+            - '**'
+        paths:
+            - 'backend/**'
+    pull_request:
+        branches:
+            - '**' 
+        paths:
+            - 'backend/**'
+jobs:
+    build:
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Set up JDK 17
+          uses: actions/setup-java@v4
+          with:
+            java-version: '17'
+            distribution: 'temurin'
+            cache: 'maven'
+        
+        - name: Run tests
+          working-directory: backend
+          run: mvn test --batch-mode
+
+        - name: Build with Maven
+          working-directory: backend
+          run: mvn clean install --batch-mode
