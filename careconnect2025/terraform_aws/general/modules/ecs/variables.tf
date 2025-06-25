@@ -1,6 +1,13 @@
 variable "cc_ecr_repo_url" {
   type = string
 }
+variable "billing_task_env_vars" {
+  type    = list(map(string))
+  default = []
+}
+variable "cloudmap_billing_service" {
+  type = string
+}
 # variable "rds_endpoint" {
 #   type = string
 # }
