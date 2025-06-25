@@ -1,42 +1,48 @@
 import 'dart:convert';
-import 'session_manager.dart';
 import 'dart:io';
-class AuthService {
-  static final _baseUrl = Platform.isAndroid
-      ? 'http://10.0.2.2:3000/api/auth'
-      : 'http://localhost:3000/api/auth';
+import 'package:http/http.dart' as http;
+import 'session_manager.dart';
 
+class ApiEndpoints {
+  static final String _host = Platform.isAndroid ? 'http://10.0.2.2' : 'http://localhost';
+  static final String auth = '$_host:8080/api/auth';
+}
+
+class AuthService {
+  // ✅ LOGIN
   static Future<Map<String, dynamic>> login(String email, String password, {required String role}) async {
     final session = SessionManager();
+
     final response = await session.post(
-      '$_baseUrl/login',
+      '${ApiEndpoints.auth}/login',
       body: jsonEncode({
         'email': email,
         'password': password,
-        'role': role, // <-- include this!
+        'role': role,
       }),
     );
 
-    session.updateCookies(response); // ✅ Moved before checking status
-
+    session.updateCookies(response); // Store session cookie
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      return data['user']; // ✅ return full user object
+      return data; // Return full user object
     } else {
-      throw Exception(data['message'] ?? 'Login failed');
+      throw Exception(data['error'] ?? 'Login failed');
     }
   }
 
+  // ✅ REGISTER
   static Future<void> register({
     required String name,
     required String email,
     required String password,
-    String role = 'patient', // ✅ default role
+    String role = 'patient',
   }) async {
     final session = SessionManager();
+
     final response = await session.post(
-      '$_baseUrl/register',
+      '${ApiEndpoints.auth}/register',
       body: jsonEncode({
         'name': name,
         'email': email,
@@ -44,17 +50,21 @@ class AuthService {
         'role': role,
       }),
     );
-    if (response.statusCode == 201) {
-      print("✅ Registration successful: ${response.body}");
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      print("✅ Registration: $data");
     } else {
-      final errorData = jsonDecode(response.body);
-      throw Exception(errorData['message'] ?? 'Registration failed');
+      throw Exception(data['error'] ?? 'Registration failed');
     }
   }
 
+  // ✅ LOGOUT
   static Future<void> logout() async {
     final session = SessionManager();
-    final response = await session.post('$_baseUrl/logout');
+
+    final response = await session.post('${ApiEndpoints.auth}/logout');
 
     if (response.statusCode == 200) {
       print("✅ Logout successful");

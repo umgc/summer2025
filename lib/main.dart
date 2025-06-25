@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'login_screen.dart';
-import 'caregiver_login_screen.dart';
-import 'patient_dashboard.dart'; // Make sure this import path is correct
-import 'caregiver_dashboard.dart'; // Optional if you want to route caregivers
+import 'frontend/caregiver_dashboard.dart';
+import 'frontend/caregiver_login_screen.dart';
+import 'frontend/login_screen.dart';
+import 'frontend/patient_dashboard.dart';
+import 'services/session_manager.dart';
 
 void main() {
   runApp(const CareConnectApp());
@@ -21,7 +21,7 @@ class CareConnectApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const LaunchRouter(), // 👈 Entry point based on login status
+      home: const LaunchRouter(),
     );
   }
 }
@@ -41,10 +41,14 @@ class _LaunchRouterState extends State<LaunchRouter> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
+    _initSessionAndRedirect();
   }
 
-  Future<void> _checkLoginStatus() async {
+  Future<void> _initSessionAndRedirect() async {
+    // ✅ Restore session cookie
+    await SessionManager().restoreSession();
+
+    // 🔐 Check login status from local storage
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString('userId');
     final role = prefs.getString('role');
@@ -55,7 +59,7 @@ class _LaunchRouterState extends State<LaunchRouter> {
       });
     } else if (userId != null && role == 'caregiver') {
       setState(() {
-        _redirect = const CaregiverDashboard(); // You can pass userId here if needed
+        _redirect = const CaregiverDashboard(); // Add userId if needed
       });
     } else {
       setState(() {
