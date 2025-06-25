@@ -9,7 +9,8 @@ It includes a **Flutter frontend** and a **Spring Boot backend**, supporting aut
 
 ```
 care_connect_app/
-├── lib/                    # Flutter frontend
+├── lib/                  
+    └── Frontend/           # Flutter frontend 
 ├── careconnect-backend/    # Spring Boot backend (Java)
 ├── pubspec.yaml            # Flutter config
 └── README.md               # Project documentation
