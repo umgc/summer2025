@@ -1,6 +1,7 @@
 # CareConnect App
 
-CareConnect is a full-stack healthcare application designed to streamline communication and coordination between caregivers and patients. It includes a **Flutter frontend** and a **Node.js backend**, with support for authentication, gamification, secure messaging, and more.
+CareConnect is a full-stack healthcare application designed to streamline communication and coordination between caregivers and patients.
+It includes a **Flutter frontend** and a **Spring Boot backend**, supporting authentication, gamification, secure messaging, social networking, and more.
 
 ---
 
@@ -8,10 +9,10 @@ CareConnect is a full-stack healthcare application designed to streamline commun
 
 ```
 care_connect_app/
-├── lib/                   # Flutter frontend
-├── careconnect-backend/   # Node.js backend
-├── pubspec.yaml           # Flutter config
-└── README.md              # Project documentation
+├── lib/                    # Flutter frontend
+├── careconnect-backend/    # Spring Boot backend (Java)
+├── pubspec.yaml            # Flutter config
+└── README.md               # Project documentation
 ```
 
 ---
@@ -20,10 +21,11 @@ care_connect_app/
 
 Please install the following before starting:
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install)
-- [Node.js (v18+)](https://nodejs.org/)
-- Git
-- Code editor (e.g., VS Code or Android Studio)
+* [Flutter SDK](https://docs.flutter.dev/get-started/install)
+* [Java JDK 17+](https://adoptopenjdk.net/) (for Spring Boot)
+* [PostgreSQL](https://www.postgresql.org/download/)
+* Git
+* Code editor (e.g., VS Code, Android Studio, IntelliJ IDEA)
 
 ---
 
@@ -39,48 +41,48 @@ cd summer2025
 ## 2. Set Up the Flutter Frontend
 
 ```bash
-cd care_connect_app       # Navigate into the frontend folder
-flutter pub get           # Install Flutter dependencies
-flutter run               # Launch the app
+cd care_connect_app         # Navigate into the frontend folder
+flutter pub get             # Install Flutter dependencies
+flutter run                 # Launch the app
 ```
 
 > Make sure your emulator or physical device is connected and running before launching the app.
 
 ---
 
-## 3. Set Up the Node.js Backend
+## 3. Set Up the Spring Boot Backend
 
 ```bash
-cd careconnect-backend    # Navigate into the backend folder
-npm install               # Install backend dependencies
+cd careconnect-backend      # Navigate into the backend folder
+# Open in IntelliJ IDEA or your preferred Java IDE.
+# OR build with Maven:
+./mvnw spring-boot:run      # For Linux/Mac
+mvnw spring-boot:run        # For Windows
+# OR use IntelliJ "Run" button
 ```
 
 ---
 
-## 4. Create a `.env` File
+## 4. Configuration
 
-In the `careconnect-backend/` folder, create a file named `.env` and paste the following content:
-
-```env
-DATABASE_URL=your_postgresql_connection_string
-SESSION_SECRET=your_random_session_secret
-AWS_ACCESS_KEY_ID=your_aws_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret
-S3_BUCKET_NAME=your_bucket_name
-```
-
-> These values are sensitive. Request them from the team lead and do **not** commit your `.env` file to GitHub.
+A default `application.properties` file is included for initial development and testing.
+**Note:** The configuration will be updated soon to comply with best practices (e.g., moving secrets to an ignored sample file and adding setup instructions).
 
 ---
 
 ## 5. Run the Backend Server
 
-```bash
-node index.js
-```
+* With Maven wrapper:
 
-> If successful, you should see:  
-> `Server started on http://localhost:3000`
+  ```bash
+  ./mvnw spring-boot:run
+  # or on Windows:
+  mvnw spring-boot:run
+  ```
+* Or, in IntelliJ/IDEA:
+  Click the green "Run" arrow for `CareconnectBackendApplication`.
+
+The backend runs by default at [http://localhost:8080](http://localhost:8080).
 
 ---
 
@@ -88,33 +90,23 @@ node index.js
 
 Once both servers are running:
 
-- Open the Flutter app and register or log in.
-- Check the backend terminal for logs or errors.
-- Use Postman (optional) to test API endpoints manually.
+* Open the Flutter app and register or log in.
+* Check the backend console for logs or errors.
+* Use Postman (optional) to test API endpoints manually (`http://localhost:8080/api/...`).
 
 ---
 
 ## Optional Tools
 
-- [**pgAdmin**](https://www.pgadmin.org/download/) – To visually manage the PostgreSQL database.
-- [**Postman**](https://www.postman.com/downloads/) – To test backend endpoints without the frontend.
-
----
-
-## .env.example
-
-```env
-DATABASE_URL=postgres://username:password@host:port/database
-SESSION_SECRET=your_session_secret
-AWS_ACCESS_KEY_ID=your_aws_access_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-S3_BUCKET_NAME=your_s3_bucket_name
-```
+* [**pgAdmin**](https://www.pgadmin.org/download/) – Visual database management for PostgreSQL.
+* [**Postman**](https://www.postman.com/downloads/) – For manual API endpoint testing.
 
 ---
 
 ## Support
 
-For `.env` credentials or setup help, reach out to the team lead or project maintainer.
+For credentials, setup help, or onboarding, contact your team lead or project maintainer.
 
 ---
+
+***Note: `application.properties` setup will be improved soon to follow current best practices for secrets and environment management.***
