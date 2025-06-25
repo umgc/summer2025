@@ -23,3 +23,10 @@ terraform -chdir=terraform_aws/general apply
 ```
 
 * Type yes if you want to confirm the changes
+
+
+### Extra
+Use the below command to format the scripts
+```
+terraform -chdir=terraform_aws fmt --recursive
+```
