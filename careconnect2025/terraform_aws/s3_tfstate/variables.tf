@@ -1,6 +1,6 @@
 variable "primary_region" {
   description = "The primary AWS region"
-  default = "us-east-1"
+  default     = "us-east-1"
 }
 
 variable "iac_bucket_name" {

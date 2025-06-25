@@ -1,11 +1,13 @@
 terraform {
 
+  # Consider using workspaces for different environments backends like dev, staging, prod
+  # That could help in naming the resources differently based on the environment
   backend "s3" {
-    bucket         = "cc-iac-us-east-1"
-    key            = "tf-state/terraform.tfstate"
-    region         = "us-east-1"
-    use_lockfile   = true
-    encrypt        = true
+    bucket       = "cc-iac-us-east-1"
+    key          = "tf-state/terraform.tfstate"
+    region       = "us-east-1"
+    use_lockfile = true
+    encrypt      = true
   }
 
   required_providers {
@@ -32,7 +34,15 @@ module "vpc" {
 }
 
 module "iam" {
-  source = "./modules/iam"
+  source         = "./modules/iam"
+  default_tags   = var.default_tags
+  primary_region = var.primary_region
+}
+
+module "cloudmap" {
+  source       = "./modules/cloudmap"
+  default_tags = var.default_tags
+  vpc_id       = module.vpc.vpc_id
 }
 
 module "kms" {
@@ -55,12 +65,14 @@ module "ecs" {
   source          = "./modules/ecs"
   cc_ecr_repo_url = module.ecr.repository_url
   # rds_endpoint        = module.rds.cc_db_endpoint
-  subnet_ids          = module.vpc.cc_subnet_ids
-  cc_ecs_sg_id        = module.vpc.cc_ecs_sg_id
-  cc_ecs_lb_sg_id     = module.vpc.cc_ecs_lb_sg_id
-  vpc_id              = module.vpc.vpc_id
-  cc_ecs_exe_role_arn = module.iam.cc_ecs_exe_role_arn
-  default_tags        = var.default_tags
+  subnet_ids               = module.vpc.cc_subnet_ids
+  cc_ecs_sg_id             = module.vpc.cc_ecs_sg_id
+  cc_ecs_lb_sg_id          = module.vpc.cc_ecs_lb_sg_id
+  vpc_id                   = module.vpc.vpc_id
+  cc_ecs_exe_role_arn      = module.iam.cc_ecs_exe_role_arn
+  billing_task_env_vars    = var.billing_task_env_vars
+  cloudmap_billing_service = module.cloudmap.cloudmap_billing_service_arn
+  default_tags             = var.default_tags
 }
 
 
