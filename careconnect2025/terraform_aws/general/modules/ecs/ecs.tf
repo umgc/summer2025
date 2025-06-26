@@ -54,63 +54,7 @@ resource "aws_ecs_service" "cc_billing_service" {
   }
 
   service_registries {
-    registry_arn = var.cloudmap_billing_service.arn
+    registry_arn = var.cloudmap_billing_service_arn
   }
   tags = merge(var.default_tags, { Name : "cc-billing-service" })
 }
-
-resource "aws_lb" "cc_main_lb" {
-  name               = "cc-main-alb"
-  internal           = true
-  load_balancer_type = "application"
-  security_groups    = [var.cc_ecs_lb_sg_id]
-  subnets            = var.subnet_ids
-  tags               = merge(var.default_tags, { Name : "cc-main-alb" })
-}
-
-resource "aws_lb_target_group" "cc_main_tg" {
-  name        = "cc-main-tg"
-  port        = 80
-  protocol    = "HTTP"
-  target_type = "ip"
-  vpc_id      = var.vpc_id
-
-  health_check {
-    path                = "/api/health"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 5
-    unhealthy_threshold = 2
-    matcher             = "200-299"
-  }
-  tags = merge(var.default_tags, { Name : "cc-main-tg" })
-}
-
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.cc_main_lb.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.cc_main_tg.arn
-  }
-  tags = merge(var.default_tags, { Name : "cc-main-http-listener" })
-}
-
-# resource "aws_lb_listener" "https" {
-#   load_balancer_arn = aws_lb.cc_main_lb.arn
-#   port              = "443"
-#   protocol          = "HTTPS"
-
-#   default_action {
-#     # type             = "forward"
-#     # target_group_arn = aws_lb_target_group.cc_main_tg.arn
-#     type = "fixed-response"
-#     fixed_response {
-#       content_type = "text/plain"
-#       message_body = "arrived at the container facing https"
-#       status_code = 200
-#     }
-#   }
-# }

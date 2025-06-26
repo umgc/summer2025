@@ -56,7 +56,7 @@ resource "aws_apigatewayv2_integration" "main" {
   integration_method = "ANY"
   connection_type    = "VPC_LINK"
   connection_id      = aws_apigatewayv2_vpc_link.cc_api_vpc_link.id
-  integration_uri    = var.cc_main_lb_listener_arn
+  integration_uri    = var.cc_billing_service_cm_arn
   credentials_arn    = var.cc_main_api_role_arn
 
   # request_parameters = {
