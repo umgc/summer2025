@@ -5,7 +5,7 @@ variable "billing_task_env_vars" {
   type    = list(map(string))
   default = []
 }
-variable "cloudmap_billing_service" {
+variable "cloudmap_billing_service_arn" {
   type = string
 }
 # variable "rds_endpoint" {
@@ -15,9 +15,6 @@ variable "subnet_ids" {
   type = list(any)
 }
 variable "cc_ecs_sg_id" {
-  type = string
-}
-variable "cc_ecs_lb_sg_id" {
   type = string
 }
 variable "vpc_id" {
