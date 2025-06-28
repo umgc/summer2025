@@ -22,3 +22,23 @@ variable "default_tags" {
     Use        = "IaC"
   }
 }
+variable "rds_user_param_name" {
+  description = "RDS database username parameter name"
+  type        = string
+  default     = "cc-rds-username"
+}
+variable "rds_pass_param_name" {
+  description = "RDS database password parameter name"
+  type        = string
+  default     = "cc-rds-password"
+}
+variable "rds_username" {
+  description = "RDS database username"
+  type        = string
+  sensitive   = true
+}
+variable "rds_password" {
+  description = "RDS database password"
+  type        = string
+  sensitive   = true
+}

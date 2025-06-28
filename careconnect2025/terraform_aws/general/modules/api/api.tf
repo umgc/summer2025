@@ -51,17 +51,14 @@ resource "aws_apigatewayv2_vpc_link" "cc_api_vpc_link" {
 # }
 
 resource "aws_apigatewayv2_integration" "main" {
-  api_id             = aws_apigatewayv2_api.cc_main_api.id
-  integration_type   = "HTTP_PROXY"
-  integration_method = "ANY"
-  connection_type    = "VPC_LINK"
-  connection_id      = aws_apigatewayv2_vpc_link.cc_api_vpc_link.id
-  integration_uri    = var.cc_billing_service_cm_arn
-  credentials_arn    = var.cc_main_api_role_arn
-
-  # request_parameters = {
-  #   "overwrite:path" = "$request.path"
-  # }
+  api_id               = aws_apigatewayv2_api.cc_main_api.id
+  integration_type     = "HTTP_PROXY"
+  integration_method   = "ANY"
+  connection_type      = "VPC_LINK"
+  connection_id        = aws_apigatewayv2_vpc_link.cc_api_vpc_link.id
+  integration_uri      = var.cc_billing_service_cm_arn
+  credentials_arn      = var.cc_main_api_role_arn
+  timeout_milliseconds = 5000
 }
 
 # resource "aws_apigatewayv2_route" "cc_api_main_proxy" {

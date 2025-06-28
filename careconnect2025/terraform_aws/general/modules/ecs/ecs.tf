@@ -4,7 +4,7 @@ resource "aws_ecs_cluster" "cc_main_cluster" {
 }
 
 resource "aws_ecs_task_definition" "cc_billing_task_def" {
-  family                   = "cc-task"
+  family                   = "cc-billing-task"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "1024"
@@ -13,8 +13,8 @@ resource "aws_ecs_task_definition" "cc_billing_task_def" {
 
   container_definitions = jsonencode([
     {
-      name      = "cc-backend"
-      image     = "${var.cc_ecr_repo_url}:latest"
+      name      = "cc-billing-backend"
+      image     = "${var.cc_ecr_repo_url}"
       essential = true
       portMappings = [
         {
