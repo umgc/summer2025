@@ -4,7 +4,7 @@ terraform {
   # That could help in naming the resources differently based on the environment
   backend "s3" {
     bucket       = "cc-iac-us-east-1"
-    key          = "tf-state/terraform.tfstate"
+    key          = "tf-state/careconnect.tfstate"
     region       = "us-east-1"
     use_lockfile = true
     encrypt      = true
@@ -33,10 +33,29 @@ module "vpc" {
   primary_region = var.primary_region
 }
 
+module "s3_internal" {
+  source                  = "./modules/s3"
+  default_tags            = var.default_tags
+  cc_internal_bucket_name = "cc-internal-file-storage-${var.primary_region}"
+  cc_vpc_id               = module.vpc.vpc_id
+  cc_app_role_arn         = module.iam.cc_app_role_arn
+}
+
+module "ssm" {
+  source              = "./modules/ssm"
+  default_tags        = var.default_tags
+  rds_username        = var.rds_username
+  rds_password        = var.rds_password
+  rds_user_param_name = var.rds_user_param_name
+  rds_pass_param_name = var.rds_pass_param_name
+}
 module "iam" {
-  source         = "./modules/iam"
-  default_tags   = var.default_tags
-  primary_region = var.primary_region
+  source                  = "./modules/iam"
+  default_tags            = var.default_tags
+  primary_region          = var.primary_region
+  cc_internal_bucket_arn  = module.s3_internal.internal_s3_bucket.arn
+  main_rds_user_param_arn = module.ssm.rds_username_param.arn
+  main_rds_pass_param_arn = module.ssm.rds_password_param.arn
 }
 
 module "cloudmap" {
@@ -45,9 +64,6 @@ module "cloudmap" {
   vpc_id       = module.vpc.vpc_id
 }
 
-module "kms" {
-  source = "./modules/kms"
-}
 
 # module "rds" {
 #   source             = "./modules/db"
@@ -58,20 +74,21 @@ module "kms" {
 # }
 
 module "ecr" {
-  source = "./modules/ecr"
+  source              = "./modules/ecr"
+  default_tags        = var.default_tags
 }
 
 module "ecs" {
   source          = "./modules/ecs"
   cc_ecr_repo_url = module.ecr.repository_url
   # rds_endpoint        = module.rds.cc_db_endpoint
-  subnet_ids               = module.vpc.cc_subnet_ids
-  cc_ecs_sg_id             = module.vpc.cc_ecs_sg_id
-  vpc_id                   = module.vpc.vpc_id
-  cc_ecs_exe_role_arn      = module.iam.cc_ecs_exe_role_arn
-  billing_task_env_vars    = var.billing_task_env_vars
+  subnet_ids                   = module.vpc.cc_subnet_ids
+  cc_ecs_sg_id                 = module.vpc.cc_ecs_sg_id
+  vpc_id                       = module.vpc.vpc_id
+  cc_ecs_exe_role_arn          = module.iam.cc_ecs_exe_role_arn
+  billing_task_env_vars        = var.billing_task_env_vars
   cloudmap_billing_service_arn = module.cloudmap.cloudmap_billing_service_arn
-  default_tags             = var.default_tags
+  default_tags                 = var.default_tags
 }
 
 
@@ -81,44 +98,13 @@ module "ecs" {
 # }
 
 module "main_api" {
-  source                  = "./modules/api"
+  source                    = "./modules/api"
   cc_billing_service_cm_arn = module.cloudmap.cloudmap_billing_service_arn
-  cc_main_api_role_arn    = module.iam.cc_api_gw_role.arn
-  cc_vpc_id               = module.vpc.vpc_id
-  cc_main_api_sg_id       = module.vpc.cc_main_api_sg_id
-  cc_main_sbn_ids         = module.vpc.cc_subnet_ids
-  default_tags            = var.default_tags
+  cc_main_api_role_arn      = module.iam.cc_api_gw_role.arn
+  cc_vpc_id                 = module.vpc.vpc_id
+  cc_main_api_sg_id         = module.vpc.cc_main_api_sg_id
+  cc_main_sbn_ids           = module.vpc.cc_subnet_ids
+  default_tags              = var.default_tags
   # cc_cognito_user_pool_arn = module.cognito.cc_cognito_user_pool
 }
 
-# resource "aws_cognito_user_pool" "main" {
-#   name = "main-user-pool"
-# }
-
-# resource "aws_cognito_user_pool_client" "main" {
-#   user_pool_id = aws_cognito_user_pool.main.id
-#   name         = "main-user-pool-client"
-# }
-
-
-
-# resource "aws_api_gateway_method" "main" {
-#   rest_api_id   = aws_apigatewayv2_api.main.id
-#   resource_id   = aws_api_gateway_resource.main.id
-#   http_method   = "ANY"
-#   authorization = "COGNITO_USER_POOLS"
-#   authorizer_id = aws_api_gateway_authorizer.main.id
-# }
-
-# # resource "aws_api_gateway_deployment" "main" {
-# #   rest_api_id = aws_api_gateway_rest_api.main.id
-# #   stage_name  = "prod"
-# # }
-
-# resource "aws_api_gateway_authorizer" "main" {
-#   name                   = "main-authorizer"
-#   rest_api_id            = aws_apigatewayv2_api.main.id
-#   identity_source        = "method.request.header.Authorization"
-#   provider_arns          = [aws_cognito_user_pool.main.arn]
-#   type                   = "COGNITO_USER_POOLS"
-# }

@@ -24,3 +24,5 @@ terraform.rc
 
 # Backup files
 *.backup
+
+*.tfvars

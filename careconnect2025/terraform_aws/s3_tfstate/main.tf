@@ -14,6 +14,7 @@ provider "aws" {
 resource "aws_s3_bucket" "backend_bucket" {
   bucket        = var.iac_bucket_name
   force_destroy = true
+  tags          = merge(var.default_tags, { Name = "cc-iac-bucket" })
 }
 
 resource "aws_s3_bucket_versioning" "backend_bucket_versioning" {

@@ -2,6 +2,9 @@ variable "primary_region" {
   description = "The primary AWS region"
   default     = "us-east-1"
 }
+variable "default_tags" {
+  type = map(string)
+}
 
 variable "iac_bucket_name" {
   description = "Name of the S3 bucket used for the back end for Terraform"
