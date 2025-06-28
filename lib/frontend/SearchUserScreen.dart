@@ -18,7 +18,8 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
 
   Future<void> searchUsers() async {
     setState(() => isLoading = true);
-    final response = await ApiService.searchUsers(_controller.text.trim());
+    final response = await ApiService.searchUsers(_controller.text.trim(), widget.userId);
+
 
     if (response.statusCode == 200) {
       setState(() => results = jsonDecode(response.body));

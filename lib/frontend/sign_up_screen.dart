@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:care_connect_app/services/auth_service.dart';
+import '../widgets/Constant.dart';
 import 'login_screen.dart';
+
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -41,14 +43,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       try {
         final fullName = '${_firstNameController.text} ${_lastNameController.text}';
-        await AuthService.register(
+        final message = await AuthService.register(
           name: fullName,
           email: _emailController.text.trim(),
           password: _passwordController.text,
+          verificationBaseUrl: getBackendBaseUrl(),
+          role: 'patient',
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created! Please log in.')),
+          SnackBar(content: Text(message)),
         );
 
         Navigator.pushReplacement(
@@ -62,6 +66,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
     }
   }
+
+
 
   void _goBack() {
     if (_currentStep > 0) {

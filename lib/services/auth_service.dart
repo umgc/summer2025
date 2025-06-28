@@ -32,12 +32,12 @@ class AuthService {
     }
   }
 
-  // ✅ REGISTER
-  static Future<void> register({
+  static Future<String> register({
     required String name,
     required String email,
     required String password,
     String role = 'patient',
+    required String verificationBaseUrl,
   }) async {
     final session = SessionManager();
 
@@ -48,6 +48,7 @@ class AuthService {
         'email': email,
         'password': password,
         'role': role,
+        'verificationBaseUrl': verificationBaseUrl,
       }),
     );
 
@@ -55,10 +56,16 @@ class AuthService {
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       print("✅ Registration: $data");
+      // If backend returns a string: just return it
+      if (data is String) return data;
+      // If backend returns JSON: extract a message
+      return data['message'] ?? 'Registration successful! Please check your email to verify your account.';
     } else {
-      throw Exception(data['error'] ?? 'Registration failed');
+      // Try to extract error details
+      throw Exception(data['error'] ?? data.toString() ?? 'Registration failed');
     }
   }
+
 
   // ✅ LOGOUT
   static Future<void> logout() async {

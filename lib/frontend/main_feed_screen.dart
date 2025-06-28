@@ -4,6 +4,7 @@ import 'package:care_connect_app/services/api_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:care_connect_app/widgets/user_avatar.dart';
 import 'package:care_connect_app/services/session_manager.dart';
+import '../widgets/Constant.dart';
 import 'SearchUserScreen.dart';
 import 'comment_screen.dart';
 import 'friend_requests_screen.dart';
@@ -61,7 +62,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
 
   Widget buildPostCard(Map<String, dynamic> post) {
     final imageUrl = post['imageUrl'];
-    const String backendBaseUrl = "http://localhost:8080"; // Change for emulator if needed!
+    final String backendBaseUrl = getBackendBaseUrl(); // Change for emulator if needed!
     final resolvedUrl = imageUrl != null && imageUrl.isNotEmpty
         ? '$backendBaseUrl$imageUrl'
         : null;

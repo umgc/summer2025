@@ -5,12 +5,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:care_connect_app/services/session_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart' as path;
+
 class ApiEndpoints {
   static final String _host = Platform.isAndroid ? 'http://10.0.2.2' : 'http://localhost';
   static final String auth = '$_host:3000/api/auth';
   static final String feed = '$_host:8080/api/feed';
-  static final String users = '$_host:8080/users';
-  static final String friends = '$_host:8080/friends';
+  static final String users = '$_host:8080/api/users'; // ✅ Fixed here
+  static final String friends = '$_host:8080/api/friends';
 }
 
 class ApiService {
@@ -32,31 +33,25 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      // ✅ Save session info to secure storage
       await storage.write(key: 'session', value: jsonEncode({'email': email}));
 
-      // ✅ Extract and store session cookie manually
       final rawCookie = response.headers['set-cookie'];
       if (rawCookie != null) {
         final prefs = await SharedPreferences.getInstance();
-        // Find the cookie starting with JSESSIONID= or SESSION=, etc.
         final sessionCookie = rawCookie.split(';').firstWhere(
-              (c) => c.trim().startsWith('JSESSIONID='),
-          orElse: () => '', // If not found
+              (c) => c.trim().startsWith('JSESSIONID=') || c.trim().startsWith('SESSION='),
+          orElse: () => '',
         );
         if (sessionCookie.isNotEmpty) {
           await prefs.setString('session_cookie', sessionCookie);
           print('💾 Saved session_cookie: $sessionCookie');
         } else {
-          print('⚠️ No JSESSIONID found in cookie!');
+          print('⚠️ No session cookie found in login response');
         }
       }
     }
-    return response;
-  }
 
-  static Future<http.Response> getProfile() async {
-    return await http.get(Uri.parse('${ApiEndpoints.auth}/profile'));
+    return response;
   }
 
   static Future<void> logout() async {
@@ -64,9 +59,8 @@ class ApiService {
     await storage.delete(key: 'session');
   }
 
-  static Future<http.Response> getFeed(int userId) async {
-    final url = Uri.parse('${ApiEndpoints.feed}/feed/$userId');
-    return await http.get(url, headers: {'Content-Type': 'application/json'});
+  static Future<http.Response> getProfile() async {
+    return await http.get(Uri.parse('${ApiEndpoints.auth}/profile'));
   }
 
   static Future<http.Response> getAllPosts() async {
@@ -81,23 +75,14 @@ class ApiService {
 
   static Future<http.Response> createPost(int userId, String content, [File? image]) async {
     final uri = Uri.parse('${ApiEndpoints.feed}/create');
-
-
-    // 🔁 Restore session_cookie from SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     final session_cookie = prefs.getString('session_cookie') ?? '';
-    print('💾 Saved session_cookie from prefs: $session_cookie');
-    print('📤 [createPost] Using session_cookie: $session_cookie');
-
-    final savedCookie = await prefs.getString('session_cookie');
-    print('💾 Saved session_cookie from prefs: $savedCookie');
 
     var request = http.MultipartRequest('POST', uri)
       ..fields['userId'] = userId.toString()
       ..fields['content'] = content
       ..headers['Cookie'] = session_cookie;
 
-    // Optional: Attach image if present
     if (image != null) {
       final imageStream = http.ByteStream(image.openRead());
       final imageLength = await image.length();
@@ -110,21 +95,26 @@ class ApiService {
       request.files.add(multipartFile);
     }
 
-    // 🔄 Send request and wait for full response
     final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-
-    // 🐞 Debug output
-    print('📥 [createPost] Status: ${response.statusCode}');
-    print('📥 [createPost] Body: ${response.body}');
-
-    return response;
+    return await http.Response.fromStream(streamedResponse);
   }
 
+  // -------------------------------
+  // 🤝 FRIEND FEATURES
+  // -------------------------------
 
-  static Future<http.Response> searchUsers(String query) async {
-    final url = Uri.parse('${ApiEndpoints.users}/search?query=$query');
-    return await http.get(url);
+  static Future<http.Response> searchUsers(String query, int currentUserId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final session_cookie = prefs.getString('session_cookie') ?? '';
+    final url = Uri.parse('${ApiEndpoints.users}/search?query=$query&currentUserId=$currentUserId');
+
+    return await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': session_cookie,
+      },
+    );
   }
 
   static Future<http.Response> sendFriendRequest(int fromUserId, int toUserId) async {
@@ -134,5 +124,33 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'fromUserId': fromUserId, 'toUserId': toUserId}),
     );
+  }
+
+  static Future<http.Response> getPendingFriendRequests(int userId) async {
+    final url = Uri.parse('${ApiEndpoints.friends}/requests/$userId');
+    return await http.get(url);
+  }
+
+  static Future<http.Response> acceptFriendRequest(int requestId) async {
+    final url = Uri.parse('${ApiEndpoints.friends}/accept');
+    return await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'requestId': requestId}),
+    );
+  }
+
+  static Future<http.Response> rejectFriendRequest(int requestId) async {
+    final url = Uri.parse('${ApiEndpoints.friends}/reject');
+    return await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'requestId': requestId}),
+    );
+  }
+
+  static Future<http.Response> getFriends(int userId) async {
+    final url = Uri.parse('${ApiEndpoints.friends}/list/$userId');
+    return await http.get(url);
   }
 }

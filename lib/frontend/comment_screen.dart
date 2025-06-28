@@ -20,10 +20,6 @@ class _CommentScreenState extends State<CommentScreen> {
   bool isLoading = true;
   bool isSubmitting = false;
 
-  // Set your backend base URL here (update if you use an emulator)
-  static String get backendBaseUrl =>
-      Platform.isAndroid ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
-
   @override
   void initState() {
     super.initState();

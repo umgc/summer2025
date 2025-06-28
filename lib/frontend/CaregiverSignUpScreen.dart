@@ -1,6 +1,8 @@
 import 'package:care_connect_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
+import '../widgets/Constant.dart';
+
 class CaregiverSignUpScreen extends StatefulWidget {
   const CaregiverSignUpScreen({super.key});
 
@@ -60,6 +62,7 @@ class _CaregiverSignUpScreenState extends State<CaregiverSignUpScreen> {
             email: _emailController.text.trim(),
             password: _passwordController.text,
             role: 'caregiver', // 👈 IMPORTANT
+            verificationBaseUrl: getBackendBaseUrl(),
           );
 
           ScaffoldMessenger.of(context).showSnackBar(
