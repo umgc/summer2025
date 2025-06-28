@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Local CI
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.service == 'billing'
-        uses: ./backend/core/github/actions/ci
+        uses: ./careconnect2025/backend/core/github/actions/ci
       
   create-release:
     runs-on: ubuntu-latest
