@@ -65,13 +65,14 @@ module "cloudmap" {
 }
 
 
-# module "rds" {
-#   source             = "./modules/db"
-#   cc_rds_sg_id       = module.vpc.cc_rds_sg
-#   cc_sbn_group_name  = module.vpc.cc_db_main_sbn_group
-#   cc_rds_kms_key_arn = module.kms.cc_rds_kms_key.arn
-#   default_tags       = var.default_tags
-# }
+module "rds" {
+  source             = "./modules/db"
+  cc_rds_sg_id       = module.vpc.cc_rds_sg
+  cc_sbn_group_name  = module.vpc.cc_db_main_sbn_group
+  rds_username    = var.rds_username
+  rds_password    = var.rds_password
+  default_tags       = var.default_tags
+}
 
 module "ecr" {
   source       = "./modules/ecr"
