@@ -1,3 +1,4 @@
+import 'package:care_connect_app/frontend/PatientDashboard/mainscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:care_connect_app/frontend/main_feed_screen.dart';
 
@@ -142,7 +143,12 @@ class _PatientDashboardState extends State<PatientDashboard> {
                 Align(
                   alignment: Alignment.bottomRight,
                   child: TextButton.icon(
-                    onPressed: () {},
+                    onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => EmergencyScreen()),
+                        );
+                      },
                     icon: const Icon(Icons.phone_in_talk_rounded, color: Colors.red),
                     label: const Text('SOS CALL', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                   ),
