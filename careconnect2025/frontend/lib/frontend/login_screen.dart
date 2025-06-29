@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:care_connect_app/services/auth_service.dart';
-import 'patient_dashboard.dart';
+import 'PatientDashboard/patient_main_screen.dart';
 import 'sign_up_screen.dart';
 import 'reset_password_screen.dart';
 

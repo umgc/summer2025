@@ -3,7 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'frontend/caregiver_dashboard.dart';
 import 'frontend/caregiver_login_screen.dart';
 import 'frontend/login_screen.dart';
-import 'frontend/patient_dashboard.dart';
+import 'frontend/PatientDashboard/patient_main_screen.dart';
+import 'frontend/Caregiver_dashboard/patient_dashboard_screen.dart';
 import 'services/session_manager.dart';
 
 void main() {
@@ -21,7 +22,7 @@ class CareConnectApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const LaunchRouter(),
+      home: const PatientDashboardScreen(caregiverEmail: 'jane.malala@example.com'),
     );
   }
 }
