@@ -56,7 +56,7 @@ rds_pass_param_name = "cc-rds-password"
 rds_username = "cc_rds_admin"
 rds_password = "mynonsecretpassword"
 
-billing_task_env_vars = [
+core_task_env_vars = [
   {
     "name"  = "RDS_USER_PARAM_NAME"
     "value" = "cc-rds-username"

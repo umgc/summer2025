@@ -5,8 +5,8 @@ resource "aws_service_discovery_private_dns_namespace" "cc_backend_service_names
   tags        = merge(var.default_tags, { Name : "cc-backend-service-namespace" })
 }
 
-resource "aws_service_discovery_service" "cloudmap_billing_service" {
-  name = "cc-billing-service"
+resource "aws_service_discovery_service" "cloudmap_core_service" {
+  name = "cc-core-service"
 
   dns_config {
     namespace_id = aws_service_discovery_private_dns_namespace.cc_backend_service_namespace.id
@@ -22,5 +22,5 @@ resource "aws_service_discovery_service" "cloudmap_billing_service" {
   health_check_custom_config {
     failure_threshold = 3
   }
-  tags = merge(var.default_tags, { Name : "cc-billing-service" })
+  tags = merge(var.default_tags, { Name : "cc-core-service" })
 }
