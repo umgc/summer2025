@@ -8,7 +8,7 @@ variable "secondary_region" {
   default     = "us-west-2"
 }
 
-variable "billing_task_env_vars" {
+variable "core_task_env_vars" {
   type    = list(map(string))
   default = []
 }
