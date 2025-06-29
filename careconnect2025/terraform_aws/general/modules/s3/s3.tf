@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_s3_bucket" "cc_internal_bucket" {
   bucket        = var.cc_internal_bucket_name
   force_destroy = true
@@ -33,21 +35,8 @@ resource "aws_s3_bucket_policy" "cc_default_policy" {
         Action    = "s3:PutObject"
         Resource  = "${aws_s3_bucket.cc_internal_bucket.arn}/*"
         Condition = {
-          StringNotEquals = {
-            "s3:x-amz-server-side-encryption" = "aws:kms"
-          }
-        }
-      },
-      {
-        Sid       = "Access-to-specific-VPC-only"
-        Principal = "*"
-        Action    = "s3:*"
-        Effect    = "Deny"
-        Resource = ["${aws_s3_bucket.cc_internal_bucket.arn}",
-        "${aws_s3_bucket.cc_internal_bucket.arn}/*"]
-        Condition = {
-          StringNotEquals = {
-            "aws:SourceVpc" = "${var.cc_vpc_id}"
+          Null = {
+            "s3:x-amz-server-side-encryption" = "true"
           }
         }
       },
@@ -55,10 +44,13 @@ resource "aws_s3_bucket_policy" "cc_default_policy" {
         Sid    = "AllowCCInternalCompute"
         Effect = "Allow"
         Principal = {
-          AWS = ["${var.cc_app_role_arn}"]
+          AWS = [
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+            "${var.cc_app_role_arn}"
+          ]
         }
         Action   = "s3:*"
-        Resource = "${aws_s3_bucket.cc_internal_bucket.arn}/*"
+        Resource = ["${aws_s3_bucket.cc_internal_bucket.arn}", "${aws_s3_bucket.cc_internal_bucket.arn}/*"]
       }
     ]
   })

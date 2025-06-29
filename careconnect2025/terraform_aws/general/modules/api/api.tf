@@ -27,11 +27,13 @@ resource "aws_apigatewayv2_stage" "cc_main_api_stage" {
       }
     )
   }
+  tags = var.default_tags
 }
 
 resource "aws_cloudwatch_log_group" "api_gw" {
   name              = "/aws/api_gw/${aws_apigatewayv2_api.cc_main_api.name}"
   retention_in_days = 60
+  tags              = var.default_tags
 }
 
 resource "aws_apigatewayv2_vpc_link" "cc_api_vpc_link" {
@@ -56,7 +58,7 @@ resource "aws_apigatewayv2_integration" "main" {
   integration_method   = "ANY"
   connection_type      = "VPC_LINK"
   connection_id        = aws_apigatewayv2_vpc_link.cc_api_vpc_link.id
-  integration_uri      = var.cc_billing_service_cm_arn
+  integration_uri      = var.cc_core_service_cm_arn
   credentials_arn      = var.cc_main_api_role_arn
   timeout_milliseconds = 5000
 }
