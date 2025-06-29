@@ -44,6 +44,8 @@ terraform apply -var-file=general.tfvars
     ```
     terraform -chdir=terraform_aws fmt --recursive
     ```
+3. **DO NOT USE** `terraform destroy` command or else the AWS resources will be **deleted**.
+
 
 
 ### Variable file sample
@@ -53,7 +55,7 @@ terraform apply -var-file=general.tfvars
 rds_user_param_name = "cc-rds-username"
 rds_pass_param_name = "cc-rds-password"
 
-rds_username = "cc_rds_admin"
+rds_username = "ccrdsadmin"
 rds_password = "mynonsecretpassword"
 
 core_task_env_vars = [

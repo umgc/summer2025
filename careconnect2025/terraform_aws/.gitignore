@@ -25,4 +25,5 @@ terraform.rc
 # Backup files
 *.backup
 
+# Sensitive terraform values
 *.tfvars
