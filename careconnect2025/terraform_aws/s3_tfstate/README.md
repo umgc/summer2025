@@ -22,3 +22,6 @@ terraform -chdir=terraform_aws/s3_tfstate apply
 ```
 
 * Type yes if you want to confirm the changes
+
+
+**DO NOT USE** `terraform destroy` command or else the AWS resources will be **deleted**.
