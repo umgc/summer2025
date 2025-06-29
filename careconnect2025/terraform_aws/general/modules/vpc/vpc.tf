@@ -20,7 +20,7 @@ resource "aws_subnet" "private_subnetb" {
 
 resource "aws_security_group" "cc_api_sg" {
   vpc_id = aws_vpc.vpc.id
-  name = "cc-apigw-sg"
+  name   = "cc-apigw-sg"
 
   ingress {
     from_port   = 80
@@ -30,10 +30,10 @@ resource "aws_security_group" "cc_api_sg" {
   }
 
   ingress {
-    from_port       = 443
-    to_port         = 443
-    protocol        = "tcp"
-    cidr_blocks     = ["0.0.0.0/0"]
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -72,7 +72,7 @@ resource "aws_security_group" "cc_api_sg" {
 # }
 resource "aws_security_group" "cc_ecs_sg" {
   vpc_id = aws_vpc.vpc.id
-  name = "cc-ecs-sg"
+  name   = "cc-ecs-sg"
 
   ingress {
     from_port       = 8080
@@ -92,7 +92,7 @@ resource "aws_security_group" "cc_ecs_sg" {
 
 resource "aws_security_group" "cc_rds_sg" {
   vpc_id = aws_vpc.vpc.id
-  name = "cc-rds-sg"
+  name   = "cc-rds-sg"
 
   ingress {
     from_port       = 5432

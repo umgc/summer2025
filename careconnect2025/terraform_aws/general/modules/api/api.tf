@@ -33,7 +33,7 @@ resource "aws_apigatewayv2_stage" "cc_main_api_stage" {
 resource "aws_cloudwatch_log_group" "api_gw" {
   name              = "/aws/api_gw/${aws_apigatewayv2_api.cc_main_api.name}"
   retention_in_days = 60
-  tags = var.default_tags
+  tags              = var.default_tags
 }
 
 resource "aws_apigatewayv2_vpc_link" "cc_api_vpc_link" {

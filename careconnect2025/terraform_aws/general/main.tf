@@ -82,13 +82,13 @@ module "ecs" {
   source          = "./modules/ecs"
   cc_ecr_repo_url = module.ecr.core_repository_url
   # rds_endpoint        = module.rds.cc_db_endpoint
-  subnet_ids                   = module.vpc.cc_subnet_ids
-  cc_ecs_sg_id                 = module.vpc.cc_ecs_sg_id
-  vpc_id                       = module.vpc.vpc_id
-  cc_ecs_exe_role_arn          = module.iam.cc_ecs_exe_role_arn
+  subnet_ids                = module.vpc.cc_subnet_ids
+  cc_ecs_sg_id              = module.vpc.cc_ecs_sg_id
+  vpc_id                    = module.vpc.vpc_id
+  cc_ecs_exe_role_arn       = module.iam.cc_ecs_exe_role_arn
   core_task_env_vars        = var.core_task_env_vars
   cloudmap_core_service_arn = module.cloudmap.cloudmap_core_service_arn
-  default_tags                 = var.default_tags
+  default_tags              = var.default_tags
 }
 
 
@@ -98,13 +98,13 @@ module "ecs" {
 # }
 
 module "main_api" {
-  source                    = "./modules/api"
+  source                 = "./modules/api"
   cc_core_service_cm_arn = module.cloudmap.cloudmap_core_service_arn
-  cc_main_api_role_arn      = module.iam.cc_api_gw_role.arn
-  cc_vpc_id                 = module.vpc.vpc_id
-  cc_main_api_sg_id         = module.vpc.cc_main_api_sg_id
-  cc_main_sbn_ids           = module.vpc.cc_subnet_ids
-  default_tags              = var.default_tags
+  cc_main_api_role_arn   = module.iam.cc_api_gw_role.arn
+  cc_vpc_id              = module.vpc.vpc_id
+  cc_main_api_sg_id      = module.vpc.cc_main_api_sg_id
+  cc_main_sbn_ids        = module.vpc.cc_subnet_ids
+  default_tags           = var.default_tags
   # cc_cognito_user_pool_arn = module.cognito.cc_cognito_user_pool
 }
 
