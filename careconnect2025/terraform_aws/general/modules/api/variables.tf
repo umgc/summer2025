@@ -1,7 +1,7 @@
 variable "cc_main_api_role_arn" {
   type = string
 }
-variable "cc_billing_service_cm_arn" {
+variable "cc_core_service_cm_arn" {
   type = string
 }
 variable "cc_vpc_id" {
