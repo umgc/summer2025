@@ -1,3 +1,4 @@
+import 'package:care_connect_app/config/EnvConstant.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -22,7 +23,7 @@ class _MyFriendsScreenState extends State<MyFriendsScreen> {
 
   Future<void> fetchFriends() async {
     final response = await http.get(
-      Uri.parse('http://localhost:8080/api/friends/list/${widget.userId}'),
+      Uri.parse('${getBackendBaseUrl()}/api/friends/list/${widget.userId}'),
     );
 
     if (response.statusCode == 200) {
