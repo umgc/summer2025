@@ -95,8 +95,8 @@ resource "aws_security_group" "cc_rds_sg" {
   name   = "cc-rds-sg"
 
   ingress {
-    from_port       = 5432
-    to_port         = 5432
+    from_port       = 3306
+    to_port         = 3306
     protocol        = "tcp"
     security_groups = [aws_security_group.cc_ecs_sg.id]
   }
