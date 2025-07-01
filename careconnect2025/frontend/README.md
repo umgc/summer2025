@@ -41,37 +41,40 @@ cd summer2025
 
 ## 2. Set Up the Flutter Frontend
 
-```bash
-cd care_connect_app         # Navigate into the frontend folder
-flutter pub get             # Install Flutter dependencies
-flutter run                 # Launch the app
-```
+  1. ### Create the Environment Variables file `.env`
+  
+      * Create a file with the name `.env` inside of `careconnect2025/frontend/` folder
+      * Add the required environment variables like so:
+      
+          ```
+            deepSeek_key=Bearer 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
+            deepSeek_uri=https://openrouter.ai/api/v1/chat/completions
+            cc_backend_token=<ADD_TOKEN>
+            CC_BASE_URL_ANDROID=http://192.168.1.155:8080
+            CC_BASE_URL_WEB=http://192.168.1.155:8080
+            CC_BASE_URL_OTHER=http://192.168.1.155:8080
+          ```
+        
+      * **IMPORTANT:** Update your code to use the methods from `package:care_connect_app/config/EnvConstant.dart` to get the environment variables you need.
+    
 
-> Make sure your emulator or physical device is connected and running before launching the app.
 
----
+  2. ### Run the app
 
-## 3. Set Up the Spring Boot Backend
 
-```bash
-cd careconnect-backend      # Navigate into the backend folder
-# Open in IntelliJ IDEA or your preferred Java IDE.
-# OR build with Maven:
-./mvnw spring-boot:run      # For Linux/Mac
-mvnw spring-boot:run        # For Windows
-# OR use IntelliJ "Run" button
-```
+      ```bash
+      cd careconnect2025/frontend     # Navigate into the frontend folder
+      flutter pub get                 # Install Flutter dependencies
+      flutter run                     # Launch the app
+      ```
 
----
+      > Make sure your emulator or physical device is connected and running before launching the app.
 
-## 4. Configuration
 
-A default `application.properties` file is included for initial development and testing.
-**Note:** The configuration will be updated soon to comply with best practices (e.g., moving secrets to an ignored sample file and adding setup instructions).
+  ---
 
----
 
-## 5. Run the Backend Server
+## 3. Run the Backend Server
 
 * With Maven wrapper:
 
@@ -85,9 +88,11 @@ A default `application.properties` file is included for initial development and 
 
 The backend runs by default at [http://localhost:8080](http://localhost:8080).
 
+Read more in the that [README.](../backend/core/README.md)
+
 ---
 
-## 6. Test the Integration
+## 4. Test the Integration
 
 Once both servers are running:
 
@@ -97,17 +102,3 @@ Once both servers are running:
 
 ---
 
-## Optional Tools
-
-* [**pgAdmin**](https://www.pgadmin.org/download/) – Visual database management for PostgreSQL.
-* [**Postman**](https://www.postman.com/downloads/) – For manual API endpoint testing.
-
----
-
-## Support
-
-For credentials, setup help, or onboarding, contact your team lead or project maintainer.
-
----
-
-***Note: `application.properties` setup will be improved soon to follow current best practices for secrets and environment management.***

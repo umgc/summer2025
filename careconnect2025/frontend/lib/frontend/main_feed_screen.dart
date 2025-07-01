@@ -4,7 +4,7 @@ import 'package:care_connect_app/services/api_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:care_connect_app/widgets/user_avatar.dart';
 import 'package:care_connect_app/services/session_manager.dart';
-import '../widgets/Constant.dart';
+import '../config/EnvConstant.dart';
 import 'SearchUserScreen.dart';
 import 'comment_screen.dart';
 import 'friend_requests_screen.dart';

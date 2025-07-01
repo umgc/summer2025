@@ -1,7 +1,7 @@
 import 'package:care_connect_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
-import '../widgets/Constant.dart';
+import '../config/EnvConstant.dart';
 
 class CaregiverSignUpScreen extends StatefulWidget {
   const CaregiverSignUpScreen({super.key});

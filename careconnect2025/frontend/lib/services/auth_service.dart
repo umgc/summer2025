@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'session_manager.dart';
+import 'package:care_connect_app/config/EnvConstant.dart';
 
 class ApiEndpoints {
-  static final String _host = Platform.isAndroid ? 'http://10.0.2.2' : 'http://localhost';
-  static final String auth = '$_host:8080/api/auth';
+  static final String _host = getBackendBaseUrl();
+  static final String auth = '$_host/api/auth';
 }
 
 class AuthService {

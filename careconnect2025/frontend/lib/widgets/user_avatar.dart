@@ -1,4 +1,5 @@
 // lib/widgets/user_avatar.dart
+import 'package:care_connect_app/config/EnvConstant.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 
@@ -11,9 +12,7 @@ class UserAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolvedUrl = (imageUrl != null && imageUrl!.isNotEmpty)
-        ? (Platform.isAndroid
-        ? 'http://10.0.2.2:3000$imageUrl'
-        : 'http://localhost:3000$imageUrl')
+        ? '${getBackendBaseUrl()}$imageUrl'
         : null;
 
     return CircleAvatar(

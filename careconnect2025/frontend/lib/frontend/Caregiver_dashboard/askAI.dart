@@ -1,7 +1,7 @@
+import 'package:care_connect_app/config/EnvConstant.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AskAIScreen extends StatefulWidget {
   const AskAIScreen({super.key});
@@ -35,8 +35,8 @@ class _AskAIScreenState extends State<AskAIScreen> {
     });
 
     try {
-      final uri = dotenv.env['deepSeek_uri'];
-      final key = dotenv.env['deepSeek_key'];
+      final uri = getDeepSeekUri();
+      final key = getDeepSeekKey();
 
       if (uri == null || key == null) {
         throw Exception('Missing deepSeek_uri or deepSeek_key in .env');
