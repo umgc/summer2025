@@ -5,8 +5,12 @@ import 'frontend/caregiver_login_screen.dart';
 import 'frontend/login_screen.dart';
 import 'frontend/PatientDashboard/patient_main_screen.dart';
 import 'services/session_manager.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
   runApp(const CareConnectApp());
 }
 
