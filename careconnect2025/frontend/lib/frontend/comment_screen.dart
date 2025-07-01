@@ -1,7 +1,7 @@
+import 'package:care_connect_app/config/EnvConstant.dart';
 import 'package:care_connect_app/services/session_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
 
@@ -31,9 +31,7 @@ class _CommentScreenState extends State<CommentScreen> {
     final session = SessionManager();
     await session.restoreSession();
 
-    final url = Platform.isAndroid
-        ? 'http://10.0.2.2:8080/api/comments/post/${widget.postId}'
-        : 'http://localhost:8080/api/comments/post/${widget.postId}';
+    final url = '${getBackendBaseUrl()}/api/comments/post/${widget.postId}';
 
     try {
       final response = await session.get(url);
@@ -74,9 +72,7 @@ class _CommentScreenState extends State<CommentScreen> {
     final session = SessionManager();
     await session.restoreSession();
 
-    final url = Platform.isAndroid
-        ? 'http://10.0.2.2:8080/api/comments/post/${widget.postId}'
-        : 'http://localhost:8080/api/comments/post/${widget.postId}';
+    final url = '${getBackendBaseUrl()}/api/comments/post/${widget.postId}';
 
     final body = jsonEncode({
       'userId': int.parse(userId),

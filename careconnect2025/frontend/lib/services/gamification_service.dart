@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:care_connect_app/config/EnvConstant.dart';
+
 import 'session_manager.dart';
 
 class ApiEndpoints {
-  static final String _host = Platform.isAndroid ? 'http://10.0.2.2' : 'http://localhost';
-  static final String gamification = '$_host:8080/api/gamification';
+  static final String _host = getBackendBaseUrl();
+  static final String gamification = '$_host/api/gamification';
 }
 
 class GamificationService {

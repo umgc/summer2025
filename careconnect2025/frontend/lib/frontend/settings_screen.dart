@@ -1,4 +1,5 @@
 // lib/screens/settings_screen.dart
+import 'package:care_connect_app/config/EnvConstant.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
@@ -34,9 +35,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final resolvedUrl = profileImageUrl != null && profileImageUrl!.isNotEmpty
-        ? (Platform.isAndroid
-        ? 'http://10.0.2.2:3000$profileImageUrl'
-        : 'http://localhost:3000$profileImageUrl')
+        ? '${getBackendBaseUrl()}$profileImageUrl'
         : null;
 
     return Scaffold(

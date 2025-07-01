@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:care_connect_app/config/EnvConstant.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:care_connect_app/services/session_manager.dart';
@@ -7,11 +8,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart' as path;
 
 class ApiEndpoints {
-  static final String _host = Platform.isAndroid ? 'http://10.0.2.2' : 'http://localhost';
-  static final String auth = '$_host:3000/api/auth';
-  static final String feed = '$_host:8080/api/feed';
-  static final String users = '$_host:8080/api/users'; // ✅ Fixed here
-  static final String friends = '$_host:8080/api/friends';
+  static final String _host = getBackendBaseUrl();
+  static final String auth = '$_host/api/auth';
+  static final String feed = '$_host/api/feed';
+  static final String users = '$_host/api/users'; // ✅ Fixed here
+  static final String friends = '$_host/api/friends';
 }
 
 class ApiService {

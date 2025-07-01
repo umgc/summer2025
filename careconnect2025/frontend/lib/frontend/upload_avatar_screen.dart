@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:care_connect_app/config/EnvConstant.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
@@ -41,8 +42,7 @@ class _UploadAvatarScreenState extends State<UploadAvatarScreen> {
 
     setState(() => isUploading = true);
 
-    final baseUrl = Platform.isAndroid ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
-    final uri = Uri.parse('$baseUrl/api/auth/avatar/$userId');
+    final uri = Uri.parse('${getBackendBaseUrl()}/api/auth/avatar/$userId');
 
     final request = http.MultipartRequest('POST', uri);
     request.files.add(
@@ -81,9 +81,7 @@ class _UploadAvatarScreenState extends State<UploadAvatarScreen> {
   @override
   Widget build(BuildContext context) {
     final resolvedImageUrl = uploadedAvatarUrl != null
-        ? (Platform.isAndroid
-        ? 'http://10.0.2.2:3000$uploadedAvatarUrl'
-        : 'http://localhost:3000$uploadedAvatarUrl')
+        ? '${getBackendBaseUrl()}$uploadedAvatarUrl'
         : null;
 
     return Scaffold(
