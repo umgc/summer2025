@@ -1,4 +1,4 @@
-package com.deeptrain.config;
+/*package com.deeptrain.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -35,3 +35,5 @@ public class PostgresConfig {
         return new JdbcTemplate(dataSource);
     }
 }
+ */  
+                                                                         
