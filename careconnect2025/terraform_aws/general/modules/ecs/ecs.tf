@@ -10,6 +10,8 @@ resource "aws_ecs_task_definition" "cc_core_task_def" {
   cpu                      = "1024"
   memory                   = "4096"
   execution_role_arn       = var.cc_ecs_exe_role_arn
+  task_role_arn            = var.cc_app_role_arn
+
 
   container_definitions = jsonencode([
     {
@@ -55,6 +57,7 @@ resource "aws_ecs_service" "cc_core_service" {
 
   service_registries {
     registry_arn = var.cloudmap_core_service_arn
+    port         = 8080
   }
   tags = merge(var.default_tags, { Name : "cc-core-service" })
 }

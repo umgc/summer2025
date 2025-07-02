@@ -63,11 +63,11 @@ resource "aws_apigatewayv2_integration" "main" {
   timeout_milliseconds = 5000
 }
 
-# resource "aws_apigatewayv2_route" "cc_api_main_proxy" {
-#   api_id    = aws_apigatewayv2_api.cc_main_api.id
-#   route_key = "ANY /{proxy+}"
-#   target    = "integrations/${aws_apigatewayv2_integration.main.id}"
-# }
+resource "aws_apigatewayv2_route" "cc_api_main_proxy" {
+  api_id    = aws_apigatewayv2_api.cc_main_api.id
+  route_key = "ANY /{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.main.id}"
+}
 
 # resource "aws_api_gateway_integration" "main" {
 #   rest_api_id             = aws_apigatewayv2_api.cc_main_api.id

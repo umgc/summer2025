@@ -45,31 +45,6 @@ resource "aws_security_group" "cc_api_sg" {
   tags = merge(var.default_tags, { Name : "cc-apigw-sg" })
 }
 
-# resource "aws_security_group" "cc_ecs_lb_sg" {
-#   vpc_id = aws_vpc.vpc.id
-
-#   ingress {
-#     from_port   = 80
-#     to_port     = 80
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-
-#   ingress = {
-#     from_port       = 443
-#     to_port         = 443
-#     protocol        = "tcp"
-#     security_groups = ["0.0.0.0/0"]
-#   }
-
-#   egress {
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-#   tags = merge(var.default_tags, {Name: "cc-ecs-lb-sg"})
-# }
 resource "aws_security_group" "cc_ecs_sg" {
   vpc_id = aws_vpc.vpc.id
   name   = "cc-ecs-sg"
@@ -171,6 +146,18 @@ resource "aws_vpc_endpoint" "cloudwatch_endpoint" {
   security_group_ids  = [aws_security_group.https_endpoints_sg.id]
   private_dns_enabled = true
   tags                = merge(var.default_tags, { Name : "cloudwatch-endpoint" })
+}
+
+resource "aws_vpc_endpoint" "servicediscovery" {
+  vpc_id              = aws_vpc.vpc.id
+  service_name        = "com.amazonaws.${var.primary_region}.servicediscovery"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [aws_subnet.private_subneta.id, aws_subnet.private_subnetb.id]
+  security_group_ids  = [aws_security_group.https_endpoints_sg.id]
+  private_dns_enabled = true
+  tags = merge(var.default_tags, {
+    Name = "cc-servicediscovery-endpoint"
+  })
 }
 
 # Secret manager endpoint

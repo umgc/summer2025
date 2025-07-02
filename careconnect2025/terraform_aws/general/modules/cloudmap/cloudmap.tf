@@ -16,6 +16,11 @@ resource "aws_service_discovery_service" "cloudmap_core_service" {
       ttl  = 10
     }
 
+    dns_records {
+      ttl  = 10
+      type = "SRV"
+    }
+
     routing_policy = "MULTIVALUE"
   }
 
