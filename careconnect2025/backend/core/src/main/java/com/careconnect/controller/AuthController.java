@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.careconnect.dto.LoginResponse;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -71,6 +72,11 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Collections.singletonMap("error", e.getMessage()));
         }
+    }
+
+    @PostMapping("/loginV2")
+    public ResponseEntity<LoginResponse> loginV2(@RequestBody LoginRequest req) {
+        return ResponseEntity.ok(authService.loginV2(req));
     }
 
     // --- Logout ---

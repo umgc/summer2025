@@ -15,4 +15,6 @@ public record SubscriptionDto(
         String customerId,
         String priceId,
         String status,
+        String planId,
+        int quantity,
         Long currentPeriodEnd) {}

@@ -32,6 +32,7 @@ public class User {
     // private String role; // "patient" or "caregiver"
     private com.careconnect.security.Role role;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean isVerified = false;
 
