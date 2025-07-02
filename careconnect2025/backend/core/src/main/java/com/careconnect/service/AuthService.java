@@ -13,6 +13,7 @@ import java.util.UUID;
 import com.careconnect.dto.RegisterRequest;
 import com.careconnect.model.User;
 import com.careconnect.repository.UserRepository;
+import com.careconnect.security.Role;
 import jakarta.servlet.http.HttpSession;
 
 import java.util.Collections;
@@ -71,7 +72,7 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setName(request.getName());
-        user.setRole(request.getRole());
+        user.setRole(Role.valueOf(request.getRole().toUpperCase()));
         user.setIsVerified(false);
         user.setVerificationToken(verificationToken);
         user.setCreatedAt(new Timestamp(System.currentTimeMillis()));
