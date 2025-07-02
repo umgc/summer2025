@@ -5,9 +5,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io' show Platform;
 import '../../../payments/models/package_model.dart';
-import 'package:flutter/foundation.dart'; 
-import 'package:careconnectpt_fe/core/constants/api_constants.dart';
-import 'package:careconnectpt_fe/providers/user_provider.dart';
+import 'package:flutter/foundation.dart';
+import '../../../../core/constants/api_constants.dart';
+import '../../../../providers/user_provider.dart';
 import 'package:provider/provider.dart';
 
 class StripeCheckoutPage extends StatefulWidget {
@@ -22,17 +22,17 @@ class _StripeCheckoutPageState extends State<StripeCheckoutPage> {
   bool _isProcessing = false;
   String? _status;
 
-bool get isIOS13OrLower {
-  if (kIsWeb) return false; // Never block on web
-  if (!Platform.isIOS) return false;
-  final version = Platform.operatingSystemVersion;
-  final match = RegExp(r'(\d+)\.(\d+)').firstMatch(version);
-  if (match != null) {
-    final major = int.tryParse(match.group(1) ?? '0') ?? 0;
-    return major < 14;
+  bool get isIOS13OrLower {
+    if (kIsWeb) return false; // Never block on web
+    if (!Platform.isIOS) return false;
+    final version = Platform.operatingSystemVersion;
+    final match = RegExp(r'(\d+)\.(\d+)').firstMatch(version);
+    if (match != null) {
+      final major = int.tryParse(match.group(1) ?? '0') ?? 0;
+      return major < 14;
+    }
+    return false;
   }
-  return false;
-}
 
   Future<void> _pay() async {
     setState(() {
@@ -41,19 +41,18 @@ bool get isIOS13OrLower {
     });
 
     try {
-      
-  final user = Provider.of<UserProvider>(context, listen: false).user; 
+      final user = Provider.of<UserProvider>(context, listen: false).user;
 
-  final int? patientId = user?.patientId;
-  final int? caregiverId = user?.caregiverId;
-  final int? userId = caregiverId ?? patientId; 
-  if (userId == null) {
-    setState(() {
-      _status = 'User not logged in.';
-      _isProcessing = false;
-    });
-    return;
-  }
+      final int? patientId = user?.patientId;
+      final int? caregiverId = user?.caregiverId;
+      final int? userId = caregiverId ?? patientId;
+      if (userId == null) {
+        setState(() {
+          _status = 'User not logged in.';
+          _isProcessing = false;
+        });
+        return;
+      }
 
       final response = await http.post(
         Uri.parse('${ApiConstants.baseUrl}subscriptions/create'),
@@ -69,7 +68,10 @@ bool get isIOS13OrLower {
       if (response.statusCode == 200 && data['checkoutUrl'] != null) {
         final checkoutUrl = data['checkoutUrl'];
         if (await canLaunchUrl(Uri.parse(checkoutUrl))) {
-          await launchUrl(Uri.parse(checkoutUrl), mode: LaunchMode.externalApplication);
+          await launchUrl(
+            Uri.parse(checkoutUrl),
+            mode: LaunchMode.externalApplication,
+          );
           setState(() {
             _status = 'Redirected to Stripe Checkout.';
           });
@@ -115,7 +117,10 @@ bool get isIOS13OrLower {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.package.name} Checkout', style: const TextStyle(color: Colors.white)),
+        title: Text(
+          '${widget.package.name} Checkout',
+          style: const TextStyle(color: Colors.white),
+        ),
         backgroundColor: const Color(0xFF14366E),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -179,7 +184,9 @@ bool get isIOS13OrLower {
               Text(
                 _status!,
                 style: TextStyle(
-                  color: _status!.contains('successful') ? Colors.green : Colors.red,
+                  color: _status!.contains('successful')
+                      ? Colors.green
+                      : Colors.red,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,

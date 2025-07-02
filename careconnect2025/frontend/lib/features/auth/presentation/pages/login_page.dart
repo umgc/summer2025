@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:careconnectpt_fe/core/constants/api_constants.dart';
+import '../../../../core/constants/api_constants.dart';
 import 'package:provider/provider.dart';
-import 'package:careconnectpt_fe/providers/user_provider.dart';
+import '../../../../providers/user_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -36,41 +36,38 @@ class _LoginPageState extends State<LoginPage> {
       final response = await http.post(
         Uri.parse('${ApiConstants.baseUrl}auth/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': _email.text.trim(),
-          'password': _pwd.text,
-        }),
+        body: jsonEncode({'email': _email.text.trim(), 'password': _pwd.text}),
       );
 
- if (response.statusCode == 200) {
-  final data = json.decode(response.body);
-  final int userId = data['id'];
-  final String role = data['role'] ?? '';
-  final String token = data['token'] ?? '';
-  final int? patientId = data['patientId'];
-  final int? caregiverId = data['caregiverId'];
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final int userId = data['id'];
+        final String role = data['role'] ?? '';
+        final String token = data['token'] ?? '';
+        final int? patientId = data['patientId'];
+        final int? caregiverId = data['caregiverId'];
 
-          // Save user info to Provider
-          Provider.of<UserProvider>(context, listen: false).setUser(
-            UserSession(
-              id: userId,
-              role: role,
-              token: token,
-              patientId: patientId,
-              caregiverId: caregiverId,
-            ),
-          );
+        // Save user info to Provider
+        Provider.of<UserProvider>(context, listen: false).setUser(
+          UserSession(
+            id: userId,
+            role: role,
+            token: token,
+            patientId: patientId,
+            caregiverId: caregiverId,
+          ),
+        );
 
-          if (role == 'CAREGIVER') {
-            context.go('/dashboard/caregiver');
-          } else if (role == 'PATIENT') {
-            context.go('/dashboard/patient');
-          } else {
-            setState(() {
-              _error = 'Unknown user role: $role';
-            });
-          }
+        if (role == 'CAREGIVER') {
+          context.go('/dashboard/caregiver');
+        } else if (role == 'PATIENT') {
+          context.go('/dashboard/patient');
         } else {
+          setState(() {
+            _error = 'Unknown user role: $role';
+          });
+        }
+      } else {
         setState(() {
           _error = 'Login failed: ${response.body}';
         });

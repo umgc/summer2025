@@ -1,13 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'frontend/caregiver_dashboard.dart';
 import 'frontend/caregiver_login_screen.dart';
 import 'frontend/login_screen.dart';
 import 'frontend/PatientDashboard/patient_main_screen.dart';
 import 'services/session_manager.dart';
+import 'providers/user_provider.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(const CareConnectApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
+  await _bootstrap(); // load env, init DI, etc.
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => UserProvider(),
+      child: const CareConnectApp(),
+    ),
+  );
+}
+
+Future<void> _bootstrap() async {
+  // Add your initialization logic here
+  // Examples:
+  // - Initialize dependency injection
+  // - Setup services
+  // - Configure app settings
+  // - Initialize databases
+
+  // For now, this is a placeholder for your bootstrap logic
+  print('Bootstrap initialization completed');
 }
 
 class CareConnectApp extends StatelessWidget {
@@ -18,9 +41,7 @@ class CareConnectApp extends StatelessWidget {
     return MaterialApp(
       title: 'CareConnect',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: const LaunchRouter(),
     );
   }
@@ -135,7 +156,9 @@ class WelcomeScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const LoginScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
                         );
                       },
                       child: const Text(
@@ -151,7 +174,9 @@ class WelcomeScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const CaregiverLoginScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => const CaregiverLoginScreen(),
+                          ),
                         );
                       },
                       child: const Text(

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:careconnectpt_fe/providers/user_provider.dart';
+import '../../../../providers/user_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:careconnectpt_fe/core/constants/api_constants.dart';
+import '../../../../core/constants/api_constants.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 
 class PatientDashboard extends StatefulWidget {
   const PatientDashboard({super.key});
@@ -73,7 +72,9 @@ class _PatientDashboardState extends State<PatientDashboard> {
         });
         return;
       }
-      caregivers = List<Map<String, dynamic>>.from(json.decode(caregiversRes.body));
+      caregivers = List<Map<String, dynamic>>.from(
+        json.decode(caregiversRes.body),
+      );
 
       setState(() {
         loading = false;
@@ -108,110 +109,120 @@ class _PatientDashboardState extends State<PatientDashboard> {
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : error != null
-              ? Center(child: Text(error!))
-              : SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+          ? Center(child: Text(error!))
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              '${greeting()}, ${patient?['firstName'] ?? ''}!',
+                              style: const TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF14366E),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              "How are you feeling today?",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _buildMoodSelector(),
+                            const SizedBox(height: 16),
+                            const Text(
+                              "How is your pain today?",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _buildPainSelector(),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        "My Caregivers",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF14366E),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ...caregivers.map(_buildCaregiverCard).toList(),
+                      const SizedBox(height: 32),
+                      Row(
                         children: [
-                          Text(
-                            '${greeting()}, ${patient?['firstName'] ?? ''}!',
-                                  style: const TextStyle(
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF14366E),
-                                  ),
+                          Expanded(
+                            child: FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF14366E),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
                                 ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  "How are you feeling today?",
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                                textStyle: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                const SizedBox(height: 8),
-                                _buildMoodSelector(),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  "How is your pain today?",
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                                ),
-                                const SizedBox(height: 8),
-                                _buildPainSelector(),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            "My Caregivers",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF14366E),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          ...caregivers.map(_buildCaregiverCard).toList(),
-                          const SizedBox(height: 32),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: FilledButton(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: const Color(0xFF14366E),
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    textStyle: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    context.go('/tasks/today');
-                                  },
-                                  child: const Text('View Today\'s Tasks'),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                              ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red[700],
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 18, horizontal: 20),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  textStyle: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                onPressed: () {
-                                  // SOS call logic placeholder
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('SOS Call initiated!'),
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(Icons.phone, size: 32),
-                                label: const Text('SOS'),
+                              onPressed: () {
+                                context.go('/tasks/today');
+                              },
+                              child: const Text('View Today\'s Tasks'),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red[700],
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 18,
+                                horizontal: 20,
                               ),
-                            ],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onPressed: () {
+                              // SOS call logic placeholder
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('SOS Call initiated!'),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.phone, size: 32),
+                            label: const Text('SOS'),
                           ),
                         ],
                       ),
-                    ),
+                    ],
                   ),
                 ),
+              ),
+            ),
     );
   }
 
@@ -247,9 +258,16 @@ class _PatientDashboardState extends State<PatientDashboard> {
               ),
               child: Column(
                 children: [
-                  Icon(mood['icon'] as IconData, size: 32, color: const Color(0xFF14366E)),
+                  Icon(
+                    mood['icon'] as IconData,
+                    size: 32,
+                    color: const Color(0xFF14366E),
+                  ),
                   const SizedBox(height: 4),
-                  Text(mood['label'] as String, style: const TextStyle(fontSize: 12)),
+                  Text(
+                    mood['label'] as String,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ],
               ),
             ),
@@ -290,9 +308,16 @@ class _PatientDashboardState extends State<PatientDashboard> {
               ),
               child: Column(
                 children: [
-                  Icon(pain['icon'] as IconData, size: 32, color: Colors.red[700]),
+                  Icon(
+                    pain['icon'] as IconData,
+                    size: 32,
+                    color: Colors.red[700],
+                  ),
                   const SizedBox(height: 4),
-                  Text(pain['label'] as String, style: const TextStyle(fontSize: 12)),
+                  Text(
+                    pain['label'] as String,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ],
               ),
             ),
@@ -311,7 +336,8 @@ class _PatientDashboardState extends State<PatientDashboard> {
         leading: CircleAvatar(
           radius: 28,
           backgroundImage: const NetworkImage(
-              'https://randomuser.me/api/portraits/lego/2.jpg'), // Placeholder
+            'https://randomuser.me/api/portraits/lego/2.jpg',
+          ), // Placeholder
         ),
         title: Text(
           '${caregiver['firstName']} ${caregiver['lastName']}',
@@ -324,12 +350,13 @@ class _PatientDashboardState extends State<PatientDashboard> {
             Text('Email: ${caregiver['email'] ?? 'N/A'}'),
             if (caregiver['professional'] != null)
               Text(
-                  'Experience: ${caregiver['professional']['yearsExperience']} yrs'),
+                'Experience: ${caregiver['professional']['yearsExperience']} yrs',
+              ),
             if (caregiver['caregiverType'] != null)
               Text('Type: ${caregiver['caregiverType']}'),
           ],
         ),
-          trailing: PopupMenuButton<String>(
+        trailing: PopupMenuButton<String>(
           icon: const Icon(Icons.more_horiz, color: Color(0xFF14366E)),
           onSelected: (value) async {
             final phone = caregiver['phone'];
@@ -339,23 +366,25 @@ class _PatientDashboardState extends State<PatientDashboard> {
               if (await canLaunchUrl(uri)) {
                 await launchUrl(uri);
               }
-            }else if (value == 'email' && email != null) {
+            } else if (value == 'email' && email != null) {
               final uri = Uri(
                 scheme: 'mailto',
                 path: email,
                 queryParameters: {
                   'subject': 'CareConnect Inquiry',
-                  'body': 'Hello...' 
+                  'body': 'Hello...',
                 },
+              );
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Could not launch email client.'),
+                  ),
                 );
-                if (await canLaunchUrl(uri)) {
-                  await launchUrl(uri);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Could not launch email client.')),
-                  );
-                }
-              } else if (value == 'sms' && phone != null) {
+              }
+            } else if (value == 'sms' && phone != null) {
               final uri = Uri(scheme: 'sms', path: phone);
               if (await canLaunchUrl(uri)) {
                 await launchUrl(uri);
@@ -364,8 +393,12 @@ class _PatientDashboardState extends State<PatientDashboard> {
               showDialog(
                 context: context,
                 builder: (_) => AlertDialog(
-                  title: Text('${caregiver['firstName']} ${caregiver['lastName']}'),
-                  content: Text('Email: $email\nPhone: $phone\nType: ${caregiver['caregiverType']}'),
+                  title: Text(
+                    '${caregiver['firstName']} ${caregiver['lastName']}',
+                  ),
+                  content: Text(
+                    'Email: $email\nPhone: $phone\nType: ${caregiver['caregiverType']}',
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),

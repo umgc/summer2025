@@ -3,11 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:careconnectpt_fe/core/constants/api_constants.dart';
-import 'package:careconnectpt_fe/providers/user_provider.dart';
+import 'package:care_connect_app/core/constants/api_constants.dart';
+import 'package:care_connect_app/providers/user_provider.dart';
 import '../../models/patient_model.dart';
 import '../../models/dashboard_analytics_model.dart';
-import 'package:careconnectpt_fe/providers/user_provider.dart';
+import 'package:care_connect_app/providers/user_provider.dart';
 
 class PatientStatusPage extends StatefulWidget {
   const PatientStatusPage({super.key});
@@ -62,7 +62,9 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
 
       // Fetch vitals summary
       final vitalsRes = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}analytics/dashboard?patientId=$patientId&days=7'),
+        Uri.parse(
+          '${ApiConstants.baseUrl}analytics/dashboard?patientId=$patientId&days=7',
+        ),
         headers: {'Accept': 'application/json'},
       );
       if (vitalsRes.statusCode != 200) {
@@ -123,73 +125,75 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : error != null
-              ? Center(child: Text(error!))
-              : patient == null
-                  ? const Center(child: Text('No patient data found.'))
-                  : Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
+          ? Center(child: Text(error!))
+          : patient == null
+          ? const Center(child: Text('No patient data found.'))
+          : Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 32,
+                        backgroundImage: NetworkImage(
+                          patient!.photo ??
+                              'https://randomuser.me/api/portraits/men/32.jpg',
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 32,
-                                backgroundImage: NetworkImage(
-                                  patient!.photo ??
-                                      'https://randomuser.me/api/portraits/men/32.jpg',
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${patient!.firstName} ${patient!.lastName}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      color: Color(0xFF14366E),
-                                    ),
-                                  ),
-                                  Text('Age: ${_calculateAge(patient!.dob)}'),
-                                  Text('Phone: ${patient!.phone}'),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'Current Condition',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Color(0xFF14366E),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(patient!.relationship ?? 'N/A',
-                              style: const TextStyle(fontSize: 16)),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'Address',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Color(0xFF14366E),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
                           Text(
-                            '${patient!.address?.line1 ?? ''} ${patient!.address?.line2 ?? ''}\n'
-                            '${patient!.address?.city ?? ''}, ${patient!.address?.state ?? ''} ${patient!.address?.zip ?? ''}',
-                            style: const TextStyle(fontSize: 16),
+                            '${patient!.firstName} ${patient!.lastName}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              color: Color(0xFF14366E),
+                            ),
                           ),
-                          const SizedBox(height: 24),
-                          buildVitalsSummary(vitals),
+                          Text('Age: ${_calculateAge(patient!.dob)}'),
+                          Text('Phone: ${patient!.phone}'),
                         ],
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Current Condition',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Color(0xFF14366E),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    patient!.relationship ?? 'N/A',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Address',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Color(0xFF14366E),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${patient!.address?.line1 ?? ''} ${patient!.address?.line2 ?? ''}\n'
+                    '${patient!.address?.city ?? ''}, ${patient!.address?.state ?? ''} ${patient!.address?.zip ?? ''}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 24),
+                  buildVitalsSummary(vitals),
+                ],
+              ),
+            ),
     );
   }
 
@@ -204,15 +208,27 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Vitals Summary (Past 7 Days)',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Vitals Summary (Past 7 Days)',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            Text('Heart Rate: avg ${vitals.avgHeartRate?.toStringAsFixed(1) ?? 'N/A'} bpm'),
+            Text(
+              'Heart Rate: avg ${vitals.avgHeartRate?.toStringAsFixed(1) ?? 'N/A'} bpm',
+            ),
             Text('SpO₂: avg ${vitals.avgSpo2?.toStringAsFixed(1) ?? 'N/A'}%'),
-            Text('Blood Pressure (Systolic): avg ${vitals.avgSystolic?.toStringAsFixed(1) ?? 'N/A'} mmHg'),
-            Text('Blood Pressure (Diastolic): avg ${vitals.avgDiastolic?.toStringAsFixed(1) ?? 'N/A'} mmHg'),
-            Text('Weight: avg ${vitals.avgWeight?.toStringAsFixed(1) ?? 'N/A'} lbs'),
-            Text('Adherence Rate: ${vitals.adherenceRate?.toStringAsFixed(1) ?? 'N/A'}%'),
+            Text(
+              'Blood Pressure (Systolic): avg ${vitals.avgSystolic?.toStringAsFixed(1) ?? 'N/A'} mmHg',
+            ),
+            Text(
+              'Blood Pressure (Diastolic): avg ${vitals.avgDiastolic?.toStringAsFixed(1) ?? 'N/A'} mmHg',
+            ),
+            Text(
+              'Weight: avg ${vitals.avgWeight?.toStringAsFixed(1) ?? 'N/A'} lbs',
+            ),
+            Text(
+              'Adherence Rate: ${vitals.adherenceRate?.toStringAsFixed(1) ?? 'N/A'}%',
+            ),
           ],
         ),
       ),
