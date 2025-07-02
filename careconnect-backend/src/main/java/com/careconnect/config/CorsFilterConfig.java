@@ -1,32 +1,50 @@
 package com.careconnect.config;
 
-import jakarta.servlet.Filter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.util.List;
+import java.util.Arrays;
 
 @Configuration
-public class CorsFilterConfig {
+public class CorsFilterConfig implements WebMvcConfigurer {
 
+    @Value("${app.cors.allowed-origins:http://localhost:3000}")
+    private String allowedOrigins;
+
+    @Value("${uploads.dir:uploads/}")
+    private String uploadsDir;
+
+    // --- CORS Configuration ---
     @Bean
-    public Filter corsFilter() {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of(
-                "http://localhost:8080",
-                "http://10.0.2.2:8080",
-                "http://localhost:3000"
-        ));
+        // Support comma-separated list of allowed origins
+        Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .forEach(config::addAllowedOrigin);
+        config.addAllowedMethod("GET");
+        config.addAllowedMethod("POST");
+        config.addAllowedMethod("PUT");
+        config.addAllowedMethod("DELETE");
         config.setAllowCredentials(true);
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.addAllowedHeader("*");
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-        System.out.println("Custom CorsFilter applied.");
-        return new CorsFilter(source);
+        return source;
+    }
+
+    // --- Uploads Directory Handler ---
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        String location = "file:" + (uploadsDir.endsWith("/") ? uploadsDir : uploadsDir + "/");
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations(location);
     }
 }

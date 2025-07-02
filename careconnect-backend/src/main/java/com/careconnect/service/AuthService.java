@@ -31,6 +31,9 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private GamificationService gamificationService;
+
     @Value("${careconnect.baseurl:http://localhost:8080}")
     private String baseUrl; // configurable via application.properties
 
@@ -75,7 +78,10 @@ public class AuthService {
         user.setIsVerified(false);
         user.setVerificationToken(verificationToken);
         user.setCreatedAt(new Timestamp(System.currentTimeMillis()));
-        userRepository.save(user);
+        User savedUser = userRepository.save(user); // <--- save and keep the returned user with ID
+
+        // **AWARD XP AND WELCOME ACHIEVEMENT HERE**
+        gamificationService.unlockAchievement(savedUser.getId(), "WELCOME", 10); // 10 XP, adjust as desired
 
         String verificationBaseUrl = request.getVerificationBaseUrl();
         String link = ((verificationBaseUrl != null && !verificationBaseUrl.isEmpty())
@@ -87,6 +93,7 @@ public class AuthService {
         return ResponseEntity.ok(Collections.singletonMap("message",
                 "Registration successful! Please check your email to verify your account."));
     }
+
 
     // ✅ Validate user for login
     public Optional<User> validateUser(String email, String password, String role) {
@@ -127,14 +134,24 @@ public class AuthService {
     // ✅ Email verification (optional if implemented)
     public ResponseEntity<?> verifyToken(String token) {
         Optional<User> userOpt = userRepository.findByVerificationToken(token);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            user.setIsVerified(true);
-            user.setVerificationToken(null); // Clear token so it can't be reused
-            userRepository.save(user);
-            return ResponseEntity.ok("Your email has been verified! You can now log in.");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired verification link.");
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "Invalid or expired verification token."));
         }
+        User user = userOpt.get();
+        if (Boolean.TRUE.equals(user.getIsVerified())) {
+            return ResponseEntity.ok(Collections.singletonMap("message", "Your email is already verified!"));
+        }
+
+        // Mark as verified
+        user.setIsVerified(true);
+        user.setVerificationToken(null);
+        userRepository.save(user);
+
+        // *** AWARD XP/ACHIEVEMENT FOR VERIFICATION ***
+        gamificationService.unlockAchievement(user.getId(), "VERIFIED_USER", 15); // 15 XP as an example
+
+        return ResponseEntity.ok(Collections.singletonMap("message", "Your email has been verified!"));
     }
+
 }

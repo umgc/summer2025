@@ -18,11 +18,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(originPatterns = {
-        "http://localhost:3000",
-        "http://10.0.2.2:8080",
-        "http://localhost:8080"
-}, allowCredentials = "true")
 public class AuthController {
 
     @Autowired
@@ -35,7 +30,6 @@ public class AuthController {
         return authService.register(request);
     }
 
-    // --- Login user ---
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @RequestBody LoginRequest request,

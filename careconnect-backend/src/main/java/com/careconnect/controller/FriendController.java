@@ -13,11 +13,6 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/friends")
-@CrossOrigin(originPatterns = {
-        "http://localhost:3000",
-        "http://10.0.2.2:8080",
-        "http://localhost:8080"
-}, allowCredentials = "true")
 public class FriendController {
 
     @Autowired
