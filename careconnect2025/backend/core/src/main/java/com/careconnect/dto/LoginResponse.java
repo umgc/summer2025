@@ -10,7 +10,8 @@ public record LoginResponse(
         Role role,
         String token,
         Long patientId,      
-        Long caregiverId     
+        Long caregiverId,
+        String name    
 ) {
 
     public static LoginResponseBuilder builder() {
@@ -24,6 +25,12 @@ public record LoginResponse(
         private String token;
         private Long patientId;
         private Long caregiverId;
+        private String name;
+
+        public LoginResponseBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
 
         public LoginResponseBuilder id(long id) {
             this.id = id;
@@ -56,7 +63,7 @@ public record LoginResponse(
         }
 
         public LoginResponse build() {
-            return new LoginResponse(id, email, role, token, patientId, caregiverId);
+            return new LoginResponse(id, email, role, token, patientId, caregiverId, name);
         }
     }
 }

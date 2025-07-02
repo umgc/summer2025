@@ -16,26 +16,34 @@ import java.util.Collections;
 
 @Component
 public class SessionAuthenticationFilter extends OncePerRequestFilter {
-
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("userId") != null &&
-                SecurityContextHolder.getContext().getAuthentication() == null) {
-
-            Long userId = (Long) session.getAttribute("userId");
-
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                    userId, null, Collections.emptyList()
-            );
-            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(auth);
-        }
-
+        // Allow all requests without authentication
         filterChain.doFilter(request, response);
     }
+    // @Override
+    // protected void doFilterInternal(
+    //         HttpServletRequest request,
+    //         HttpServletResponse response,
+    //         FilterChain filterChain
+    // ) throws ServletException, IOException {
+    //     HttpSession session = request.getSession(false);
+    //     if (session != null && session.getAttribute("userId") != null &&
+    //             SecurityContextHolder.getContext().getAuthentication() == null) {
+
+    //         Long userId = (Long) session.getAttribute("userId");
+
+    //         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+    //                 userId, null, Collections.emptyList()
+    //         );
+    //         auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+    //         SecurityContextHolder.getContext().setAuthentication(auth);
+    //     }
+
+    //     filterChain.doFilter(request, response);
+    // }
 }

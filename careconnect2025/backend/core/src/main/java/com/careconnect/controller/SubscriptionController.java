@@ -8,14 +8,17 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.careconnect.dto.SubscriptionCancelRequestDTO;
+import com.careconnect.dto.PlanDTO;
 import org.springframework.web.bind.annotation.RequestBody;
 import com.careconnect.service.SubscriptionService;
 import com.stripe.model.SubscriptionCollection;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.Map;
+import java.util.List;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
+import com.careconnect.service.StripeService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -24,22 +27,50 @@ import jakarta.servlet.http.HttpServletRequest;
 public class SubscriptionController {
 
     private SubscriptionService subscriptionService;
-    private String stripeWebhookSecret="sk_test_51RXvh6ELoozGI1YxqEoWg79VsZc2zKRrNC3dmlULVkc";
-
+    private final StripeService stripeService;
+    @Value("${stripe.webhook-secret}")
+    private String stripeWebhookSecret;
+    
 
     public SubscriptionController(
-        SubscriptionService subscriptionService
+        SubscriptionService subscriptionService,
+        StripeService stripeService
         // @Value("${stripe.webhook-secret}") String stripeWebhookSecret
     ) {
         this.subscriptionService = subscriptionService;
+        this.stripeService = stripeService;
         // this.stripeWebhookSecret = stripeWebhookSecret; 
     }
 	
+    @GetMapping("/products")
+    public ResponseEntity<String> listProducts() {
+        String products = stripeService.listProducts();
+        return ResponseEntity.ok(products);
+    }
+ 
     @GetMapping("/plans")
-    public ResponseEntity<String> listPlans() { return ResponseEntity.ok("Available plans"); }
+    public ResponseEntity<List<PlanDTO>> listPlans() {
+    List<PlanDTO> plans = stripeService.listPlans();
+    return ResponseEntity.ok(plans);
+    }
     
-    @PostMapping("/")
-    public ResponseEntity<String> createSubscription() { return ResponseEntity.ok("Subscription created"); }
+    @GetMapping("/stripe/{customerId}/subscriptions")
+    public ResponseEntity<String> getStripeCustomerSubscriptions(@PathVariable String customerId) {
+        String subs = stripeService.listSubscriptions(customerId);
+        return ResponseEntity.ok(subs);
+    }
+
+    @GetMapping("/stripe/subscription/{subscriptionId}")
+    public ResponseEntity<String> getSubscription(@PathVariable String subscriptionId) {
+        String sub = stripeService.getSubscription(subscriptionId);
+        return ResponseEntity.ok(sub);
+    }
+
+    @GetMapping("/stripe/subscriptions/search")
+    public ResponseEntity<String> searchSubscriptions(@RequestParam String query) {
+        String result = stripeService.searchSubscriptions(query);
+        return ResponseEntity.ok(result);
+    }
     
     @PostMapping("/create")
     public ResponseEntity<?> createCheckoutSession(
@@ -53,19 +84,14 @@ public class SubscriptionController {
     public ResponseEntity<String> updatePayment(@PathVariable String id) { return ResponseEntity.ok("Payment updated: " + id); }
     
 
-    @GetMapping("/stripe/{customerId}/subscriptions")
-    public ResponseEntity<SubscriptionCollection> getStripeCustomerSubscriptions(@PathVariable String customerId) {
-        SubscriptionCollection subs = subscriptionService.listCustomerSubscriptions(customerId);
-        return ResponseEntity.ok(subs);
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelSubscription(@PathVariable String id) {
+        String result = stripeService.cancelSubscription(id);
+        return ResponseEntity.ok().body(result);
     }
 
-    @PostMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelSubscription(@RequestBody SubscriptionCancelRequestDTO dto) {
-        subscriptionService.cancelSubscription(dto.getSubscriptionId());
-        return ResponseEntity.ok().body("Subscription cancelled");
-    }   
-@PostMapping("/webhook/stripe")
-public ResponseEntity<String> handleStripeWebhook(HttpServletRequest request) {
+    @PostMapping("/webhook/stripe")
+    public ResponseEntity<String> handleStripeWebhook(HttpServletRequest request) {
     try {
         String payload = request.getReader().lines().reduce("", (acc, line) -> acc + line);
         String sigHeader = request.getHeader("Stripe-Signature");
