@@ -41,13 +41,13 @@ public class UserController {
                 .filter(user -> !(
                         user.getId().equals(currentUserId) &&
                                 user.getEmail().equalsIgnoreCase(currentUser.getEmail()) &&
-                                user.getRole().equalsIgnoreCase(currentUser.getRole())
+                                user.getRole().equals(currentUser.getRole())
                 )) // exclude self (same ID + same role + same email)
                 .map(user -> new UserResponse(
                         user.getId(),
                         user.getName(),
                         user.getEmail(),
-                        user.getRole(),
+                        user.getRole().toString(),
                         user.getProfileImageUrl()))
                 .toList();
 

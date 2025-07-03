@@ -4,12 +4,13 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+import lombok.Builder;
 import java.sql.Timestamp;
 
 @Entity
 @Table(name = "users")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
@@ -20,13 +21,19 @@ public class User {
 
     private String name;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(nullable = false)
     private String password;
 
-    private String role; // "patient" or "caregiver"
+    @Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+    // private String role; // "patient" or "caregiver"
+    private com.careconnect.security.Role role;
 
+    @Builder.Default
+    @Column(nullable = false)
     private Boolean isVerified = false;
 
     private String verificationToken;

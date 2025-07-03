@@ -18,24 +18,34 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/uploads/**",
-                                "/api/auth/register",
-                                "/api/auth/login",
-                                "/api/auth/verify/**",
-                                "/api/auth/check",
-                                "/api/auth/**", "/api/gamification/**"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .formLogin(form -> form.disable())
-                .httpBasic(httpBasic -> httpBasic.disable());
+        // http
+        //         .csrf(csrf -> csrf.disable())
+        //         .authorizeHttpRequests(auth -> auth
+        //                 .requestMatchers(
+        //                         "/uploads/**",
+        //                         "/api/auth/register",
+        //                         "/api/auth/login",
+        //                         "/api/auth/verify/**",
+        //                         "/api/auth/check",
+        //                         "/api/auth/**", "/api/gamification/**"
+        //                 ).permitAll()
+        //                 .anyRequest().authenticated()
+        //         )
+        //         .addFilterBefore(sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        //         .formLogin(form -> form.disable())
+        //         .httpBasic(httpBasic -> httpBasic.disable());
 
-        return http.build();
+        // return http.build();
+            http
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(auth -> auth
+            .anyRequest().permitAll()
+        )
+        .addFilterBefore(sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .formLogin(form -> form.disable())
+        .httpBasic(httpBasic -> httpBasic.disable());
+
+    return http.build();
     }
 
     @Bean

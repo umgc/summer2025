@@ -7,12 +7,29 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder; // Make sure you have spring-boot-starter-security or similar
 import org.springframework.stereotype.Service;
 
+import com.careconnect.dto.LoginRequest;
+import com.careconnect.dto.LoginResponse;
+import com.careconnect.model.Caregiver;
+import com.careconnect.model.Patient;
+import org.springframework.web.bind.annotation.*;
+
+import com.careconnect.model.ProfessionalInfo;
+import com.careconnect.model.User;
+import com.careconnect.repository.CaregiverRepository;
+import com.careconnect.repository.PatientRepository;
+import com.careconnect.repository.UserRepository;
+import com.careconnect.security.JwtTokenProvider;
+import com.careconnect.service.StripeService;
+import com.careconnect.exception.*;
+
+
 import java.sql.Timestamp;
 import java.util.UUID;
 
 import com.careconnect.dto.RegisterRequest;
 import com.careconnect.model.User;
 import com.careconnect.repository.UserRepository;
+import com.careconnect.security.Role;
 import jakarta.servlet.http.HttpSession;
 
 import java.util.Collections;
@@ -30,6 +47,24 @@ public class AuthService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserRepository users;
+
+    @Autowired
+    private PatientRepository patients;
+    
+    @Autowired
+    private CaregiverRepository caregivers;
+
+    @Autowired
+    private PasswordEncoder encoder;
+
+    @Autowired
+    private JwtTokenProvider jwt;
+    private Long patientId;
+    private Long caregiverId;
+
 
     @Value("${careconnect.baseurl:http://localhost:8080}")
     private String baseUrl; // configurable via application.properties
@@ -71,7 +106,7 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setName(request.getName());
-        user.setRole(request.getRole());
+        user.setRole(Role.valueOf(request.getRole().toUpperCase()));
         user.setIsVerified(false);
         user.setVerificationToken(verificationToken);
         user.setCreatedAt(new Timestamp(System.currentTimeMillis()));
@@ -136,5 +171,53 @@ public class AuthService {
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired verification link.");
         }
+    }
+
+    public LoginResponse loginV2(LoginRequest req) {
+    User user = users.findByEmail(req.getEmail())
+            .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+
+    System.out.println("Raw: " + req.getPassword());
+    System.out.println("Hash: " + user.getPassword());
+    System.out.println("Match: " + encoder.matches(req.getPassword(), user.getPassword()));
+    if (!encoder.matches(req.getPassword(), user.getPassword()))
+        throw new AuthenticationException("Invalid credentials");
+
+    Long patientId = null;
+    Long caregiverId = null;
+    String name = null;
+
+    switch (user.getRole()) {
+        case PATIENT -> {
+            Patient patient = patients.findByUser(user).orElse(null);
+            if (patient != null) {
+                patientId = patient.getId();
+                name = patient.getFirstName() + " " + patient.getLastName();
+            }
+        }
+        case CAREGIVER -> {
+            Caregiver caregiver = caregivers.findByUser(user).orElse(null);
+            if (caregiver != null) {
+                caregiverId = caregiver.getId();
+                name = caregiver.getFirstName() + " " + caregiver.getLastName();
+            }
+        }
+        case FAMILY_MEMBER -> {
+            // TODO: FAMILY_MEMBER
+        }
+        case ADMIN -> {
+            // TODO: ADMIN 
+        }
+    }
+
+    return LoginResponse.builder()
+            .id(user.getId())
+            .email(user.getEmail())
+            .role(user.getRole())
+            .token(jwt.createToken(user.getEmail(), user.getRole()))
+            .patientId(patientId)
+            .caregiverId(caregiverId)
+            .name(name)
+            .build();
     }
 }
