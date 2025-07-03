@@ -13,7 +13,7 @@ resource "aws_service_discovery_service" "cloudmap_core_service" {
 
     dns_records {
       type = "A"
-      ttl  = 10
+      ttl  = 10 # 10 seconds
     }
 
     dns_records {

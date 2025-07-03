@@ -22,20 +22,29 @@ You can still use the `-chdir` argument if you are not running the commands from
 
 - Init
 ```
-terraform -chdir=terraform_aws/s3_tfstate init
+terraform init
 ```
 
 - Plan
 ```
-terraform -chdir=terraform_aws/s3_tfstate plan
+terraform plan
 ```
 
 - Apply
 ```
-terraform -chdir=terraform_aws/s3_tfstate apply
+terraform apply
 ```
 
 * Type yes if you want to confirm the changes
 
 
-**DO NOT USE** `terraform destroy` command or else the AWS resources will be **deleted**.
+### Extra
+1. Use the below command to format the scripts
+    ```
+    terraform fmt --recursive
+    ```
+2. Use `-chdir` to run the command from a folder other than where the `main.tf` file is. You have to provide a path relative to where the `main.tf` file is.
+    ```
+    terraform -chdir=terraform_aws fmt --recursive
+    ```
+3. **DO NOT USE** `terraform destroy` command or else the AWS resources will be **deleted**. Unless you really what to tear down the resources you created.
