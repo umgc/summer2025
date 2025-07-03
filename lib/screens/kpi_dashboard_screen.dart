@@ -37,7 +37,10 @@ class _KpiCard extends StatelessWidget {
       child: ListTile(
         leading: const Icon(Icons.trending_up),
         title: Text(title),
-        trailing: Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        trailing: Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }

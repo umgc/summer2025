@@ -184,9 +184,15 @@ class DashboardScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
             const SizedBox(height: 8),
-            Text(value, style: const TextStyle(fontSize: 28, color: Color(0xFF6366F1))),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 28, color: Color(0xFF6366F1)),
+            ),
           ],
         ),
       ),
@@ -231,7 +237,10 @@ class DashboardScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Scenarios", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Text(
+              "Scenarios",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
             ListTile(
               leading: Icon(Icons.play_arrow),
               title: Text("Scenario 1"),

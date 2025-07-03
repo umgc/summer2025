@@ -4,7 +4,12 @@ import 'auth_service.dart';
 import '/shared/widgets/buttons/primary_button.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  // NICOLE EDITS: Add optional authService parameter for dependency injection
+  final AuthService? authService;
+  const RegisterScreen({
+    super.key,
+    this.authService,
+  }); // NICOLE EDITS: Update constructor
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -16,8 +21,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  final _authService = AuthService();
+  // NICOLE EDITS: Make _authService late final and initialize in initState
+  late final AuthService _authService;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    // NICOLE EDITS: Initialize authService in initState
+    super.initState();
+    _authService =
+        widget.authService ?? AuthService(); // Use injected service or default
+  }
 
   void _registerUser() async {
     final firstName = _firstNameController.text.trim();
@@ -25,7 +39,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    setState(() => _isLoading = true);
+    // NICOLE EDITS: Add validation for all empty fields
+    if (firstName.isEmpty ||
+        lastName.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty) {
+      // NICOLE EDITS: Check mounted before showing SnackBar
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Please fill all fields")));
+      }
+      return;
+    }
+
+    // NICOLE EDITS: Check mounted before setState
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
+
     try {
       final success = await _authService.signUpUser(
         email: email,
@@ -33,15 +65,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
         firstName: firstName,
         lastName: lastName,
       );
+
+      // NICOLE EDITS: Crucial mounted check after async operation
+      if (!mounted) return;
+
       if (success) {
         context.go('/confirm', extra: email);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Registration error: $e')),
-      );
+      // NICOLE EDITS: Check mounted before showing SnackBar
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Registration error: $e')));
+      }
     } finally {
-      setState(() => _isLoading = false);
+      // NICOLE EDITS: Check mounted before setState
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -86,14 +128,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     const Text(
                       'Create your DeepTrain account',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     TextField(
                       controller: _firstNameController,
                       decoration: InputDecoration(
                         hintText: 'First Name',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -101,7 +148,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _lastNameController,
                       decoration: InputDecoration(
                         hintText: 'Last Name',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -109,7 +158,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _emailController,
                       decoration: InputDecoration(
                         hintText: 'Email',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -118,10 +169,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         hintText: 'Password',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         suffixIcon: IconButton(
-                          icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
                         ),
                       ),
                     ),
@@ -132,30 +191,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed: _registerUser,
                     ),
                     const SizedBox(height: 20),
+                    // NICOLE EDITS: Fix for RenderFlex overflow - wrap children in Flexible
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text("Already have an account? "),
+                        Flexible(
+                          // Allows this text to shrink
+                          child: const Text("Already have an account? "),
+                        ),
                         GestureDetector(
                           onTap: () => context.go('/login'),
                           child: const Text(
                             'Sign In',
-                            style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: Color(0xFF2563EB),
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
-                    Text(
-                      "By signing up, you agree to DeepTrain's Terms of Service and Privacy Policy",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    )
+                    // NICOLE EDITS: Wrap this long Text in Flexible as well to prevent overflow
+                    Flexible(
+                      child: Text(
+                        "By signing up, you agree to DeepTrain's Terms of Service and Privacy Policy",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );
