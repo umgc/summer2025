@@ -81,8 +81,7 @@ module "ecr" {
 
 module "ecs" {
   source          = "./modules/ecs"
-  cc_ecr_repo_url = module.ecr.core_repository_url
-  # rds_endpoint        = module.rds.cc_db_endpoint
+  cc_ecr_repo_url = module.ecr.core_repository.repository_url
   subnet_ids                = module.vpc.cc_subnet_ids
   cc_ecs_sg_id              = module.vpc.cc_ecs_sg_id
   vpc_id                    = module.vpc.vpc_id
@@ -91,6 +90,21 @@ module "ecs" {
   core_task_env_vars        = var.core_task_env_vars
   cloudmap_core_service_arn = module.cloudmap.cloudmap_core_service_arn
   default_tags              = var.default_tags
+}
+
+module "evb" {
+  source = "./modules/eventbridge"
+  default_tags = var.default_tags
+  cc_core_cluster_name = module.ecs.cc_cluster.name
+  cc_core_service_name = module.ecs.cc_core_service.name
+  core_erc_repo_name = module.ecr.core_repository.name
+  cc_trigger_ecs_task_sfn_state_machine_arn = module.sfn_sm.sfn_state_machine_arn
+}
+
+module "sfn_sm" {
+  source = "./modules/stepfunction"
+  cc_app_role_arn = module.iam.cc_app_role_arn
+  default_tags = var.default_tags
 }
 
 
