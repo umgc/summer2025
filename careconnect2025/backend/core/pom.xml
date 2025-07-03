@@ -159,10 +159,14 @@
 			<version>0.11.5</version>
 			<scope>runtime</scope>
 		</dependency>
-		<!-- <dependency>
+		<dependency>
     		<groupId>org.flywaydb</groupId>
     		<artifactId>flyway-core</artifactId>
-		</dependency> -->
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-mysql</artifactId>  <!-- provides MySQL 5.6-8.x support -->
+		</dependency>
 		<!-- <dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -216,6 +220,21 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+
+			<!-- Flyway Maven Plugin for DB migrations -->
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>9.22.3</version>
+				<configuration>
+					<url>${env.FLYWAY_DB_URL}</url>
+					<user>${env.FLYWAY_DB_USER}</user>
+					<password>${env.FLYWAY_DB_PASSWORD}</password>
+					<schemas>${env.FLYWAY_DB_SCHEMA}</schemas>
+					<locations>classpath:db/migration</locations>
+				</configuration>
+			</plugin>
+			<!-- End Flyway Plugin -->
 		</plugins>
 	</build>
 

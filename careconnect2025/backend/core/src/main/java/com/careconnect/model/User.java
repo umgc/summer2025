@@ -27,6 +27,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
+
     @Enumerated(EnumType.STRING)
 	@Column(nullable = false)
     // private String role; // "patient" or "caregiver"

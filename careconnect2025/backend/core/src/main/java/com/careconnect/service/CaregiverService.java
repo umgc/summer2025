@@ -92,6 +92,7 @@ public Patient registerPatient(PatientRegistration reg) {
     User user = User.builder()
             .email(reg.getEmail())
             .password(encoder.encode(reg.getPassword()))
+            .passwordHash(encoder.encode(reg.getPassword()))
             .role(Role.PATIENT)
             .build();
 
@@ -130,6 +131,7 @@ public Patient registerPatient(PatientRegistration reg) {
     User user = new User();
     user.setEmail(reg.getCredentials().getEmail());
     user.setPassword(encoder.encode(reg.getCredentials().getPassword()));
+    user.setPasswordHash(encoder.encode(reg.getCredentials().getPassword()));
     user.setRole(Role.CAREGIVER);
 
     Address addr = toAddress(reg.getAddress());
