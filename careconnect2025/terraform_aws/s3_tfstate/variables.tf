@@ -4,6 +4,12 @@ variable "primary_region" {
 }
 variable "default_tags" {
   type = map(string)
+  default = {
+    Purpose    = "capstone at UMGC"
+    CourseCode = "SWEN-670"
+    Project    = "careconnect"
+    Use        = "IaC"
+  }
 }
 
 variable "iac_bucket_name" {

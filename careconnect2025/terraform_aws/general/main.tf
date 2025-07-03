@@ -3,7 +3,7 @@ terraform {
   # Consider using workspaces for different environments backends like dev, staging, prod
   # That could help in naming the resources differently based on the environment
   backend "s3" {
-    bucket       = "cc-iac-us-east-1"
+    bucket       = "cc-iac-us-east-1-641592448579"
     key          = "tf-state/careconnect.tfstate"
     region       = "us-east-1"
     use_lockfile = true
@@ -66,12 +66,12 @@ module "cloudmap" {
 
 
 module "rds" {
-  source             = "./modules/db"
-  cc_rds_sg_id       = module.vpc.cc_rds_sg
-  cc_sbn_group_name  = module.vpc.cc_db_main_sbn_group
-  rds_username    = var.rds_username
-  rds_password    = var.rds_password
-  default_tags       = var.default_tags
+  source            = "./modules/db"
+  cc_rds_sg_id      = module.vpc.cc_rds_sg
+  cc_sbn_group_name = module.vpc.cc_db_main_sbn_group
+  rds_username      = var.rds_username
+  rds_password      = var.rds_password
+  default_tags      = var.default_tags
 }
 
 module "ecr" {
@@ -87,6 +87,7 @@ module "ecs" {
   cc_ecs_sg_id              = module.vpc.cc_ecs_sg_id
   vpc_id                    = module.vpc.vpc_id
   cc_ecs_exe_role_arn       = module.iam.cc_ecs_exe_role_arn
+  cc_app_role_arn           = module.iam.cc_app_role_arn
   core_task_env_vars        = var.core_task_env_vars
   cloudmap_core_service_arn = module.cloudmap.cloudmap_core_service_arn
   default_tags              = var.default_tags

@@ -14,10 +14,38 @@ resource "aws_iam_role" "ecs_exe_task_execution" {
   tags = merge(var.default_tags, { Name : "cc-ecs-exe-role" })
 }
 
+resource "aws_iam_policy" "ecs_execution_policy" {
+  name        = "cc-ecs-execution-policy"
+  description = "Policy for ECS task execution"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:CreateLogGroup"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
 
 resource "aws_iam_role_policy_attachment" "ecs_execution_attach_policy" {
   role       = aws_iam_role.ecs_exe_task_execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  policy_arn = aws_iam_policy.ecs_execution_policy.arn
 }
 
 resource "aws_iam_role" "cc_app_role" {
@@ -44,6 +72,7 @@ resource "aws_iam_policy" "cc_app_role_policy" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "AccessS3",
         Effect = "Allow"
         Action = [
           "s3:*"
@@ -54,6 +83,7 @@ resource "aws_iam_policy" "cc_app_role_policy" {
         ]
       },
       {
+        Sid    = "AccessRDS",
         Effect = "Allow"
         Action = [
           "rds:DescribeDBInstances",
@@ -62,6 +92,7 @@ resource "aws_iam_policy" "cc_app_role_policy" {
         Resource = "*"
       },
       {
+        Sid    = "AccessSSMParameters",
         Effect = "Allow"
         Action = [
           "ssm:DescribeParameters",
@@ -70,6 +101,14 @@ resource "aws_iam_policy" "cc_app_role_policy" {
         ]
         Resource = ["${var.main_rds_user_param_arn}",
         "${var.main_rds_pass_param_arn}"]
+      },
+      {
+        Sid    = "AccessCloudWatchLogs",
+        Effect = "Allow"
+        Action = [
+          "logs:*"
+        ]
+        Resource = ["*"]
       }
     ]
   })
