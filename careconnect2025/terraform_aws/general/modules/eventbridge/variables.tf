@@ -16,3 +16,7 @@ variable "cc_trigger_ecs_task_sfn_state_machine_arn" {
   type        = string
   description = "The ARN of the Step Function state machine that triggers the ECS task"
 }
+variable "cc_app_role_arn" {
+  type        = string
+  description = "The ARN of the IAM role that the Step Function will assume to trigger the ECS task"
+}

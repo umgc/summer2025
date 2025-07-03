@@ -99,6 +99,7 @@ module "evb" {
   cc_core_service_name = module.ecs.cc_core_service.name
   core_erc_repo_name = module.ecr.core_repository.name
   cc_trigger_ecs_task_sfn_state_machine_arn = module.sfn_sm.sfn_state_machine_arn
+  cc_app_role_arn = module.iam.cc_app_role_arn
 }
 
 module "sfn_sm" {

@@ -56,7 +56,8 @@ resource "aws_iam_role" "cc_app_role" {
     Statement = [{
       Effect = "Allow"
       Principal = {
-        Service = "ecs-tasks.amazonaws.com"
+        Service = ["ecs-tasks.amazonaws.com",
+        "states.amazonaws.com"]
       }
       Action = "sts:AssumeRole"
     }]
@@ -109,6 +110,17 @@ resource "aws_iam_policy" "cc_app_role_policy" {
           "logs:*"
         ]
         Resource = ["*"]
+      },
+      {
+        Sid = "StepFunctionAccess",
+        Effect = "Allow"
+        Action = [
+          "ecs:DescribeTaskDefinition",
+"ecs:RegisterTaskDefinition",
+"ecs:UpdateService",
+"ecr:DescribeImages"
+        ],
+        Resource = "*"
       }
     ]
   })
