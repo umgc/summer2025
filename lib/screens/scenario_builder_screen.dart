@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
 import '../state/scenario_provider.dart';
 import '../shared/models/node_block.dart';
 
@@ -43,135 +45,245 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
   void _editNode(NodeBlock block) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text('Edit ${block.type}'),
-        content: SizedBox(
-          width: MediaQuery.of(context).size.width >= 800 ? 768 : null,
-          height: MediaQuery.of(context).size.width >= 800 ? 512 : null,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextFormField(
-                  initialValue: block.title,
-                  onChanged: (val) => ref.read(scenarioProvider.notifier)
-                      .updateNode(block.copyWith(title: val)),
-                  decoration: const InputDecoration(labelText: 'Node Title'),
-                ),
-                const SizedBox(height: 8),
+      builder: (_) => Consumer(
+        builder: (context, ref, _) {
+          final currentBlock = ref.watch(scenarioProvider)
+              .firstWhere((b) => b.id == block.id);
 
-                if (block.type == 'Start') ...[
-                  TextFormField(
-                    initialValue: block.welcomeMessage ?? '',
-                    onChanged: (val) => ref.read(scenarioProvider.notifier)
-                        .updateNode(block.copyWith(welcomeMessage: val)),
-                    decoration: const InputDecoration(labelText: 'Welcome Message'),
-                  ),
-                ],
+          return AlertDialog(
+            title: Text('Edit ${currentBlock.type}'),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width >= 800 ? 768 : null,
+              height: MediaQuery.of(context).size.width >= 800 ? 512 : null,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      initialValue: currentBlock.title,
+                      onChanged: (val) => ref.read(scenarioProvider.notifier)
+                          .updateNode(currentBlock.copyWith(title: val)),
+                      decoration: const InputDecoration(labelText: 'Node Title'),
+                    ),
+                    const SizedBox(height: 8),
 
-                if (block.type == 'Lesson') ...[
-                  DropdownButtonFormField<String>(
-                    value: block.lessonType ?? 'Text',
-                    items: ['Text', 'Image', 'Video']
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                        .toList(),
-                    onChanged: (val) => ref.read(scenarioProvider.notifier)
-                        .updateNode(block.copyWith(lessonType: val)),
-                    decoration: const InputDecoration(labelText: 'Lesson Type'),
-                  ),
-                  TextFormField(
-                    initialValue: block.lessonContent ?? '',
-                    maxLines: 10,
-                    onChanged: (val) => ref.read(scenarioProvider.notifier)
-                        .updateNode(block.copyWith(lessonContent: val)),
-                    decoration: const InputDecoration(labelText: 'Lesson Content'),
-                  ),
-                  TextFormField(
-                    initialValue: block.estimatedTime ?? '',
-                    onChanged: (val) => ref.read(scenarioProvider.notifier)
-                        .updateNode(block.copyWith(estimatedTime: val)),
-                    decoration: const InputDecoration(labelText: 'Estimated Time (minutes)'),
-                    keyboardType: TextInputType.number,
-                  ),
-                ],
+                    if (currentBlock.type == 'Start') ...[
+                      TextFormField(
+                        initialValue: currentBlock.welcomeMessage ?? '',
+                        onChanged: (val) => ref.read(scenarioProvider.notifier)
+                            .updateNode(currentBlock.copyWith(welcomeMessage: val)),
+                        decoration: const InputDecoration(labelText: 'Welcome Message'),
+                      ),
+                    ],
+if (currentBlock.type == 'Lesson') ...[
+  DropdownButtonFormField<String>(
+    value: currentBlock.lessonType ?? 'Text',
+    items: ['Text', 'Image', 'Video']
+        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+        .toList(),
+    onChanged: (val) => ref.read(scenarioProvider.notifier)
+        .updateNode(currentBlock.copyWith(lessonType: val)),
+    decoration: const InputDecoration(labelText: 'Lesson Type'),
+  ),
 
-                if (block.type == 'Quiz') ...[
-                  TextFormField(
-                    initialValue: block.quizTitle ?? '',
-                    onChanged: (val) => ref.read(scenarioProvider.notifier)
-                        .updateNode(block.copyWith(quizTitle: val)),
-                    decoration: const InputDecoration(labelText: 'Quiz Title'),
-                  ),
-                  TextFormField(
-                    initialValue: block.passingScore ?? '',
-                    onChanged: (val) => ref.read(scenarioProvider.notifier)
-                        .updateNode(block.copyWith(passingScore: val)),
-                    decoration: const InputDecoration(labelText: 'Passing Score (%)'),
-                    keyboardType: TextInputType.number,
-                  ),
-                  TextFormField(
-                    initialValue: block.timeLimit ?? '',
-                    onChanged: (val) => ref.read(scenarioProvider.notifier)
-                        .updateNode(block.copyWith(timeLimit: val)),
-                    decoration: const InputDecoration(labelText: 'Time Limit (minutes)'),
-                    keyboardType: TextInputType.number,
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      // future: add quiz question
-                    },
-                    child: const Text('Add Question'),
-                  ),
-                ],
-
-                if (block.type == 'Decision') ...[
-                  TextFormField(
-                    initialValue: block.conditionExpression ?? '',
-                    onChanged: (val) => ref.read(scenarioProvider.notifier)
-                        .updateNode(block.copyWith(conditionExpression: val)),
-                    decoration: const InputDecoration(labelText: 'Condition Expression'),
-                  ),
-                  TextFormField(
-                    initialValue: block.truePathLabel ?? '',
-                    onChanged: (val) => ref.read(scenarioProvider.notifier)
-                        .updateNode(block.copyWith(truePathLabel: val)),
-                    decoration: const InputDecoration(labelText: 'True Path Label'),
-                  ),
-                  TextFormField(
-                    initialValue: block.falsePathLabel ?? '',
-                    onChanged: (val) => ref.read(scenarioProvider.notifier)
-                        .updateNode(block.copyWith(falsePathLabel: val)),
-                    decoration: const InputDecoration(labelText: 'False Path Label'),
-                  ),
-                ],
-
-                if (block.type == 'Checkpoint') ...[
-                  TextFormField(
-                    initialValue: block.checkpointTitle ?? '',
-                    onChanged: (val) => ref.read(scenarioProvider.notifier)
-                        .updateNode(block.copyWith(checkpointTitle: val)),
-                    decoration: const InputDecoration(labelText: 'Checkpoint Title'),
-                  ),
-                  TextFormField(
-                    initialValue: block.checkpointNote ?? '',
-                    onChanged: (val) => ref.read(scenarioProvider.notifier)
-                        .updateNode(block.copyWith(checkpointNote: val)),
-                    decoration: const InputDecoration(labelText: 'Checkpoint Note'),
-                  ),
-                  TextFormField(
-                    initialValue: block.estimatedTime ?? '',
-                    onChanged: (val) => ref.read(scenarioProvider.notifier)
-                        .updateNode(block.copyWith(estimatedTime: val)),
-                    decoration: const InputDecoration(labelText: 'Estimated Time (minutes)'),
-                    keyboardType: TextInputType.number,
-                  ),
-                ],
-              ],
-            ),
-          ),
+  if (currentBlock.lessonType == 'Image' || currentBlock.lessonType == 'Video') ...[
+    ElevatedButton(
+      onPressed: () async {
+        final result = await FilePicker.platform.pickFiles(
+          type: currentBlock.lessonType == 'Image'
+              ? FileType.image
+              : FileType.video,
+        );
+        if (result != null && result.files.single.path != null) {
+          ref.read(scenarioProvider.notifier).updateNode(
+            currentBlock.copyWith(lessonContent: result.files.single.path!),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Selected: ${result.files.single.name}")),
+          );
+        }
+      },
+      child: Text(
+        currentBlock.lessonType == 'Image' ? 'Pick Image' : 'Pick Video',
+      ),
+    ),
+    if (currentBlock.lessonContent != null && currentBlock.lessonContent!.isNotEmpty)
+      Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Text(
+          "Selected: ${currentBlock.lessonContent}",
+          style: const TextStyle(fontSize: 12),
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Done')),
-        ],
+      ),
+  ],
+TextFormField(
+                        initialValue: currentBlock.lessonContent ?? '',
+                        maxLines: 8,
+                        onChanged: (val) => ref.read(scenarioProvider.notifier)
+                            .updateNode(currentBlock.copyWith(lessonContent: val)),
+                        decoration: const InputDecoration(labelText: 'Lesson Content'),
+                      ),
+
+
+  TextFormField(
+    initialValue: currentBlock.estimatedTime ?? '',
+    onChanged: (val) => ref.read(scenarioProvider.notifier)
+        .updateNode(currentBlock.copyWith(estimatedTime: val)),
+    decoration: const InputDecoration(labelText: 'Estimated Time (minutes)'),
+    keyboardType: TextInputType.number,
+  ),
+],
+                    if (currentBlock.type == 'Quiz') ...[
+                      TextFormField(
+                        initialValue: currentBlock.quizTitle ?? '',
+                        onChanged: (val) => ref.read(scenarioProvider.notifier)
+                            .updateNode(currentBlock.copyWith(quizTitle: val)),
+                        decoration: const InputDecoration(labelText: 'Quiz Title'),
+                      ),
+                      TextFormField(
+                        initialValue: currentBlock.passingScore ?? '',
+                        onChanged: (val) => ref.read(scenarioProvider.notifier)
+                            .updateNode(currentBlock.copyWith(passingScore: val)),
+                        decoration: const InputDecoration(labelText: 'Passing Score (%)'),
+                        keyboardType: TextInputType.number,
+                      ),
+                      TextFormField(
+                        initialValue: currentBlock.timeLimit ?? '',
+                        onChanged: (val) => ref.read(scenarioProvider.notifier)
+                            .updateNode(currentBlock.copyWith(timeLimit: val)),
+                        decoration: const InputDecoration(labelText: 'Time Limit (minutes)'),
+                        keyboardType: TextInputType.number,
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          String questionText = "";
+                          String correctAnswer = "";
+                          final result = await showDialog<Map<String, String>>(
+                            context: context,
+                            builder: (ctx) {
+                              return AlertDialog(
+                                title: const Text("Add Question"),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextFormField(
+                                      autofocus: true,
+                                      decoration: const InputDecoration(labelText: "Question"),
+                                      onChanged: (val) => questionText = val,
+                                    ),
+                                    TextFormField(
+                                      decoration: const InputDecoration(labelText: "Correct Answer"),
+                                      onChanged: (val) => correctAnswer = val,
+                                    ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: const Text("Cancel"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(ctx, {
+                                        "question": questionText,
+                                        "answer": correctAnswer
+                                      });
+                                    },
+                                    child: const Text("Save"),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+
+                          if (result != null && result["question"]!.trim().isNotEmpty) {
+                            final updatedQuestions = [
+                              ...?currentBlock.questions,
+                              result,
+                            ];
+                            ref.read(scenarioProvider.notifier).updateNode(
+                              currentBlock.copyWith(questions: updatedQuestions),
+                            );
+                          }
+                        },
+                        child: const Text('Add Question'),
+                      ),
+                      if (currentBlock.questions != null &&
+                          currentBlock.questions!.isNotEmpty)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 8),
+                            const Text(
+                              "Questions:",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            ...currentBlock.questions!.asMap().entries.map(
+                                  (entry) => ListTile(
+                                    dense: true,
+                                    title: Text(
+                                      "${entry.key + 1}. ${entry.value['question']} (Answer: ${entry.value['answer']})"
+                                    ),
+                                  ),
+                                ),
+                          ],
+                        ),
+                    ],
+
+                    if (currentBlock.type == 'Decision') ...[
+                      TextFormField(
+                        initialValue: currentBlock.conditionExpression ?? '',
+                        onChanged: (val) => ref.read(scenarioProvider.notifier)
+                            .updateNode(currentBlock.copyWith(conditionExpression: val)),
+                        decoration: const InputDecoration(labelText: 'Condition Expression'),
+                      ),
+                      TextFormField(
+                        initialValue: currentBlock.truePathLabel ?? '',
+                        onChanged: (val) => ref.read(scenarioProvider.notifier)
+                            .updateNode(currentBlock.copyWith(truePathLabel: val)),
+                        decoration: const InputDecoration(labelText: 'True Path Label'),
+                      ),
+                      TextFormField(
+                        initialValue: currentBlock.falsePathLabel ?? '',
+                        onChanged: (val) => ref.read(scenarioProvider.notifier)
+                            .updateNode(currentBlock.copyWith(falsePathLabel: val)),
+                        decoration: const InputDecoration(labelText: 'False Path Label'),
+                      ),
+                    ],
+
+                    if (currentBlock.type == 'Checkpoint') ...[
+                      TextFormField(
+                        initialValue: currentBlock.checkpointTitle ?? '',
+                        onChanged: (val) => ref.read(scenarioProvider.notifier)
+                            .updateNode(currentBlock.copyWith(checkpointTitle: val)),
+                        decoration: const InputDecoration(labelText: 'Checkpoint Title'),
+                      ),
+                      TextFormField(
+                        initialValue: currentBlock.checkpointNote ?? '',
+                        onChanged: (val) => ref.read(scenarioProvider.notifier)
+                            .updateNode(currentBlock.copyWith(checkpointNote: val)),
+                        decoration: const InputDecoration(labelText: 'Checkpoint Note'),
+                      ),
+                      TextFormField(
+                        initialValue: currentBlock.estimatedTime ?? '',
+                        onChanged: (val) => ref.read(scenarioProvider.notifier)
+                            .updateNode(currentBlock.copyWith(estimatedTime: val)),
+                        decoration: const InputDecoration(labelText: 'Estimated Time (minutes)'),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Done'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -229,7 +341,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
             title: const Text('Properties Inspector'),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Properties Inspector coming soon')),
+                const SnackBar(content: Text('Properties Inspector feature')),
               );
             },
           ),
@@ -246,7 +358,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: isMobile, // hamburger appears on mobile
+        automaticallyImplyLeading: isMobile,
         leading: isMobile
             ? null
             : IconButton(
@@ -261,8 +373,9 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
             icon: const Icon(Icons.add),
             tooltip: 'New Scenario',
             onPressed: () {
+              ref.read(scenarioProvider.notifier).clear();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Add scenario not implemented')),
+                const SnackBar(content: Text('Canvas cleared')),
               );
             },
           ),
@@ -278,10 +391,57 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
           IconButton(
             icon: const Icon(Icons.folder_open),
             tooltip: 'Load Scenario',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Load feature not implemented')),
+            onPressed: () async {
+              final result = await FilePicker.platform.pickFiles(
+                type: FileType.custom,
+                allowedExtensions: ['json'],
               );
+              if (result != null && result.files.single.bytes != null) {
+                try {
+                  final jsonString = String.fromCharCodes(result.files.single.bytes!);
+                  final parsedJson = jsonDecode(jsonString);
+
+                  if (parsedJson is! List) {
+                    throw Exception("Expected JSON array at the top level");
+                  }
+
+                  final loadedBlocks = parsedJson.map((e) => NodeBlock(
+                    id: e['id'],
+                    offset: Offset(
+                      (e['offset']['dx'] as num).toDouble(),
+                      (e['offset']['dy'] as num).toDouble(),
+                    ),
+                    title: e['title'],
+                    type: e['type'],
+                    description: e['description'],
+                    welcomeMessage: e['welcomeMessage'],
+                    lessonType: e['lessonType'],
+                    lessonContent: e['lessonContent'],
+                    estimatedTime: e['estimatedTime'],
+                    quizTitle: e['quizTitle'],
+                    passingScore: e['passingScore'],
+                    timeLimit: e['timeLimit'],
+                    conditionExpression: e['conditionExpression'],
+                    truePathLabel: e['truePathLabel'],
+                    falsePathLabel: e['falsePathLabel'],
+                    checkpointTitle: e['checkpointTitle'],
+                    checkpointNote: e['checkpointNote'],
+                    questions: (e['questions'] as List?)
+                        ?.map((q) => (q as Map).cast<String, String>())
+                        .toList(),
+                  )).toList();
+
+                  ref.read(scenarioProvider.notifier).replace(loadedBlocks);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Scenario loaded successfully!')),
+                  );
+                } catch (err) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Error loading: $err")),
+                  );
+                }
+              }
             },
           ),
         ],
@@ -316,7 +476,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                               color: Colors.indigo,
                               elevation: 4,
                               child: Padding(
-                                padding: const EdgeInsets.all(8.0),
+                                padding: const EdgeInsets.all(8),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
