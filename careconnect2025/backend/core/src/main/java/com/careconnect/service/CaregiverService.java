@@ -138,14 +138,17 @@ public Patient registerPatient(PatientRegistration reg) {
 
     ProfessionalInfoDto profDto = reg.getProfessional();
     ProfessionalInfo prof = new ProfessionalInfo();
-    prof.setLicenseNumber(profDto.getLicenseNumber());
-    prof.setIssuingState(profDto.getIssuingState());
-    prof.setYearsExperience(profDto.getYearsExperience());
+    if (profDto != null) {
+        prof.setLicenseNumber(profDto.getLicenseNumber());
+        prof.setIssuingState(profDto.getIssuingState());
+        prof.setYearsExperience(profDto.getYearsExperience());
+    }
 
     String caregiverType = reg.getCaregiverType();
     if (caregiverType == null || caregiverType.isBlank()) {
         caregiverType = "PROFESSIONAL";
     }
+    
 
     Caregiver cg = Caregiver.builder()
             .firstName(reg.getFirstName())
@@ -158,6 +161,7 @@ public Patient registerPatient(PatientRegistration reg) {
             .user(user)
             .caregiverType(caregiverType)
             .build();
+
 
     try {
         return caregiverRepository.save(cg);
