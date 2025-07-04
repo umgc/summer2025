@@ -45,3 +45,9 @@ app.*.map.json
 /android/app/release
 
 careconnect-backend/.env
+
+# Test coverage reports
+coverage/
+
+# Documentation files
+restructure_app.md
