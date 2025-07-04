@@ -76,8 +76,9 @@ public class SubscriptionController {
     public ResponseEntity<?> createCheckoutSession(
             HttpServletRequest request,
             @RequestParam String plan,
-            @RequestParam Long userId) {
-        return subscriptionService.createCheckoutSession(request, plan, userId);
+            @RequestParam(required = false, defaultValue = "0") Long userId,
+            @RequestParam(required = false) Long amount) { 
+        return subscriptionService.createCheckoutSession(request, plan, userId, amount);
     }
 
     @PutMapping("/{id}/payment-method")

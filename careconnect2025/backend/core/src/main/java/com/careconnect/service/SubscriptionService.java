@@ -39,53 +39,68 @@ public class SubscriptionService {
     private String frontendBaseUrl;
 
     public ResponseEntity<?> createCheckoutSession(
-        HttpServletRequest request,
-        @RequestParam String plan,
-        @RequestParam Long userId) {
-        try {
-            String domain = request.getScheme() + "://" + request.getServerName() +
-                    (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort());
+    HttpServletRequest request,
+    String plan,
+    Long userId,
+    Long amount) {
+    try {
+        String domain = request.getScheme() + "://" + request.getServerName() +
+                (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort());
 
-            long amount = switch (plan.toLowerCase()) {
+        // Use the amount from the request if provided, otherwise use default pricing
+        long finalAmount;
+        if (amount != null && amount > 0) {
+            finalAmount = amount;
+        } else {
+            // Fallback to hardcoded pricing if amount not provided
+            finalAmount = switch (plan.toLowerCase()) {
                 case "premium" -> 3000L;
                 case "standard" -> 2000L;
-                default -> throw new IllegalArgumentException("Invalid plan");
+                default -> 2000L; // Default to standard pricing
             };
+        }
 
-            // Build Stripe session params
-            com.stripe.param.checkout.SessionCreateParams params =
-                com.stripe.param.checkout.SessionCreateParams.builder()
-                        .setMode(com.stripe.param.checkout.SessionCreateParams.Mode.PAYMENT)
-                        .setSuccessUrl(frontendBaseUrl + "/payment-success.html")
-                        .setCancelUrl(frontendBaseUrl + "/payment-cancel.html")
-                        .addLineItem(
-                                com.stripe.param.checkout.SessionCreateParams.LineItem.builder()
-                                        .setQuantity(1L)
-                                        .setPriceData(
-                                                com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.builder()
-                                                        .setCurrency("usd")
-                                                        .setUnitAmount(amount)
-                                                        .setProductData(
-                                                                com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                                                                        .setName(plan + " Plan")
-                                                                        .build()
-                                                        )
-                                                        .build()
-                                        )
-                                        .build()
-                        )
-                        .build();
+        // Build Stripe session params
+        com.stripe.param.checkout.SessionCreateParams params =
+            com.stripe.param.checkout.SessionCreateParams.builder()
+                    .setMode(com.stripe.param.checkout.SessionCreateParams.Mode.SUBSCRIPTION)
+                    .setSuccessUrl(frontendBaseUrl + "/login")
+                    .setCancelUrl(frontendBaseUrl + "/payment-cancel?registration=complete")
+                    .addLineItem(
+                            com.stripe.param.checkout.SessionCreateParams.LineItem.builder()
+                                    .setQuantity(1L)
+                                    .setPriceData(
+                                            com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.builder()
+                                                    .setCurrency("usd")
+                                                    .setUnitAmount(finalAmount)
+                                                    .setRecurring(
+                                                            com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.Recurring.builder()
+                                                                    .setInterval(com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.Recurring.Interval.MONTH)
+                                                                    .build()
+                                                    )
+                                                    .setProductData(
+                                                            com.stripe.param.checkout.SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                                                    .setName(plan + " Plan")
+                                                                    .build()
+                                                    )
+                                                    .build()
+                                    )
+                                    .build()
+                    )
+                    .build();
 
         Session session = Session.create(params);
 
-        // Save payment info
-        // saveCheckoutSession(userId, plan, amount, session);
+        // Save payment info only if user is logged in
+        if (userId != null && userId != 0) {
+            saveCheckoutSession(userId, plan, finalAmount, session);
+        }
 
         return ResponseEntity.ok(Map.of("checkoutUrl", session.getUrl()));
     } catch (Exception e) {
         return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
     }
-    }
+}
 
     @Transactional
     public void cancelSubscription(Long subscriptionId) {
