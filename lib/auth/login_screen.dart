@@ -2,6 +2,7 @@ import '/auth/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
 import '/screens/dashboard_screen.dart';
+import '/screens/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,43 +31,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final jwt = await _authService.signInUser(
-        email: email,
-        password: password,
-      );
-      // NICOLE EDITS: After an await, always check if the widget is still mounted
-      // before interacting with the UI or navigating.
-      if (!mounted)
-        return; // NICOLE EDITS: Exit if the widget is no longer in the tree
-
+      final jwt = await _authService.signInUser(email: email, password: password);
       if (jwt != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Login successful!")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login successful!")),
+        );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const DashboardScreen()),
         );
-      } else {
-        // NICOLE EDITS: Handle cases where JWT is null but no exception was thrown by signInUser
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Login failed: Invalid credentials")),
-        );
       }
     } catch (e) {
-      // NICOLE EDITS: Ensure widget is still mounted before showing SnackBar
-      if (mounted) {
-        // NICOLE EDITS
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Login error: $e")));
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Login error: $e")),
+      );
     } finally {
-      // NICOLE EDITS: Ensure widget is still mounted before updating state
-      if (mounted) {
-        // NICOLE EDITS
-        setState(() => _isLoading = false);
-      }
+      setState(() => _isLoading = false);
     }
   }
 
@@ -94,14 +74,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     left: 20,
                     child: GestureDetector(
                       onTap: () {
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          '/',
-                          (route) => false,
-                        );
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
                       },
                       child: Image.asset(
-                        'assets/images/DeepTrain_Logo_small.webp',
+                        'assets/images/DeepTrain_Logo_small.webp', 
                         height: 50,
                       ),
                     ),
@@ -119,19 +95,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const Text(
                       'Welcome to DeepTrain',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 20),
                     TextField(
                       controller: _emailController,
                       decoration: InputDecoration(
                         hintText: 'Email',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -140,18 +111,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         hintText: 'Password',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
+                          icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
                       ),
                     ),
@@ -163,9 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF2563EB),
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               minimumSize: const Size(double.infinity, 50),
                             ),
                             child: const Text('Login'),
@@ -176,13 +137,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         const Text("Don't have an account? "),
                         GestureDetector(
-                          onTap: () => Navigator.pushNamed(context, '/signUp'),
+                          onTap: () =>Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
+
+
+
+
+
                           child: const Text(
                             'Sign Up',
-                            style: TextStyle(
-                              color: Color(0xFF2563EB),
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
@@ -191,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-          ),
+          )
         ],
       ),
     );
