@@ -9,10 +9,16 @@ class SessionManager {
   String? _sessionCookie;
 
   /// Use this map for authenticated requests
-  Map<String, String> get headers => {
-    'Content-Type': 'application/json',
-    if (_sessionCookie != null) 'cookie': _sessionCookie!,
-  };
+  Map<String, String> get headers {
+    final headerMap = <String, String>{'Content-Type': 'application/json'};
+
+    // Only add cookie header if we have a valid session cookie
+    if (_sessionCookie != null && _sessionCookie!.isNotEmpty) {
+      headerMap['cookie'] = _sessionCookie!;
+    }
+
+    return headerMap;
+  }
 
   /// Restore session cookie from local storage
   Future<void> restoreSession() async {
@@ -25,7 +31,9 @@ class SessionManager {
   Future<void> updateCookies(http.Response response) async {
     final rawCookie = response.headers['set-cookie'];
     if (rawCookie != null && rawCookie.contains('SESSION=')) {
-      _sessionCookie = rawCookie.split(';').firstWhere((c) => c.startsWith('SESSION='));
+      _sessionCookie = rawCookie
+          .split(';')
+          .firstWhere((c) => c.startsWith('SESSION='));
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('session_cookie', _sessionCookie!);
       print("💾 Saved cookie: $_sessionCookie");
@@ -42,13 +50,17 @@ class SessionManager {
 
   /// Standard POST request with session
   Future<http.Response> post(String url, {Object? body}) {
-    print('📤 POST $url with headers: $headers');
-    return http.post(Uri.parse(url), headers: headers, body: body);
+    try {
+      print('📤 POST $url with headers: $headers');
+      return http.post(Uri.parse(url), headers: headers, body: body);
+    } catch (e) {
+      // Error handling without print for production
+      rethrow;
+    }
   }
 
   /// Optional PUT method for updates
   Future<http.Response> put(String url, {Object? body}) {
-    print('📤 PUT $url with headers: $headers');
     return http.put(Uri.parse(url), headers: headers, body: body);
   }
 
@@ -57,6 +69,6 @@ class SessionManager {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('session_cookie');
     _sessionCookie = null;
-    print("🧹 Cleared session cookie");
+    // Session cleared successfully
   }
 }

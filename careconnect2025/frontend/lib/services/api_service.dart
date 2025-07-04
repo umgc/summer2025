@@ -1,34 +1,43 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:care_connect_app/config/EnvConstant.dart';
+import '../config/env_constant.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:care_connect_app/services/session_manager.dart';
+import '../services/session_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart' as path;
 
-class ApiEndpoints {
+class ApiConstants {
   static final String _host = getBackendBaseUrl();
   static final String auth = '$_host/api/auth';
   static final String feed = '$_host/api/feed';
-  static final String users = '$_host/api/users'; // ✅ Fixed here
+  static final String users = '$_host/api/users';
   static final String friends = '$_host/api/friends';
+  static final String analytics = '$_host/api/analytics';
 }
 
 class ApiService {
   static final storage = FlutterSecureStorage();
 
-  static Future<http.Response> register(String name, String email, String password) async {
+  static Future<http.Response> register(
+    String name,
+    String email,
+    String password,
+  ) async {
     return await http.post(
-      Uri.parse('${ApiEndpoints.auth}/register'),
+      Uri.parse('${ApiConstants.auth}/register'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'name': name, 'email': email, 'password': password}),
     );
   }
 
-  static Future<http.Response> login(String email, String password, {String role = 'patient'}) async {
+  static Future<http.Response> login(
+    String email,
+    String password, {
+    String role = 'patient',
+  }) async {
     final response = await http.post(
-      Uri.parse('${ApiEndpoints.auth}/login'),
+      Uri.parse('${ApiConstants.auth}/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'password': password, 'role': role}),
     );
@@ -39,10 +48,14 @@ class ApiService {
       final rawCookie = response.headers['set-cookie'];
       if (rawCookie != null) {
         final prefs = await SharedPreferences.getInstance();
-        final sessionCookie = rawCookie.split(';').firstWhere(
-              (c) => c.trim().startsWith('JSESSIONID=') || c.trim().startsWith('SESSION='),
-          orElse: () => '',
-        );
+        final sessionCookie = rawCookie
+            .split(';')
+            .firstWhere(
+              (c) =>
+                  c.trim().startsWith('JSESSIONID=') ||
+                  c.trim().startsWith('SESSION='),
+              orElse: () => '',
+            );
         if (sessionCookie.isNotEmpty) {
           await prefs.setString('session_cookie', sessionCookie);
           print('💾 Saved session_cookie: $sessionCookie');
@@ -56,26 +69,30 @@ class ApiService {
   }
 
   static Future<void> logout() async {
-    await http.post(Uri.parse('${ApiEndpoints.auth}/logout'));
+    await http.post(Uri.parse('${ApiConstants.auth}/logout'));
     await storage.delete(key: 'session');
   }
 
   static Future<http.Response> getProfile() async {
-    return await http.get(Uri.parse('${ApiEndpoints.auth}/profile'));
+    return await http.get(Uri.parse('${ApiConstants.auth}/profile'));
   }
 
   static Future<http.Response> getAllPosts() async {
     final session = SessionManager();
     await session.restoreSession();
-    return session.get('${ApiEndpoints.feed}/all');
+    return session.get('${ApiConstants.feed}/all');
   }
 
   static Future<http.Response> getUserPosts(int userId) async {
-    return await http.get(Uri.parse('${ApiEndpoints.feed}/user/$userId'));
+    return await http.get(Uri.parse('${ApiConstants.feed}/user/$userId'));
   }
 
-  static Future<http.Response> createPost(int userId, String content, [File? image]) async {
-    final uri = Uri.parse('${ApiEndpoints.feed}/create');
+  static Future<http.Response> createPost(
+    int userId,
+    String content, [
+    File? image,
+  ]) async {
+    final uri = Uri.parse('${ApiConstants.feed}/create');
     final prefs = await SharedPreferences.getInstance();
     final session_cookie = prefs.getString('session_cookie') ?? '';
 
@@ -104,22 +121,27 @@ class ApiService {
   // 🤝 FRIEND FEATURES
   // -------------------------------
 
-  static Future<http.Response> searchUsers(String query, int currentUserId) async {
+  static Future<http.Response> searchUsers(
+    String query,
+    int currentUserId,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final session_cookie = prefs.getString('session_cookie') ?? '';
-    final url = Uri.parse('${ApiEndpoints.users}/search?query=$query&currentUserId=$currentUserId');
+    final url = Uri.parse(
+      '${ApiConstants.users}/search?query=$query&currentUserId=$currentUserId',
+    );
 
     return await http.get(
       url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': session_cookie,
-      },
+      headers: {'Content-Type': 'application/json', 'Cookie': session_cookie},
     );
   }
 
-  static Future<http.Response> sendFriendRequest(int fromUserId, int toUserId) async {
-    final url = Uri.parse('${ApiEndpoints.friends}/request');
+  static Future<http.Response> sendFriendRequest(
+    int fromUserId,
+    int toUserId,
+  ) async {
+    final url = Uri.parse('${ApiConstants.friends}/request');
     return await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -128,12 +150,12 @@ class ApiService {
   }
 
   static Future<http.Response> getPendingFriendRequests(int userId) async {
-    final url = Uri.parse('${ApiEndpoints.friends}/requests/$userId');
+    final url = Uri.parse('${ApiConstants.friends}/requests/$userId');
     return await http.get(url);
   }
 
   static Future<http.Response> acceptFriendRequest(int requestId) async {
-    final url = Uri.parse('${ApiEndpoints.friends}/accept');
+    final url = Uri.parse('${ApiConstants.friends}/accept');
     return await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -142,7 +164,7 @@ class ApiService {
   }
 
   static Future<http.Response> rejectFriendRequest(int requestId) async {
-    final url = Uri.parse('${ApiEndpoints.friends}/reject');
+    final url = Uri.parse('${ApiConstants.friends}/reject');
     return await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -151,7 +173,52 @@ class ApiService {
   }
 
   static Future<http.Response> getFriends(int userId) async {
-    final url = Uri.parse('${ApiEndpoints.friends}/list/$userId');
+    final url = Uri.parse('${ApiConstants.friends}/list/$userId');
     return await http.get(url);
+  }
+
+  // -------------------------------
+  // 👥 PATIENT FEATURES
+  // -------------------------------
+
+  static Future<http.Response> registerPatient(
+    String firstName,
+    String lastName,
+    String email,
+    String phone,
+    String dob,
+    String address,
+    String relationship,
+    int caregiverId,
+  ) async {
+    final url = Uri.parse(
+      '${ApiConstants._host}/v1/api/caregivers/$caregiverId/patients',
+    );
+    final prefs = await SharedPreferences.getInstance();
+    final session_cookie = prefs.getString('session_cookie') ?? '';
+
+    return await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'Cookie': session_cookie},
+      body: jsonEncode({
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'password':
+            'defaultPassword123', // Add default password as required by backend
+        'phone': phone,
+        'dob': dob,
+        'address': {
+          'line1': address,
+          'line2': '',
+          'city': '',
+          'state': '',
+          'zip': '',
+          'phone': phone,
+        },
+        'relationship': relationship,
+        'caregiverId': caregiverId,
+      }),
+    );
   }
 }
