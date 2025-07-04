@@ -74,7 +74,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ScheduleManagementScreen()),
+                  MaterialPageRoute(builder: (context) => ScheduleManagementScreen(futurePatients: futurePatients)),
                 );
               },
             ),
