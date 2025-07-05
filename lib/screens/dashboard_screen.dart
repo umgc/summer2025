@@ -123,7 +123,7 @@ class DashboardScreen extends StatelessWidget {
                   );
                   break;
                 case 'logout':
-                  router.go('/');
+                  router.pushReplacement('/');
                   break;
               }
             },

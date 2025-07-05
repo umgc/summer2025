@@ -1,8 +1,12 @@
+import 'package:deeptrainfront/screens/about_screen.dart';
+import 'package:deeptrainfront/screens/contact_screen.dart';
+import 'package:deeptrainfront/screens/pricing_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '/auth/login_screen.dart';
 import '/auth/register_screen.dart';
+import '/screens/features_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -37,18 +41,20 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          if (kIsWeb && !isMobile)
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _navLink('Features'),
-                  _navLink('Pricing'),
-                  _navLink('About'),
-                  _navLink('Contact'),
-                ],
-              ),
-            ),
+         kIsWeb && !isMobile
+    ? Expanded(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _navLink(context, 'Features'),
+            _navLink(context, 'Pricing'),
+            _navLink(context, 'About'),
+            _navLink(context, 'Contact'),
+          ],
+        ),
+      )
+    : const SizedBox.shrink(),
+
         ],
       ),
       actions: [
@@ -74,20 +80,46 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _navLink(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: TextButton(
-        onPressed: () {
-          debugPrint("Clicked $title");
-        },
-        child: Text(
-          title,
-          style: const TextStyle(fontSize: 16, color: Colors.black),
-        ),
+Widget _navLink(BuildContext context, String title) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 12),
+    child: TextButton(
+      onPressed: () {
+        switch (title) {
+          case 'Features':
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FeaturesScreen()),
+            );
+            break;
+          case 'Pricing':
+           Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PricingScreen()),
+            );
+            break;
+          case 'About':
+           Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AboutScreen()),
+            );
+            break;
+          case 'Contact':
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ContactScreen()),
+            );
+            break;
+        }
+      },
+      child: Text(
+        title,
+        style: const TextStyle(fontSize: 16, color: Colors.black),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _buildMobileLayout(BuildContext context) {
     return LayoutBuilder(
@@ -305,7 +337,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildTestimonialSection() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(50, 180, 50, 100),
+      padding: const EdgeInsets.fromLTRB(50, 80, 50, 100),
       child: Column(
         children: [
           const Text(

@@ -17,24 +17,14 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
   NodeBlock? currentNode;
   bool simulating = false;
   int? currentQuestionIndex;
-
   final TextEditingController _responseController = TextEditingController();
 
-  void _zoomIn() {
-    setState(() {
-      _scale = (_scale + 0.1).clamp(0.3, 3.0);
-    });
-  }
-
-  void _zoomOut() {
-    setState(() {
-      _scale = (_scale - 0.1).clamp(0.3, 3.0);
-    });
-  }
+  void _zoomIn() => setState(() => _scale = (_scale + 0.1).clamp(0.3, 3.0));
+  void _zoomOut() => setState(() => _scale = (_scale - 0.1).clamp(0.3, 3.0));
 
   void _startSimulation(List<NodeBlock> blocks) {
     if (blocks.isEmpty) return;
-    NodeBlock? startNode = blocks.firstWhere(
+    final startNode = blocks.firstWhere(
       (b) => b.type.toLowerCase() == "start",
       orElse: () => blocks.first,
     );
@@ -47,7 +37,6 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
 
   void _continueSimulation(List<NodeBlock> blocks) {
     if (currentNode == null) return;
-
     final currentIndex = blocks.indexWhere((b) => b.id == currentNode!.id);
     if (currentIndex + 1 < blocks.length) {
       setState(() {
@@ -121,7 +110,6 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
             )).toList();
 
         ref.read(scenarioProvider.notifier).replace(loadedBlocks);
-
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Simulation loaded successfully.")),
         );
@@ -152,7 +140,6 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
       appBar: AppBar(title: const Text('Simulator')),
       body: Column(
         children: [
-          // top controls
           Padding(
             padding: const EdgeInsets.all(16),
             child: LayoutBuilder(
@@ -199,152 +186,17 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
             ),
           ),
           const Divider(),
-
           Expanded(
             child: Stack(
               children: [
                 simulating && currentNode != null
-                    ? Container(
-                        color: Colors.deepPurple.shade50,
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "${currentNode!.type} Node",
-                                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 12),
-                              if (currentNode!.title.isNotEmpty)
-                                Text("Title: ${currentNode!.title}"),
-                              if (currentNode!.description != null)
-                                Text("Description: ${currentNode!.description}"),
-                              if (currentNode!.type.toLowerCase() == "quiz" &&
-                                  currentNode!.questions != null &&
-                                  currentNode!.questions!.isNotEmpty)
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      "Quiz Question: ${currentNode!.questions![currentQuestionIndex ?? 0]['question']}",
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                              const SizedBox(height: 24),
-                              Row(
-                                children: [
-                                  ElevatedButton.icon(
-                                    onPressed: () {
-                                      if (currentNode!.type.toLowerCase() != "quiz") {
-                                        _continueSimulation(blocks);
-                                      }
-                                    },
-                                    icon: const Icon(Icons.arrow_forward),
-                                    label: const Text("Continue"),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  ElevatedButton.icon(
-                                    onPressed: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (_) => AlertDialog(
-                                          title: const Text("Generated Dialog"),
-                                          content: const Text("Ai generated dialog content."),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(context),
-                                              child: const Text("Close"),
-                                            )
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                    icon: const Icon(Icons.chat),
-                                    label: const Text("Generate Dialog"),
-                                  ),
-                                ],
-                              )
-                            ],
-                          ),
-                        ),
-                      )
-                    : InteractiveViewer(
-                        minScale: 0.3,
-                        maxScale: 3.0,
-                        panEnabled: true,
-                        scaleEnabled: false,
-                        child: Transform.scale(
-                          scale: _scale,
-                          alignment: Alignment.center,
-                          child: SizedBox(
-                            width: canvasSize.width,
-                            height: canvasSize.height,
-                            child: Stack(
-                              children: [
-                                CustomPaint(
-                                  painter: _ConnectionPainter(blocks),
-                                  child: Container(),
-                                ),
-                                ...blocks.map((block) => Positioned(
-                                      left: block.offset.dx,
-                                      top: block.offset.dy,
-                                      child: Card(
-                                        color: currentNode?.id == block.id
-                                            ? Colors.orange
-                                            : Colors.deepPurple,
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(block.type,
-                                                  style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontWeight: FontWeight.bold)),
-                                              Text(block.title,
-                                                  style: const TextStyle(
-                                                      color: Colors.white70,
-                                                      fontSize: 12)),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    )),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      FloatingActionButton(
-                        heroTag: 'zoomIn',
-                        mini: true,
-                        onPressed: _zoomIn,
-                        child: const Icon(Icons.add),
-                      ),
-                      const SizedBox(height: 8),
-                      FloatingActionButton(
-                        heroTag: 'zoomOut',
-                        mini: true,
-                        onPressed: _zoomOut,
-                        child: const Icon(Icons.remove),
-                      ),
-                    ],
-                  ),
-                ),
+                    ? _buildNodeDetail(currentNode!)
+                    : _buildCanvas(blocks, canvasSize),
+                _buildZoomButtons(),
               ],
             ),
           ),
           const Divider(),
-          // keep trainee response unchanged
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
@@ -361,50 +213,191 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
             child: ElevatedButton.icon(
               icon: const Icon(Icons.send),
               label: const Text('Submit Response'),
-              onPressed: () {
-                final response = _responseController.text.trim();
-
-                if (simulating && currentNode != null) {
-                  if (currentNode!.type.toLowerCase() == "quiz" &&
-                      currentNode!.questions != null &&
-                      currentNode!.questions!.isNotEmpty) {
-                    final currentQ = currentNode!.questions![currentQuestionIndex ?? 0];
-                    final answer = currentQ['answer']?.toLowerCase() ?? "";
-                    if (response.toLowerCase() == answer) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Correct!")),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Incorrect, correct was: $answer")),
-                      );
-                    }
-                    if ((currentQuestionIndex ?? 0) + 1 < currentNode!.questions!.length) {
-                      setState(() {
-                        currentQuestionIndex = (currentQuestionIndex ?? 0) + 1;
-                      });
-                    } else {
-                      _continueSimulation(blocks);
-                    }
-                  } else if (currentNode!.type.toLowerCase() == "decision") {
-                    if (response.toLowerCase() == "yes") {
-                      debugPrint("Decision true path taken");
-                    } else {
-                      debugPrint("Decision false path taken");
-                    }
-                    _continueSimulation(blocks);
-                  } else {
-                    _continueSimulation(blocks);
-                  }
-                  _responseController.clear();
-                }
-              },
+              onPressed: () => _handleTraineeResponse(blocks),
             ),
           ),
           const SizedBox(height: 10),
         ],
       ),
     );
+  }
+
+  Widget _buildNodeDetail(NodeBlock node) {
+    return Container(
+      color: Colors.deepPurple.shade50,
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("${node.type} Node", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            _buildNodeFields(node),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    if (node.type.toLowerCase() != "quiz") {
+                      _continueSimulation(ref.read(scenarioProvider));
+                    }
+                  },
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text("Continue"),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: const Text("Generated Dialog"),
+                        content: const Text("Ai generated dialog content."),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close"))
+                        ],
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.chat),
+                  label: const Text("Generate Dialog"),
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNodeFields(NodeBlock node) {
+    // leave quiz question display alone
+    if (node.type.toLowerCase() == "quiz" && node.questions != null && node.questions!.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Quiz Title: ${node.quizTitle ?? 'N/A'}"),
+          const SizedBox(height: 8),
+          Text(
+            "Question: ${node.questions![currentQuestionIndex ?? 0]['question']}",
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ],
+      );
+    }
+    // for all other types show every field
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (node.title.isNotEmpty) Text("Title: ${node.title}"),
+        if (node.description != null) Text("Description: ${node.description}"),
+        if (node.welcomeMessage != null) Text("Welcome Message: ${node.welcomeMessage}"),
+        if (node.lessonType != null) Text("Lesson Type: ${node.lessonType}"),
+        if (node.lessonContent != null) Text("Lesson Content: ${node.lessonContent}"),
+        if (node.estimatedTime != null) Text("Estimated Time: ${node.estimatedTime}"),
+        if (node.conditionExpression != null) Text("Condition: ${node.conditionExpression}"),
+        if (node.truePathLabel != null) Text("True Path Label: ${node.truePathLabel}"),
+        if (node.falsePathLabel != null) Text("False Path Label: ${node.falsePathLabel}"),
+        if (node.checkpointTitle != null) Text("Checkpoint Title: ${node.checkpointTitle}"),
+        if (node.checkpointNote != null) Text("Checkpoint Note: ${node.checkpointNote}"),
+      ],
+    );
+  }
+
+  Widget _buildCanvas(List<NodeBlock> blocks, Size canvasSize) {
+    return InteractiveViewer(
+      minScale: 0.3,
+      maxScale: 3.0,
+      panEnabled: true,
+      scaleEnabled: false,
+      child: Transform.scale(
+        scale: _scale,
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: canvasSize.width,
+          height: canvasSize.height,
+          child: Stack(
+            children: [
+              CustomPaint(painter: _ConnectionPainter(blocks), child: Container()),
+              ...blocks.map((block) => Positioned(
+                    left: block.offset.dx,
+                    top: block.offset.dy,
+                    child: Card(
+                      color: currentNode?.id == block.id ? Colors.orange : Colors.deepPurple,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(block.type,
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            Text(block.title,
+                                style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildZoomButtons() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            heroTag: 'zoomIn',
+            mini: true,
+            onPressed: _zoomIn,
+            child: const Icon(Icons.add),
+          ),
+          const SizedBox(height: 8),
+          FloatingActionButton(
+            heroTag: 'zoomOut',
+            mini: true,
+            onPressed: _zoomOut,
+            child: const Icon(Icons.remove),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleTraineeResponse(List<NodeBlock> blocks) {
+    final response = _responseController.text.trim();
+    if (simulating && currentNode != null) {
+      if (currentNode!.type.toLowerCase() == "quiz" &&
+          currentNode!.questions != null &&
+          currentNode!.questions!.isNotEmpty) {
+        final currentQ = currentNode!.questions![currentQuestionIndex ?? 0];
+        final answer = currentQ['answer']?.toLowerCase() ?? "";
+        if (response.toLowerCase() == answer) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Correct!")));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Incorrect, correct was: $answer")));
+        }
+        if ((currentQuestionIndex ?? 0) + 1 < currentNode!.questions!.length) {
+          setState(() {
+            currentQuestionIndex = (currentQuestionIndex ?? 0) + 1;
+          });
+        } else {
+          _continueSimulation(blocks);
+        }
+      } else if (currentNode!.type.toLowerCase() == "decision") {
+        _continueSimulation(blocks);
+      } else {
+        _continueSimulation(blocks);
+      }
+      _responseController.clear();
+    }
   }
 }
 
