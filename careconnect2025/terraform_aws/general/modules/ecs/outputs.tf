@@ -4,6 +4,6 @@ output "cc_cluster" {
 output "cc_core_service" {
   value = aws_ecs_service.cc_core_service
 }
-output "cc_core_task_def" {
-  value = aws_ecs_task_definition.cc_core_task_def
+output "cc_core_task_def_name" {
+  value = aws_ecs_task_definition.cc_core_task_def.family
 }

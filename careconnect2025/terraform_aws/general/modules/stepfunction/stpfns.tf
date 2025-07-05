@@ -12,19 +12,36 @@ resource "aws_sfn_state_machine" "trigger_ecs_tast_sfn_state_machine" {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:ecs:describeTaskDefinition",
       "Parameters": {
-        "TaskDefinition.$": "$.detail.resources[0].arn"
+        "TaskDefinition.$": "$.taskDefinition"
       },
       "ResultPath": "$.taskDefinition",
+      "Next": "RegisterNewTaskDefinition"
+    },
+    "RegisterNewTaskDefinition": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:ecs:registerTaskDefinition",
+      "Parameters": {
+        "Family.$": "$.taskDefinition.TaskDefinition.Family",
+        "TaskRoleArn.$": "$.taskDefinition.TaskDefinition.TaskRoleArn",
+        "ExecutionRoleArn.$": "$.taskDefinition.TaskDefinition.ExecutionRoleArn",
+        "NetworkMode.$": "$.taskDefinition.TaskDefinition.NetworkMode",
+        "ContainerDefinitions.$": "$.taskDefinition.TaskDefinition.ContainerDefinitions",
+        "Volumes.$": "$.taskDefinition.TaskDefinition.Volumes",
+        "PlacementConstraints.$": "$.taskDefinition.TaskDefinition.PlacementConstraints",
+        "RequiresCompatibilities.$": "$.taskDefinition.TaskDefinition.RequiresCompatibilities",
+        "Cpu.$": "$.taskDefinition.TaskDefinition.Cpu",
+        "Memory.$": "$.taskDefinition.TaskDefinition.Memory"
+      },
+      "ResultPath": "$.newTaskDefinition",
       "Next": "UpdateService"
     },
-    
     "UpdateService": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:ecs:updateService",
       "Parameters": {
-        "Cluster": "your-cluster-name",
-        "Service": "your-service-name",
-        "TaskDefinition.$": "$.newTaskDefinition.taskDefinition.taskDefinitionArn"
+        "Cluster.$": "$.clusterName",
+        "Service.$": "$.serviceName",
+        "TaskDefinition.$": "$.newTaskDefinition.TaskDefinition.TaskDefinitionArn"
       },
       "End": true
     }
@@ -52,22 +69,3 @@ resource "aws_cloudwatch_log_group" "log_group_for_sfn" {
     "Name" = "log-group-for-sfn-cc-trigger-ecs-task-stm"
   })
 }
-
-# "RegisterNewTaskDefinition": {
-#       "Type": "Task",
-#       "Resource": "arn:aws:states:::aws-sdk:ecs:registerTaskDefinition",
-#       "Parameters": {
-#         "Family.$": "$.taskDefinition.taskDefinition.family",
-#         "TaskRoleArn.$": "$.taskDefinition.taskDefinition.taskRoleArn",
-#         "ExecutionRoleArn.$": "$.taskDefinition.taskDefinition.executionRoleArn",
-#         "NetworkMode.$": "$.taskDefinition.taskDefinition.networkMode",
-#         "ContainerDefinitions.$": "States.Array(States.JsonMerge($.taskDefinition.taskDefinition.containerDefinitions[0], {\"image\": $.detail.repository-uri + \":\" + $.detail.image-tag}))",
-#         "Volumes.$": "$.taskDefinition.taskDefinition.volumes",
-#         "PlacementConstraints.$": "$.taskDefinition.taskDefinition.placementConstraints",
-#         "RequiresCompatibilities.$": "$.taskDefinition.taskDefinition.requiresCompatibilities",
-#         "Cpu.$": "$.taskDefinition.taskDefinition.cpu",
-#         "Memory.$": "$.taskDefinition.taskDefinition.memory"
-#       },
-#       "ResultPath": "$.newTaskDefinition",
-#       "Next": "UpdateService"
-#     },

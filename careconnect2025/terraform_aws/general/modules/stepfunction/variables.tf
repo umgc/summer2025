@@ -1,5 +1,5 @@
 variable "default_tags" {
-  type = map(string)  
+  type = map(string)
 }
 variable "cc_app_role_arn" {
   type        = string
