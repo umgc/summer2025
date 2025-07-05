@@ -27,6 +27,7 @@ dependencies:
   webview_flutter: ^4.2.2
   speech_to_text: ^6.6.0
   flutter_tts: ^3.8.0
+  video_player: ^2.8.3
 
   
 
@@ -46,3 +47,5 @@ flutter:
     - assets/images/DeepTrainHero.webp
     - assets/images/touch.webp
     - assets/images/Robot.webp
+    - assets/images/reset5.webp
+   
