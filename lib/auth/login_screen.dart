@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login error: $e")),
+        SnackBar(content: Text("Login error: Incorrect Username/Password")),
       );
     } finally {
       setState(() => _isLoading = false);

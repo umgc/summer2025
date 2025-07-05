@@ -2,14 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'auth_service.dart';
 import '/shared/widgets/buttons/primary_button.dart';
+import '/screens/home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
-  // NICOLE EDITS: Add optional authService parameter for dependency injection
-  final AuthService? authService;
-  const RegisterScreen({
-    super.key,
-    this.authService,
-  }); // NICOLE EDITS: Update constructor
+  const RegisterScreen({super.key});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -21,43 +17,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  // NICOLE EDITS: Make _authService late final and initialize in initState
-  late final AuthService _authService;
+  final _authService = AuthService();
   bool _isLoading = false;
-
-  @override
-  void initState() {
-    // NICOLE EDITS: Initialize authService in initState
-    super.initState();
-    _authService =
-        widget.authService ?? AuthService(); // Use injected service or default
-  }
+  final _formKey = GlobalKey<FormState>();
 
   void _registerUser() async {
+    if (!_formKey.currentState!.validate()) return;
+
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    // NICOLE EDITS: Add validation for all empty fields
-    if (firstName.isEmpty ||
-        lastName.isEmpty ||
-        email.isEmpty ||
-        password.isEmpty) {
-      // NICOLE EDITS: Check mounted before showing SnackBar
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Please fill all fields")));
-      }
-      return;
-    }
-
-    // NICOLE EDITS: Check mounted before setState
-    if (mounted) {
-      setState(() => _isLoading = true);
-    }
-
+    setState(() => _isLoading = true);
     try {
       final success = await _authService.signUpUser(
         email: email,
@@ -65,26 +37,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
         firstName: firstName,
         lastName: lastName,
       );
-
-      // NICOLE EDITS: Crucial mounted check after async operation
-      if (!mounted) return;
-
-      if (success) {
+      if (success && mounted) {
         context.go('/confirm', extra: email);
       }
     } catch (e) {
-      // NICOLE EDITS: Check mounted before showing SnackBar
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Registration error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Registration error: $e')),
+        );
       }
     } finally {
-      // NICOLE EDITS: Check mounted before setState
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) return 'Email is required';
+    if (!value.contains('@')) return 'Enter a valid email address';
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) return 'Password is required';
+    if (value.length < 8) return 'Password must be at least 8 characters';
+    if (!RegExp(r'[A-Z]').hasMatch(value)) return 'Must include at least one uppercase letter';
+    if (!RegExp(r'[a-z]').hasMatch(value)) return 'Must include at least one lowercase letter';
+    if (!RegExp(r'[0-9]').hasMatch(value)) return 'Must include at least one number';
+    return null;
   }
 
   @override
@@ -92,6 +71,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final isMobile = MediaQuery.of(context).size.width < 800;
 
     return Scaffold(
+      appBar: isMobile
+          ? AppBar(
+              automaticallyImplyLeading: false,
+              backgroundColor: Colors.white,
+              elevation: 0,
+              title: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                        context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+                  },
+                  child: Image.asset(
+                    'assets/images/DeepTrain_Logo_small.webp',
+                    height: 40,
+                  ),
+                ),
+              ),
+            )
+          : null,
       body: Row(
         children: [
           if (!isMobile)
@@ -107,11 +106,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   alignment: Alignment.topLeft,
                   child: Padding(
                     padding: const EdgeInsets.all(20),
-                    child: GestureDetector(
-                      onTap: () => context.go('/'),
-                      child: Image.asset(
-                        'assets/images/DeepTrain_Logo_small.webp',
-                        height: 50,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                              context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+                        },
+                        child: Image.asset(
+                          'assets/images/DeepTrain_Logo_small.webp',
+                          height: 50,
+                        ),
                       ),
                     ),
                   ),
@@ -122,105 +127,123 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Create your DeepTrain account',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                child: Form(
+                  key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Create your DeepTrain account',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: _firstNameController,
-                      decoration: InputDecoration(
-                        hintText: 'First Name',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: _firstNameController,
+                        decoration: InputDecoration(
+                          hintText: 'First Name',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         ),
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'First name is required' : null,
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _lastNameController,
-                      decoration: InputDecoration(
-                        hintText: 'Last Name',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _lastNameController,
+                        decoration: InputDecoration(
+                          hintText: 'Last Name',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         ),
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Last name is required' : null,
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        hintText: 'Email',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          hintText: 'Email',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         ),
+                        validator: _validateEmail,
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        hintText: 'Password',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    PrimaryButton(
-                      label: 'Sign Up',
-                      isLoading: _isLoading,
-                      onPressed: _registerUser,
-                    ),
-                    const SizedBox(height: 20),
-                    // NICOLE EDITS: Fix for RenderFlex overflow - wrap children in Flexible
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Flexible(
-                          // Allows this text to shrink
-                          child: const Text("Already have an account? "),
-                        ),
-                        GestureDetector(
-                          onTap: () => context.go('/login'),
-                          child: const Text(
-                            'Sign In',
-                            style: TextStyle(
-                              color: Color(0xFF2563EB),
-                              fontWeight: FontWeight.bold,
+                      const SizedBox(height: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              hintText: 'Password',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                                ),
+                                onPressed: () =>
+                                    setState(() => _obscurePassword = !_obscurePassword),
+                              ),
                             ),
+                            validator: _validatePassword,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    // NICOLE EDITS: Wrap this long Text in Flexible as well to prevent overflow
-                    Flexible(
-                      child: Text(
+                          const SizedBox(height: 4),
+                          const Text(
+                            "Password must be at least 8 characters, include uppercase, lowercase, and a number.",
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      PrimaryButton(
+                        label: 'Sign Up',
+                        isLoading: _isLoading,
+                        onPressed: _registerUser,
+                      ),
+                      const SizedBox(height: 20),
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text("Already have an account? "),
+                              GestureDetector(
+                                onTap: () {
+                                  if (mounted) GoRouter.of(context).go('/login');
+                                },
+                                child: const Text(
+                                  'Sign In',
+                                  style: TextStyle(
+                                      color: Color(0xFF2563EB),
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              )
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          GestureDetector(
+                            onTap: () {
+                              if (mounted) GoRouter.of(context).go('/reset-password');
+                            },
+                            child: const Text(
+                              'Forgot password?',
+                              style: TextStyle(
+                                color: Color(0xFF2563EB),
+                                decoration: TextDecoration.underline,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
                         "By signing up, you agree to DeepTrain's Terms of Service and Privacy Policy",
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                      ),
-                    ),
-                  ],
+                      )
+                    ],
+                  ),
                 ),
               ),
             ),
