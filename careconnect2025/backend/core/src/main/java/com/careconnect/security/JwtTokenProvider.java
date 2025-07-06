@@ -5,34 +5,62 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-
+import java.time.Duration;
 import java.security.Key;
+import java.time.Instant;
+
 import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
 
-    private final Key key;
-    private final long validityMillis;
+    private static final Duration ACCESS_TTL        = Duration.ofMinutes(15);
+    private static final Duration SLIDING_WINDOW    = Duration.ofHours(3);
+    private static final Duration RENEW_THRESHOLD   = Duration.ofMinutes(5);
+    private static final String   ISSUER            = "careconnect";
 
-    public JwtTokenProvider(@Value("${security.jwt.secret}") String secret,
-                            @Value("${security.jwt.ms:3600000}") long validityMillis) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes()); 
-        this.validityMillis = validityMillis;
+    private final Key key;
+    // private final long validityMillis;
+
+    // public JwtTokenProvider(@Value("${security.jwt.secret}") String secret,
+    //                         @Value("${security.jwt.ms:3600000}") long validityMillis) {
+    //     this.key = Keys.hmacShaKeyFor(secret.getBytes()); 
+    //     this.validityMillis = validityMillis;
+    // }
+
+    public JwtTokenProvider(@Value("${security.jwt.secret}") String secretBase64) {
+        // decode once;  256-bit (32-byte) secret recommended
+        this.key = Keys.hmacShaKeyFor(java.util.Base64.getDecoder().decode(secretBase64));
     }
 
+    // public String createToken(String email, Role role) {
+    //     Claims claims = Jwts.claims().setSubject(email);
+    //     claims.put("role", role.name());
+
+    //     Date now = new Date();
+    //     Date validity = new Date(now.getTime() + validityMillis);
+
+    //     return Jwts.builder()
+    //             .setClaims(claims)
+    //             .setIssuedAt(now)
+    //             .setExpiration(validity)
+    //             .signWith(key, SignatureAlgorithm.HS256) 
+    //             .compact();
+    // }
+
     public String createToken(String email, Role role) {
-        Claims claims = Jwts.claims().setSubject(email);
-        claims.put("role", role.name());
+        return buildToken(email, role, ACCESS_TTL);
+    }
 
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + validityMillis);
-
+    private String buildToken(String email, Role role, Duration ttl) {
+        Instant now = Instant.now();
         return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(validity)
-                .signWith(key, SignatureAlgorithm.HS256) 
+                .setIssuer(ISSUER)
+                .setSubject(email)
+                .claim("role", role.name())
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(now.plus(ttl)))
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -52,5 +80,32 @@ public class JwtTokenProvider {
     public Role getRole(String token) {
         String role = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().get("role", String.class);
         return Role.valueOf(role);
+    }
+
+    public boolean needsRenewal(Claims claims) {
+        Instant exp = claims.getExpiration().toInstant();
+        Instant now = Instant.now();
+        return exp.minus(RENEW_THRESHOLD).isBefore(now)        
+                && claims.getIssuedAt().toInstant()
+                         .plus(SLIDING_WINDOW)
+                         .isAfter(now);                       
+    }
+
+    private Jws<Claims> parse(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+    }
+
+    public String refresh(Claims oldClaims) {
+        String email = oldClaims.getSubject();
+        Role   role  = Role.valueOf(oldClaims.get("role", String.class));
+        return buildToken(email, role, ACCESS_TTL);
+    }
+
+    public Claims getClaims(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+    }
+
+    public String getEmailFromToken(String token) {
+        return getUsername(token); // getUsername already returns the subject (email)
     }
 }

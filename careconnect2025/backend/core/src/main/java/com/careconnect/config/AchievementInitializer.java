@@ -14,20 +14,27 @@ public class AchievementInitializer {
 
     @PostConstruct
     public void initAchievements() {
-        createAchievementIfNotExists("Verified Email", "Awarded for verifying your email.", "verified-icon.png");
-        createAchievementIfNotExists("First Login", "Awarded for logging in for the first time.", "login-icon.png");
+        try {
+            createAchievementIfNotExists("Verified Email", "Awarded for verifying your email.", "verified-icon.png");
+            createAchievementIfNotExists("First Login", "Awarded for logging in for the first time.", "login-icon.png");
+        } catch (Exception e) {
+            // Log the error but don't fail application startup
+            System.err.println("Failed to initialize achievements: " + e.getMessage());
+        }
     }
 
     private void createAchievementIfNotExists(String title, String description, String icon) {
-        if (achievementRepository.findByTitle(title).isEmpty()) {
-            Achievement achievement = new Achievement();
-            achievement.setTitle(title);
-            achievement.setDescription(description);
-            achievement.setIcon(icon);  // ✅ set icon here
-            achievementRepository.save(achievement);
-            System.out.println("Created achievement: " + title);
-        } else {
-            System.out.println("Achievement already exists: " + title);
+        try {
+            if (achievementRepository.findByTitle(title).isEmpty()) {
+                Achievement achievement = new Achievement();
+                achievement.setTitle(title);
+                achievement.setDescription(description);
+                achievement.setIcon(icon);
+                achievementRepository.save(achievement);
+            }
+        } catch (Exception e) {
+            // Log the error but continue with other achievements
+            System.err.println("Failed to create achievement '" + title + "': " + e.getMessage());
         }
     }
 }

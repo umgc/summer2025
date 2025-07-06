@@ -17,10 +17,10 @@ public class StripeConfig {
     @PostConstruct
     public void init() {
         if (secretKey.isBlank()) {
-            System.out.println("Stripe secret key not set – payments disabled");
+            // System.out.println("Stripe secret key not set – payments disabled");
         } else {
             Stripe.apiKey = secretKey;
-            System.out.println("Stripe key loaded");
+            // System.out.println("Stripe key loaded");
         }
     }
 }

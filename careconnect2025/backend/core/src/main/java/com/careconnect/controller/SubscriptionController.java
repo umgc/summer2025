@@ -81,8 +81,8 @@ public class SubscriptionController {
         return subscriptionService.createCheckoutSession(request, plan, userId, amount);
     }
 
-    @PutMapping("/{id}/payment-method")
-    public ResponseEntity<String> updatePayment(@PathVariable String id) { return ResponseEntity.ok("Payment updated: " + id); }
+    // @PutMapping("/{id}/payment-method")
+    // public ResponseEntity<String> updatePayment(@PathVariable String id) { return ResponseEntity.ok("Payment updated: " + id); }
     
 
     @PostMapping("/{id}/cancel")

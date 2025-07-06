@@ -11,7 +11,7 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "achievements")
+@Table(name = "achievement")
 public class Achievement {
 
     @Id
@@ -20,4 +20,10 @@ public class Achievement {
     private String title;
     private String description;
     private String icon;  // Optional: URL or icon name
+
+    // Explicit getters to ensure compilation works if Lombok isn't processing
+    public Long getId() { return id; }
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+    public String getIcon() { return icon; }
 }

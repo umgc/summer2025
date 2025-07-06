@@ -2,7 +2,7 @@ package com.careconnect.controller;
 
 import com.careconnect.model.*;
 import com.careconnect.service.GamificationService;
-import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,16 +31,15 @@ public class GamificationController {
     }
 
     @GetMapping("/progress/{userId}")
-    public ResponseEntity<?> getXpProgress(@PathVariable Long userId, HttpSession session) {
-        // 🔍 Debug print statements
-        System.out.println("Session ID: " + session.getId());
-        System.out.println("Session UserID: " + session.getAttribute("userId"));
-
-        Object sessionUserId = session.getAttribute("userId");
-
-        if (sessionUserId == null || !sessionUserId.toString().equals(userId.toString())) {
-            return ResponseEntity.status(403).body(1);
+    public ResponseEntity<?> getXpProgress(@PathVariable Long userId, Authentication authentication) {
+        // JWT-based authentication - get user from security context
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("Authentication required");
         }
+
+        // For JWT, you can get user details from authentication
+        String userEmail = authentication.getName();
+        // Additional validation can be added here if needed
 
         return gamificationService.getXpProgress(userId)
                 .map(ResponseEntity::ok)

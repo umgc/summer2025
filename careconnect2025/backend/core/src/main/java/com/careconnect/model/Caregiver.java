@@ -2,11 +2,6 @@ package com.careconnect.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -34,12 +29,8 @@ public class Caregiver {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "caregiver")
-    @JsonIgnore
-    private List<Patient> patients;
-
     public String getCaregiverType() {
-    return caregiverType;
+        return caregiverType;
     }
 
     public void setCaregiverType(String caregiverType) {
