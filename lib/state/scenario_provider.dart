@@ -19,6 +19,14 @@ class ScenarioController extends StateNotifier<List<NodeBlock>> {
     state = [...state, block];
   }
 
+void replace(List<NodeBlock> newState) {
+  state = newState;
+  _undoStack.clear();
+  _redoStack.clear();
+}
+
+
+
   /// Moves a node to a new position
   void moveNode(NodeBlock block, Offset newOffset) {
     _saveForUndo();
