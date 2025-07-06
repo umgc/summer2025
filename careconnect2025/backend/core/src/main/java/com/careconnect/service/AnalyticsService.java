@@ -31,14 +31,17 @@ public class AnalyticsService {
 
     /* ---------------- Dashboard ---------------- */
 
+    // MOCK: Replace real DB logic with static mock data for all patients
     public DashboardDTO getDashboard(Long patientId, Period period) {
-     Instant to   = Instant.now();
+        // Original implementation commented out for later use
+        /*
+        Instant to   = Instant.now();
         Instant from = to.minus(period);
 
         SummaryMetric agg = summaryRepo
         .findTopByPatient_UserIdAndPeriodStartAndPeriodEndOrderByCreatedAtDesc(
             patientId, from, to
-        );
+       // );
 
         double adherence;
         double avgHr;
@@ -59,7 +62,6 @@ public class AnalyticsService {
             avgHr = hr == null ? 0 : hr;
         }
 
-        /* Additional vitals */
         double avgSpo2   = avgOrZero(patientId, WearableMetric.MetricType.SPO2,             from, to);
         double avgSys    = avgOrZero(patientId, WearableMetric.MetricType.BLOOD_PRESSURE_SYS, from, to);
         double avgDia    = avgOrZero(patientId, WearableMetric.MetricType.BLOOD_PRESSURE_DIA, from, to);
@@ -75,22 +77,55 @@ public class AnalyticsService {
                 .avgDiastolic(round0(avgDia))
                 .avgWeight(round1(avgWeight))
                 .build();
+        */
+        // --- MOCK DATA BELOW ---
+        Instant to = Instant.parse("2025-07-01T12:00:00Z");
+        Instant from = to.minus(period != null ? period : Period.ofDays(30));
+        return DashboardDTO.builder()
+                .periodStart(from)
+                .periodEnd(to)
+                .adherenceRate(92.5)
+                .avgHeartRate(74.0)
+                .avgSpo2(98.2)
+                .avgSystolic(120.0)
+                .avgDiastolic(78.0)
+                .avgWeight(72.5)
+                .build();
     }
 
     /* ---------------- Vitals series ---------------- */
 
-  public List<VitalSampleDTO> getVitals(Long patientId, Period period) {
-    // Instant to   = Instant.now();
-    Instant to = Instant.parse("2025-06-27T08:00:00Z");
-    Instant from = to.minus(period);
+    // MOCK: Replace real DB logic with static mock data for all patients
+    public List<VitalSampleDTO> getVitals(Long patientId, Period period) {
+        // Original implementation commented out for later use
+        /*
+        Instant to = Instant.parse("2025-06-27T08:00:00Z");
+        Instant from = to.minus(period);
 
-    return wearableRepo.findByPatient_IdAndRecordedAtBetween(patientId, from, to)
-            .stream()
-            .collect(Collectors.groupingBy(WearableMetric::getRecordedAt))
-            .entrySet().stream()
-            .map(e -> toDTO(patientId, e.getKey(), e.getValue()))
-            .sorted(Comparator.comparing(VitalSampleDTO::timestamp))
-            .toList();
+        return wearableRepo.findByPatient_IdAndRecordedAtBetween(patientId, from, to)
+                .stream()
+                .collect(Collectors.groupingBy(WearableMetric::getRecordedAt))
+                .entrySet().stream()
+                .map(e -> toDTO(patientId, e.getKey(), e.getValue()))
+                .sorted(Comparator.comparing(VitalSampleDTO::timestamp))
+                .toList();
+        */
+        // --- MOCK DATA BELOW ---
+        Instant to = Instant.parse("2025-07-01T12:00:00Z");
+        List<VitalSampleDTO> samples = new java.util.ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            Instant ts = to.minus(java.time.Duration.ofDays(i * 15));
+            samples.add(VitalSampleDTO.builder()
+                    .patientId(patientId)
+                    .timestamp(ts)
+                    .heartRate(74.0 + (i % 3 - 1) * 2)
+                    .spo2(98.2)
+                    .systolic((int)120.0)
+                    .diastolic((int)78.0)
+                    .weight(72.5 + (i % 2 == 0 ? 0.5 : -0.5))
+                    .build());
+        }
+        return samples;
     }
 
     /* ---------------- Exports ---------------- */

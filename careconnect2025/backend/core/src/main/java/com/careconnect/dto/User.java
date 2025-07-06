@@ -8,11 +8,25 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 public class User {
-    private Long id; 
-    private String email;
-    private String password;
+	private Long id; 
+	private String email;
+	private String password;
 	private boolean emailVerified;
-    private com.careconnect.security.Role role;
+	private com.careconnect.security.Role role;
+	private String status;
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public boolean isActive() {
+		return "ACTIVE".equalsIgnoreCase(status);
+	}
+
 	public Long getId() {
 		return id;
 	}

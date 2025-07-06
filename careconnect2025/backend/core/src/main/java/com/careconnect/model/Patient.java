@@ -33,10 +33,5 @@ public class Patient {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "caregiver_id")
-    @JsonBackReference
-    private Caregiver caregiver;
-
     private String relationship; // e.g. "daughter", "client", etc.
 }

@@ -32,18 +32,22 @@ public class UserController {
 
         User currentUser = currentUserOpt.get();
 
+
         List<UserResponse> response = users.stream()
-                .filter(user -> !(
-                        user.getId().equals(currentUserId) &&
-                                user.getEmail().equalsIgnoreCase(currentUser.getEmail()) &&
-                                user.getRole().equals(currentUser.getRole())
+                .filter(u -> !(
+                        u.getId().equals(currentUserId) &&
+                                u.getEmail().equalsIgnoreCase(currentUser.getEmail()) &&
+                                u.getRole().equals(currentUser.getRole())
                 )) // exclude self (same ID + same role + same email)
-                .map(user -> new UserResponse(
-                        user.getId(),
-                        user.getName(),
-                        user.getEmail(),
-                        user.getRole().toString(),
-                        user.getProfileImageUrl()))
+                .map(u -> new UserResponse(
+                        u.getId(),
+                        u.getName(),
+                        u.getEmail(),
+                        u.getRole(),
+                        Boolean.TRUE.equals(u.getIsVerified()),
+                        u.getProfileImageUrl(),
+                        u.getStatus()
+                ))
                 .toList();
 
         return ResponseEntity.ok(response);

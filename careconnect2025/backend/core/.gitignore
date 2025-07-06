@@ -31,3 +31,35 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Security - Environment Variables ###
+.env
+.env.local
+.env.*.local
+*.env
+
+### Local Development Scripts ###
+load-env.sh
+load-env.bat
+set-env.sh
+set-env.bat
+test-env.sh
+
+### Application Logs ###
+*.log
+app.log
+
+### Upload Directory ###
+/uploads/
+/Documents/uploads/
+
+### Temporary Files ###
+*.tmp
+*.temp
+
+### Documentation Files ###
+SECURITY_CONFIG.md
+SECURITY_AUDIT.md
+CONSOLE_CLEANUP.md
+STARTUP_OPTIMIZATION.md
+.env.example

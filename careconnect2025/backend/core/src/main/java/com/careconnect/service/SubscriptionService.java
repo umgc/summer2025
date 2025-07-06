@@ -175,7 +175,10 @@ public class SubscriptionService {
                 case "checkout.session.async_payment_failed" -> handleAsyncPaymentFailed(event);
                 case "checkout.session.async_payment_succeeded" -> handleAsyncPaymentSucceeded(event);
                 case "checkout.session.expired" -> handleSessionExpired(event);
-                default -> System.out.println("Unhandled event type: " + event.getType());
+                default -> {
+                    // Unhandled event type - logging disabled
+                    // System.out.println("Unhandled event type: " + event.getType());
+                }
             }
             return "Webhook received";
         }

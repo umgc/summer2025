@@ -9,6 +9,8 @@ public class UserResponse {
     private Long id;
     private String name;
     private String email;
-    private String role;
+    private com.careconnect.security.Role role;
+    private boolean emailVerified;
     private String profileImageUrl;
+    private String status;
 }

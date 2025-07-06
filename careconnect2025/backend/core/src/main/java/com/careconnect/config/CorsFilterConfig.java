@@ -30,7 +30,7 @@ public class CorsFilterConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-        System.out.println("Custom CorsFilter applied.");
+        // System.out.println("Custom CorsFilter applied.");
         return new CorsFilter(source);
     }
 }

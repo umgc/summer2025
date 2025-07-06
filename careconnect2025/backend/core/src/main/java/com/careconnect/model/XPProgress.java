@@ -28,5 +28,17 @@ public class XPProgress {
 
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    // Explicit setters to ensure compilation works if Lombok isn't processing
+    public void setUserId(Long userId) { this.userId = userId; }
+    public void setXp(int xp) { this.xp = xp; }
+    public void setLevel(int level) { this.level = level; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    // Explicit getters to ensure compilation works if Lombok isn't processing
+    public int getXp() { return xp; }
+    public int getLevel() { return level; }
+    public Long getUserId() { return userId; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
     // Getters and Setters
 }

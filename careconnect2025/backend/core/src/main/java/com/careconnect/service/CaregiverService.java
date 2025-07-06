@@ -6,6 +6,7 @@ import com.careconnect.repository.CaregiverRepository;
 import com.careconnect.repository.PatientRepository;
 import com.careconnect.dto.CaregiverRegistration;
 import com.careconnect.dto.PatientRegistration;
+import com.careconnect.dto.CaregiverPatientLinkResponse;
 import com.careconnect.exception.RegistrationException;
 import com.careconnect.exception.AppException;
 
@@ -18,16 +19,13 @@ import com.careconnect.repository.UserRepository;
 import com.careconnect.security.JwtTokenProvider;
 import com.careconnect.security.Role;
 import com.careconnect.dto.ProfessionalInfoDto;
+import com.careconnect.dto.AddressDto;
 import com.careconnect.model.Address;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.HttpStatus;
-import com.careconnect.model.Address;
-import com.careconnect.dto.AddressDto;
-import com.careconnect.model.Caregiver;
-import com.careconnect.model.Patient;
-
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,10 +46,32 @@ public class CaregiverService {
     @Autowired
     private JwtTokenProvider jwt;
 
-    // 1. List patients under a caregiver, with optional filtering
-    public List<Patient> getPatientsByCaregiver(Long caregiverId, String email, String name) {
-        List<Patient> patients = patientRepository.findByCaregiverId(caregiverId);
+    @Autowired
+    private EmailService emailService;
 
+    @Autowired
+    private CaregiverPatientLinkService caregiverPatientLinkService;
+
+    // 1. List patients under a caregiver, with optional filtering (ACTIVE links only)
+    public List<Patient> getPatientsByCaregiver(Long caregiverId, String email, String name) {
+        // Get caregiver user
+        Caregiver caregiver = getCaregiverById(caregiverId);
+        User caregiverUser = caregiver.getUser();
+        
+        // Get active patient links via CaregiverPatientLinkService
+        List<CaregiverPatientLinkResponse> activeLinks = caregiverPatientLinkService.getPatientsByCaregiver(caregiverUser.getId());
+        
+        // Extract patient user IDs from active links and get Patient objects
+        List<Patient> patients = activeLinks.stream()
+                .map(link -> users.findById(link.patientUserId()))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(user -> patientRepository.findByUser(user))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
+
+        // Apply filters
         if (email != null && !email.isEmpty()) {
             patients = patients.stream()
                     .filter(p -> p.getEmail() != null && p.getEmail().equalsIgnoreCase(email))
@@ -89,11 +109,15 @@ public Patient registerPatient(PatientRegistration reg) {
    if (users.existsByEmail(reg.getEmail()))
         throw new RegistrationException("Email already registered");
 
+    // Generate a temporary token for password setup
+    String passwordSetupToken = java.util.UUID.randomUUID().toString();
+
     User user = User.builder()
             .email(reg.getEmail())
-            .password(encoder.encode(reg.getPassword()))
-            .passwordHash(encoder.encode(reg.getPassword()))
+            .passwordHash(null) // No password hash initially
             .role(Role.PATIENT)
+            .isVerified(false) // Not verified until password is set
+            .verificationToken(passwordSetupToken) // Use this token for password setup
             .build();
 
     Address addr = toAddress(reg.getAddress());
@@ -112,12 +136,21 @@ public Patient registerPatient(PatientRegistration reg) {
             .phone(reg.getPhone())
             .address(addr)
             .user(user)
-            .caregiver(caregiver)
             .relationship(reg.getRelationship())
             .build();
 
     try {
-        return patientRepository.save(patient);
+        Patient savedPatient = patientRepository.save(patient);
+        
+        // Create caregiver-patient link if caregiver is specified
+        if (caregiver != null) {
+            caregiverPatientLinkService.createPermanentLink(caregiver.getUser().getId(), savedPatient.getUser().getId(), "Patient registered by caregiver");
+        }
+        
+        // Send password setup email to patient
+        emailService.sendPasswordSetupEmail(reg.getEmail(), passwordSetupToken, reg.getFirstName());
+        
+        return savedPatient;
      } catch (Exception e) {
         throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR,
                 "Exception occurred while saving patient to the database");
@@ -130,8 +163,9 @@ public Patient registerPatient(PatientRegistration reg) {
 
     User user = new User();
     user.setEmail(reg.getCredentials().getEmail());
-    user.setPassword(encoder.encode(reg.getCredentials().getPassword()));
-    user.setPasswordHash(encoder.encode(reg.getCredentials().getPassword()));
+    String encodedPassword = encoder.encode(reg.getCredentials().getPassword());
+    user.setPassword(encodedPassword);
+    user.setPasswordHash(encodedPassword);
     user.setRole(Role.CAREGIVER);
 
     Address addr = toAddress(reg.getAddress());
