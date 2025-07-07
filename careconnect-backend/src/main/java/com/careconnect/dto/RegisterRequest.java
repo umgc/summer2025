@@ -7,6 +7,6 @@ public class RegisterRequest {
     private String name;
     private String email;
     private String password;
-    private String role = "patient"; // default role
+    private String role;
     private String verificationBaseUrl;
 }

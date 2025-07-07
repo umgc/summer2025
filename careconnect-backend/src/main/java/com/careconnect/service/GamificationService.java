@@ -1,4 +1,4 @@
-package com.careconnect.service;
+package com.careconnect.security.service;
 
 import com.careconnect.model.*;
 import com.careconnect.repository.*;

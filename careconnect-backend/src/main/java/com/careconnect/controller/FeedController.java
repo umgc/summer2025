@@ -1,18 +1,17 @@
 package com.careconnect.controller;
 import org.springframework.beans.factory.annotation.Value;
 import com.careconnect.model.Post;
-import com.careconnect.service.FeedService;
-import jakarta.servlet.http.HttpSession;
+import com.careconnect.security.service.FeedService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -26,43 +25,45 @@ public class FeedController {
     private FeedService feedService;
 
     @GetMapping("/all")
-    public ResponseEntity<?> getGlobalFeed(HttpSession session) {
-        Object userId = session.getAttribute("userId");
+    public ResponseEntity<?> getGlobalFeed(/*HttpSession session*/) {
+        //No session/userId checks needed for stateless operation
+        /*Object userId = session.getAttribute("userId");
 
         System.out.println("🧪 [FeedController] Session ID: " + session.getId());
         System.out.println("🧪 [FeedController] Session userId: " + userId);
 
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
+        }*/
 
-        List<Post> posts = feedService.getAllPosts();
+        List<Map<String, Object>> posts = feedService.getAllPostsWithExtras();
         return ResponseEntity.ok(posts);
     }
 
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserFeed(@PathVariable Long userId, HttpSession session) {
-        Object sessionUserId = session.getAttribute("userId");
-        if (sessionUserId == null || !sessionUserId.toString().equals(userId.toString())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
-        }
+        @GetMapping("/user/{userId}")
+        public ResponseEntity<?> getUserFeed(@PathVariable Long userId /*, HttpSession session*/) {
+            //No session/userId checks needed for stateless operation
+            /*Object sessionUserId = session.getAttribute("userId");
+            if (sessionUserId == null || !sessionUserId.toString().equals(userId.toString())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+            }*/
 
-        List<Post> posts = feedService.getPostsByUser(userId);
-        return ResponseEntity.ok(posts);
-    }
+            List<Post> posts = feedService.getPostsByUser(userId);
+            return ResponseEntity.ok(posts);
+        }
 
     @PostMapping(value = "/create", consumes = "multipart/form-data")
     public ResponseEntity<?> createPost(
             @RequestParam("userId") Long userId,
             @RequestParam("content") String content,
-            @RequestPart(value = "image", required = false) MultipartFile imageFile,
-            HttpSession session
+            @RequestPart(value = "image", required = false) MultipartFile imageFile
+            /*,HttpSession session*/
     ) {
-        Object sessionUserId = session.getAttribute("userId");
+       /* Object sessionUserId = session.getAttribute("userId");
         if (sessionUserId == null || !sessionUserId.toString().equals(userId.toString())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
+        }*/
 
         try {
             String imageUrl = null;
@@ -105,4 +106,3 @@ public class FeedController {
 
 
 }
-

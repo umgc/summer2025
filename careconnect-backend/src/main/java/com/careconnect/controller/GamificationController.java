@@ -1,8 +1,7 @@
 package com.careconnect.controller;
 
 import com.careconnect.model.*;
-import com.careconnect.service.GamificationService;
-import jakarta.servlet.http.HttpSession;
+import com.careconnect.security.service.GamificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,16 +30,16 @@ public class GamificationController {
     }
 
     @GetMapping("/progress/{userId}")
-    public ResponseEntity<?> getXpProgress(@PathVariable Long userId, HttpSession session) {
+    public ResponseEntity<?> getXpProgress(@PathVariable Long userId) { // remove HttpSession session parameter for dev
         // 🔍 Debug print statements
-        System.out.println("Session ID: " + session.getId());
+        /*System.out.println("Session ID: " + session.getId());
         System.out.println("Session UserID: " + session.getAttribute("userId"));
 
         Object sessionUserId = session.getAttribute("userId");
 
         if (sessionUserId == null || !sessionUserId.toString().equals(userId.toString())) {
             return ResponseEntity.status(403).body(1);
-        }
+        }*/
 
         return gamificationService.getXpProgress(userId)
                 .map(ResponseEntity::ok)
