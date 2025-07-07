@@ -1,0 +1,57 @@
+name: CI - CC Spring Boot Backend
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Choose the service to build'
+        default: ''
+        type: choice
+        options:
+            - billing
+            - core
+            - communication
+            - wearable
+  push:
+    branches:
+      - 'care-connect'
+      - 'care-connect-develop'
+    paths:
+      - '**backend/**'
+  pull_request:
+    branches:
+      - 'care-connect'
+      - 'care-connect-develop'
+    paths:
+      - '**backend/**'
+
+jobs:
+  build-all:
+    runs-on: ubuntu-latest
+    concurrency: 
+      group: 'ci-cc-backend-${{ github.ref }}'
+    steps:
+      - name: Check out
+        id: checkout
+        uses: actions/checkout@v4
+      - name: Local CI
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.service == 'billing'
+        uses: ./careconnect2025/backend/core/github/actions/ci
+      
+  create-release:
+    runs-on: ubuntu-latest
+    needs: build-all
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/master')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Release
+        uses: actions/create-release@latest
+        with:
+          tag_name: ${{ github.sha }}
+          release_name: CC-B r-${{ github.sha }}
+          body_path: ./backend/core/target/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,15 @@
+
+
+careconnect2025
+  backend
+    billing
+    core
+    communication
+    wearable
+    ai
+    database
+  frontend
+  terraform_aws
+    backend
+    infra
+      modules
