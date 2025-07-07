@@ -1,47 +1,42 @@
 package com.deeptrain.controller;
 
-import com.deeptrain.dto.NodeBlockDto;
+import com.deeptrain.dto.NodeBlockDTO;
+import com.deeptrain.model.NodeBlock;
 import com.deeptrain.service.NodeBlockService;
-import jakarta.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/nodes")
+@RequestMapping("/api/v1/scenario")
+@CrossOrigin(origins = "*")
 public class NodeBlockController {
 
-    private final NodeBlockService service;
+    @Autowired
+    private NodeBlockService service;
 
-    public NodeBlockController(NodeBlockService service) {
-        this.service = service;
+    @PostMapping("/save")
+    public List<NodeBlock> saveScenario(@RequestBody List<NodeBlock> blocks) {
+        return service.saveAll(blocks);
     }
 
-    @PostMapping
-    public ResponseEntity<NodeBlockDto> create(@Valid @RequestBody NodeBlockDto dto) {
-        return ResponseEntity.ok(service.save(dto));
+    @GetMapping("/all")
+    public List<NodeBlock> getAll() {
+        return service.getAll();
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<NodeBlockDto> update(@PathVariable String id, @Valid @RequestBody NodeBlockDto dto) {
-        dto.setId(id);
-        return ResponseEntity.ok(service.update(dto));
+    @PostMapping("/generate")
+    public String  generateScenario(@RequestBody NodeBlockDTO dto) {
+        String prompt = dto.getLessonContent();
+        System.out.println("Prompt ---> " + dto.getLessonContent());
+        return service.generateScenarioFromPrompt(prompt);
     }
 
-    @GetMapping
-    public ResponseEntity<List<NodeBlockDto>> getAll() {
-        return ResponseEntity.ok(service.getAll());
-    }
+    
 
-    @GetMapping("/domain/{domain}")
-    public ResponseEntity<List<NodeBlockDto>> getByDomain(@PathVariable String domain) {
-        return ResponseEntity.ok(service.getByDomain(domain));
-    }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        service.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }
 }

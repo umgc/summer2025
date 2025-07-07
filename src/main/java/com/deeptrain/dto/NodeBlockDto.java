@@ -1,27 +1,46 @@
 package com.deeptrain.dto;
 
-import lombok.Data;
-
-@Data
-public class NodeBlockDto {
+public class NodeBlockDTO {
     private String id;
-    private String type;
     private String title;
-    private float offsetX;
-    private float offsetY;
-
-    private String welcomeMessage;
-    private String lessonType;
+    private String type;
     private String lessonContent;
-    private String estimatedTime;
-    private String quizTitle;
-    private String passingScore;
-    private String timeLimit;
-    private String conditionExpression;
-    private String truePathLabel;
-    private String falsePathLabel;
-    private String checkpointTitle;
-    private String checkpointNote;
 
-    private String domain;
+    // Getter & Setter for lessonContent
+    public String getLessonContent() {
+        return lessonContent;
+    }
+
+    public void setLessonContent(String lessonContent) {
+        this.lessonContent = lessonContent;
+    }
+
+    // Add getters/setters for other fields too
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+
 }
+

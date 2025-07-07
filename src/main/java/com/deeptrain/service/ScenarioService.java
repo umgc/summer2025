@@ -1,42 +1,47 @@
 package com.deeptrain.service;
-
-import com.deeptrain.dto.NodeBlockDto;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.deeptrain.dto.ScenarioDTO;
+import com.deeptrain.model.Scenario;
+import com.deeptrain.repository.ScenarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
-
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class ScenarioService {
 
-    private final WebClient deepSeekClient;
+    @Autowired
+    private ScenarioRepository scenarioRepository;
 
-    // Save not yet implemented: you can persist to DB later
-    public List<NodeBlockDto> saveScenario(String domain, List<NodeBlockDto> nodes) {
-        return nodes;
+    public Scenario saveScenario(ScenarioDTO dto) {
+        System.out.println("Saving Scenario -> Title: " + dto.title + ", Domain: " + dto.domain);
+        Scenario s = new Scenario();
+        s.setDomain(dto.domain);
+        s.setTitle(dto.title);
+        s.setSerializedBlocks(dto.serializedBlocks);
+        return scenarioRepository.save(s);
     }
 
-    public List<NodeBlockDto> loadScenario(String domain) {
-        try {
-            return deepSeekClient.get()
-                    .uri("/scenarios/{domain}", domain)
-                    .retrieve()
-                    .bodyToFlux(NodeBlockDto.class)
-                    .collectList()
-                    .block(); // Blocking for simplicity; consider reactive in future
-        } catch (Exception e) {
-            log.error("Failed to fetch scenario from DeepSeek for domain {}", domain, e);
-            return List.of(); // Empty fallback
-        }
+    public List<Scenario> getAllScenarios() {
+        return scenarioRepository.findAll();
     }
 
-    public void clearScenario(String domain) {
-        // Not applicable for remote fetch, but kept for compatibility
-        log.info("Clear scenario is not implemented for DeepSeek-backed service.");
+    public Optional<Scenario> getScenarioById(Long id) {
+        return scenarioRepository.findById(id);
+    }
+
+    public Optional<Scenario> updateScenario(Long id, ScenarioDTO dto) {
+        
+        return scenarioRepository.findById(id).map(existing -> {
+            existing.setDomain(dto.domain);
+            existing.setTitle(dto.title);
+            existing.setSerializedBlocks(dto.serializedBlocks);
+            return scenarioRepository.save(existing);
+        });
+    }
+
+    public void deleteScenario(Long id) {
+        scenarioRepository.deleteById(id);
     }
 }

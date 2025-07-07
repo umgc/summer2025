@@ -1,49 +1,61 @@
 package com.deeptrain.service;
 
-import com.deeptrain.dto.NodeBlockDto;
-import com.deeptrain.mapper.NodeBlockMapper;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
 import com.deeptrain.model.NodeBlock;
 import com.deeptrain.repository.NodeBlockRepository;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+
+
 
 @Service
 public class NodeBlockService {
 
-    private final NodeBlockRepository repository;
+    private final WebClient webClient;
 
-    public NodeBlockService(NodeBlockRepository repository) {
-        this.repository = repository;
+    @Autowired
+    private NodeBlockRepository repository;
+
+    public List<NodeBlock> saveAll(List<NodeBlock> blocks) {
+        return repository.saveAll(blocks);
     }
 
-    public NodeBlockDto save(NodeBlockDto dto) {
-        NodeBlock saved = repository.save(NodeBlockMapper.toEntity(dto));
-        return NodeBlockMapper.toDto(saved);
+    public List<NodeBlock> getAll() {
+        return repository.findAll();
     }
 
-    public List<NodeBlockDto> getAll() {
-        return repository.findAll().stream()
-                .map(NodeBlockMapper::toDto)
-                .collect(Collectors.toList());
+    public NodeBlockService(@Value("${deepseek.api.url}") String baseUrl,
+                     @Value("${deepseek.api.key}") String apiKey) {
+        this.webClient = WebClient.builder()
+                .baseUrl(baseUrl)
+                .defaultHeader("Authorization", "Bearer " + apiKey)
+                .build();
     }
 
-    public List<NodeBlockDto> getByDomain(String domain) {
-        return repository.findByDomainIgnoreCase(domain).stream()
-                .map(NodeBlockMapper::toDto)
-                .collect(Collectors.toList());
+    public String generateScenarioFromPrompt(String prompt) {
+      try {
+       
+       return webClient.post()
+            .uri("/completions")
+            .bodyValue(Map.of(
+                "model", "deepseek-chat",
+                "prompt", prompt,
+                "max_tokens", 300
+            ))
+            .retrieve()
+            .bodyToMono(String.class)
+            .block();
+    } catch (Exception e) {
+        return "Error generating response: " + e.getMessage();
+  
+      }
     }
 
-    public void deleteById(String id) {
-        repository.deleteById(id);
-    }
 
-    public NodeBlockDto update(NodeBlockDto dto) {
-        if (!repository.existsById(dto.getId())) {
-            throw new IllegalArgumentException("Node not found");
-        }
-        NodeBlock updated = repository.save(NodeBlockMapper.toEntity(dto));
-        return NodeBlockMapper.toDto(updated);
-    }
 }
