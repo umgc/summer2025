@@ -44,10 +44,41 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Security - Environment Variables and Secrets
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
+*.env
+*.secret
+*.key
+*.pem
+
+# OAuth2 and API Credentials
+credentials.json
+service-account.json
+google-credentials.json
+oauth-credentials.json
+
+# JWT and Encryption Keys
+jwt.key
+private.key
+public.key
+
+# Database and API Keys
+database.env
+api-keys.env
+
 careconnect-backend/.env
 
 # Test coverage reports
 coverage/
 
-# Documentation files
-restructure_app.md
+# Documentation files (except README)
+*.md
+!README.md
+!readme.md
+!README.MD
+!readme.MD

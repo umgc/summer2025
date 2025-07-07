@@ -1,7 +1,55 @@
 import 'package:flutter/material.dart';
+import '../../../../services/auth_service.dart';
 
-class ResetPasswordScreen extends StatelessWidget {
+class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
+
+  @override
+  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+}
+
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  bool _isLoading = false;
+  String? _message;
+  String? _error;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendResetCode() async {
+    if (_emailController.text.trim().isEmpty) {
+      setState(() {
+        _error = 'Please enter your email address';
+        _message = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+      _message = null;
+    });
+
+    try {
+      final result = await AuthService.requestPasswordReset(
+        _emailController.text.trim(),
+      );
+      setState(() {
+        _message = result;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to send reset code: $e';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,11 +92,28 @@ class ResetPasswordScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             TextFormField(
+              controller: _emailController,
               decoration: const InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(),
               ),
+              keyboardType: TextInputType.emailAddress,
             ),
+            const SizedBox(height: 16),
+            if (_error != null) ...[
+              Text(
+                _error!,
+                style: const TextStyle(color: Colors.red, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (_message != null) ...[
+              Text(
+                _message!,
+                style: const TextStyle(color: Colors.green, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+            ],
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
@@ -60,13 +125,20 @@ class ResetPasswordScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
-                onPressed: () {
-                  // Add send-code logic here
-                },
-                child: const Text(
-                  'Send code',
-                  style: TextStyle(fontSize: 16),
-                ),
+                onPressed: _isLoading ? null : _sendResetCode,
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Send Reset Code',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
               ),
             ),
           ],

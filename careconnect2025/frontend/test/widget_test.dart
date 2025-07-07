@@ -434,6 +434,7 @@ STRIPE_PUBLISHABLE_KEY=test_key
         id: 1,
         role: 'PATIENT',
         token: 'test_token',
+        email: 'testme@sample.com',
         patientId: 1,
       );
 

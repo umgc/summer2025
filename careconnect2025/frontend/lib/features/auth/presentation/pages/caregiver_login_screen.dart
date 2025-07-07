@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../services/auth_service.dart';
-import 'password_reset_page.dart';
-import 'sign_up_screen.dart';
-import '../../../dashboard/presentation/pages/caregiver_dashboard.dart';
+import '../../../../providers/user_provider.dart';
 
 class CaregiverLoginScreen extends StatefulWidget {
   const CaregiverLoginScreen({super.key});
@@ -28,18 +27,19 @@ class _CaregiverLoginScreenState extends State<CaregiverLoginScreen> {
       final user = await AuthService.login(
         _emailController.text.trim(),
         _passwordController.text,
-        role: 'caregiver', // ✅ Add this line
+        role: 'caregiver',
       );
 
-      if (user['role'] == 'caregiver') {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('userId', user['id'].toString());
-        await prefs.setString('role', user['role']);
+      if (user.role.toUpperCase() == 'CAREGIVER') {
+        // Update UserProvider with the logged-in user
+        if (mounted) {
+          Provider.of<UserProvider>(context, listen: false).setUser(user);
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const CaregiverDashboard()),
-        );
+          // Add a small delay to ensure JWT token is fully saved before navigation
+          await Future.delayed(const Duration(milliseconds: 100));
+
+          context.go('/dashboard/caregiver');
+        }
       } else {
         setState(() {
           errorMessage = "You are not registered as a caregiver.";
@@ -110,12 +110,7 @@ class _CaregiverLoginScreenState extends State<CaregiverLoginScreen> {
               const SizedBox(height: 20),
               GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const PasswordResetPage(),
-                    ),
-                  );
+                  context.go('/reset-password');
                 },
                 child: const Text(
                   'Forgot your password?',
@@ -129,10 +124,7 @@ class _CaregiverLoginScreenState extends State<CaregiverLoginScreen> {
               const SizedBox(height: 20),
               GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                  );
+                  context.go('/signup');
                 },
                 child: const Text(
                   'Register here for an account',

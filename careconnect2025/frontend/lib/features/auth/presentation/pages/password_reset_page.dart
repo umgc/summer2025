@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../services/auth_service.dart';
 
 class PasswordResetPage extends StatefulWidget {
   const PasswordResetPage({super.key});
@@ -12,6 +13,7 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
   final TextEditingController _emailController = TextEditingController();
   bool _isLoading = false;
   String? _status;
+  bool _isError = false;
 
   @override
   void dispose() {
@@ -21,16 +23,47 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
 
   Future<void> _resetPassword() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
       _status = null;
+      _isError = false;
     });
-    // TODO: Integrate with backend for password reset
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() {
-      _isLoading = false;
-      _status = 'If your email exists, a reset link has been sent.';
-    });
+
+    try {
+      final message = await AuthService.requestPasswordReset(
+        _emailController.text.trim(),
+      );
+      setState(() {
+        _isLoading = false;
+        _status = message;
+        _isError = false;
+      });
+    } catch (e) {
+      String errorMessage = e.toString().replaceAll('Exception: ', '');
+
+      // Handle common error cases
+      if (errorMessage.contains('No route to host') ||
+          errorMessage.contains('Failed to connect') ||
+          errorMessage.contains('Connection refused')) {
+        errorMessage =
+            'Cannot connect to server. Please check your internet connection.';
+      } else if (errorMessage.contains('Timeout')) {
+        errorMessage = 'Request timed out. Please try again.';
+      } else if (errorMessage.contains('404')) {
+        errorMessage = 'Service not available. Please try again later.';
+      } else if (errorMessage.contains('500')) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (!errorMessage.contains('Error:')) {
+        errorMessage = 'An unexpected error occurred. Please try again.';
+      }
+
+      setState(() {
+        _isLoading = false;
+        _status = errorMessage;
+        _isError = true;
+      });
+    }
   }
 
   @override
@@ -72,9 +105,15 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
                       ),
                     ),
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Please enter your email'
-                        : null,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                        return 'Please enter a valid email address';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
@@ -109,13 +148,39 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
                   ),
                   if (_status != null) ...[
                     const SizedBox(height: 24),
-                    Text(
-                      _status!,
-                      style: const TextStyle(
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: _isError
+                            ? Colors.red.shade50
+                            : Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _isError
+                              ? Colors.red.shade300
+                              : Colors.green.shade300,
+                        ),
                       ),
-                      textAlign: TextAlign.center,
+                      child: Row(
+                        children: [
+                          Icon(
+                            _isError ? Icons.error : Icons.check_circle,
+                            color: _isError ? Colors.red : Colors.green,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _status!,
+                              style: TextStyle(
+                                color: _isError
+                                    ? Colors.red.shade700
+                                    : Colors.green.shade700,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ],

@@ -43,7 +43,7 @@ class _UploadAvatarScreenState extends State<UploadAvatarScreen> {
 
     setState(() => isUploading = true);
 
-    final uri = Uri.parse('${getBackendBaseUrl()}/api/auth/avatar/$userId');
+    final uri = Uri.parse('${getBackendBaseUrl()}/v1/api/auth/avatar/$userId');
 
     final request = http.MultipartRequest('POST', uri);
     request.files.add(
