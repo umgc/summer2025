@@ -3,9 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:care_connect_app/config/constants/api_constants.dart';
 import 'package:care_connect_app/providers/user_provider.dart';
+import 'package:care_connect_app/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../widgets/ai_chat.dart';
 
 class PatientDashboard extends StatefulWidget {
   final int? userId;
@@ -48,13 +49,22 @@ class _PatientDashboardState extends State<PatientDashboard> {
       }
 
       // Fetch patient details
+      final authHeaders = await ApiService.getAuthHeaders();
+      print(
+        'DEBUG: Making patient API call with headers: ${authHeaders.keys.join(', ')}',
+      );
+
       final patientRes = await http.get(
         Uri.parse('${ApiConstants.baseUrl}patients/$patientId'),
-        headers: {'Accept': 'application/json'},
+        headers: authHeaders,
       );
+      print('DEBUG: Patient API response status: ${patientRes.statusCode}');
+      print('DEBUG: Patient API response body: ${patientRes.body}');
+
       if (patientRes.statusCode != 200) {
         setState(() {
-          error = 'Failed to load patient details';
+          error =
+              'Failed to load patient details (${patientRes.statusCode}): ${patientRes.body}';
           loading = false;
         });
         return;
@@ -62,13 +72,23 @@ class _PatientDashboardState extends State<PatientDashboard> {
       patient = json.decode(patientRes.body);
 
       // Fetch caregivers
+      print(
+        'DEBUG: Making caregivers API call with headers: ${authHeaders.keys.join(', ')}',
+      );
+
       final caregiversRes = await http.get(
         Uri.parse('${ApiConstants.baseUrl}patients/$patientId/caregivers'),
-        headers: {'Accept': 'application/json'},
+        headers: authHeaders,
       );
+      print(
+        'DEBUG: Caregivers API response status: ${caregiversRes.statusCode}',
+      );
+      print('DEBUG: Caregivers API response body: ${caregiversRes.body}');
+
       if (caregiversRes.statusCode != 200) {
         setState(() {
-          error = 'Failed to load caregivers';
+          error =
+              'Failed to load caregivers (${caregiversRes.statusCode}): ${caregiversRes.body}';
           loading = false;
         });
         return;
@@ -108,93 +128,102 @@ class _PatientDashboardState extends State<PatientDashboard> {
         ),
       ),
       drawer: _buildDrawer(context),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : error != null
-          ? Center(child: Text(error!))
-          : SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${greeting()} ${patient?['firstName'] ?? 'Patient'}!',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      'How are you feeling today?',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildMoodSelector(),
-                    const Divider(height: 30, thickness: 2),
-
-                    const Text(
-                      'How is your pain today?',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildPainSelector(),
-                    const Divider(height: 30, thickness: 2),
-
-                    ...caregivers
-                        .map((caregiver) => _buildCaregiverCard(caregiver)),
-
-                    const SizedBox(height: 20),
-
-                    GestureDetector(
-                      onTap: () => context.go('/tasks/today'),
-                      child: const Text(
-                        'View Today\'s Task',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
-                          fontWeight: FontWeight.bold,
+      body: Stack(
+        children: [
+          loading
+              ? const Center(child: CircularProgressIndicator())
+              : error != null
+              ? Center(child: Text(error!))
+              : SafeArea(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${greeting()} ${patient?['firstName'] ?? 'Patient'}!',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ),
+                        const SizedBox(height: 20),
 
-                    const SizedBox(height: 30),
-
-                    Align(
-                      alignment: Alignment.bottomRight,
-                      child: TextButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('SOS Call initiated!'),
-                            ),
-                          );
-                        },
-                        icon: const Icon(
-                          Icons.phone_in_talk_rounded,
-                          color: Colors.red,
-                        ),
-                        label: const Text(
-                          'SOS CALL',
+                        const Text(
+                          'How are you feeling today?',
                           style: TextStyle(
-                            color: Colors.red,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 10),
+                        _buildMoodSelector(),
+                        const Divider(height: 30, thickness: 2),
+
+                        const Text(
+                          'How is your pain today?',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        _buildPainSelector(),
+                        const Divider(height: 30, thickness: 2),
+
+                        ...caregivers.map(
+                          (caregiver) => _buildCaregiverCard(caregiver),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        GestureDetector(
+                          onTap: () => context.go('/tasks/today'),
+                          child: const Text(
+                            'View Today\'s Task',
+                            style: TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 30),
+
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child: TextButton.icon(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('SOS Call initiated!'),
+                                ),
+                              );
+                            },
+                            icon: const Icon(
+                              Icons.phone_in_talk_rounded,
+                              color: Colors.red,
+                            ),
+                            label: const Text(
+                              'SOS CALL',
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Add some bottom padding to ensure content isn't hidden behind AI chat
+                        const SizedBox(height: 100),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+          // AI Chat Widget
+          const AIChat(role: 'patient'),
+        ],
+      ),
     );
   }
 
@@ -377,22 +406,34 @@ class _PatientDashboardState extends State<PatientDashboard> {
             decoration: BoxDecoration(color: Colors.blue.shade700),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                CircleAvatar(
+              children: [
+                const CircleAvatar(
                   radius: 28,
                   backgroundColor: Colors.white,
                   child: Icon(Icons.person, size: 30),
                 ),
-                SizedBox(height: 8),
-                Text(
-                  'Patient Name',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                const SizedBox(height: 8),
+                Consumer<UserProvider>(
+                  builder: (context, userProvider, child) {
+                    final user = userProvider.user;
+                    final patientName =
+                        user?.name ??
+                        (patient?['firstName'] != null &&
+                                patient?['lastName'] != null
+                            ? '${patient!['firstName']} ${patient!['lastName']}'
+                            : 'Patient');
+
+                    return Text(
+                      patientName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
                 ),
-                Text('Patient', style: TextStyle(color: Colors.white70)),
+                const Text('Patient', style: TextStyle(color: Colors.white70)),
               ],
             ),
           ),
@@ -416,6 +457,11 @@ class _PatientDashboardState extends State<PatientDashboard> {
               'icon': Icons.note_alt,
               'title': 'Health Care Note',
               'route': null,
+            },
+            {
+              'icon': Icons.analytics,
+              'title': 'Analytics',
+              'route': '/analytics',
             },
             {
               'icon': Icons.emoji_events,
@@ -443,6 +489,14 @@ class _PatientDashboardState extends State<PatientDashboard> {
                 if (route != null) {
                   if (route == '/social-feed') {
                     context.go('$route?userId=${widget.userId ?? 1}');
+                  } else if (route == '/analytics') {
+                    final user = Provider.of<UserProvider>(
+                      context,
+                      listen: false,
+                    ).user;
+                    final patientId =
+                        user?.patientId ?? user?.id ?? widget.userId ?? 1;
+                    context.go('$route?patientId=$patientId');
                   } else {
                     context.go(route);
                   }

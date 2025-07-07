@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../models/patient_model.dart';
 import 'package:provider/provider.dart';
-import 'package:care_connect_app/config/constants/api_constants.dart';
 import 'package:care_connect_app/providers/user_provider.dart';
+import 'package:care_connect_app/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../widgets/ai_chat.dart';
 
 class CaregiverDashboard extends StatefulWidget {
   final int caregiverId;
@@ -41,11 +41,9 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
         });
         return;
       }
-      final response = await http.get(
-        Uri.parse(
-          '${ApiConstants.baseUrl}caregivers/${user.caregiverId}/patients',
-        ),
-      );
+      final response = await ApiService.getCaregiverPatients(
+        user.caregiverId ?? 0,
+      ).timeout(const Duration(seconds: 180));
       if (response.statusCode == 200) {
         final List data = json.decode(response.body);
         setState(() {
@@ -68,11 +66,9 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
 
   Future<List<Map<String, dynamic>>> fetchPatientVitals(int patientId) async {
     try {
-      final response = await http.get(
-        Uri.parse(
-          '${ApiConstants.baseUrl}analytics/vitals?patientId=$patientId&days=7',
-        ),
-      );
+      final response = await ApiService.getPatientVitals(
+        patientId,
+      ).timeout(const Duration(seconds: 180));
       if (response.statusCode == 200) {
         final List data = json.decode(response.body);
         return List<Map<String, dynamic>>.from(data);
@@ -164,24 +160,33 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(color: Colors.blue.shade700),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 28,
                     backgroundColor: Colors.white,
                     child: Icon(Icons.person, size: 30),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Caregiver Name',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  const SizedBox(height: 8),
+                  Consumer<UserProvider>(
+                    builder: (context, userProvider, child) {
+                      final userName =
+                          userProvider.user?.name ?? 'Caregiver Name';
+                      return Text(
+                        userName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    },
                   ),
-                  Text('Caregiver', style: TextStyle(color: Colors.white70)),
+                  const Text(
+                    'Caregiver',
+                    style: TextStyle(color: Colors.white70),
+                  ),
                 ],
               ),
             ),
@@ -242,229 +247,342 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           ],
         ),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: loading
-              ? const Center(child: CircularProgressIndicator())
-              : error != null
-              ? Center(child: Text(error!))
-              : patients.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.person_add,
-                        size: 80,
-                        color: Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'No patients found',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Add your first patient to get started',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: () => context.go('/register/patient'),
-                        icon: const Icon(Icons.person_add),
-                        label: const Text('Register New Patient'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade900,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : error != null
+                  ? Center(child: Text(error!))
+                  : patients.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.person_add,
+                            size: 80,
+                            color: Colors.grey.shade400,
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : Column(
-                  children: [
-                    // Add patient button at the top
-                    Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: ElevatedButton.icon(
-                        onPressed: () => context.go('/register/patient'),
-                        icon: const Icon(Icons.person_add),
-                        label: const Text('Register New Patient'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade900,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Patient list
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: patients.length,
-                        itemBuilder: (context, index) {
-                          final patient = patients[index];
-                          return Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(color: Colors.blue.shade900),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No patients found',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey,
                             ),
-                            margin: const EdgeInsets.only(bottom: 20),
-                            elevation: 1,
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 24,
-                                        backgroundColor: Colors.blue.shade900,
-                                        child: Text(
-                                          (patient.firstName.isNotEmpty
-                                                  ? patient.firstName[0]
-                                                  : 'P')
-                                              .toUpperCase(),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              '${patient.firstName} ${patient.lastName}',
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              'DOB: ${formatDate(patient.dob)}',
-                                            ),
-                                            Text('Phone: ${patient.phone}'),
-                                            Text(
-                                              'Relationship: ${patient.relationship}',
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const Icon(Icons.more_vert),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-
-                                  // Vitals summary for this patient
-                                  FutureBuilder<List<Map<String, dynamic>>>(
-                                    future: fetchPatientVitals(patient.id),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return const Padding(
-                                          padding: EdgeInsets.only(bottom: 12),
-                                          child: LinearProgressIndicator(),
-                                        );
-                                      }
-                                      if (snapshot.hasData &&
-                                          snapshot.data!.isNotEmpty) {
-                                        return Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 12,
-                                          ),
-                                          child: buildVitalsSummary(
-                                            snapshot.data!,
-                                          ),
-                                        );
-                                      }
-                                      return const SizedBox.shrink();
-                                    },
-                                  ),
-
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      _dashboardButton(
-                                        context,
-                                        Icons.view_list,
-                                        'View Logs',
-                                        () => ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  'View Logs feature coming soon!',
-                                                ),
-                                              ),
-                                            ),
-                                      ),
-                                      _dashboardButton(
-                                        context,
-                                        Icons.call,
-                                        'Call',
-                                        () => ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Calling ${patient.phone} (simulated)',
-                                                ),
-                                              ),
-                                            ),
-                                      ),
-                                      _dashboardButton(
-                                        context,
-                                        Icons.message,
-                                        'Message',
-                                        () => ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  'Message feature coming soon!',
-                                                ),
-                                              ),
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Add your first patient to get started',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () => context.go('/register/patient'),
+                            icon: const Icon(Icons.person_add),
+                            label: const Text('Register New Patient'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade900,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                          );
-                        },
+                          ),
+                        ],
                       ),
+                    )
+                  : Column(
+                      children: [
+                        // Add patient button at the top
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: ElevatedButton.icon(
+                            onPressed: () => context.go('/register/patient'),
+                            icon: const Icon(Icons.person_add),
+                            label: const Text('Register New Patient'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade900,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Patient list
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: patients.length,
+                            itemBuilder: (context, index) {
+                              final patient = patients[index];
+                              return Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  side: BorderSide(color: Colors.blue.shade900),
+                                ),
+                                margin: const EdgeInsets.only(bottom: 20),
+                                elevation: 1,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 24,
+                                            backgroundColor:
+                                                Colors.blue.shade900,
+                                            child: Text(
+                                              (patient.firstName.isNotEmpty
+                                                      ? patient.firstName[0]
+                                                      : 'P')
+                                                  .toUpperCase(),
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  '${patient.firstName} ${patient.lastName}',
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'DOB: ${formatDate(patient.dob)}',
+                                                ),
+                                                Text('Phone: ${patient.phone}'),
+                                                Text(
+                                                  'Relationship: ${patient.relationship}',
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const Icon(Icons.more_vert),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+
+                                      // Vitals summary for this patient
+                                      FutureBuilder<List<Map<String, dynamic>>>(
+                                        future: fetchPatientVitals(patient.id),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return const Padding(
+                                              padding: EdgeInsets.only(
+                                                bottom: 12,
+                                              ),
+                                              child: LinearProgressIndicator(),
+                                            );
+                                          }
+                                          if (snapshot.hasData &&
+                                              snapshot.data!.isNotEmpty) {
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 12,
+                                              ),
+                                              child: buildVitalsSummary(
+                                                snapshot.data!,
+                                              ),
+                                            );
+                                          }
+                                          return const SizedBox.shrink();
+                                        },
+                                      ),
+
+                                      // Responsive button layout
+                                      LayoutBuilder(
+                                        builder: (context, constraints) {
+                                          // If width is too small, use 2x2 grid
+                                          if (constraints.maxWidth < 380) {
+                                            return Column(
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: _dashboardButton(
+                                                        context,
+                                                        Icons.analytics,
+                                                        'Analytics',
+                                                        () => context.go(
+                                                          '/analytics?patientId=${patient.id}',
+                                                        ),
+                                                        isAnalytics: true,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Expanded(
+                                                      child: _dashboardButton(
+                                                        context,
+                                                        Icons.view_list,
+                                                        'View Logs',
+                                                        () =>
+                                                            ScaffoldMessenger.of(
+                                                              context,
+                                                            ).showSnackBar(
+                                                              const SnackBar(
+                                                                content: Text(
+                                                                  'View Logs feature coming soon!',
+                                                                ),
+                                                              ),
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: _dashboardButton(
+                                                        context,
+                                                        Icons.call,
+                                                        'Call',
+                                                        () =>
+                                                            ScaffoldMessenger.of(
+                                                              context,
+                                                            ).showSnackBar(
+                                                              SnackBar(
+                                                                content: Text(
+                                                                  'Calling ${patient.phone} (simulated)',
+                                                                ),
+                                                              ),
+                                                            ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Expanded(
+                                                      child: _dashboardButton(
+                                                        context,
+                                                        Icons.message,
+                                                        'Message',
+                                                        () =>
+                                                            ScaffoldMessenger.of(
+                                                              context,
+                                                            ).showSnackBar(
+                                                              const SnackBar(
+                                                                content: Text(
+                                                                  'Message feature coming soon!',
+                                                                ),
+                                                              ),
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            );
+                                          } else {
+                                            // Use single row for wider screens
+                                            return Row(
+                                              children: [
+                                                Expanded(
+                                                  child: _dashboardButton(
+                                                    context,
+                                                    Icons.analytics,
+                                                    'Analytics',
+                                                    () => context.go(
+                                                      '/analytics?patientId=${patient.id}',
+                                                    ),
+                                                    isAnalytics: true,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: _dashboardButton(
+                                                    context,
+                                                    Icons.view_list,
+                                                    'View Logs',
+                                                    () =>
+                                                        ScaffoldMessenger.of(
+                                                          context,
+                                                        ).showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text(
+                                                              'View Logs feature coming soon!',
+                                                            ),
+                                                          ),
+                                                        ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: _dashboardButton(
+                                                    context,
+                                                    Icons.call,
+                                                    'Call',
+                                                    () =>
+                                                        ScaffoldMessenger.of(
+                                                          context,
+                                                        ).showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(
+                                                              'Calling ${patient.phone} (simulated)',
+                                                            ),
+                                                          ),
+                                                        ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: _dashboardButton(
+                                                    context,
+                                                    Icons.message,
+                                                    'Message',
+                                                    () =>
+                                                        ScaffoldMessenger.of(
+                                                          context,
+                                                        ).showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text(
+                                                              'Message feature coming soon!',
+                                                            ),
+                                                          ),
+                                                        ),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Colors.blue.shade900,
-        icon: const Icon(Icons.smart_toy),
-        label: const Text('Ask AI'),
-        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('AI Assistant feature coming soon!')),
-        ),
+            ),
+          ),
+          // AI Chat Widget
+          const AIChat(role: 'caregiver'),
+        ],
       ),
     );
   }
@@ -473,18 +591,29 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     BuildContext context,
     IconData icon,
     String label,
-    VoidCallback onPressed,
-  ) {
+    VoidCallback onPressed, {
+    bool isAnalytics = false,
+  }) {
     return ElevatedButton.icon(
       onPressed: onPressed,
-      icon: Icon(icon, size: 18),
-      label: Text(label),
+      icon: Icon(icon, size: 16), // Reduced from 18 to 16
+      label: Text(
+        label,
+        style: const TextStyle(fontSize: 11), // Reduced from 12 to 11
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue.shade900,
+        backgroundColor: isAnalytics
+            ? Colors.green.shade700
+            : Colors.blue.shade900,
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 8,
+          vertical: 6,
+        ), // Reduced padding
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-        textStyle: const TextStyle(fontSize: 12),
+        minimumSize: const Size(0, 32), // Set minimum height
       ),
     );
   }

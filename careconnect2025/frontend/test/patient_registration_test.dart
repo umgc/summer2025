@@ -14,6 +14,7 @@ void main() {
         id: 1,
         role: 'caregiver',
         token: 'mock_token',
+        email: 'testcaregiver@sample.com',
         caregiverId: 1,
       );
 
@@ -45,6 +46,7 @@ void main() {
         id: 1,
         role: 'caregiver',
         token: 'mock_token',
+        email: 'testmeemail@sample.com',
         caregiverId: 1,
       );
 

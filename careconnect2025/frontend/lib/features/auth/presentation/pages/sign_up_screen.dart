@@ -186,12 +186,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
 
       // Navigate to payment selection for caregiver registration
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const CaregiverRegistrationFlowPage(),
-        ),
-      );
+      context.go('/register/caregiver/payment');
     }
   }
 

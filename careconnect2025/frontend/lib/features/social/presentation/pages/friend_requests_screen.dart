@@ -27,7 +27,12 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
     final url = Uri.parse(
       '${getBackendBaseUrl()}/api/friends/requests/${widget.userId}',
     );
-    final response = await http.get(url);
+    final response = await http
+        .get(url)
+        .timeout(
+          const Duration(seconds: 180),
+          onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
+        );
 
     if (response.statusCode == 200) {
       setState(() {

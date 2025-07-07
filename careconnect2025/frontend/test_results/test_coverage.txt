@@ -1,0 +1,579 @@
+00:00 +0: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart                                                               00:01 +0: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart                                                               00:02 +0: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart                                                               00:03 +0: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart                                                               00:04 +0: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart                                                               00:05 +0: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart                                                               00:06 +0: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart                                                               00:07 +0: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart                                                               00:08 +0: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart                                                               00:09 +0: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart                                                               00:10 +0: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart                                                               00:11 +0: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart                                                               00:12 +0: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart                                                               00:12 +0: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Analytics page shows filter chips                                    00:13 +0: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Analytics page shows filter chips                                    00:13 +1: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Analytics page shows filter chips                                    00:13 +2: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Analytics page shows filter chips                                    00:13 +3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Analytics page shows filter chips                                    00:14 +3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Analytics page shows filter chips                                    00:15 +3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Analytics page shows filter chips                                    00:15 +3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Analytics page shows filter chips                                    
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "7 days": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart:14:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:193:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1064:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart line 14
+The test description was:
+  Analytics page shows filter chips
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:15 +3 -1: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Analytics page shows filter chips [E]                             
+  Test failed. See exception logs above.
+  The test description was: Analytics page shows filter chips
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart -p vm --plain-name 'Analytics page shows filter chips'
+00:15 +3 -1: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Filter chips can be selected                                      00:15 +3 -1: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Filter chips can be selected                                      
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _AncestorWidgetFinder:<Found 0 widgets with type "FilterChip" that are ancestors of
+widgets with text "14 days": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart:27:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:193:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1064:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart line 27
+The test description was:
+  Filter chips can be selected
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:15 +3 -2: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Filter chips can be selected [E]                                  
+  Test failed. See exception logs above.
+  The test description was: Filter chips can be selected
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart -p vm --plain-name 'Filter chips can be selected'
+00:15 +3 -2: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Refresh button works                                              00:15 +3 -2: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Refresh button works                                              
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _IconWidgetFinder:<Found 0 widgets with icon "IconData(U+0E514)": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart:43:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:193:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1064:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart line 43
+The test description was:
+  Refresh button works
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:16 +3 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart: Refresh button works [E]                                          
+  Test failed. See exception logs above.
+  The test description was: Refresh button works
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_filter_test.dart -p vm --plain-name 'Refresh button works'
+00:16 +3 -3: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/simple_test.dart                                                                      00:17 +3 -3: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/simple_test.dart                                                                      00:18 +3 -3: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/simple_test.dart                                                                      00:19 +3 -3: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/simple_test.dart                                                                      00:20 +3 -3: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/simple_test.dart                                                                      00:21 +3 -3: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/simple_test.dart                                                                      00:21 +3 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/simple_test.dart: Simple test to verify setup                                                 00:21 +4 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/simple_test.dart: Simple test to verify setup                                                 00:22 +4 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/simple_test.dart: Simple test to verify setup                                                 00:23 +4 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/simple_test.dart: Simple test to verify setup                                                 00:24 +4 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/simple_test.dart: Simple test to verify setup                                                 00:24 +4 -3: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart                                                           00:24 +4 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: ... Tests CaregiverDashboard adapts to different screen sizes    00:25 +4 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: ... Tests CaregiverDashboard adapts to different screen sizes    00:26 +4 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: ... Tests CaregiverDashboard adapts to different screen sizes    00:27 +4 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: ... Tests CaregiverDashboard adapts to different screen sizes    00:28 +4 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: ... Tests CaregiverDashboard adapts to different screen sizes    00:28 +5 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: ... Tests CaregiverDashboard adapts to different screen sizes    00:28 +6 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: ... Tests CaregiverDashboard adapts to different screen sizes    00:28 +7 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: ... Tests CaregiverDashboard adapts to different screen sizes    00:28 +8 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: ... Tests CaregiverDashboard adapts to different screen sizes    00:28 +9 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_simple_test.dart: ... Tests UserProvider should correctly identify caregiver role    00:28 +10 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: Responsive Layout Tests Patient card actions are responsive     00:28 +11 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: Responsive Layout Tests Patient card actions are responsive     00:28 +12 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: Responsive Layout Tests Patient card actions are responsive     00:29 +12 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: Responsive Layout Tests Patient card actions are responsive     00:29 +13 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: Responsive Layout Tests Patient card actions are responsive     00:29 +13 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: Responsive Layout Tests Analytics summary grid is responsive    00:29 +14 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: Responsive Layout Tests Analytics summary grid is responsive    00:30 +14 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: Responsive Layout Tests Analytics summary grid is responsive    00:31 +14 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/responsive_layout_test.dart: Responsive Layout Tests Analytics summary grid is responsive    00:31 +14 -3: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart                                                           00:32 +14 -3: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart                                                           00:33 +14 -3: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart                                                           00:34 +14 -3: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart                                                           00:35 +14 -3: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart                                                           00:35 +14 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Extraction should extract JWT token from Set-Cookie header   00:35 +15 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Extraction should extract JWT token from Set-Cookie header   00:35 +15 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... should handle malformed Set-Cookie header gracefully         00:35 +16 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... should handle malformed Set-Cookie header gracefully         00:35 +16 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Extraction should extract JWT from complex Set-Cookie header 00:35 +17 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Extraction should extract JWT from complex Set-Cookie header 00:35 +17 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... UserSession should create UserSession from JSON correctly    00:35 +18 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... UserSession should create UserSession from JSON correctly    00:35 +18 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... UserSession should serialize UserSession to JSON correctly   00:35 +19 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... UserSession should serialize UserSession to JSON correctly   00:35 +19 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... UserSession should handle caregiver UserSession correctly    00:35 +20 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... UserSession should handle caregiver UserSession correctly    00:35 +20 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Backend Tests UserProvider should track user state correctly 00:35 +21 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Backend Tests UserProvider should track user state correctly 00:35 +21 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Tests UserProvider should correctly identify caregiver role  00:35 +22 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Tests UserProvider should correctly identify caregiver role  00:35 +22 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Tests UserProvider should handle case insensitive roles      00:35 +23 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Tests UserProvider should handle case insensitive roles      00:35 +23 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... and Backend Tests UserProvider should handle null user state 00:35 +24 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... and Backend Tests UserProvider should handle null user state 00:35 +24 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... and Backend Tests UserProvider should handle loading state   00:35 +25 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... and Backend Tests UserProvider should handle loading state   00:35 +25 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Flow should handle authentication header format correctly    00:35 +26 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Flow should handle authentication header format correctly    00:35 +26 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Tests Authentication Flow should validate JWT token format   00:35 +27 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Tests Authentication Flow should validate JWT token format   00:36 +27 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Tests Authentication Flow should validate JWT token format   00:37 +27 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Tests Authentication Flow should validate JWT token format   00:38 +27 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/auth_and_backend_test.dart: ... Tests Authentication Flow should validate JWT token format   00:38 +27 -3: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/patient_registration_test.dart                                                       00:38 +27 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/patient_registration_test.dart: PatientRegistrationPage renders patient registration form    00:39 +27 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/patient_registration_test.dart: PatientRegistrationPage renders patient registration form    00:40 +27 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/patient_registration_test.dart: PatientRegistrationPage renders patient registration form    00:41 +27 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/patient_registration_test.dart: PatientRegistrationPage renders patient registration form    00:42 +27 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/patient_registration_test.dart: PatientRegistrationPage renders patient registration form    00:43 +27 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/patient_registration_test.dart: PatientRegistrationPage renders patient registration form    00:43 +28 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_page_test.dart: Analytics page renders correctly                                   00:44 +28 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_page_test.dart: Analytics page renders correctly                                   00:44 +29 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_page_test.dart: Analytics page renders correctly                                   00:45 +29 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_page_test.dart: Analytics page renders correctly                                   00:45 +30 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_page_test.dart: Analytics page renders correctly                                   00:45 +30 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_page_test.dart: Analytics page shows export buttons                                00:46 +30 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_page_test.dart: Analytics page shows export buttons                                00:46 +30 -3: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_page_test.dart: Analytics page shows export buttons                                
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "PDF": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_page_test.dart:21:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:193:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1064:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_page_test.dart line 21
+The test description was:
+  Analytics page shows export buttons
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:46 +30 -4: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_page_test.dart: Analytics page shows export buttons [E]                            
+  Test failed. See exception logs above.
+  The test description was: Analytics page shows export buttons
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/analytics_page_test.dart -p vm --plain-name 'Analytics page shows export buttons'
+00:46 +30 -4: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart                                                             00:47 +30 -4: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart                                                             00:48 +30 -4: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart                                                             00:49 +30 -4: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart                                                             00:50 +30 -4: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart                                                             00:51 +30 -4: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart                                                             00:52 +30 -4: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart                                                             00:52 +30 -4: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart: AI Chat Widget Tests AI Chat should show correct button text       00:53 +30 -4: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart: AI Chat Widget Tests AI Chat should show correct button text       00:54 +30 -4: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart: AI Chat Widget Tests AI Chat should show correct button text       00:54 +31 -4: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart: AI Chat Widget Tests AI Chat should show correct button text       00:54 +32 -4: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart: AI Chat Widget Tests AI Chat should show correct button text       00:54 +33 -4: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart: AI Chat Widget Tests AI Chat should show correct button text       00:54 +34 -4: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart: AI Chat Widget Tests AI Chat should show correct button text       00:54 +34 -4: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart: AI Chat Widget Tests AI Chat should show correct button text       
+══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+The following assertion was thrown while applying parent data.:
+Incorrect use of ParentDataWidget.
+The ParentDataWidget Positioned(right: 16.0, bottom: 16.0) wants to apply ParentData of type
+StackParentData to a RenderObject, which has been set up to accept ParentData of incompatible type
+MultiChildLayoutParentData.
+Usually, this means that the Positioned widget has the wrong ancestor RenderObjectWidget. Typically,
+Positioned widgets are placed directly inside Stack widgets.
+The offending Positioned is currently placed inside a CustomMultiChildLayout widget.
+The ownership chain for the RenderObject that received the incompatible parent data was:
+  Column ← Positioned ← AIChat ← KeyedSubtree-[GlobalKey#6d511] ← _BodyBuilder ← MediaQuery ←
+LayoutId-[<_ScaffoldSlot.body>] ← CustomMultiChildLayout ← _ActionsScope ← Actions ← ⋯
+
+When the exception was thrown, this was the stack:
+#0      RenderObjectElement._updateParentData.<anonymous closure> (package:flutter/src/widgets/framework.dart:6775:11)
+#1      RenderObjectElement._updateParentData (package:flutter/src/widgets/framework.dart:6792:6)
+#2      RenderObjectElement.attachRenderObject (package:flutter/src/widgets/framework.dart:6838:7)
+#3      RenderObjectElement.mount (package:flutter/src/widgets/framework.dart:6696:5)
+#4      MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7166:11)
+...     Normal element mounting (39 frames)
+#43     Element.inflateWidget (package:flutter/src/widgets/framework.dart:4539:16)
+#44     MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7159:36)
+#45     MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7175:32)
+...     Normal element mounting (332 frames)
+#377    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4539:16)
+#378    MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7159:36)
+#379    MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7175:32)
+...     Normal element mounting (457 frames)
+#836    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4539:16)
+#837    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:20)
+#838    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#839    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#840    ProxyElement.update (package:flutter/src/widgets/framework.dart:6041:5)
+#841    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#842    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#843    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#844    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5874:11)
+#845    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#846    StatefulElement.update (package:flutter/src/widgets/framework.dart:5899:5)
+#847    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#848    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#849    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#850    ProxyElement.update (package:flutter/src/widgets/framework.dart:6041:5)
+#851    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#852    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#853    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#854    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5874:11)
+#855    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#856    StatefulElement.update (package:flutter/src/widgets/framework.dart:5899:5)
+#857    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#858    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#859    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5874:11)
+#860    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#861    StatefulElement.update (package:flutter/src/widgets/framework.dart:5899:5)
+#862    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#863    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#864    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#865    ProxyElement.update (package:flutter/src/widgets/framework.dart:6041:5)
+#866    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#867    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#868    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5874:11)
+#869    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#870    StatefulElement.update (package:flutter/src/widgets/framework.dart:5899:5)
+#871    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#872    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#873    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#874    ProxyElement.update (package:flutter/src/widgets/framework.dart:6041:5)
+#875    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#876    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#877    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#878    ProxyElement.update (package:flutter/src/widgets/framework.dart:6041:5)
+#879    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#880    _RawViewElement._updateChild (package:flutter/src/widgets/view.dart:481:16)
+#881    _RawViewElement.update (package:flutter/src/widgets/view.dart:569:5)
+#882    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#883    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#884    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#885    StatelessElement.update (package:flutter/src/widgets/framework.dart:5787:5)
+#886    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#887    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#888    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5874:11)
+#889    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#890    StatefulElement.update (package:flutter/src/widgets/framework.dart:5899:5)
+#891    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#892    RootElement._rebuild (package:flutter/src/widgets/binding.dart:1698:16)
+#893    RootElement.update (package:flutter/src/widgets/binding.dart:1676:5)
+#894    RootElement.performRebuild (package:flutter/src/widgets/binding.dart:1690:7)
+#895    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#896    BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2694:15)
+#897    BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2752:11)
+#898    BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3056:18)
+#899    AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:1515:19)
+#900    RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:495:5)
+#901    SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1438:15)
+#902    SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1351:9)
+#903    AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:1340:9)
+#906    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#907    AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:1329:27)
+#908    WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:599:22)
+#911    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#912    WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:596:27)
+#913    main.<anonymous closure>.<anonymous closure> (file:///Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart:10:20)
+#914    testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:193:29)
+<asynchronous suspension>
+#915    TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1064:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from dart:async and package:stack_trace)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:54 +34 -5: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart: AI Chat Widget Tests AI Chat should show correct button text [E]   
+  Test failed. See exception logs above.
+  The test description was: AI Chat should show correct button text
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart -p vm --plain-name 'AI Chat Widget Tests AI Chat should show correct button text'
+00:55 +34 -5: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart: ... Widget Tests AI Chat should show smart toy icon when collapsed 00:55 +34 -5: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart: AI Chat Widget Tests AI Chat should show smart toy icon when collapsed
+══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+The following assertion was thrown while applying parent data.:
+Incorrect use of ParentDataWidget.
+The ParentDataWidget Positioned(right: 16.0, bottom: 16.0) wants to apply ParentData of type
+StackParentData to a RenderObject, which has been set up to accept ParentData of incompatible type
+MultiChildLayoutParentData.
+Usually, this means that the Positioned widget has the wrong ancestor RenderObjectWidget. Typically,
+Positioned widgets are placed directly inside Stack widgets.
+The offending Positioned is currently placed inside a CustomMultiChildLayout widget.
+The ownership chain for the RenderObject that received the incompatible parent data was:
+  Column ← Positioned ← AIChat ← KeyedSubtree-[GlobalKey#10e32] ← _BodyBuilder ← MediaQuery ←
+LayoutId-[<_ScaffoldSlot.body>] ← CustomMultiChildLayout ← _ActionsScope ← Actions ← ⋯
+
+When the exception was thrown, this was the stack:
+#0      RenderObjectElement._updateParentData.<anonymous closure> (package:flutter/src/widgets/framework.dart:6775:11)
+#1      RenderObjectElement._updateParentData (package:flutter/src/widgets/framework.dart:6792:6)
+#2      RenderObjectElement.attachRenderObject (package:flutter/src/widgets/framework.dart:6838:7)
+#3      RenderObjectElement.mount (package:flutter/src/widgets/framework.dart:6696:5)
+#4      MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7166:11)
+...     Normal element mounting (39 frames)
+#43     Element.inflateWidget (package:flutter/src/widgets/framework.dart:4539:16)
+#44     MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7159:36)
+#45     MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7175:32)
+...     Normal element mounting (332 frames)
+#377    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4539:16)
+#378    MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7159:36)
+#379    MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7175:32)
+...     Normal element mounting (457 frames)
+#836    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4539:16)
+#837    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:20)
+#838    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#839    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#840    ProxyElement.update (package:flutter/src/widgets/framework.dart:6041:5)
+#841    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#842    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#843    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#844    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5874:11)
+#845    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#846    StatefulElement.update (package:flutter/src/widgets/framework.dart:5899:5)
+#847    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#848    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#849    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#850    ProxyElement.update (package:flutter/src/widgets/framework.dart:6041:5)
+#851    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#852    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#853    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#854    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5874:11)
+#855    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#856    StatefulElement.update (package:flutter/src/widgets/framework.dart:5899:5)
+#857    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#858    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#859    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5874:11)
+#860    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#861    StatefulElement.update (package:flutter/src/widgets/framework.dart:5899:5)
+#862    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#863    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#864    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#865    ProxyElement.update (package:flutter/src/widgets/framework.dart:6041:5)
+#866    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#867    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#868    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5874:11)
+#869    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#870    StatefulElement.update (package:flutter/src/widgets/framework.dart:5899:5)
+#871    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#872    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#873    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#874    ProxyElement.update (package:flutter/src/widgets/framework.dart:6041:5)
+#875    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#876    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#877    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#878    ProxyElement.update (package:flutter/src/widgets/framework.dart:6041:5)
+#879    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#880    _RawViewElement._updateChild (package:flutter/src/widgets/view.dart:481:16)
+#881    _RawViewElement.update (package:flutter/src/widgets/view.dart:569:5)
+#882    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#883    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#884    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#885    StatelessElement.update (package:flutter/src/widgets/framework.dart:5787:5)
+#886    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#887    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5738:16)
+#888    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5874:11)
+#889    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#890    StatefulElement.update (package:flutter/src/widgets/framework.dart:5899:5)
+#891    Element.updateChild (package:flutter/src/widgets/framework.dart:3982:15)
+#892    RootElement._rebuild (package:flutter/src/widgets/binding.dart:1698:16)
+#893    RootElement.update (package:flutter/src/widgets/binding.dart:1676:5)
+#894    RootElement.performRebuild (package:flutter/src/widgets/binding.dart:1690:7)
+#895    Element.rebuild (package:flutter/src/widgets/framework.dart:5427:7)
+#896    BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2694:15)
+#897    BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2752:11)
+#898    BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3056:18)
+#899    AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:1515:19)
+#900    RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:495:5)
+#901    SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1438:15)
+#902    SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1351:9)
+#903    AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:1340:9)
+#906    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#907    AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:1329:27)
+#908    WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:599:22)
+#911    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#912    WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:596:27)
+#913    main.<anonymous closure>.<anonymous closure> (file:///Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart:26:20)
+#914    testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:193:29)
+<asynchronous suspension>
+#915    TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1064:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from dart:async and package:stack_trace)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:55 +34 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart: AI Chat Widget Tests AI Chat should show smart toy icon when collapsed [E]
+  Test failed. See exception logs above.
+  The test description was: AI Chat should show smart toy icon when collapsed
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_chat_widget_test.dart -p vm --plain-name 'AI Chat Widget Tests AI Chat should show smart toy icon when collapsed'
+00:57 +34 -6: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/api_key_validation_test.dart                                                         00:58 +34 -6: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/api_key_validation_test.dart                                                         00:59 +34 -6: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/api_key_validation_test.dart                                                         01:00 +34 -6: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/api_key_validation_test.dart                                                         01:01 +34 -6: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/api_key_validation_test.dart                                                         01:01 +34 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/api_key_validation_test.dart: API key validation                                             01:02 +34 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/api_key_validation_test.dart: API key validation                                             01:02 +35 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/api_key_validation_test.dart: API key validation                                             01:03 +35 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/api_key_validation_test.dart: API key validation                                             01:04 +35 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/api_key_validation_test.dart: API key validation                                             01:04 +35 -6: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart                                                           01:04 +35 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart: ... Debug Tests AI service should have correct URLs and models   01:04 +36 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart: ... Debug Tests AI service should have correct URLs and models   01:04 +36 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart: ... Tests AI service should handle test question (simulated)     01:04 +37 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart: ... Tests AI service should handle test question (simulated)     01:04 +37 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart: ... Debug Tests AI service should format request body correctly  01:04 +38 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart: ... Debug Tests AI service should format request body correctly  01:04 +38 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart: ... Debug Tests OpenAI model should include additional parameters01:04 +39 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart: ... Debug Tests OpenAI model should include additional parameters01:05 +39 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart: ... Debug Tests OpenAI model should include additional parameters01:06 +39 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart: ... Debug Tests OpenAI model should include additional parameters01:07 +39 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart: ... Debug Tests OpenAI model should include additional parameters01:08 +39 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart: ... Debug Tests OpenAI model should include additional parameters01:09 +39 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_service_debug_test.dart: ... Debug Tests OpenAI model should include additional parameters01:09 +39 -6: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/caregiver_dashboard_test.dart                                                        01:09 +39 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/caregiver_dashboard_test.dart: ... renders caregiver dashboard with analytics button         01:10 +39 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/caregiver_dashboard_test.dart: ... renders caregiver dashboard with analytics button         01:11 +39 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/caregiver_dashboard_test.dart: ... renders caregiver dashboard with analytics button         01:12 +39 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/caregiver_dashboard_test.dart: ... renders caregiver dashboard with analytics button         01:13 +39 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/caregiver_dashboard_test.dart: ... renders caregiver dashboard with analytics button         01:13 +40 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/caregiver_dashboard_simple_test.dart: ... Tests analytics button is present in patient card  01:14 +40 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/caregiver_dashboard_simple_test.dart: ... Tests analytics button is present in patient card  01:14 +41 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/caregiver_dashboard_simple_test.dart: ... Tests analytics button is present in patient card  01:14 +42 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/caregiver_dashboard_simple_test.dart: ... Tests analytics button is present in patient card  01:15 +42 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/caregiver_dashboard_simple_test.dart: ... Tests analytics button is present in patient card  01:15 +43 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/caregiver_dashboard_simple_test.dart: ... Tests analytics button is present in patient card  01:16 +43 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/caregiver_dashboard_simple_test.dart: ... Tests analytics button is present in patient card  01:16 +43 -6: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart                                                                   01:17 +43 -6: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart                                                                   01:18 +43 -6: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart                                                                   01:19 +43 -6: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart                                                                   01:20 +43 -6: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart                                                                   01:20 +43 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: ... Tests JWT token should be extractable from Set-Cookie header         01:20 +44 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: ... Tests JWT token should be extractable from Set-Cookie header         01:20 +44 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: ... Tests getAuthHeaders should return correct headers format            01:20 +44 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: JWT Authentication Tests getAuthHeaders should return correct headers format
+DEBUG: Error reading token from storage: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+01:20 +45 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: ... Tests getAuthHeaders should return correct headers format            01:20 +45 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: ... Tests UserSession should be created from JSON correctly              01:20 +46 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: ... Tests UserSession should be created from JSON correctly              01:20 +46 -6: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: ... Tests AuthService.login should handle network errors gracefully      01:21 +46 -7: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: ... Tests AuthService.login should handle network errors gracefully      01:21 +46 -7: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: JWT Authentication Tests AuthService.login should handle network errors gracefully [E]
+  Expected: <Instance of 'Exception'>
+    Actual: <Instance of 'NotInitializedError'>
+     Which: is not an instance of 'Exception'
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 474:18  expect
+  test/jwt_auth_test.dart 64:11                       main.<fn>.<fn>.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                          _CustomZone.registerBinaryCallback
+  test/jwt_auth_test.dart 57:11                       main.<fn>.<fn>.<fn>
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 474:18  expect
+  test/jwt_auth_test.dart 55:7                        main.<fn>.<fn>
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart -p vm --plain-name 'JWT Authentication Tests AuthService.login should handle network errors gracefully'
+01:21 +46 -7: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: Authentication Flow Tests login flow structure should be correct         01:21 +46 -7: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: Authentication Flow Tests login flow structure should be correct         
+DEBUG: Error reading token from storage: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+01:21 +47 -7: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: Authentication Flow Tests login flow structure should be correct         01:21 +47 -7: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: Authentication Flow Tests JWT token regex pattern should work correctly  01:21 +48 -7: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: Authentication Flow Tests JWT token regex pattern should work correctly  01:21 +48 -7: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: API Endpoint Tests ApiConstants should have correct endpoint URLs        01:21 +48 -8: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: API Endpoint Tests ApiConstants should have correct endpoint URLs [E]    
+  Instance of 'NotInitializedError'
+  package:flutter_dotenv/src/dotenv.dart 41:7               DotEnv.env
+  package:care_connect_app/config/env_constant.dart 17:37   getBackendBaseUrl
+  package:care_connect_app/services/api_service.dart 9:31   ApiConstants._host
+  package:care_connect_app/services/api_service.dart        ApiConstants._host
+  package:care_connect_app/services/api_service.dart 10:32  ApiConstants.auth
+  package:care_connect_app/services/api_service.dart        ApiConstants.auth
+  test/jwt_auth_test.dart 108:39                            main.<fn>.<fn>
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart -p vm --plain-name 'API Endpoint Tests ApiConstants should have correct endpoint URLs'
+01:21 +48 -8: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: API Endpoint Tests login endpoint should be correctly formatted          01:21 +48 -9: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: API Endpoint Tests login endpoint should be correctly formatted [E]      
+  Instance of 'NotInitializedError'
+  package:flutter_dotenv/src/dotenv.dart 41:7               DotEnv.env
+  package:care_connect_app/config/env_constant.dart 17:37   getBackendBaseUrl
+  package:care_connect_app/services/api_service.dart 9:31   ApiConstants._host
+  package:care_connect_app/services/api_service.dart        ApiConstants._host
+  package:care_connect_app/services/api_service.dart 10:32  ApiConstants.auth
+  package:care_connect_app/services/api_service.dart        ApiConstants.auth
+  test/jwt_auth_test.dart 117:39                            main.<fn>.<fn>
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart -p vm --plain-name 'API Endpoint Tests login endpoint should be correctly formatted'
+01:21 +48 -9: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: API Endpoint Tests protected endpoints should be correctly formatted     01:21 +48 -10: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: API Endpoint Tests protected endpoints should be correctly formatted [E]
+  Instance of 'NotInitializedError'
+  package:flutter_dotenv/src/dotenv.dart 41:7               DotEnv.env
+  package:care_connect_app/config/env_constant.dart 17:37   getBackendBaseUrl
+  package:care_connect_app/services/api_service.dart 9:31   ApiConstants._host
+  package:care_connect_app/services/api_service.dart        ApiConstants._host
+  package:care_connect_app/services/api_service.dart 14:37  ApiConstants.analytics
+  package:care_connect_app/services/api_service.dart        ApiConstants.analytics
+  test/jwt_auth_test.dart 121:39                            main.<fn>.<fn>
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart -p vm --plain-name 'API Endpoint Tests protected endpoints should be correctly formatted'
+01:21 +48 -10: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: API Endpoint Tests API URLs should be valid URIs                        01:21 +48 -11: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: API Endpoint Tests API URLs should be valid URIs [E]                    
+  Expected: return normally
+    Actual: <Closure: () => Uri>
+     Which: threw <Instance of 'NotInitializedError'>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 474:18  expect
+  test/jwt_auth_test.dart 127:7                       main.<fn>.<fn>
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart -p vm --plain-name 'API Endpoint Tests API URLs should be valid URIs'
+01:21 +48 -11: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: ... Security Tests JWT token should not be logged in production         01:21 +49 -11: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: ... Security Tests JWT token should not be logged in production         01:21 +49 -11: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: ... Security Tests Authorization header should be correctly formatted   01:21 +50 -11: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: ... Security Tests Authorization header should be correctly formatted   01:21 +50 -11: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: ... Security Tests public endpoints should not require authentication   01:21 +50 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart: Authentication Security Tests public endpoints should not require authentication [E]
+  Instance of 'NotInitializedError'
+  package:flutter_dotenv/src/dotenv.dart 41:7                DotEnv.env
+  package:care_connect_app/config/env_constant.dart 17:37    getBackendBaseUrl
+  package:care_connect_app/services/api_service.dart 9:31    ApiConstants._host
+  package:care_connect_app/services/api_service.dart         ApiConstants._host
+  package:care_connect_app/services/api_service.dart 10:32   ApiConstants.auth
+  package:care_connect_app/services/api_service.dart         ApiConstants.auth
+  package:care_connect_app/services/api_service.dart 142:37  ApiService.login
+  test/jwt_auth_test.dart 170:38                             main.<fn>.<fn>.<fn>
+  package:matcher                                            expect
+  package:flutter_test/src/widget_tester.dart 474:18         expect
+  test/jwt_auth_test.dart 169:7                              main.<fn>.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                 Future._asyncCompleteError
+  test/jwt_auth_test.dart 170:38                             main.<fn>.<fn>.<fn>
+  package:matcher                                            expect
+  package:flutter_test/src/widget_tester.dart 474:18         expect
+  test/jwt_auth_test.dart 169:7                              main.<fn>.<fn>
+  
+  Instance of 'NotInitializedError'
+  package:flutter_dotenv/src/dotenv.dart 41:7                DotEnv.env
+  package:care_connect_app/config/env_constant.dart 17:37    getBackendBaseUrl
+  package:care_connect_app/services/api_service.dart 9:31    ApiConstants._host
+  package:care_connect_app/services/api_service.dart         ApiConstants._host
+  package:care_connect_app/services/api_service.dart 10:32   ApiConstants.auth
+  package:care_connect_app/services/api_service.dart         ApiConstants.auth
+  package:care_connect_app/services/api_service.dart 129:33  ApiService.register
+  test/jwt_auth_test.dart 174:38                             main.<fn>.<fn>.<fn>
+  package:matcher                                            expect
+  package:flutter_test/src/widget_tester.dart 474:18         expect
+  test/jwt_auth_test.dart 173:7                              main.<fn>.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                 Future._asyncCompleteError
+  test/jwt_auth_test.dart 174:38                             main.<fn>.<fn>.<fn>
+  package:matcher                                            expect
+  package:flutter_test/src/widget_tester.dart 474:18         expect
+  test/jwt_auth_test.dart 173:7                              main.<fn>.<fn>
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/jwt_auth_test.dart -p vm --plain-name 'Authentication Security Tests public endpoints should not require authentication'
+01:23 +50 -12: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart                                                                    01:23 +50 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: (setUpAll)                                                                01:23 +50 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Core App Tests CareConnect app loads successfully                         01:24 +50 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Core App Tests CareConnect app loads successfully                         01:25 +50 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Core App Tests CareConnect app loads successfully                         01:26 +50 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Core App Tests CareConnect app loads successfully                         01:26 +51 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Core App Tests CareConnect app loads successfully                         01:26 +51 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Core App Tests CareConnect app has WelcomePage                            01:26 +52 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Core App Tests CareConnect app has WelcomePage                            01:26 +52 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests WelcomePage displays correctly                       01:26 +53 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests WelcomePage displays correctly                       01:26 +53 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests LoginPage displays correctly                         01:27 +53 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests LoginPage displays correctly                         01:27 +54 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests LoginPage displays correctly                         01:27 +54 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests SignUpScreen renders correctly                       01:27 +55 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests SignUpScreen renders correctly                       01:27 +56 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests SignUpScreen renders correctly                       01:27 +57 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests SignUpScreen renders correctly                       01:28 +57 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests SignUpScreen renders correctly                       01:28 +58 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests SignUpScreen renders correctly                       01:28 +58 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests PasswordResetPage renders correctly                  01:29 +58 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests PasswordResetPage renders correctly                  01:29 +59 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Welcome & Auth Tests PasswordResetPage renders correctly                  01:29 +59 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Dashboard Tests CaregiverDashboard renders correctly                      01:29 +60 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Dashboard Tests CaregiverDashboard renders correctly                      01:29 +60 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Dashboard Tests PatientDashboard renders correctly                        01:29 +61 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Dashboard Tests PatientDashboard renders correctly                        01:29 +61 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Dashboard Tests PatientStatusPage renders correctly                       01:29 +62 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Dashboard Tests PatientStatusPage renders correctly                       01:29 +62 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Analytics Tests AnalyticsPage renders correctly                           01:29 +63 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Analytics Tests AnalyticsPage renders correctly                           01:29 +63 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Payment Tests SelectPackagePage renders correctly                         01:29 +63 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Payment Tests SelectPackagePage renders correctly                         
+🚀 SelectPackagePage initState called
+🔗 Base URL: http://localhost:8080/v1/api/
+🔍 Starting to fetch subscription plans...
+📡 Making API call to: http://localhost:8080/v1/api/subscriptions/plans
+📊 Response status: 400
+📋 Response body: 
+❌ API call failed with status: 400
+01:29 +64 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Payment Tests SelectPackagePage renders correctly                         01:29 +64 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Payment Tests PaymentSuccessPage renders correctly                        01:30 +64 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Payment Tests PaymentSuccessPage renders correctly                        01:30 +65 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Payment Tests PaymentSuccessPage renders correctly                        01:30 +65 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Payment Tests PaymentCancelPage renders correctly                         01:30 +66 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Payment Tests PaymentCancelPage renders correctly                         01:30 +66 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Social Feature Tests MainFeedScreen renders correctly                     01:30 +67 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Social Feature Tests MainFeedScreen renders correctly                     01:30 +67 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Social Feature Tests FriendRequestsScreen renders correctly               01:30 +68 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Social Feature Tests FriendRequestsScreen renders correctly               01:30 +68 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Social Feature Tests NewPostScreen renders correctly                      01:30 +69 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Social Feature Tests NewPostScreen renders correctly                      01:30 +69 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Gamification Tests GamificationScreen renders correctly                   01:30 +70 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Gamification Tests GamificationScreen renders correctly                   01:30 +70 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Gamification Tests AchievementDetailScreen renders correctly              01:30 +71 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Gamification Tests AchievementDetailScreen renders correctly              01:30 +71 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Health Feature Tests MealTrackingScreen renders correctly                 01:30 +72 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Health Feature Tests MealTrackingScreen renders correctly                 01:30 +72 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Health Feature Tests SymptomTrackerScreen renders correctly               01:31 +72 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Health Feature Tests SymptomTrackerScreen renders correctly               01:31 +73 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Health Feature Tests SymptomTrackerScreen renders correctly               01:31 +73 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Profile Tests SettingsScreen renders correctly                            01:31 +74 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Profile Tests SettingsScreen renders correctly                            01:31 +74 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Model Tests Patient model creates correctly                               01:31 +75 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Model Tests Patient model creates correctly                               01:31 +75 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Model Tests PackageModel creates correctly                                01:31 +76 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Model Tests PackageModel creates correctly                                01:31 +76 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Model Tests Vital creates correctly                                       01:31 +77 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Model Tests Vital creates correctly                                       01:31 +77 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Model Tests Address creates correctly                                     01:31 +78 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Model Tests Address creates correctly                                     01:31 +78 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Service Tests AuthService exists and has required methods                 01:31 +79 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Service Tests AuthService exists and has required methods                 01:31 +79 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Service Tests SessionManager can be instantiated                          01:31 +80 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Service Tests SessionManager can be instantiated                          01:31 +80 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Service Tests GamificationService can be instantiated                     01:31 +81 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Service Tests GamificationService can be instantiated                     01:31 +81 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Provider Tests UserProvider manages user state correctly                  01:31 +82 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Provider Tests UserProvider manages user state correctly                  01:31 +82 -12: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Widget Tests UserAvatar renders correctly                                 01:32 +81 -13: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Widget Tests UserAvatar renders correctly                                 01:32 +81 -13: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Provider Tests UserProvider manages user state correctly [E]              
+  MissingPluginException(No implementation found for method delete on channel plugins.it_nomads.com/flutter_secure_storage)
+  package:flutter/src/services/platform_channel.dart 368:7    MethodChannel._invokeMethod
+  ===== asynchronous gap ===========================
+  dart:async                                                  _CustomZone.registerBinaryCallback
+  package:care_connect_app/providers/user_provider.dart 88:5  UserProvider.clearUser
+  test/widget_test.dart 446:20                                main.<fn>.<fn>
+  
+  This test failed after it had already completed.
+  Make sure to use a matching library which informs the test runner
+  of pending async work.
+  package:flutter/src/services/platform_channel.dart 368:7    MethodChannel._invokeMethod
+  ===== asynchronous gap ===========================
+  dart:async                                                  _CustomZone.registerBinaryCallback
+  package:care_connect_app/providers/user_provider.dart 88:5  UserProvider.clearUser
+  test/widget_test.dart 446:20                                main.<fn>.<fn>
+  
+01:32 +82 -13: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: Widget Tests UserAvatar renders correctly                                 01:32 +82 -13: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: (tearDownAll)                                                             01:33 +82 -13: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: (tearDownAll)                                                             01:34 +82 -13: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/widget_test.dart: (tearDownAll)                                                             01:34 +82 -13: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_simple_test.dart                                               01:34 +82 -13: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_simple_test.dart: ... Tests getBackendBaseUrl should return valid URL  01:34 +82 -14: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_simple_test.dart: Backend Connectivity Tests getBackendBaseUrl should return valid URL [E]
+  Instance of 'NotInitializedError'
+  package:flutter_dotenv/src/dotenv.dart 41:7              DotEnv.env
+  package:care_connect_app/config/env_constant.dart 17:37  getBackendBaseUrl
+  test/backend_connectivity_simple_test.dart 8:23          main.<fn>.<fn>
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_simple_test.dart -p vm --plain-name 'Backend Connectivity Tests getBackendBaseUrl should return valid URL'
+01:34 +82 -14: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_simple_test.dart: ... API endpoints should be properly constructed     01:34 +82 -15: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_simple_test.dart: Backend Connectivity Tests API endpoints should be properly constructed [E]
+  Instance of 'NotInitializedError'
+  package:flutter_dotenv/src/dotenv.dart 41:7              DotEnv.env
+  package:care_connect_app/config/env_constant.dart 17:37  getBackendBaseUrl
+  test/backend_connectivity_simple_test.dart 19:23         main.<fn>.<fn>
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_simple_test.dart -p vm --plain-name 'Backend Connectivity Tests API endpoints should be properly constructed'
+01:34 +82 -15: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_simple_test.dart: ... Environment configuration should be consistent   01:34 +82 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_simple_test.dart: Backend Connectivity Tests Environment configuration should be consistent [E]
+  Instance of 'NotInitializedError'
+  package:flutter_dotenv/src/dotenv.dart 41:7              DotEnv.env
+  package:care_connect_app/config/env_constant.dart 17:37  getBackendBaseUrl
+  test/backend_connectivity_simple_test.dart 33:23         main.<fn>.<fn>
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_simple_test.dart -p vm --plain-name 'Backend Connectivity Tests Environment configuration should be consistent'
+01:36 +82 -16: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart                                                  01:37 +82 -16: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart                                                  01:38 +82 -16: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart                                                  01:39 +82 -16: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart                                                  01:40 +82 -16: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart                                                  01:40 +82 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:41 +82 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:42 +82 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:43 +82 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:44 +82 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:45 +82 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:45 +83 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:45 +84 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:45 +85 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:45 +86 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:46 +86 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:47 +86 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:48 +86 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:49 +86 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:50 +86 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:51 +86 -16: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Tests AnalyticsPage contains AI chat widget         01:51 +86 -17: loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_test.dart [E]                                                  
+  Failed to load "/Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_test.dart": Instance of 'OutsideTestException'
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 474:18  expect
+  test/backend_connectivity_test.dart 9:5             main.<fn>
+  package:test_api                                    Declarer.group
+  package:flutter_test/src/test_compat.dart 210:13    group
+  test/backend_connectivity_test.dart 4:3             main
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_test.dart -p vm --plain-name 'loading /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/backend_connectivity_test.dart'
+01:55 +86 -17: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: AI Analytics Integration Tests AnalyticsPage contains AI chat widget
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+pumpAndSettle timed out
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:718:11)
+<asynchronous suspension>
+#1      TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#2      main.<anonymous closure>.<anonymous closure> (file:///Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart:15:7)
+<asynchronous suspension>
+#3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:193:15)
+<asynchronous suspension>
+#4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1064:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  AnalyticsPage contains AI chat widget
+════════════════════════════════════════════════════════════════════════════════════════════════════
+01:55 +86 -18: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: AI Analytics Integration Tests AnalyticsPage contains AI chat widget [E]
+  Test failed. See exception logs above.
+  The test description was: AnalyticsPage contains AI chat widget
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart -p vm --plain-name 'AI Analytics Integration Tests AnalyticsPage contains AI chat widget'
+01:55 +86 -18: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Integration Tests AI chat widget has analytics role 01:56 +86 -18: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Integration Tests AI chat widget has analytics role 01:57 +86 -18: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Integration Tests AI chat widget has analytics role 01:58 +86 -18: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Integration Tests AI chat widget has analytics role 01:59 +86 -18: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Integration Tests AI chat widget has analytics role 02:00 +86 -18: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Integration Tests AI chat widget has analytics role 02:00 +86 -18: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: AI Analytics Integration Tests AI chat widget has analytics role
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+pumpAndSettle timed out
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:718:11)
+<asynchronous suspension>
+#1      TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#2      main.<anonymous closure>.<anonymous closure> (file:///Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart:28:7)
+<asynchronous suspension>
+#3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:193:15)
+<asynchronous suspension>
+#4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1064:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  AI chat widget has analytics role
+════════════════════════════════════════════════════════════════════════════════════════════════════
+02:00 +86 -19: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: AI Analytics Integration Tests AI chat widget has analytics role [E]
+  Test failed. See exception logs above.
+  The test description was: AI chat widget has analytics role
+  
+
+To run this test again: /usr/local/Caskroom/flutter/3.32.1/flutter/bin/cache/dart-sdk/bin/dart test /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart -p vm --plain-name 'AI Analytics Integration Tests AI chat widget has analytics role'
+02:00 +86 -19: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Health data context anonymizes patient information  02:00 +87 -19: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Health data context anonymizes patient information  02:01 +87 -19: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/frontend/test/ai_analytics_integration_test.dart: ... Health data context anonymizes patient information  02:01 +87 -19: Some tests failed.                                                                                                                                                                      

@@ -43,13 +43,15 @@ cd summer2025
 
   1. ### Create the Environment Variables file `.env`
   
-      * Create a file with the name `.env` inside of `careconnect2025/frontend/` folder
+      * Create a file with the name `.env.local` inside of `careconnect2025/frontend/` folder
       * Add the required environment variables like so:
       
           ```
-            deepSeek_key=Bearer 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
-            deepSeek_uri=https://openrouter.ai/api/v1/chat/completions
-            cc_backend_token=<ADD_TOKEN>
+            DEEPSEEK_API_KEY=your_deepseek_api_key_here
+            deepSeek_uri=https://api.deepseek.com/v1/chat/completions
+            OPENAI_API_KEY=your_openai_api_key_here
+            JWT_SECRET=your_secure_jwt_secret_32_chars_minimum
+            CC_BACKEND_TOKEN=your_backend_token_here
             CC_BASE_URL_ANDROID=http://192.168.1.155:8080
             CC_BASE_URL_WEB=http://192.168.1.155:8080
             CC_BASE_URL_OTHER=http://192.168.1.155:8080

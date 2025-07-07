@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:provider/provider.dart';
-import '../../../../config/constants/api_constants.dart';
+import '../../../../services/auth_service.dart';
 import '../../../../providers/user_provider.dart';
 
 class LoginPage extends StatefulWidget {
@@ -17,6 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _email = TextEditingController();
   final TextEditingController _pwd = TextEditingController();
   bool _busy = false;
+  bool _googleSignInBusy = false;
   String? _error;
 
   @override
@@ -33,51 +32,66 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': _email.text.trim(), 'password': _pwd.text}),
+      final user = await AuthService.login(
+        _email.text.trim(),
+        _pwd.text,
+        role: 'patient', // Default to patient, could be made dynamic
       );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final int userId = data['id'];
-        final String role = data['role'] ?? '';
-        final String token = data['token'] ?? '';
-        final int? patientId = data['patientId'];
-        final int? caregiverId = data['caregiverId'];
+      // Save user info to Provider
+      Provider.of<UserProvider>(context, listen: false).setUser(user);
 
-        // Save user info to Provider
-        Provider.of<UserProvider>(context, listen: false).setUser(
-          UserSession(
-            id: userId,
-            role: role,
-            token: token,
-            patientId: patientId,
-            caregiverId: caregiverId,
-          ),
-        );
+      // Add a small delay to ensure JWT token is fully saved before navigation
+      await Future.delayed(const Duration(milliseconds: 100));
 
-        if (role == 'CAREGIVER') {
-          context.go('/dashboard/caregiver');
-        } else if (role == 'PATIENT') {
-          context.go('/dashboard/patient');
-        } else {
-          setState(() {
-            _error = 'Unknown user role: $role';
-          });
-        }
+      if (user.role.toUpperCase() == 'CAREGIVER') {
+        context.go('/dashboard/caregiver');
+      } else if (user.role.toUpperCase() == 'PATIENT') {
+        context.go('/dashboard/patient');
       } else {
         setState(() {
-          _error = 'Login failed: ${response.body}';
+          _error = 'Unknown user role: ${user.role}';
         });
       }
     } catch (e) {
       setState(() {
-        _error = 'Error: $e';
+        _error = 'Login failed: $e';
       });
     } finally {
       setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _loginWithGoogle() async {
+    setState(() {
+      _googleSignInBusy = true;
+      _error = null;
+    });
+
+    try {
+      final user = await AuthService.loginWithGoogle();
+
+      // Save user info to Provider
+      Provider.of<UserProvider>(context, listen: false).setUser(user);
+
+      // Add a small delay to ensure JWT token is fully saved before navigation
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      if (user.role.toUpperCase() == 'CAREGIVER') {
+        context.go('/dashboard/caregiver');
+      } else if (user.role.toUpperCase() == 'PATIENT') {
+        context.go('/dashboard/patient');
+      } else {
+        setState(() {
+          _error = 'Unknown user role: ${user.role}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Google Sign-In failed: $e';
+      });
+    } finally {
+      setState(() => _googleSignInBusy = false);
     }
   }
 
@@ -145,6 +159,66 @@ class _LoginPageState extends State<LoginPage> {
                       : const Text(
                           'Log in',
                           style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _googleSignInBusy ? null : _loginWithGoogle,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.grey[700],
+                    side: BorderSide(color: Colors.grey[300]!),
+                    elevation: 1,
+                    shadowColor: Colors.grey[300],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: _googleSignInBusy
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.blue,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Google "G" logo representation
+                            Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'G',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue[600],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Sign in with Google',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                 ),
               ),

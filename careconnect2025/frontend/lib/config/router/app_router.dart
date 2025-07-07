@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/welcome/presentation/pages/welcome_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/oauth_callback_page.dart';
 import '../../features/dashboard/presentation/pages/caregiver_dashboard.dart';
 import '../../features/dashboard/presentation/pages/patient_dashboard.dart';
 import '../../features/onboarding/presentation/pages/patient_registration.dart';
@@ -45,6 +46,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/register/caregiver',
       builder: (_, __) => const SignUpScreen(),
+    ),
+    GoRoute(
+      path: '/register/caregiver/payment',
+      builder: (_, __) => const CaregiverRegistrationFlowPage(),
     ),
     GoRoute(
       path: '/register/patient',
@@ -144,6 +149,17 @@ final GoRouter appRouter = GoRouter(
           );
         }
         return AnalyticsPage(patientId: patientId);
+      },
+    ),
+    GoRoute(
+      path: '/oauth/callback',
+      builder: (context, state) {
+        // Extract OAuth parameters from URL
+        final token = state.uri.queryParameters['token'];
+        final user = state.uri.queryParameters['user'];
+        final error = state.uri.queryParameters['error'];
+
+        return OAuthCallbackPage(token: token, user: user, error: error);
       },
     ),
   ],

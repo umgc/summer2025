@@ -45,9 +45,10 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
       final patientId = user.id;
 
       // Fetch patient profile
+      final authHeaders = await ApiService.getAuthHeaders();
       final profileRes = await http.get(
         Uri.parse('${ApiConstants.users}/$patientId'),
-        headers: {'Accept': 'application/json'},
+        headers: authHeaders,
       );
       if (profileRes.statusCode != 200) {
         setState(() {
@@ -64,7 +65,7 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
         Uri.parse(
           '${ApiConstants.analytics}/dashboard?patientId=$patientId&days=7',
         ),
-        headers: {'Accept': 'application/json'},
+        headers: authHeaders,
       );
       if (vitalsRes.statusCode != 200) {
         setState(() {

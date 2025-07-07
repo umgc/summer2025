@@ -21,6 +21,8 @@ version: 1.0.0+1
 environment:
   sdk: ^3.8.1
 
+# Performance optimization: Enable null safety and latest features
+
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
 # consider running `flutter pub upgrade --major-versions`. Alternatively,
@@ -35,6 +37,9 @@ dependencies:
   cookie_jar: ^4.0.6
   dio_cookie_manager: ^3.0.0
   confetti: ^0.7.0
+  url_launcher: ^6.1.12  # For OAuth redirects
+  crypto: ^3.0.3  # For generating state parameter
+  app_links: ^6.3.2  # For handling deep links from OAuth callback (replaced uni_links)
 
 # -- Astha - start
   path_provider: ^2.1.2
@@ -46,6 +51,7 @@ dependencies:
   
   intl: ^0.20.2 # data formatting
   camera: ^0.11.1 # emotion detector use
+  pdf: ^3.10.8 # PDF generation
   # emotion detector use
 
   google_ml_kit: ^0.20.0
@@ -60,7 +66,6 @@ dependencies:
   flutter_stripe: ^9.5.0
   geolocator: ^11.0.0
   google_maps_flutter: ^2.6.0
-  url_launcher: ^6.2.6
   fl_chart: ^0.66.0
   
   # AI Voice Commands 
@@ -83,6 +88,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  mockito: ^5.4.4
+  build_runner: ^2.4.9
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

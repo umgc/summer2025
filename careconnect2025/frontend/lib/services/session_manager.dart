@@ -45,14 +45,24 @@ class SessionManager {
   /// Standard GET request with session
   Future<http.Response> get(String url) {
     print('📤 GET $url with headers: $headers');
-    return http.get(Uri.parse(url), headers: headers);
+    return http
+        .get(Uri.parse(url), headers: headers)
+        .timeout(
+          const Duration(seconds: 180),
+          onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
+        );
   }
 
   /// Standard POST request with session
   Future<http.Response> post(String url, {Object? body}) {
     try {
       print('📤 POST $url with headers: $headers');
-      return http.post(Uri.parse(url), headers: headers, body: body);
+      return http
+          .post(Uri.parse(url), headers: headers, body: body)
+          .timeout(
+            const Duration(seconds: 180),
+            onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
+          );
     } catch (e) {
       // Error handling without print for production
       rethrow;
@@ -61,7 +71,12 @@ class SessionManager {
 
   /// Optional PUT method for updates
   Future<http.Response> put(String url, {Object? body}) {
-    return http.put(Uri.parse(url), headers: headers, body: body);
+    return http
+        .put(Uri.parse(url), headers: headers, body: body)
+        .timeout(
+          const Duration(seconds: 180),
+          onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
+        );
   }
 
   /// Clear the session (logout or expired)
