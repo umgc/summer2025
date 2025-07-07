@@ -1,4 +1,3 @@
-import 'package:care_connect_app/config/EnvConstant.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -24,7 +23,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
 
   Future<void> fetchRequests() async {
     setState(() => isLoading = true);
-    final url = Uri.parse('${getBackendBaseUrl()}/api/friends/requests/${widget.userId}');
+    final url = Uri.parse('http://localhost:8080/api/friends/requests/${widget.userId}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -40,7 +39,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
 
   Future<void> acceptRequest(int requestId) async {
     final response = await http.post(
-      Uri.parse('${getBackendBaseUrl()}/api/friends/accept'),
+      Uri.parse('http://localhost:8080/api/friends/accept'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'requestId': requestId}),
     );
@@ -55,7 +54,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
 
   Future<void> rejectRequest(int requestId) async {
     final response = await http.post(
-      Uri.parse('${getBackendBaseUrl()}/api/friends/reject'),
+      Uri.parse('http://localhost:8080/api/friends/reject'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'requestId': requestId}),
     );

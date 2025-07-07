@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:care_connect_app/config/EnvConstant.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:care_connect_app/services/session_manager.dart';
+import 'package:care_connect_app/frontend/session_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart' as path;
 

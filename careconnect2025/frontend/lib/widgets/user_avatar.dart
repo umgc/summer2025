@@ -1,7 +1,6 @@
 // lib/widgets/user_avatar.dart
-import 'package:care_connect_app/config/EnvConstant.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart'; // for kIsWeb
 
 class UserAvatar extends StatelessWidget {
   final String? imageUrl;
@@ -11,9 +10,15 @@ class UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedUrl = (imageUrl != null && imageUrl!.isNotEmpty)
-        ? '${getBackendBaseUrl()}$imageUrl'
-        : null;
+    String? resolvedUrl;
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
+      // Use kIsWeb to check for web, otherwise assume mobile/emulator
+      if (kIsWeb) {
+        resolvedUrl = 'http://localhost:8080$imageUrl';
+      } else {
+        resolvedUrl = 'http://10.0.2.2:8080$imageUrl';
+      }
+    }
 
     return CircleAvatar(
       radius: radius,

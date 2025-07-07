@@ -1,9 +1,9 @@
-import 'package:care_connect_app/config/EnvConstant.dart';
-import 'package:care_connect_app/services/session_manager.dart';
+import 'package:care_connect_app/frontend/session_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
+import 'package:flutter/foundation.dart'; // <-- for kIsWeb
 
 class CommentScreen extends StatefulWidget {
   final int postId;
@@ -20,18 +20,29 @@ class _CommentScreenState extends State<CommentScreen> {
   bool isLoading = true;
   bool isSubmitting = false;
 
+  String getApiBaseUrl() {
+    // You can adjust this logic as needed!
+    if (kIsWeb) {
+      return 'http://localhost:8080';
+    }
+    // For Android emulator
+    // (If you're testing on a physical device, use your LAN IP)
+    return 'http://10.0.2.2:8080';
+  }
+
   @override
   void initState() {
     super.initState();
     fetchComments();
   }
+
   Future<void> fetchComments() async {
     setState(() => isLoading = true);
 
     final session = SessionManager();
     await session.restoreSession();
 
-    final url = '${getBackendBaseUrl()}/api/comments/post/${widget.postId}';
+    final url = '${getApiBaseUrl()}/api/comments/post/${widget.postId}';
 
     try {
       final response = await session.get(url);
@@ -72,7 +83,7 @@ class _CommentScreenState extends State<CommentScreen> {
     final session = SessionManager();
     await session.restoreSession();
 
-    final url = '${getBackendBaseUrl()}/api/comments/post/${widget.postId}';
+    final url = '${getApiBaseUrl()}/api/comments/post/${widget.postId}';
 
     final body = jsonEncode({
       'userId': int.parse(userId),
@@ -96,7 +107,6 @@ class _CommentScreenState extends State<CommentScreen> {
       );
     }
   }
-
 
   Widget buildCommentCard(Map<String, dynamic> comment) {
     return ListTile(

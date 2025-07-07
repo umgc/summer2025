@@ -1,11 +1,13 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:care_connect_app/config/EnvConstant.dart';
-
-import 'session_manager.dart';
+import '../frontend/session_manager.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiEndpoints {
-  static final String _host = getBackendBaseUrl();
+  // Use localhost for web, otherwise fallback for emulator, etc.
+  static final String _host = kIsWeb
+      ? 'http://localhost:8080'
+      : 'http://10.0.2.2:8080'; // Change if needed for emulator, or set to localhost for physical device
+
   static final String gamification = '$_host/api/gamification';
 }
 

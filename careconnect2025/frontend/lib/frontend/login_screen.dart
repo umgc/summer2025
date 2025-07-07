@@ -99,7 +99,12 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
               TextButton(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResetPasswordScreen())),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ResetPasswordScreen(role: "patient"),
+                  ),
+                ),
                 child: const Text('Forgot your password?'),
               ),
               Row(

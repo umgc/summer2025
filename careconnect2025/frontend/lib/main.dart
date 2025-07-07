@@ -4,35 +4,55 @@ import 'frontend/caregiver_dashboard.dart';
 import 'frontend/caregiver_login_screen.dart';
 import 'frontend/login_screen.dart';
 import 'frontend/PatientDashboard/patient_main_screen.dart';
-import 'services/session_manager.dart';
+import 'frontend/session_manager.dart';
+import 'frontend/SetNewPasswordScreen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-
 Future<void> main() async {
+  print('main() started');
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
-  runApp(const CareConnectApp());
+  print('dotenv loaded');
+
+  // 👇 Flutter web: check for reset-password on cold start
+  final uri = Uri.base; // e.g., http://localhost:3000/reset-password?token=123
+  Widget home = const LaunchRouter();
+  if (uri.path == '/reset-password' && uri.queryParameters['token'] != null) {
+    home = SetNewPasswordScreen(token: uri.queryParameters['token']!);
+  }
+
+  runApp(CareConnectApp(homeOverride: home));
 }
 
 class CareConnectApp extends StatelessWidget {
-  const CareConnectApp({super.key});
+  final Widget homeOverride;
+  const CareConnectApp({super.key, required this.homeOverride});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CareConnect',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const LaunchRouter(),
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: homeOverride, // This shows the correct initial page!
+      onGenerateRoute: (settings) {
+        final uri = Uri.parse(settings.name ?? '/');
+        if (uri.path == '/reset-password') {
+          final token = uri.queryParameters['token'] ?? '';
+          return MaterialPageRoute(
+            builder: (_) => SetNewPasswordScreen(token: token),
+            settings: settings,
+          );
+        }
+        return MaterialPageRoute(builder: (_) => const LaunchRouter());
+      },
+      onUnknownRoute: (_) => MaterialPageRoute(builder: (_) => const LaunchRouter()),
     );
   }
 }
 
 class LaunchRouter extends StatefulWidget {
   const LaunchRouter({super.key});
-
   @override
   State<LaunchRouter> createState() => _LaunchRouterState();
 }
@@ -45,25 +65,23 @@ class _LaunchRouterState extends State<LaunchRouter> {
   @override
   void initState() {
     super.initState();
+    print('LaunchRouter initState');
     _initSessionAndRedirect();
   }
 
   Future<void> _initSessionAndRedirect() async {
-    // ✅ Restore session cookie
+    print('initSessionAndRedirect start');
     await SessionManager().restoreSession();
-
-    // 🔐 Check login status from local storage
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString('userId');
     final role = prefs.getString('role');
-
     if (userId != null && role == 'patient') {
       setState(() {
         _redirect = PatientDashboard(userId: int.parse(userId));
       });
     } else if (userId != null && role == 'caregiver') {
       setState(() {
-        _redirect = const CaregiverDashboard(); // Add userId if needed
+        _redirect = const CaregiverDashboard();
       });
     } else {
       setState(() {
@@ -80,7 +98,6 @@ class _LaunchRouterState extends State<LaunchRouter> {
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

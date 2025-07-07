@@ -35,8 +35,9 @@ dependencies:
   cookie_jar: ^4.0.6
   dio_cookie_manager: ^3.0.0
   confetti: ^0.7.0
-
-# -- Astha - start
+  speech_to_text: ^7.1.0
+  porcupine_flutter: ^3.0.4
+  # -- Astha - start
   path_provider: ^2.1.2
   mime: ^2.0.0
   image_picker: ^1.0.7  # image upload

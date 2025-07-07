@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'session_manager.dart';
+import '../frontend/session_manager.dart';
 import 'package:care_connect_app/config/EnvConstant.dart';
 
 class ApiEndpoints {
@@ -78,6 +78,28 @@ class AuthService {
       print("✅ Logout successful");
     } else {
       print("❌ Logout failed: ${response.statusCode} - ${response.body}");
+    }
+  }
+
+  static Future<void> forgotPassword(String email, String role) async {
+    final session = SessionManager();
+    final response = await session.post(
+      '${ApiEndpoints.auth}/forgot-password',
+      body: jsonEncode({'email': email, 'role': role}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception(jsonDecode(response.body)['message'] ?? 'Failed to send reset link');
+    }
+  }
+
+  static Future<void> resetPassword(String token, String password) async {
+    final session = SessionManager();
+    final response = await session.post(
+      '${ApiEndpoints.auth}/reset-password',
+      body: jsonEncode({'token': token, 'password': password}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception(jsonDecode(response.body)['message'] ?? 'Failed to reset password');
     }
   }
 }

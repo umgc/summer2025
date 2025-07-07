@@ -1,6 +1,9 @@
 import 'package:care_connect_app/frontend/PatientDashboard/mainscreen.dart';
 import 'package:flutter/material.dart';
+import 'package:care_connect_app/frontend/gamification_screen.dart';
 import 'package:care_connect_app/frontend/main_feed_screen.dart';
+
+import '../settings_screen.dart';
 
 class PatientDashboard extends StatefulWidget {
   final int userId;
@@ -50,25 +53,50 @@ class _PatientDashboardState extends State<PatientDashboard> {
               {'icon': Icons.video_camera_front, 'title': 'Virtual Check-In'},
               {'icon': Icons.medical_services, 'title': 'TeleHealth'},
               {'icon': Icons.note_alt, 'title': 'Health Care Note'},
-              {'icon': Icons.emoji_events, 'title': 'Gamification'},
-              {'icon': Icons.people_alt, 'title': 'Social Network'},
+              {
+                'icon': Icons.emoji_events,
+                'title': 'Gamification',
+                'route': (BuildContext context) {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const GamificationScreen()),
+                  );
+                },
+              },
               {
                 'icon': Icons.people_alt,
                 'title': 'Social Network',
                 'route': (BuildContext context) {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => MainFeedScreen(userId: widget.userId),
-                  ));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => MainFeedScreen(userId: widget.userId)),
+                  );
                 },
               },
-              {'icon': Icons.settings, 'title': 'Settings'},
+              {
+                'icon': Icons.settings,
+                'title': 'Settings',
+                'route': (BuildContext context) {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  );
+                },
+              },
               {'icon': Icons.help_outline, 'title': 'Help & Support'},
             ].map((item) {
               return ListTile(
                 leading: Icon(item['icon'] as IconData),
                 title: Text(item['title'] as String),
-                onTap: () {}, // Placeholder
+                onTap: () {
+                  final Function? routeFn = item['route'] as Function?;
+                  if (routeFn != null) {
+                    routeFn(context);
+                  }
+                },
               );
             }),
             const Divider(),
@@ -144,11 +172,11 @@ class _PatientDashboardState extends State<PatientDashboard> {
                   alignment: Alignment.bottomRight,
                   child: TextButton.icon(
                     onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => EmergencyScreen()),
-                        );
-                      },
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => EmergencyScreen()),
+                      );
+                    },
                     icon: const Icon(Icons.phone_in_talk_rounded, color: Colors.red),
                     label: const Text('SOS CALL', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                   ),
@@ -221,8 +249,6 @@ class CaregiverCard extends StatelessWidget {
           children: [
             Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-
-            //Adding phone and message icon
             Row(
               children: [
                 IconButton(
@@ -251,6 +277,3 @@ class CaregiverCard extends StatelessWidget {
     );
   }
 }
-
-
-

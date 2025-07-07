@@ -1,9 +1,6 @@
-// lib/screens/settings_screen.dart
-import 'package:care_connect_app/config/EnvConstant.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
-import '../widgets/user_avatar.dart';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'upload_avatar_screen.dart';
 import 'package:care_connect_app/main.dart';
 
@@ -34,21 +31,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedUrl = profileImageUrl != null && profileImageUrl!.isNotEmpty
-        ? '${getBackendBaseUrl()}$profileImageUrl'
-        : null;
+    // Generate correct image URL for web/mobile.
+    String? resolvedUrl;
+    if (profileImageUrl != null && profileImageUrl!.isNotEmpty) {
+      if (kIsWeb) {
+        resolvedUrl = 'http://localhost:8080$profileImageUrl';
+      } else {
+        resolvedUrl = 'http://10.0.2.2:8080$profileImageUrl';
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
         backgroundColor: Colors.blue.shade900,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 20),
-            UserAvatar(imageUrl: profileImageUrl, radius: 40),
+            // Avatar display: fallback to icon if null
+            CircleAvatar(
+              radius: 40,
+              backgroundColor: Colors.grey[300],
+              backgroundImage: (resolvedUrl != null) ? NetworkImage(resolvedUrl) : null,
+              child: (resolvedUrl == null)
+                  ? const Icon(Icons.person, size: 40, color: Colors.white)
+                  : null,
+            ),
             const SizedBox(height: 10),
             Text(name ?? '', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 30),

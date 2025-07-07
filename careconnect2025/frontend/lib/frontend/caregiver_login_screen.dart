@@ -31,7 +31,8 @@ class _CaregiverLoginScreenState extends State<CaregiverLoginScreen> {
         role: 'caregiver', // ✅ Add this line
       );
 
-      if (user['role'] == 'caregiver') {
+      if (user['role']?.toString().toUpperCase() == 'CAREGIVER') {
+        // Success, proceed!
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('userId', user['id'].toString());
         await prefs.setString('role', user['role']);
@@ -112,7 +113,9 @@ class _CaregiverLoginScreenState extends State<CaregiverLoginScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ResetPasswordScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const ResetPasswordScreen(role: "caregiver"),
+                    ),
                   );
                 },
                 child: const Text(
@@ -124,6 +127,7 @@ class _CaregiverLoginScreenState extends State<CaregiverLoginScreen> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 20),
               GestureDetector(
                 onTap: () {

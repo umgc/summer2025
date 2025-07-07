@@ -22,7 +22,6 @@ import com.careconnect.security.JwtTokenProvider;
 import com.careconnect.service.StripeService;
 import com.careconnect.exception.*;
 
-
 import java.sql.Timestamp;
 import java.util.UUID;
 
@@ -38,6 +37,8 @@ import java.util.Optional;
 @Service
 public class AuthService {
 
+    @Autowired
+    private GamificationService gamificationService;
 
     @Autowired
     private UserRepository userRepository;
@@ -53,7 +54,7 @@ public class AuthService {
 
     @Autowired
     private PatientRepository patients;
-    
+
     @Autowired
     private CaregiverRepository caregivers;
 
@@ -70,8 +71,18 @@ public class AuthService {
     private String baseUrl; // configurable via application.properties
 
     public ResponseEntity<?> register(RegisterRequest request) {
-        // 1. Lookup existing user by email & role
-        Optional<User> existingUserOpt = userRepository.findByEmailAndRole(request.getEmail(), request.getRole());
+        // --- Validate & Convert Role ---
+        Role userRole;
+        try {
+            userRole = Role.valueOf(request.getRole().toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException ex) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Collections.singletonMap("error", "Invalid role: " + request.getRole()));
+        }
+
+        // 1. Lookup existing user by email & role (using enum)
+        Optional<User> existingUserOpt = userRepository.findByEmailAndRole(request.getEmail(), userRole);
 
         // 2. If user exists
         if (existingUserOpt.isPresent()) {
@@ -106,7 +117,7 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setName(request.getName());
-        user.setRole(Role.valueOf(request.getRole().toUpperCase()));
+        user.setRole(userRole); // use enum!
         user.setIsVerified(false);
         user.setVerificationToken(verificationToken);
         user.setCreatedAt(new Timestamp(System.currentTimeMillis()));
@@ -123,20 +134,28 @@ public class AuthService {
                 "Registration successful! Please check your email to verify your account."));
     }
 
-    // ✅ Validate user for login
+
+
     public Optional<User> validateUser(String email, String password, String role) {
-        Optional<User> userOpt = userRepository.findByEmailAndRole(email, role);
+        Optional<User> userOpt = userRepository.findByEmailAndRole(email, Role.fromString(role));
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            // Check password
             if (!passwordEncoder.matches(password, user.getPassword())) {
                 return Optional.empty();
             }
-            // Check email verification
             if (!Boolean.TRUE.equals(user.getIsVerified())) {
-                // Instead of returning empty, you could throw to signal "not verified"
                 throw new RuntimeException("Please verify your email before logging in.");
             }
+
+            // Award First Login XP if first login
+            if (user.getLastLogin() == null) {
+                gamificationService.unlockAchievement(user.getId(), "First Login", 20);
+            }
+
+            // Update lastLogin timestamp
+            user.setLastLogin(new Timestamp(System.currentTimeMillis()));
+            userRepository.save(user);
+
             return Optional.of(user);
         }
         return Optional.empty();
@@ -144,12 +163,12 @@ public class AuthService {
 
 
     // ✅ Logout
-    public ResponseEntity<?> logout(HttpSession session) {
-        session.invalidate();
+    public ResponseEntity<?> logout(/*HttpSession session*/) {
+        // session.invalidate(); -> comment out for stateless section
         return ResponseEntity.ok(Collections.singletonMap("message", "Logged out successfully"));
     }
 
-    // ✅ Check if user session is valid
+  /*  // ✅ Check if user session is valid
     public ResponseEntity<?> checkSession(HttpSession session) {
         Object userId = session.getAttribute("userId");
         if (userId != null) {
@@ -157,7 +176,7 @@ public class AuthService {
         } else {
             return ResponseEntity.status(401).body(Collections.singletonMap("error", "Not logged in"));
         }
-    }
+    }*/
 
     // ✅ Email verification (optional if implemented)
     public ResponseEntity<?> verifyToken(String token) {
@@ -167,6 +186,7 @@ public class AuthService {
             user.setIsVerified(true);
             user.setVerificationToken(null); // Clear token so it can't be reused
             userRepository.save(user);
+            gamificationService.unlockAchievement(user.getId(), "Verified Email", 10);
             return ResponseEntity.ok("Your email has been verified! You can now log in.");
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired verification link.");
@@ -206,7 +226,7 @@ public class AuthService {
             // TODO: FAMILY_MEMBER
         }
         case ADMIN -> {
-            // TODO: ADMIN 
+            // TODO: ADMIN
         }
     }
 

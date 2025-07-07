@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'dart:io';
 import 'package:care_connect_app/services/api_service.dart';
-import 'package:care_connect_app/services/session_manager.dart'; // Import SessionManager
+import 'package:care_connect_app/frontend/session_manager.dart'; // Import SessionManager
 
 class NewPostScreen extends StatefulWidget {
   final int userId;

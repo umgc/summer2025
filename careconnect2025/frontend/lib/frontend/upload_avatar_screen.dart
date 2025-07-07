@@ -1,6 +1,6 @@
 import 'dart:convert';
-
-import 'package:care_connect_app/config/EnvConstant.dart';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
@@ -15,16 +15,23 @@ class UploadAvatarScreen extends StatefulWidget {
 }
 
 class _UploadAvatarScreenState extends State<UploadAvatarScreen> {
-  File? _selectedAvatar;
+  File? _selectedAvatar;       // Mobile/desktop file
+  Uint8List? _avatarBytes;     // Web image bytes
   bool isUploading = false;
-  String? uploadedAvatarUrl; // this stores the relative path like `/uploads/avatar.png`
+  String? uploadedAvatarUrl;   // Relative URL from backend
 
   Future<void> pickAvatar() async {
     final result = await FilePicker.platform.pickFiles(type: FileType.image);
 
-    if (result != null && result.files.single.path != null) {
+    if (result != null) {
       setState(() {
-        _selectedAvatar = File(result.files.single.path!);
+        if (kIsWeb) {
+          _avatarBytes = result.files.single.bytes;
+          _selectedAvatar = null;
+        } else {
+          _selectedAvatar = File(result.files.single.path!);
+          _avatarBytes = null;
+        }
       });
     }
   }
@@ -33,7 +40,8 @@ class _UploadAvatarScreenState extends State<UploadAvatarScreen> {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString('userId');
 
-    if (userId == null || _selectedAvatar == null) {
+    // Ensure image is picked
+    if (userId == null || (_selectedAvatar == null && _avatarBytes == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Missing user ID or image')),
       );
@@ -42,38 +50,56 @@ class _UploadAvatarScreenState extends State<UploadAvatarScreen> {
 
     setState(() => isUploading = true);
 
-    final uri = Uri.parse('${getBackendBaseUrl()}/api/auth/avatar/$userId');
+    final baseUrl = kIsWeb
+        ? 'http://localhost:8080'
+        : (Platform.isAndroid ? 'http://10.0.2.2:8080' : 'http://localhost:8080');
+    final uri = Uri.parse('$baseUrl/api/auth/avatar/$userId');
 
     final request = http.MultipartRequest('POST', uri);
-    request.files.add(
-      await http.MultipartFile.fromPath('avatar', _selectedAvatar!.path),
-    );
 
-    final response = await request.send();
+    if (kIsWeb && _avatarBytes != null) {
+      request.files.add(http.MultipartFile.fromBytes(
+        'avatar',
+        _avatarBytes!,
+        filename: 'avatar.png',
+      ));
+    } else if (_selectedAvatar != null) {
+      request.files.add(await http.MultipartFile.fromPath('avatar', _selectedAvatar!.path));
+    } else {
+      // Should never happen, but safety!
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No image selected')),
+      );
+      setState(() => isUploading = false);
+      return;
+    }
 
-    setState(() => isUploading = false);
+    try {
+      final response = await request.send();
+      setState(() => isUploading = false);
 
-    if (response.statusCode == 200) {
-      final responseBody = await http.Response.fromStream(response);
-      if (responseBody.statusCode == 200) {
-        final data = jsonDecode(responseBody.body);
-        final serverPath = data['imageUrl']; // This should be '/uploads/filename.jpg'
+      if (response.statusCode == 200) {
+        final responseBody = await http.Response.fromStream(response);
+        if (responseBody.statusCode == 200) {
+          final data = jsonDecode(responseBody.body);
+          final serverPath = data['imageUrl']; // This should be '/uploads/filename.jpg'
 
-        setState(() => uploadedAvatarUrl = serverPath);
-        await prefs.setString('profileImageUrl', serverPath);
+          setState(() => uploadedAvatarUrl = serverPath);
+          await prefs.setString('profileImageUrl', serverPath);
 
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Avatar uploaded successfully!')),
+          );
+        }
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Avatar uploaded successfully!')),
+          const SnackBar(content: Text('Failed to upload avatar')),
         );
       }
-
-
+    } catch (e) {
+      setState(() => isUploading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Avatar uploaded successfully!')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to upload avatar')),
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }
@@ -81,7 +107,9 @@ class _UploadAvatarScreenState extends State<UploadAvatarScreen> {
   @override
   Widget build(BuildContext context) {
     final resolvedImageUrl = uploadedAvatarUrl != null
-        ? '${getBackendBaseUrl()}$uploadedAvatarUrl'
+        ? ((kIsWeb || !Platform.isAndroid)
+        ? 'http://localhost:8080$uploadedAvatarUrl'
+        : 'http://10.0.2.2:8080$uploadedAvatarUrl')
         : null;
 
     return Scaffold(
@@ -93,7 +121,17 @@ class _UploadAvatarScreenState extends State<UploadAvatarScreen> {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            if (_selectedAvatar != null) ...[
+            if (kIsWeb && _avatarBytes != null) ...[
+              Image.memory(_avatarBytes!, height: 150),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () => setState(() {
+                  _avatarBytes = null;
+                  uploadedAvatarUrl = null;
+                }),
+                child: const Text('Remove Image'),
+              ),
+            ] else if (!kIsWeb && _selectedAvatar != null) ...[
               Image.file(_selectedAvatar!, height: 150),
               const SizedBox(height: 10),
               TextButton(
@@ -127,7 +165,7 @@ class _UploadAvatarScreenState extends State<UploadAvatarScreen> {
                     backgroundImage: NetworkImage(resolvedImageUrl),
                   )
                 ],
-              )
+              ),
           ],
         ),
       ),
