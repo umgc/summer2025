@@ -14,6 +14,17 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+// SendGrid imports
+import com.sendgrid.*;
+import com.sendgrid.Method;
+import com.sendgrid.Request;
+import com.sendgrid.Response;
+import com.sendgrid.SendGrid;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Email;
+import com.sendgrid.helpers.mail.objects.Content;
+import java.io.IOException;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,6 +68,46 @@ public class EmailService {
 
     @Autowired
     private RestTemplate restTemplate;
+
+        /**
+     * Send password setup email with backend-generated credentials
+     */
+    public void sendPasswordSetupEmailWithCredentials(String recipientEmail, String passwordSetupToken, String firstName, String username, String tempPassword) {
+        String passwordSetupLink = frontendBaseUrl + "/setup-password?token=" + passwordSetupToken;
+        String subject = "CareConnect - Your Account Credentials & Set Up Password";
+        String htmlContent = buildPasswordSetupEmailWithCredentialsHtml(firstName, passwordSetupLink, username, tempPassword);
+        String textContent = "Hello " + (firstName != null ? firstName : "") + ",\n\n" +
+                "Your CareConnect account has been created.\n" +
+                "Username: " + username + "\n" +
+                "Temporary Password: " + tempPassword + "\n\n" +
+                "Please set up your password using the following link: " + passwordSetupLink + "\n\n" +
+                "For security, please change your password after logging in.";
+        sendEmail(recipientEmail, subject, htmlContent, textContent);
+    }
+
+    /**
+     * HTML template for password setup email with credentials
+     */
+    private String buildPasswordSetupEmailWithCredentialsHtml(String firstName, String passwordSetupLink, String username, String tempPassword) {
+        return "<html><body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>" +
+                "<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>" +
+                "<h2 style='color: #007bff;'>Welcome to CareConnect!</h2>" +
+                "<p>Hello " + (firstName != null ? firstName : "") + ",</p>" +
+                "<p>Your CareConnect account has been created. Here are your credentials:</p>" +
+                "<div style='background: #f8f9fa; border-radius: 5px; padding: 15px; margin: 20px 0;'>" +
+                "<strong>Username (Email):</strong> " + username + "<br>" +
+                "<strong>Temporary Password:</strong> <span style='font-family: monospace;'>" + tempPassword + "</span>" +
+                "</div>" +
+                "<p style='color: #dc3545; font-weight: bold;'>For your security, please change your password after logging in.</p>" +
+                "<p>To set up your password, click the button below:</p>" +
+                "<p style='text-align: center; margin: 30px 0;'>" +
+                "<a href='" + passwordSetupLink + "' style='background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;'>SET UP PASSWORD</a>" +
+                "</p>" +
+                "<p>If the button doesn't work, copy and paste this link into your browser:</p>" +
+                "<p style='word-break: break-all; color: #666;'>" + passwordSetupLink + "</p>" +
+                "<p style='margin-top: 30px; font-size: 14px; color: #666;'>If you did not expect this email, please contact your caregiver.</p>" +
+                "</div></body></html>";
+    }
 
     public void sendVerificationEmail(String recipientEmail, String verificationLink) {
         String subject = "CareConnect Email Verification";
@@ -222,44 +273,35 @@ public class EmailService {
         }
 
         try {
-            String url = "https://api.sendgrid.com/v3/mail/send";
-            
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(sendgridApiKey);
+            Email from = new Email(fromEmail, "CareConnect");
+            Email to = new Email(recipientEmail);
+            Content content = new Content("text/html", htmlContent);
+            Mail mail = new Mail(from, subject, to, content);
 
-            // Build SendGrid JSON payload
-            Map<String, Object> emailData = new HashMap<>();
-            
-            // From email
-            Map<String, String> fromData = new HashMap<>();
-            fromData.put("email", fromEmail);
-            fromData.put("name", "CareConnect");
-            emailData.put("from", fromData);
-            
-            // To email
-            Map<String, String> toData = new HashMap<>();
-            toData.put("email", recipientEmail);
-            Map<String, Object> personalization = new HashMap<>();
-            personalization.put("to", new Map[]{toData});
-            personalization.put("subject", subject);
-            emailData.put("personalizations", new Map[]{personalization});
-            
-            // Content
-            Map<String, String> contentData = new HashMap<>();
-            contentData.put("type", "text/html");
-            contentData.put("value", htmlContent);
-            emailData.put("content", new Map[]{contentData});
+            SendGrid sg = new SendGrid(sendgridApiKey);
+            Request request = new Request();
+            request.setMethod(Method.POST);
+            request.setEndpoint("mail/send");
+            request.setBody(mail.build());
 
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(emailData, headers);
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+            // Print outgoing request details for debugging
+            System.out.println("\n==== SENDGRID OUTGOING REQUEST ====");
+            System.out.println("API KEY: " + (sendgridApiKey != null ? sendgridApiKey.substring(0, 8) + "..." : "null"));
+            System.out.println("From: " + fromEmail);
+            System.out.println("To: " + recipientEmail);
+            System.out.println("Subject: " + subject);
+            System.out.println("Body (truncated): " + htmlContent.substring(0, Math.min(200, htmlContent.length())) + (htmlContent.length() > 200 ? "..." : ""));
+            System.out.println("Raw JSON Payload: " + mail.build());
+            System.out.println("==== END SENDGRID REQUEST ====");
 
-            if (response.getStatusCode().is2xxSuccessful()) {
-                // System.out.println("✅ Email sent via SendGrid to " + recipientEmail);
+            Response response = sg.api(request);
+            System.out.println("SendGrid Response: Status=" + response.getStatusCode() + ", Body=" + response.getBody());
+            if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
+                // Email sent successfully
             } else {
-                throw new RuntimeException("SendGrid API returned status: " + response.getStatusCode());
+                throw new RuntimeException("SendGrid API returned status: " + response.getStatusCode() + " - " + response.getBody());
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException("Failed to send email via SendGrid: " + e.getMessage(), e);
         }
     }
@@ -268,32 +310,25 @@ public class EmailService {
      * SMTP-based email sending (production mode)
      */
     private void sendSmtpEmail(String recipientEmail, String subject, String htmlContent) {
+        // If using SendGrid SMTP, set username="apikey" and password=actual API key in properties
         if (mailSender == null) {
             throw new RuntimeException("SMTP configuration not available. Configure JavaMailSender or use a different email provider.");
         }
-
+        if (fromEmail == null || fromEmail.trim().isEmpty()) {
+            System.err.println("❌ ERROR: fromEmail is null or empty! Check your environment variables and application.properties mapping.");
+            throw new RuntimeException("FROM_EMAIL (careconnect.email.from) is not set. Email cannot be sent.");
+        }
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
             helper.setTo(recipientEmail);
+            System.out.println("DEBUG: Sending SMTP email with FROM: '" + fromEmail + "'");
             helper.setFrom(fromEmail);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
-
-            // Debug logging to show the actual FROM_EMAIL being used
-            // SMTP email logging disabled
-            // System.out.println("📧 SMTP Email Details:");
-            // System.out.println("  Provider: " + emailProvider);
-            // System.out.println("  To: " + recipientEmail);
-            // System.out.println("  From: " + fromEmail);
-            // System.out.println("  Subject: " + subject);
-
             mailSender.send(message);
-            String providerInfo = getProviderInfo();
-            // System.out.println("✅ Email sent via " + providerInfo + " to " + recipientEmail);
         } catch (MessagingException e) {
-            System.err.println("❌ SMTP Email failed. FROM_EMAIL: " + fromEmail);
+            System.err.println("❌ SMTP Email failed. FROM_EMAIL: '" + fromEmail + "'");
             throw new RuntimeException("Failed to send SMTP email: " + e.getMessage(), e);
         }
     }
