@@ -32,6 +32,9 @@ public class PasswordResetService {
     @Value("${careconnect.email.provider:mailtrap}")
     private String emailProvider;
     
+    @Value("${careconnect.email.from:noreply@careconnect.com}")
+    private String fromEmail;
+
     public PasswordResetService(UserRepository users, PasswordResetTokenRepo tokens, PasswordEncoder encoder) {
         this.users = users;
         this.tokens = tokens;
@@ -113,10 +116,14 @@ public class PasswordResetService {
             MimeMessage message = mail.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setTo(to);
+            if (fromEmail == null || fromEmail.trim().isEmpty()) {
+                System.err.println("❌ ERROR: fromEmail is null or empty in PasswordResetService! Check your environment variables and application.properties mapping.");
+                throw new RuntimeException("FROM_EMAIL (careconnect.email.from) is not set. Email cannot be sent.");
+            }
+            helper.setFrom(fromEmail);
             helper.setSubject("CareConnect Password Reset");
             helper.setText("<p>You requested a password reset.</p>" +
                     "<p>Click <a href='" + link + "'>here</a> to reset your password. This link will expire in 2 hours.</p>", true);
-            
             mail.send(message);
             String providerInfo = getProviderInfo();
             // System.out.println("✅ Password reset email sent via " + providerInfo + " to " + to);

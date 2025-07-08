@@ -109,9 +109,10 @@
 			<version>24.6.0</version>  <!-- latest as of June 2025 -->
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-web</artifactId>
-		</dependency>
+					<groupId>org.springframework.security</groupId>
+					<artifactId>spring-security-web</artifactId>
+					<version>6.3.0</version>
+				</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
@@ -187,6 +188,12 @@
 			<artifactId>commons-codec</artifactId>
 			<version>1.16.1</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.sendgrid/sendgrid-java -->
+		<dependency>
+    <groupId>com.sendgrid</groupId>
+    <artifactId>sendgrid-java</artifactId>
+    <version>4.10.1</version>
+</dependency>
 			<!--ag end-->
 	</dependencies>
 
