@@ -1,13 +1,19 @@
 # Main Terraform - AWS Infrastructure of Care Connect
 This section of the code should be used to manage the underlaying AWS infrastructure for Care Connect. Inside of this folder we have all the initial and general scripts needed to start. Please follow this guide carefully.
 
-## Start with the s3_tfstate folder at the first run
-Here is the high level recommended execution flow:
+**_NB: Keep in mind you could be charged for the resources you are creating on AWS._**
+
+
+## Start with the [s3_tfstate](./s3_tfstate/README.md) folder at the first run
+_Unless you already have your own s3 bucket ready for the state.<br/>In that case you could just update the bucket name for the backend in the `main.tf` file under the general folder._
+
+---
+## Here is the high level recommended execution flow:
 
 1. Confirm you have all the pre-requisites
+1. Change the bucket name if needed in the main.tf of the ***`s3_tfstate`***, because bucket names are unique in S3 accross all AWS accounts.
 1. Execute the scripts under the ***`s3_tfstate`*** folder
 1. Execute the scripts under the ***`general`*** folder 
-1. 
 
 
 ## Pre-requisites

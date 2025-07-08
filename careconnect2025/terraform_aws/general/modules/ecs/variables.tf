@@ -24,5 +24,10 @@ variable "default_tags" {
   type = map(any)
 }
 variable "cc_ecs_exe_role_arn" {
-  type = string
+  type        = string
+  description = "The ECS execution role ARN used by the agent at startup to pull the image, create log group and run the task"
+}
+variable "cc_app_role_arn" {
+  type        = string
+  description = "The ECS task role ARN that the task/Spring Boot will use to access AWS services"
 }

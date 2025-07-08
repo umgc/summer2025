@@ -70,3 +70,22 @@ For credentials, setup help, or onboarding, contact your team lead or project ma
 ---
 
 ***Note: `application.properties` setup will be improved soon to follow current best practices for secrets and environment management.***
+
+
+## Deployment on AWS
+This can be done after create the infrastructure resources using the Terraform scripts. Follow the README(s) for more on the Terraform scripts.
+<br/>Those commands are provided on AWS ECR as well. 
+
+1. Install Docker on your computer. Jump to step 2 if you already have docker.
+2. Install and Configure your AWS Cli. Jump to step 3 if you have done that already.
+3. Create a .env file in the same directory of the DOckerfile. Add all the required environment variables with the their value on one single line each. Format: `VARIALBLE=VALUE`. Those variables would be the same as what you would use in the run configirations explained above.
+4. Run these commands: 
+```sh
+aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin 641592448579.dkr.ecr.us-east-1.amazonaws.com # To authenticate to ECR
+
+sudo docker build -t cc_core_ecr . # To build the image in your local
+
+sudo docker tag cc_core_ecr:latest 641592448579.dkr.ecr.us-east-1.amazonaws.com/cc_core_ecr:latest # To create a new tag of the created image (Duplicate it with a new tag[name])
+
+sudo docker push 641592448579.dkr.ecr.us-east-1.amazonaws.com/cc_core_ecr:latest # To push the image to AWS ECR
+```

@@ -1,12 +1,12 @@
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "cc_internal_bucket" {
-  bucket        = var.cc_internal_bucket_name
+  bucket        = "${var.cc_internal_bucket_name}-${data.aws_caller_identity.current.account_id}"
   force_destroy = true
-  tags          = merge(var.default_tags, { Name = "cc-internal-bucket" })
+  tags          = merge(var.default_tags, { Name = "${var.cc_internal_bucket_name}-${data.aws_caller_identity.current.account_id}" })
 }
 
-resource "aws_s3_bucket_versioning" "cc_intelnal_bucket_versioning" {
+resource "aws_s3_bucket_versioning" "cc_internal_bucket_versioning" {
   bucket = aws_s3_bucket.cc_internal_bucket.id
   versioning_configuration {
     status = "Enabled"
