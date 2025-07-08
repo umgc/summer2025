@@ -9,6 +9,7 @@ resource "aws_db_instance" "cc_db" {
   engine_version         = "8.0"
   instance_class         = "db.t3.micro" // free tier
   identifier             = "cc-db"
+  db_name                = "careconnect"
   username               = var.rds_username
   password               = var.rds_password
   vpc_security_group_ids = [var.cc_rds_sg_id]
@@ -18,7 +19,7 @@ resource "aws_db_instance" "cc_db" {
 }
 
 # Comment PostgreSQL DB Instance for now as it is not being used yet for media uploads.
-  
+
 # resource "aws_db_instance" "cc_db_media" {
 #  allocated_storage      = 100
 #  max_allocated_storage  = 250
