@@ -11,8 +11,10 @@ provider "aws" {
   region = var.primary_region
 }
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_s3_bucket" "backend_bucket" {
-  bucket        = var.iac_bucket_name
+  bucket        = "${var.iac_bucket_name}-${data.aws_caller_identity.current.account_id}"
   force_destroy = true
   tags          = merge(var.default_tags, { Name = "cc-iac-bucket" })
 }
