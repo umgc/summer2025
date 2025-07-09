@@ -41,7 +41,7 @@ public class PasswordResetService {
         this.encoder = encoder;
     }
 
-    private static final Duration TTL = Duration.ofHours(2);
+    private static final Duration TTL = Duration.ofMinutes(20);
 
     /* Step 1 – request */
     public void startReset(String email, String appUrl) {
@@ -122,8 +122,48 @@ public class PasswordResetService {
             }
             helper.setFrom(fromEmail);
             helper.setSubject("CareConnect Password Reset");
-            helper.setText("<p>You requested a password reset.</p>" +
-                    "<p>Click <a href='" + link + "'>here</a> to reset your password. This link will expire in 2 hours.</p>", true);
+            
+            String emailBody = """
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #2c3e50; text-align: center;">CareConnect Password Reset</h2>
+                    
+                    <p style="font-size: 16px; line-height: 1.6; color: #333;">
+                        You requested a password reset for your CareConnect account.
+                    </p>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="%s" 
+                           style="background-color: #3498db; 
+                                  color: white; 
+                                  padding: 12px 30px; 
+                                  text-decoration: none; 
+                                  border-radius: 5px; 
+                                  font-weight: bold; 
+                                  font-size: 16px;
+                                  display: inline-block;
+                                  border: 2px solid #3498db;
+                                  transition: background-color 0.3s;">
+                            Reset Your Password
+                        </a>
+                    </div>
+                    
+                    <p style="font-size: 14px; color: #666; text-align: center; margin-top: 20px;">
+                        <strong>⏰ This link is valid for 20 minutes only and will expire automatically.</strong>
+                    </p>
+                    
+                    <p style="font-size: 14px; color: #666; text-align: center;">
+                        If you didn't request this password reset, please ignore this email.
+                    </p>
+                    
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    
+                    <p style="font-size: 12px; color: #999; text-align: center;">
+                        This is an automated message from CareConnect. Please do not reply to this email.
+                    </p>
+                </div>
+                """.formatted(link);
+            
+            helper.setText(emailBody, true);
             mail.send(message);
             String providerInfo = getProviderInfo();
             // System.out.println("✅ Password reset email sent via " + providerInfo + " to " + to);
