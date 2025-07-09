@@ -40,6 +40,19 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
   ];
 
   /**
+ * Domain-specific images
+ */
+  ///
+  final Map<String, String> domainImages = {
+    'Oil & Gas': '../../assets/images/oil-pumps.jpg',
+    'IT Project Management': '../../assets/images/it_management_background.jpg',
+    'Healthcare': '../../assets/images/healthcare_background.jpg',
+    'Military': '../../assets/images/military_background.jpg',
+    'Government': '../../assets/images/government_background.jpg',
+    'Finance': '../../assets/images/finance_background.jpg',
+  };
+
+  /**
  * Domain-specific event templates
  * These can be used to generate random events based on the selected domain.
  */
@@ -48,12 +61,27 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
     'Healthcare': [
       {'type': 'Pop Quiz', 'content': 'What is the normal blood pressure?'},
       {'type': 'Surprise Task', 'content': 'Sterilize a new tool set.'},
+      {'type': 'Pop Quiz', 'content': 'How many bones are in the human body?'},
+      {'type': 'Surprise Task', 'content': 'Triage five incoming patients.'},
+      {
+        'type': 'Pop Quiz',
+        'content': 'What PPE is required for airborne precautions?',
+      },
     ],
     'Military': [
       {'type': 'Pop Quiz', 'content': 'How do you identify friendly fire?'},
       {
         'type': 'Surprise Task',
         'content': 'Clean your weapon in under 2 minutes.',
+      },
+      {'type': 'Pop Quiz', 'content': 'What does “HOOAH” stand for?'},
+      {
+        'type': 'Surprise Task',
+        'content': 'Prepare a defensive perimeter using your squad.',
+      },
+      {
+        'type': 'Pop Quiz',
+        'content': 'What is the five-paragraph OPORD format?',
       },
     ],
     'IT Project Management': [
@@ -62,10 +90,74 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
         'content': 'Your stakeholder changed a requirement. What do you do?',
       },
       {'type': 'Pop Quiz', 'content': 'What does MVP stand for?'},
+      {
+        'type': 'Pop Quiz',
+        'content': 'What’s the difference between Agile and Waterfall?',
+      },
+      {
+        'type': 'Surprise Task',
+        'content': 'The project is delayed. Create a mitigation plan.',
+      },
+      {'type': 'Pop Quiz', 'content': 'Define the term "technical debt."'},
     ],
-    // Add more domain events...
+    'Oil & Gas': [
+      {'type': 'Pop Quiz', 'content': 'What is the flash point of crude oil?'},
+      {
+        'type': 'Surprise Task',
+        'content': 'Respond to a simulated pipeline leak.',
+      },
+      {
+        'type': 'Pop Quiz',
+        'content': 'What is upstream vs. downstream in oil & gas?',
+      },
+      {
+        'type': 'Surprise Task',
+        'content': 'Conduct a risk assessment on a drilling site.',
+      },
+      {
+        'type': 'Pop Quiz',
+        'content': 'What PPE is required for rig floor personnel?',
+      },
+    ],
+    'Government': [
+      {'type': 'Pop Quiz', 'content': 'What is the FOIA?'},
+      {
+        'type': 'Surprise Task',
+        'content': 'Draft a policy response to a cyber threat.',
+      },
+      {
+        'type': 'Pop Quiz',
+        'content': 'What are the three branches of government?',
+      },
+      {
+        'type': 'Surprise Task',
+        'content': 'You must prepare for a public press briefing.',
+      },
+      {'type': 'Pop Quiz', 'content': 'What does OMB stand for?'},
+    ],
+    'Finance': [
+      {'type': 'Pop Quiz', 'content': 'What does ROI stand for?'},
+      {
+        'type': 'Surprise Task',
+        'content': 'Analyze this balance sheet for errors.',
+      },
+      {
+        'type': 'Pop Quiz',
+        'content': 'What is the difference between a stock and a bond?',
+      },
+      {
+        'type': 'Surprise Task',
+        'content': 'Develop a quick forecast for next quarter.',
+      },
+      {'type': 'Pop Quiz', 'content': 'What is compound interest?'},
+    ],
   };
 
+  /**
+ * Returns a random event for the given domain.
+ * If no specific events are defined for the domain, returns a generic event.
+ */
+  ///
   Map<String, String> getRandomEventForDomain(String domain) {
     final events = domainEventTemplates[domain];
     if (events == null || events.isEmpty) {
@@ -503,11 +595,26 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
         children: [
           DrawerHeader(
             decoration: const BoxDecoration(color: Colors.indigo),
-            child: Text(
-              'Scenario Designer',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(color: Colors.white),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Scenario Designer',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.headlineSmall?.copyWith(color: Colors.white),
+                ),
+                const SizedBox(height: 8),
+                if (domainImages[selectedDomain] != null)
+                  Expanded(
+                    child: Image.asset(
+                      domainImages[selectedDomain]!,
+                      fit: BoxFit
+                          .cover, // or BoxFit.contain depending on the effect you want
+                      width: double.infinity,
+                    ),
+                  ),
+              ],
             ),
           ),
           Padding(
