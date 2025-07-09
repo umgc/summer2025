@@ -11,12 +11,11 @@ WORKDIR /app
 # Copy the jar from the build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Copy the .env file into the image
-COPY .env .env
 
 # Export environment variables from .env file
 RUN apt-get update && apt-get install -y curl
-RUN echo "export $(cat .env | xargs)" >> /etc/profile
 
-# Run the app with environment variables loaded
-ENTRYPOINT ["/bin/bash", "-c", ". /etc/profile && java -jar app.jar"]
+COPY .env /app/.env
+COPY env-entry.sh /app/env-entry.sh
+RUN chmod +x /app/env-entry.sh
+ENTRYPOINT ["/app/env-entry.sh"]
