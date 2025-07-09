@@ -17,11 +17,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/feed")
-@CrossOrigin(originPatterns = {
-        "http://localhost:3000",
-        "http://10.0.2.2:8080",
-        "http://localhost:8080"
-}, allowCredentials = "true")
 public class FeedController {
 
     @Value("${careconnect.upload.dir}")

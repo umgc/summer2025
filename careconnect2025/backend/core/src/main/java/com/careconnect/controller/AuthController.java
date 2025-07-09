@@ -19,11 +19,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(originPatterns = {
-        "http://localhost:3000",
-        "http://10.0.2.2:8080",
-        "http://localhost:8080"
-}, allowCredentials = "true")
+
 public class AuthController {
 
     @Autowired
@@ -81,14 +77,14 @@ public class AuthController {
 
     // --- Logout ---
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpSession session) {
-        return authService.logout(session);
+    public ResponseEntity<?> logout() {
+        return authService.logout();
     }
 
     // --- Check session ---
     @GetMapping("/check")
-    public ResponseEntity<?> checkSession(HttpSession session) {
-        return authService.checkSession(session);
+    public ResponseEntity<?> checkSession(@RequestHeader("Authorization") String authHeader) {
+        return authService.checkSession(authHeader);
     }
 
     // --- Email verification ---

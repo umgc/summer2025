@@ -19,7 +19,7 @@ import com.careconnect.repository.CaregiverRepository;
 import com.careconnect.repository.PatientRepository;
 import com.careconnect.repository.UserRepository;
 import com.careconnect.security.JwtTokenProvider;
-import com.careconnect.service.StripeService;
+import com.careconnect.security.service.StripeService;
 import com.careconnect.exception.*;
 
 import java.sql.Timestamp;
@@ -44,7 +44,7 @@ public class AuthService {
     private UserRepository userRepository;
 
     @Autowired
-    private com.careconnect.service.EmailService emailService;
+    private com.careconnect.security.service.EmailService emailService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -168,15 +168,29 @@ public class AuthService {
         return ResponseEntity.ok(Collections.singletonMap("message", "Logged out successfully"));
     }
 
-  /*  // ✅ Check if user session is valid
-    public ResponseEntity<?> checkSession(HttpSession session) {
-        Object userId = session.getAttribute("userId");
-        if (userId != null) {
-            return ResponseEntity.ok(Collections.singletonMap("userId", userId));
-        } else {
-            return ResponseEntity.status(401).body(Collections.singletonMap("error", "Not logged in"));
+    public ResponseEntity<?> checkSession(String authHeader) {
+        try {
+            // Remove Bearer prefix if present
+            String token = authHeader.replace("Bearer ", "").trim();
+
+            if (!jwt.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("error", "Invalid or expired token"));
+            }
+
+            String email = jwt.getUsername(token); // This extracts the subject (email)
+            Role role = jwt.getRole(token);        // If you want to show the user's role
+
+            // You can optionally return the user info
+            return ResponseEntity.ok(Collections.singletonMap("email", email));
+            // Or, just say it's valid:
+            // return ResponseEntity.ok(Collections.singletonMap("message", "Token is valid"));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("error", "Invalid or expired token"));
         }
-    }*/
+    }
 
     // ✅ Email verification (optional if implemented)
     public ResponseEntity<?> verifyToken(String token) {
