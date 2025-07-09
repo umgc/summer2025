@@ -172,4 +172,21 @@ class ApiService {
     final url = Uri.parse('${ApiConstants.friends}/list/$userId');
     return await http.get(url, headers: headers);
   }
+
+  static Future<http.Response> resetUserPassword({
+    required String username,
+    required String resetToken,
+    required String newPassword,
+  }) async {
+    final url = Uri.parse('${ApiConstants.users}/reset-password');
+    return await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'username': username,
+        'resetToken': resetToken,
+        'newPassword': newPassword,
+      }),
+    );
+  }
 }
