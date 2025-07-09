@@ -24,6 +24,10 @@ class NodeBlock {
   final String? falsePathLabel;
   final String? checkpointTitle;
   final String? checkpointNote;
+  final String? eventType;
+  final String? triggerCondition;
+  final String? eventContent;
+  final String? eventAnswer;
 
   NodeBlock({
     String? id,
@@ -44,6 +48,10 @@ class NodeBlock {
     this.checkpointTitle,
     this.checkpointNote,
     this.questions,
+    this.eventType,
+    this.triggerCondition,
+    this.eventContent,
+    this.eventAnswer,
   }) : id = id ?? _uuid.v4();
 
   NodeBlock copyWith({
@@ -64,6 +72,10 @@ class NodeBlock {
     String? falsePathLabel,
     String? checkpointTitle,
     String? checkpointNote,
+    String? eventType,
+    String? triggerCondition,
+    String? eventContent,
+    String? eventAnswer,
     List<Map<String, String>>? questions,
   }) {
     return NodeBlock(
@@ -85,6 +97,10 @@ class NodeBlock {
       checkpointTitle: checkpointTitle ?? this.checkpointTitle,
       checkpointNote: checkpointNote ?? this.checkpointNote,
       questions: questions ?? this.questions,
+      eventType: eventType ?? this.eventType,
+      triggerCondition: triggerCondition ?? this.triggerCondition,
+      eventContent: eventContent ?? this.eventContent,
+      eventAnswer: eventAnswer ?? this.eventAnswer,
     );
   }
 }

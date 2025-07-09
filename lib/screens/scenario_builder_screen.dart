@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,19 +12,70 @@ class ScenarioBuilderScreen extends ConsumerStatefulWidget {
   const ScenarioBuilderScreen({super.key, required this.initialDomain});
 
   @override
-  ConsumerState<ScenarioBuilderScreen> createState() => _ScenarioBuilderScreenState();
+  ConsumerState<ScenarioBuilderScreen> createState() =>
+      _ScenarioBuilderScreenState();
 }
 
 class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
   late String selectedDomain;
 
   final List<String> nodeTypes = [
-    'Start', 'Lesson', 'Quiz', 'Decision', 'Checkpoint', 'End', 'Interactive'
+    'Start',
+    'Lesson',
+    'Quiz',
+    'Decision',
+    'Checkpoint',
+    'End',
+    'Interactive',
+    'Event',
   ];
 
   final List<String> domains = [
-    'Oil & Gas', 'IT Project Management', 'Healthcare', 'Military', 'Government', 'Finance'
+    'Oil & Gas',
+    'IT Project Management',
+    'Healthcare',
+    'Military',
+    'Government',
+    'Finance',
   ];
+
+  /**
+ * Domain-specific event templates
+ * These can be used to generate random events based on the selected domain.
+ */
+  ///
+  final Map<String, List<Map<String, String>>> domainEventTemplates = {
+    'Healthcare': [
+      {'type': 'Pop Quiz', 'content': 'What is the normal blood pressure?'},
+      {'type': 'Surprise Task', 'content': 'Sterilize a new tool set.'},
+    ],
+    'Military': [
+      {'type': 'Pop Quiz', 'content': 'How do you identify friendly fire?'},
+      {
+        'type': 'Surprise Task',
+        'content': 'Clean your weapon in under 2 minutes.',
+      },
+    ],
+    'IT Project Management': [
+      {
+        'type': 'Surprise Task',
+        'content': 'Your stakeholder changed a requirement. What do you do?',
+      },
+      {'type': 'Pop Quiz', 'content': 'What does MVP stand for?'},
+    ],
+    // Add more domain events...
+  };
+
+  Map<String, String> getRandomEventForDomain(String domain) {
+    final events = domainEventTemplates[domain];
+    if (events == null || events.isEmpty) {
+      return {
+        'type': 'Generic Event',
+        'content': 'A random event has occurred.',
+      };
+    }
+    return events[Random().nextInt(events.length)];
+  }
 
   @override
   void initState() {
@@ -32,14 +84,32 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
   }
 
   void _addNode(String type, Offset offset) {
-    ref.read(scenarioProvider.notifier).addNode(
-      NodeBlock(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        offset: offset,
-        type: type,
-        title: type,
-      ),
-    );
+    if (type == 'Event') {
+      final randomEvent = getRandomEventForDomain(selectedDomain);
+      ref
+          .read(scenarioProvider.notifier)
+          .addNode(
+            NodeBlock(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              offset: offset,
+              type: type,
+              title: randomEvent['type']!,
+              eventType: randomEvent['type'],
+              eventContent: randomEvent['content'],
+            ),
+          );
+    } else {
+      ref
+          .read(scenarioProvider.notifier)
+          .addNode(
+            NodeBlock(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              offset: offset,
+              type: type,
+              title: type,
+            ),
+          );
+    }
   }
 
   void _editNode(NodeBlock block) {
@@ -47,7 +117,8 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
       context: context,
       builder: (_) => Consumer(
         builder: (context, ref, _) {
-          final currentBlock = ref.watch(scenarioProvider)
+          final currentBlock = ref
+              .watch(scenarioProvider)
               .firstWhere((b) => b.id == block.id);
 
           return AlertDialog(
@@ -61,97 +132,143 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                   children: [
                     TextFormField(
                       initialValue: currentBlock.title,
-                      onChanged: (val) => ref.read(scenarioProvider.notifier)
+                      onChanged: (val) => ref
+                          .read(scenarioProvider.notifier)
                           .updateNode(currentBlock.copyWith(title: val)),
-                      decoration: const InputDecoration(labelText: 'Node Title'),
+                      decoration: const InputDecoration(
+                        labelText: 'Node Title',
+                      ),
                     ),
                     const SizedBox(height: 8),
 
                     if (currentBlock.type == 'Start') ...[
                       TextFormField(
                         initialValue: currentBlock.welcomeMessage ?? '',
-                        onChanged: (val) => ref.read(scenarioProvider.notifier)
-                            .updateNode(currentBlock.copyWith(welcomeMessage: val)),
-                        decoration: const InputDecoration(labelText: 'Welcome Message'),
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(
+                              currentBlock.copyWith(welcomeMessage: val),
+                            ),
+                        decoration: const InputDecoration(
+                          labelText: 'Welcome Message',
+                        ),
                       ),
                     ],
-if (currentBlock.type == 'Lesson') ...[
-  DropdownButtonFormField<String>(
-    value: currentBlock.lessonType ?? 'Text',
-    items: ['Text', 'Image', 'Video']
-        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-        .toList(),
-    onChanged: (val) => ref.read(scenarioProvider.notifier)
-        .updateNode(currentBlock.copyWith(lessonType: val)),
-    decoration: const InputDecoration(labelText: 'Lesson Type'),
-  ),
-
-  if (currentBlock.lessonType == 'Image' || currentBlock.lessonType == 'Video') ...[
-    ElevatedButton(
-      onPressed: () async {
-        final result = await FilePicker.platform.pickFiles(
-          type: currentBlock.lessonType == 'Image'
-              ? FileType.image
-              : FileType.video,
-        );
-        if (result != null && result.files.single.path != null) {
-          ref.read(scenarioProvider.notifier).updateNode(
-            currentBlock.copyWith(lessonContent: result.files.single.path!),
-          );
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Selected: ${result.files.single.name}")),
-          );
-        }
-      },
-      child: Text(
-        currentBlock.lessonType == 'Image' ? 'Pick Image' : 'Pick Video',
-      ),
-    ),
-    if (currentBlock.lessonContent != null && currentBlock.lessonContent!.isNotEmpty)
-      Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: Text(
-          "Selected: ${currentBlock.lessonContent}",
-          style: const TextStyle(fontSize: 12),
-        ),
-      ),
-  ],
-TextFormField(
-                        initialValue: currentBlock.lessonContent ?? '',
-                        maxLines: 8,
-                        onChanged: (val) => ref.read(scenarioProvider.notifier)
-                            .updateNode(currentBlock.copyWith(lessonContent: val)),
-                        decoration: const InputDecoration(labelText: 'Lesson Content'),
+                    if (currentBlock.type == 'Lesson') ...[
+                      DropdownButtonFormField<String>(
+                        value: currentBlock.lessonType ?? 'Text',
+                        items: ['Text', 'Image', 'Video']
+                            .map(
+                              (e) => DropdownMenuItem(value: e, child: Text(e)),
+                            )
+                            .toList(),
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(currentBlock.copyWith(lessonType: val)),
+                        decoration: const InputDecoration(
+                          labelText: 'Lesson Type',
+                        ),
                       ),
 
+                      if (currentBlock.lessonType == 'Image' ||
+                          currentBlock.lessonType == 'Video') ...[
+                        ElevatedButton(
+                          onPressed: () async {
+                            final result = await FilePicker.platform.pickFiles(
+                              type: currentBlock.lessonType == 'Image'
+                                  ? FileType.image
+                                  : FileType.video,
+                            );
+                            if (result != null &&
+                                result.files.single.path != null) {
+                              ref
+                                  .read(scenarioProvider.notifier)
+                                  .updateNode(
+                                    currentBlock.copyWith(
+                                      lessonContent: result.files.single.path!,
+                                    ),
+                                  );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "Selected: ${result.files.single.name}",
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          child: Text(
+                            currentBlock.lessonType == 'Image'
+                                ? 'Pick Image'
+                                : 'Pick Video',
+                          ),
+                        ),
+                        if (currentBlock.lessonContent != null &&
+                            currentBlock.lessonContent!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              "Selected: ${currentBlock.lessonContent}",
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                      ],
+                      TextFormField(
+                        initialValue: currentBlock.lessonContent ?? '',
+                        maxLines: 8,
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(
+                              currentBlock.copyWith(lessonContent: val),
+                            ),
+                        decoration: const InputDecoration(
+                          labelText: 'Lesson Content',
+                        ),
+                      ),
 
-  TextFormField(
-    initialValue: currentBlock.estimatedTime ?? '',
-    onChanged: (val) => ref.read(scenarioProvider.notifier)
-        .updateNode(currentBlock.copyWith(estimatedTime: val)),
-    decoration: const InputDecoration(labelText: 'Estimated Time (minutes)'),
-    keyboardType: TextInputType.number,
-  ),
-],
+                      TextFormField(
+                        initialValue: currentBlock.estimatedTime ?? '',
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(
+                              currentBlock.copyWith(estimatedTime: val),
+                            ),
+                        decoration: const InputDecoration(
+                          labelText: 'Estimated Time (minutes)',
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ],
                     if (currentBlock.type == 'Quiz') ...[
                       TextFormField(
                         initialValue: currentBlock.quizTitle ?? '',
-                        onChanged: (val) => ref.read(scenarioProvider.notifier)
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
                             .updateNode(currentBlock.copyWith(quizTitle: val)),
-                        decoration: const InputDecoration(labelText: 'Quiz Title'),
+                        decoration: const InputDecoration(
+                          labelText: 'Quiz Title',
+                        ),
                       ),
                       TextFormField(
                         initialValue: currentBlock.passingScore ?? '',
-                        onChanged: (val) => ref.read(scenarioProvider.notifier)
-                            .updateNode(currentBlock.copyWith(passingScore: val)),
-                        decoration: const InputDecoration(labelText: 'Passing Score (%)'),
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(
+                              currentBlock.copyWith(passingScore: val),
+                            ),
+                        decoration: const InputDecoration(
+                          labelText: 'Passing Score (%)',
+                        ),
                         keyboardType: TextInputType.number,
                       ),
                       TextFormField(
                         initialValue: currentBlock.timeLimit ?? '',
-                        onChanged: (val) => ref.read(scenarioProvider.notifier)
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
                             .updateNode(currentBlock.copyWith(timeLimit: val)),
-                        decoration: const InputDecoration(labelText: 'Time Limit (minutes)'),
+                        decoration: const InputDecoration(
+                          labelText: 'Time Limit (minutes)',
+                        ),
                         keyboardType: TextInputType.number,
                       ),
                       ElevatedButton(
@@ -168,11 +285,15 @@ TextFormField(
                                   children: [
                                     TextFormField(
                                       autofocus: true,
-                                      decoration: const InputDecoration(labelText: "Question"),
+                                      decoration: const InputDecoration(
+                                        labelText: "Question",
+                                      ),
                                       onChanged: (val) => questionText = val,
                                     ),
                                     TextFormField(
-                                      decoration: const InputDecoration(labelText: "Correct Answer"),
+                                      decoration: const InputDecoration(
+                                        labelText: "Correct Answer",
+                                      ),
                                       onChanged: (val) => correctAnswer = val,
                                     ),
                                   ],
@@ -186,7 +307,7 @@ TextFormField(
                                     onPressed: () {
                                       Navigator.pop(ctx, {
                                         "question": questionText,
-                                        "answer": correctAnswer
+                                        "answer": correctAnswer,
                                       });
                                     },
                                     child: const Text("Save"),
@@ -196,14 +317,19 @@ TextFormField(
                             },
                           );
 
-                          if (result != null && result["question"]!.trim().isNotEmpty) {
+                          if (result != null &&
+                              result["question"]!.trim().isNotEmpty) {
                             final updatedQuestions = [
                               ...?currentBlock.questions,
                               result,
                             ];
-                            ref.read(scenarioProvider.notifier).updateNode(
-                              currentBlock.copyWith(questions: updatedQuestions),
-                            );
+                            ref
+                                .read(scenarioProvider.notifier)
+                                .updateNode(
+                                  currentBlock.copyWith(
+                                    questions: updatedQuestions,
+                                  ),
+                                );
                           }
                         },
                         child: const Text('Add Question'),
@@ -219,13 +345,13 @@ TextFormField(
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             ...currentBlock.questions!.asMap().entries.map(
-                                  (entry) => ListTile(
-                                    dense: true,
-                                    title: Text(
-                                      "${entry.key + 1}. ${entry.value['question']} (Answer: ${entry.value['answer']})"
-                                    ),
-                                  ),
+                              (entry) => ListTile(
+                                dense: true,
+                                title: Text(
+                                  "${entry.key + 1}. ${entry.value['question']} (Answer: ${entry.value['answer']})",
                                 ),
+                              ),
+                            ),
                           ],
                         ),
                     ],
@@ -233,43 +359,126 @@ TextFormField(
                     if (currentBlock.type == 'Decision') ...[
                       TextFormField(
                         initialValue: currentBlock.conditionExpression ?? '',
-                        onChanged: (val) => ref.read(scenarioProvider.notifier)
-                            .updateNode(currentBlock.copyWith(conditionExpression: val)),
-                        decoration: const InputDecoration(labelText: 'Condition Expression'),
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(
+                              currentBlock.copyWith(conditionExpression: val),
+                            ),
+                        decoration: const InputDecoration(
+                          labelText: 'Condition Expression',
+                        ),
                       ),
                       TextFormField(
                         initialValue: currentBlock.truePathLabel ?? '',
-                        onChanged: (val) => ref.read(scenarioProvider.notifier)
-                            .updateNode(currentBlock.copyWith(truePathLabel: val)),
-                        decoration: const InputDecoration(labelText: 'True Path Label'),
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(
+                              currentBlock.copyWith(truePathLabel: val),
+                            ),
+                        decoration: const InputDecoration(
+                          labelText: 'True Path Label',
+                        ),
                       ),
                       TextFormField(
                         initialValue: currentBlock.falsePathLabel ?? '',
-                        onChanged: (val) => ref.read(scenarioProvider.notifier)
-                            .updateNode(currentBlock.copyWith(falsePathLabel: val)),
-                        decoration: const InputDecoration(labelText: 'False Path Label'),
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(
+                              currentBlock.copyWith(falsePathLabel: val),
+                            ),
+                        decoration: const InputDecoration(
+                          labelText: 'False Path Label',
+                        ),
                       ),
                     ],
 
                     if (currentBlock.type == 'Checkpoint') ...[
                       TextFormField(
                         initialValue: currentBlock.checkpointTitle ?? '',
-                        onChanged: (val) => ref.read(scenarioProvider.notifier)
-                            .updateNode(currentBlock.copyWith(checkpointTitle: val)),
-                        decoration: const InputDecoration(labelText: 'Checkpoint Title'),
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(
+                              currentBlock.copyWith(checkpointTitle: val),
+                            ),
+                        decoration: const InputDecoration(
+                          labelText: 'Checkpoint Title',
+                        ),
                       ),
                       TextFormField(
                         initialValue: currentBlock.checkpointNote ?? '',
-                        onChanged: (val) => ref.read(scenarioProvider.notifier)
-                            .updateNode(currentBlock.copyWith(checkpointNote: val)),
-                        decoration: const InputDecoration(labelText: 'Checkpoint Note'),
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(
+                              currentBlock.copyWith(checkpointNote: val),
+                            ),
+                        decoration: const InputDecoration(
+                          labelText: 'Checkpoint Note',
+                        ),
                       ),
                       TextFormField(
                         initialValue: currentBlock.estimatedTime ?? '',
-                        onChanged: (val) => ref.read(scenarioProvider.notifier)
-                            .updateNode(currentBlock.copyWith(estimatedTime: val)),
-                        decoration: const InputDecoration(labelText: 'Estimated Time (minutes)'),
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(
+                              currentBlock.copyWith(estimatedTime: val),
+                            ),
+                        decoration: const InputDecoration(
+                          labelText: 'Estimated Time (minutes)',
+                        ),
                         keyboardType: TextInputType.number,
+                      ),
+                    ],
+
+                    /**
+                     * Event nodes allow for dynamic interactions
+                     * like pop quizzes or surprise tasks.
+                     */
+                    if (currentBlock.type == 'Event') ...[
+                      TextFormField(
+                        initialValue: currentBlock.eventType ?? '',
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(currentBlock.copyWith(eventType: val)),
+                        decoration: const InputDecoration(
+                          labelText:
+                              'Event Type (e.g., Pop Quiz, Surprise Task)',
+                        ),
+                      ),
+                      TextFormField(
+                        initialValue: currentBlock.triggerCondition ?? '',
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(
+                              currentBlock.copyWith(triggerCondition: val),
+                            ),
+                        decoration: const InputDecoration(
+                          labelText:
+                              'Trigger Condition (e.g., Random, After Lesson)',
+                        ),
+                      ),
+                      TextFormField(
+                        initialValue: currentBlock.eventContent ?? '',
+                        maxLines: 6,
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(
+                              currentBlock.copyWith(eventContent: val),
+                            ),
+                        decoration: const InputDecoration(
+                          labelText:
+                              'Event Content (e.g., quiz question or info)',
+                        ),
+                      ),
+                      TextFormField(
+                        initialValue: currentBlock.eventAnswer ?? '',
+                        onChanged: (val) => ref
+                            .read(scenarioProvider.notifier)
+                            .updateNode(
+                              currentBlock.copyWith(eventAnswer: val),
+                            ),
+                        decoration: const InputDecoration(
+                          labelText: 'Correct Answer (if applicable)',
+                        ),
                       ),
                     ],
                   ],
@@ -296,7 +505,9 @@ TextFormField(
             decoration: const BoxDecoration(color: Colors.indigo),
             child: Text(
               'Scenario Designer',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(color: Colors.white),
             ),
           ),
           Padding(
@@ -304,7 +515,9 @@ TextFormField(
             child: DropdownButton<String>(
               value: selectedDomain,
               isExpanded: true,
-              items: domains.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
+              items: domains
+                  .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                  .toList(),
               onChanged: (value) {
                 if (value != null) setState(() => selectedDomain = value);
               },
@@ -374,9 +587,9 @@ TextFormField(
             tooltip: 'New Scenario',
             onPressed: () {
               ref.read(scenarioProvider.notifier).clear();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Canvas cleared')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Canvas cleared')));
             },
           ),
           IconButton(
@@ -398,43 +611,51 @@ TextFormField(
               );
               if (result != null && result.files.single.bytes != null) {
                 try {
-                  final jsonString = String.fromCharCodes(result.files.single.bytes!);
+                  final jsonString = String.fromCharCodes(
+                    result.files.single.bytes!,
+                  );
                   final parsedJson = jsonDecode(jsonString);
 
                   if (parsedJson is! List) {
                     throw Exception("Expected JSON array at the top level");
                   }
 
-                  final loadedBlocks = parsedJson.map((e) => NodeBlock(
-                    id: e['id'],
-                    offset: Offset(
-                      (e['offset']['dx'] as num).toDouble(),
-                      (e['offset']['dy'] as num).toDouble(),
-                    ),
-                    title: e['title'],
-                    type: e['type'],
-                    description: e['description'],
-                    welcomeMessage: e['welcomeMessage'],
-                    lessonType: e['lessonType'],
-                    lessonContent: e['lessonContent'],
-                    estimatedTime: e['estimatedTime'],
-                    quizTitle: e['quizTitle'],
-                    passingScore: e['passingScore'],
-                    timeLimit: e['timeLimit'],
-                    conditionExpression: e['conditionExpression'],
-                    truePathLabel: e['truePathLabel'],
-                    falsePathLabel: e['falsePathLabel'],
-                    checkpointTitle: e['checkpointTitle'],
-                    checkpointNote: e['checkpointNote'],
-                    questions: (e['questions'] as List?)
-                        ?.map((q) => (q as Map).cast<String, String>())
-                        .toList(),
-                  )).toList();
+                  final loadedBlocks = parsedJson
+                      .map(
+                        (e) => NodeBlock(
+                          id: e['id'],
+                          offset: Offset(
+                            (e['offset']['dx'] as num).toDouble(),
+                            (e['offset']['dy'] as num).toDouble(),
+                          ),
+                          title: e['title'],
+                          type: e['type'],
+                          description: e['description'],
+                          welcomeMessage: e['welcomeMessage'],
+                          lessonType: e['lessonType'],
+                          lessonContent: e['lessonContent'],
+                          estimatedTime: e['estimatedTime'],
+                          quizTitle: e['quizTitle'],
+                          passingScore: e['passingScore'],
+                          timeLimit: e['timeLimit'],
+                          conditionExpression: e['conditionExpression'],
+                          truePathLabel: e['truePathLabel'],
+                          falsePathLabel: e['falsePathLabel'],
+                          checkpointTitle: e['checkpointTitle'],
+                          checkpointNote: e['checkpointNote'],
+                          questions: (e['questions'] as List?)
+                              ?.map((q) => (q as Map).cast<String, String>())
+                              .toList(),
+                        ),
+                      )
+                      .toList();
 
                   ref.read(scenarioProvider.notifier).replace(loadedBlocks);
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Scenario loaded successfully!')),
+                    const SnackBar(
+                      content: Text('Scenario loaded successfully!'),
+                    ),
                   );
                 } catch (err) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -449,7 +670,8 @@ TextFormField(
       drawer: isMobile ? _buildSidebar(context, isMobile) : null,
       body: Row(
         children: [
-          if (!isMobile) SizedBox(width: 260, child: _buildSidebar(context, isMobile)),
+          if (!isMobile)
+            SizedBox(width: 260, child: _buildSidebar(context, isMobile)),
           Expanded(
             child: DragTarget<String>(
               onAcceptWithDetails: (details) {
@@ -464,32 +686,47 @@ TextFormField(
                       painter: _ConnectionPainter(blocks),
                       child: Container(),
                     ),
-                    ...blocks.map((block) => Positioned(
-                          left: block.offset.dx,
-                          top: block.offset.dy,
-                          child: GestureDetector(
-                            onPanUpdate: (details) {
-                              scenario.moveNode(block, block.offset + details.delta);
-                            },
-                            onTap: () => _editNode(block),
-                            child: Card(
-                              color: Colors.indigo,
-                              elevation: 4,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(block.type,
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                    Text(block.title,
-                                        style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                                  ],
-                                ),
+                    ...blocks.map(
+                      (block) => Positioned(
+                        left: block.offset.dx,
+                        top: block.offset.dy,
+                        child: GestureDetector(
+                          onPanUpdate: (details) {
+                            scenario.moveNode(
+                              block,
+                              block.offset + details.delta,
+                            );
+                          },
+                          onTap: () => _editNode(block),
+                          child: Card(
+                            color: Colors.indigo,
+                            elevation: 4,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    block.type,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    block.title,
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        )),
+                        ),
+                      ),
+                    ),
                   ],
                 );
               },
