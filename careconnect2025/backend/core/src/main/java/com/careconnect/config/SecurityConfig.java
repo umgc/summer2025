@@ -27,6 +27,9 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .httpBasic(basic -> basic
+                .authenticationEntryPoint((req, res, e) ->
+                    res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Basic Authentication Required")))
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((req, res, e) ->
@@ -51,6 +54,8 @@ public class SecurityConfig {
                 .requestMatchers(
                         "/v1/api/auth/**",
                         "/api/v1/auth/**",  // Support both URL patterns
+                        "/api/auth/**",     // Support auth endpoints under /api/auth/
+                        "/v1/api/users/reset-password",  // Allow password reset (current)
                         "/v1/api/caregivers/**",
                         "/v1/api/subscriptions/**",
                         "/v1/api/email-test/**",  // Allow email testing endpoints

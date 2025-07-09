@@ -79,7 +79,8 @@ public class AuthController {
             }
             ```
             """,
-        tags = {"🔑 Authentication"}
+        tags = {"🔑 Authentication"},
+        security = {} // No authentication required for registration
     )
     @ApiResponses({
         @ApiResponse(
@@ -118,7 +119,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(
-        summary = "🔑 Login user",
+        summary = "Login user",
         description = """
             Authenticate user with email and password. Returns JWT token for API access.
             
@@ -137,7 +138,8 @@ public class AuthController {
             **Test Credentials:**
             If you need test credentials, use the registration endpoint first.
             """,
-        tags = {"🔑 Authentication"}
+        tags = {"Authentication"},
+        security = {} // No authentication required for login
     )
     @ApiResponses({
         @ApiResponse(
@@ -184,11 +186,23 @@ public class AuthController {
 
     // --- Email verification ---
     @GetMapping("/verify/{token}")
+    @Operation(
+        summary = "✉️ Verify email address",
+        description = "Verify user email address using verification token",
+        tags = {"🔑 Authentication"},
+        security = {} // No authentication required for email verification
+    )
     public ResponseEntity<?> verify(@PathVariable String token) {
         return authService.verifyToken(token);
     }
 
     @PostMapping("/password/forgot")
+    @Operation(
+        summary = "🔐 Request password reset",
+        description = "Request a password reset link to be sent via email",
+        tags = {"🔑 Authentication"},
+        security = {} // No authentication required for password reset request
+    )
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request,
                        HttpServletRequest req) {
         String email = request.get("email");
@@ -215,17 +229,7 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/password/reset")
-    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordDTO dto) {
-        try {
-            reset.finalizeReset(dto.token(), dto.newPassword());
-            return ResponseEntity.ok(Collections.singletonMap("message", 
-                "Password has been reset successfully. You can now log in with your new password."));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", 
-                "Invalid or expired reset token."));
-        }
-    }
+
 
     @PostMapping("/password/change")
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request,

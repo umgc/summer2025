@@ -76,7 +76,8 @@ import org.springframework.context.annotation.Configuration;
     },
     security = {
         @SecurityRequirement(name = "JWT Authentication"),
-        @SecurityRequirement(name = "Cookie Authentication")
+        @SecurityRequirement(name = "Cookie Authentication"),
+        @SecurityRequirement(name = "Basic Authentication")
     }
 )
 @SecurityScheme(
@@ -98,6 +99,24 @@ import org.springframework.context.annotation.Configuration;
     type = SecuritySchemeType.HTTP,
     bearerFormat = "JWT",
     in = SecuritySchemeIn.HEADER
+)
+@SecurityScheme(
+    name = "Basic Authentication",
+    description = """
+        Basic HTTP authentication for testing purposes.
+        
+        **How to authenticate:**
+        1. Use username (email) and password
+        2. Format: `username:password` encoded in Base64
+        3. Include in Authorization header as: `Basic {base64-encoded-credentials}`
+        
+        **Example:**
+        ```
+        Authorization: Basic dXNlckBleGFtcGxlLmNvbTpwYXNzd29yZA==
+        ```
+        """,
+    type = SecuritySchemeType.HTTP,
+    scheme = "basic"
 )
 @SecurityScheme(
     name = "Cookie Authentication",
