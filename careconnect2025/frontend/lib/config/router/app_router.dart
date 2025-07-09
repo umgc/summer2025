@@ -8,18 +8,13 @@ import '../../features/dashboard/presentation/pages/caregiver_dashboard.dart';
 import '../../features/dashboard/presentation/pages/patient_dashboard.dart';
 import '../../features/onboarding/presentation/pages/patient_registration.dart';
 import '../../features/auth/presentation/pages/sign_up_screen.dart';
-// import '../../features/chatbot/presentation/pages/aiassitant.dart';
-// import '../../features/scheduling/presentation/pages/taskscheduling.dart';
-// import '../../features/deviceintegration/presentation/pages/fitbitintegration.dart';
-// import '../../features/immergencyalert/presentation/pages/sos.dart';
 import '../../features/payments/presentation/pages/select_package_page.dart';
 import '../../features/auth/presentation/pages/password_reset_page.dart';
+import '../../features/auth/presentation/pages/reset_password_screen.dart'; // ADD THIS IMPORT
 import '../../features/payments/models/package_model.dart';
 import '../../features/social/presentation/pages/main_feed_screen.dart';
 import '../../features/gamification/presentation/pages/caregiver_gamification_landingpage.dart';
 import '../../features/gamification/presentation/pages/gamification_screen.dart';
-// import '../../features/immergencyalert/presentation/pages/caregiver_sos_altert.dart';
-// import '../../features/immergencyalert/presentation/pages/patient_location_widget.dart';
 import '../../features/payments/presentation/pages/stripe_checkout_page.dart';
 import '../../features/analytics/analytics_page.dart';
 import '../../features/payments/presentation/pages/payment_success_page.dart';
@@ -64,6 +59,26 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
+      path: '/select-package',
+      builder: (_, __) => const SelectPackagePage(),
+    ),
+    // FIX: Use ResetPasswordScreen for requesting reset link
+    GoRoute(
+      path: '/reset-password',
+      builder: (_, __) => const ResetPasswordScreen(),
+    ),
+    // FIX: Use PasswordResetPage for setting new password with token
+    GoRoute(
+      path: '/reset',
+      builder: (context, state) {
+        final token = state
+            .uri
+            .queryParameters['token']; // FIX: queryParameters not queryParams
+        return PasswordResetPage(token: token);
+      },
+    ),
+    // FIX: Remove duplicate, keep only one gamification route
+    GoRoute(
       path: '/gamification',
       builder: (_, __) => const GamificationScreen(),
     ),
@@ -71,41 +86,6 @@ final GoRouter appRouter = GoRouter(
       path: '/caregiver-gamification',
       builder: (_, __) => CaregiverGamificationLandingScreen(),
     ),
-    // GoRoute(
-    //   path: '/chatandcalls',
-    //   builder: (_, __) => const ChatAndCallsPage(),
-    // ),
-    // GoRoute(path: '/aiassistant', builder: (_, __) => const AIAssistantPage()),
-    // GoRoute(
-    //   path: '/taskscheduling',
-    //   builder: (_, __) => const TaskSchedulingPage(),
-    // ),
-    // GoRoute(path: '/fitbit', builder: (_, __) => const FitbitIntegrationPage()),
-    // GoRoute(path: '/sos', builder: (_, __) => const SOSPage()),
-    GoRoute(
-      path: '/select-package',
-      builder: (_, __) => const SelectPackagePage(),
-    ),
-    GoRoute(
-      path: '/reset-password',
-      builder: (_, __) => const PasswordResetPage(),
-    ),
-    GoRoute(
-      path: '/gamification',
-      builder: (_, __) => CaregiverGamificationLandingScreen(),
-    ),
-    GoRoute(
-      path: '/caregiver-gamification',
-      builder: (_, __) => CaregiverGamificationLandingScreen(),
-    ),
-    // GoRoute(
-    //   path: '/caregiver-sos',
-    //   builder: (_, __) => const CaregiverSOSAlertPage(),
-    // ),
-    // GoRoute(
-    //   path: '/patientlocation',
-    //   builder: (context, state) => const PatientLocationWidget(),
-    // ),
     GoRoute(
       path: '/stripe-checkout',
       builder: (context, state) {
@@ -154,11 +134,9 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/oauth/callback',
       builder: (context, state) {
-        // Extract OAuth parameters from URL
         final token = state.uri.queryParameters['token'];
         final user = state.uri.queryParameters['user'];
         final error = state.uri.queryParameters['error'];
-
         return OAuthCallbackPage(token: token, user: user, error: error);
       },
     ),
