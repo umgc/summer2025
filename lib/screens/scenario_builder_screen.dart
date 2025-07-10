@@ -44,12 +44,12 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
  */
   ///
   final Map<String, String> domainImages = {
-    'Oil & Gas': '../../assets/images/oil-pumps.jpg',
-    'IT Project Management': '../../assets/images/it_management_background.jpg',
-    'Healthcare': '../../assets/images/healthcare_background.jpg',
-    'Military': '../../assets/images/military_background.jpg',
-    'Government': '../../assets/images/government_background.jpg',
-    'Finance': '../../assets/images/finance_background.jpg',
+    'Oil & Gas': 'assets/images/oil-pumps.jpg',
+    'IT Project Management': 'assets/images/it_management_background.jpg',
+    'Healthcare': 'assets/images/healthcare_background.jpg',
+    'Military': 'assets/images/military_background.jpg',
+    'Government': 'assets/images/government_background.jpg',
+    'Finance': 'assets/images/finance_background.jpg',
   };
 
   /**

@@ -42,10 +42,5 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/DeepTrain_Logo_small.webp
-    - assets/images/deeptrain_animation.json
-    - assets/images/DeepTrainHero.webp
-    - assets/images/touch.webp
-    - assets/images/Robot.webp
-    - assets/images/reset5.webp
+    - assets/images/
    
