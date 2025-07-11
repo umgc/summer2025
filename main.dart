@@ -5,8 +5,6 @@ import 'package:deeptrainfront/screens/pricing_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'auth/auth_reset_password.dart';
-
 
 import 'screens/home_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -16,6 +14,7 @@ import 'screens/kpi_dashboard_screen.dart';
 import 'auth/login_screen.dart';
 import 'auth/register_screen.dart';
 import 'auth/auth_confirm_screen.dart';
+import 'auth/auth_reset_password.dart';
 
 final _router = GoRouter(
   routes: [
@@ -29,7 +28,8 @@ final _router = GoRouter(
         ),
         GoRoute(
           path: 'Builder',
-          builder: (context, state) => const ScenarioBuilderScreen(initialDomain: 'Healthcare'),
+          builder: (context, state) =>
+              const ScenarioBuilderScreen(initialDomain: 'Healthcare'),
         ),
         GoRoute(
           path: 'simulator',
@@ -38,14 +38,10 @@ final _router = GoRouter(
         GoRoute(
           path: 'kpi',
           builder: (context, state) => const KpiDashboardScreen(),
-        ), 
-        
+        ),
       ],
     ),
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
       path: '/signUp',
       builder: (context, state) => const RegisterScreen(),
@@ -58,10 +54,7 @@ final _router = GoRouter(
       path: '/pricing',
       builder: (context, state) => const PricingScreen(),
     ),
-     GoRoute(
-      path: '/about',
-      builder: (context, state) => const AboutScreen(),
-    ),
+    GoRoute(path: '/about', builder: (context, state) => const AboutScreen()),
     GoRoute(
       path: '/contact',
       builder: (context, state) => const ContactScreen(),
@@ -73,22 +66,15 @@ final _router = GoRouter(
         return AuthConfirmScreen(email: email);
       },
     ),
-GoRoute(
-  path: '/reset-password',
-  builder: (context, state) => const ResetPasswordScreen(),
-),
-
-
-
+    GoRoute(
+      path: '/reset-password',
+      builder: (context, state) => const ResetPasswordScreen(),
+    ),
   ],
 );
 
 void main() {
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

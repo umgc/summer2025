@@ -10,6 +10,7 @@ import 'screens/kpi_dashboard_screen.dart';
 import 'auth/login_screen.dart';
 import 'auth/register_screen.dart';
 import 'auth/auth_confirm_screen.dart';
+import 'auth/auth_reset_password.dart';
 
 final _router = GoRouter(
   routes: [
@@ -50,6 +51,10 @@ final _router = GoRouter(
         final email = state.extra as String;
         return AuthConfirmScreen(email: email);
       },
+    ),
+    GoRoute(
+      path: '/reset-password',
+      builder: (context, state) => const ResetPasswordScreen(),
     ),
   ],
 );

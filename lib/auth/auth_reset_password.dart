@@ -24,9 +24,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   void _sendResetCode() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter your email")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Please enter your email")));
       return;
     }
 
@@ -42,9 +42,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error sending code: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error sending code: $e")));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -68,15 +68,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Password reset successfully! Please log in.")),
+          const SnackBar(
+            content: Text("Password reset successfully! Please log in."),
+          ),
         );
         context.go('/login');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error confirming reset: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error confirming reset: $e")));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -86,9 +88,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) return 'Password is required';
     if (value.length < 8) return 'Password must be at least 8 characters';
-    if (!RegExp(r'[A-Z]').hasMatch(value)) return 'Must include at least one uppercase letter';
-    if (!RegExp(r'[a-z]').hasMatch(value)) return 'Must include at least one lowercase letter';
-    if (!RegExp(r'[0-9]').hasMatch(value)) return 'Must include at least one number';
+    if (!RegExp(r'[A-Z]').hasMatch(value))
+      return 'Must include at least one uppercase letter';
+    if (!RegExp(r'[a-z]').hasMatch(value))
+      return 'Must include at least one lowercase letter';
+    if (!RegExp(r'[0-9]').hasMatch(value))
+      return 'Must include at least one number';
     return null;
   }
 
@@ -99,35 +104,34 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     return Scaffold(
       body: Row(
         children: [
-        if (!isMobile)
-  Expanded(
-    child: Stack(
-      children: [
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.all(40),
-            child: Image.asset(
-              'assets/images/reset5.webp',
-              height: 300,
-              fit: BoxFit.contain,
+          if (!isMobile)
+            Expanded(
+              child: Stack(
+                children: [
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(40),
+                      child: Image.asset(
+                        'assets/images/reset5.webp',
+                        height: 300,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 20,
+                    left: 20,
+                    child: GestureDetector(
+                      onTap: () => context.go('/'),
+                      child: Image.asset(
+                        'assets/images/DeepTrain_Logo_small.webp',
+                        height: 50,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
-        Positioned(
-          top: 20,
-          left: 20,
-          child: GestureDetector(
-            onTap: () => context.go('/'),
-            child: Image.asset(
-              'assets/images/DeepTrain_Logo_small.webp',
-              height: 50,
-            ),
-          ),
-        ),
-      ],
-    ),
-  ),
-
 
           Expanded(
             child: Center(
@@ -141,7 +145,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     children: [
                       const Text(
                         'Reset Your Password',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       TextFormField(
@@ -151,7 +158,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) =>
-                            value == null || !value.contains('@') ? 'Enter a valid email' : null,
+                            value == null || !value.contains('@')
+                            ? 'Enter a valid email'
+                            : null,
                       ),
                       const SizedBox(height: 20),
                       if (_codeSent) ...[
@@ -174,10 +183,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             border: const OutlineInputBorder(),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                                _obscurePassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
                               ),
-                              onPressed: () =>
-                                  setState(() => _obscurePassword = !_obscurePassword),
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
                             ),
                           ),
                           validator: _validatePassword,
