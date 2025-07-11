@@ -40,4 +40,12 @@ public interface FamilyMemberLinkRepository extends JpaRepository<FamilyMemberLi
     
     boolean existsByFamilyUserAndPatientUserAndStatus(
         User familyUser, User patientUser, FamilyMemberLink.LinkStatus status);
+    
+    @Query("SELECT COUNT(f) > 0 FROM FamilyMemberLink f " +
+           "WHERE f.familyUser.id = :familyMemberUserId " +
+           "AND f.patientUser.id = :patientId " +
+           "AND f.status = 'ACTIVE'")
+    boolean existsByFamilyMemberUserIdAndPatientId(
+        @Param("familyMemberUserId") Long familyMemberUserId, 
+        @Param("patientId") Long patientId);
 }

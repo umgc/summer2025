@@ -117,17 +117,42 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           );
 
       if (vitalsResp.statusCode == 200 && dashboardResp.statusCode == 200) {
-        final vitalsJson = json.decode(vitalsResp.body) as List;
+        final Map<String, dynamic> vitalsJsonMap = json.decode(vitalsResp.body);
+        final List<dynamic> vitalsDataList =
+            vitalsJsonMap['data'] as List; // Access the 'data' key
+
         final dashboardJson = json.decode(dashboardResp.body);
 
         setState(() {
-          vitals = vitalsJson.map((e) => Vital.fromJson(e)).toList();
+          vitals = vitalsDataList.map((e) => Vital.fromJson(e)).toList();
           dashboard = DashboardAnalytics.fromJson(dashboardJson);
           loading = false;
         });
       } else {
+        String vitalsErrorMessage = 'Failed to fetch vitals data';
+        if (vitalsResp.body.isNotEmpty) {
+          try {
+            final Map<String, dynamic> errorBody = json.decode(vitalsResp.body);
+            vitalsErrorMessage = errorBody['error'] ?? vitalsErrorMessage;
+          } catch (e) {}
+        }
+        // Handle non-200 status codes for dashboardResp
+        String dashboardErrorMessage = 'Failed to fetch dashboard data';
+        if (dashboardResp.body.isNotEmpty) {
+          try {
+            final Map<String, dynamic> errorBody = json.decode(
+              dashboardResp.body,
+            );
+            dashboardErrorMessage = errorBody['error'] ?? dashboardErrorMessage;
+          } catch (e) {
+            // ignore: avoid_print
+            print("Failed to parse dashboard error response: $e");
+          }
+        }
+
         setState(() {
-          error = 'Failed to fetch analytics data';
+          error =
+              'Vitals Error: $vitalsErrorMessage\nDashboard Error: $dashboardErrorMessage';
           loading = false;
         });
       }

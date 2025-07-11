@@ -9,6 +9,7 @@ import com.careconnect.dto.PatientRegistration;
 import com.careconnect.dto.CaregiverPatientLinkResponse;
 import com.careconnect.exception.RegistrationException;
 import com.careconnect.exception.AppException;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,8 @@ import com.careconnect.security.Role;
 import com.careconnect.dto.ProfessionalInfoDto;
 import com.careconnect.dto.AddressDto;
 import com.careconnect.model.Address;
+import com.careconnect.repository.FamilyMemberLinkRepository;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.HttpStatus;
 
@@ -51,6 +54,9 @@ public class CaregiverService {
 
     @Autowired
     private CaregiverPatientLinkService caregiverPatientLinkService;
+
+    @Autowired 
+    private  FamilyMemberLinkRepository familyMemberLinkRepository;
 
     // 1. List patients under a caregiver, with optional filtering (ACTIVE links only)
     public List<Patient> getPatientsByCaregiver(Long caregiverId, String email, String name) {
@@ -105,37 +111,34 @@ public Caregiver updateCaregiver(Long caregiverId, Caregiver updatedCaregiver) {
     return caregiverRepository.save(existing);
 }
 
+@Transactional 
 public Patient registerPatient(PatientRegistration reg) {
-   if (users.existsByEmail(reg.getEmail()))
+    if (users.existsByEmail(reg.getEmail()))
         throw new RegistrationException("Email already registered");
-
 
     // Generate a temporary token for password setup
     String passwordSetupToken = java.util.UUID.randomUUID().toString();
 
-    // Always generate a random password for patient registration (they'll set their own via email)
+    // Always generate a random password for patient registration
     String password = generateRandomPassword(12);
-    
     String encodedPassword = encoder.encode(password);
 
+    // Create and save the user first to ensure we have an ID
     User user = User.builder()
             .email(reg.getEmail())
-            .password(encodedPassword)  // Set both for consistency
+            .password(encodedPassword)
             .passwordHash(encodedPassword)
             .role(Role.PATIENT)
-            .isVerified(false) // Not verified until password is set
-            .verificationToken(passwordSetupToken) // Use this token for password setup
+            .isVerified(false)
+            .verificationToken(passwordSetupToken)
             .createdAt(new java.sql.Timestamp(System.currentTimeMillis()))
             .build();
+    
+    User savedUser = users.save(user); // Save user first to get ID
 
     Address addr = reg.getAddress() != null ? toAddress(reg.getAddress()) : null;
 
-    Caregiver caregiver = null;
-    if (reg.getCaregiverId() != null) {
-        caregiver = caregiverRepository.findById(reg.getCaregiverId())
-                .orElseThrow(() -> new RegistrationException("Caregiver not found"));
-    }
-
+    // Build the patient object
     Patient patient = Patient.builder()
             .firstName(reg.getFirstName())
             .lastName(reg.getLastName())
@@ -143,7 +146,7 @@ public Patient registerPatient(PatientRegistration reg) {
             .email(reg.getEmail())
             .phone(reg.getPhone())
             .address(addr)
-            .user(user)
+            .user(savedUser) // Use the saved user with ID
             .relationship(reg.getRelationship())
             .build();
 
@@ -151,26 +154,37 @@ public Patient registerPatient(PatientRegistration reg) {
         Patient savedPatient = patientRepository.save(patient);
         
         // Create caregiver-patient link if caregiver is specified
-        if (caregiver != null) {
-            caregiverPatientLinkService.createPermanentLink(caregiver.getUser().getId(), savedPatient.getUser().getId(), "Patient registered by caregiver");
+        if (reg.getCaregiverId() != null) {
+            Caregiver caregiver = caregiverRepository.findById(reg.getCaregiverId())
+                    .orElseThrow(() -> new RegistrationException("Caregiver not found"));
+            
+            try {
+                // Create the permanent link between caregiver and patient
+                caregiverPatientLinkService.createPermanentLink(
+                    caregiver.getUser().getId(), 
+                    savedUser.getId(), 
+                    "Patient registered by caregiver"
+                );
+            } catch (Exception e) {
+                throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to establish caregiver-patient relationship");
+            }
         }
         
-        // Send password setup email to patient, including username and password
         emailService.sendPasswordSetupEmailWithCredentials(
             reg.getEmail(),
             passwordSetupToken,
             reg.getFirstName(),
             reg.getEmail(),
-            password // Use the actual password (either provided or generated)
+            password
         );
         
         return savedPatient;
-     } catch (Exception e) {
+    } catch (Exception e) {
         throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR,
                 "Exception occurred while saving patient to the database");
-     }
     }
-
+}
       /**
      * Generate a secure random password of the given length
      */
@@ -242,4 +256,34 @@ public Patient registerPatient(PatientRegistration reg) {
                 .zip(dto.zip())
                 .build();
     }
+
+public boolean hasAccessToPatient(Long userId, Long patientId) {
+    User user = users.findById(userId)
+        .orElse(null);
+    
+    if (user == null) {
+        return false;
+    }
+    
+    // Check role-specific access
+    switch (user.getRole()) {
+        case PATIENT:
+            // Patient can only access their own data
+            return patientRepository.existsByIdAndUserId(patientId, userId);
+            
+        case CAREGIVER:
+            // Use the new query method
+            return patientRepository.hasAccessByCaregiverId(patientId, userId);
+            
+        case FAMILY_MEMBER:
+            // Similar check for family members
+            return familyMemberLinkRepository.existsByFamilyMemberUserIdAndPatientId(userId, patientId);
+            
+        case ADMIN:
+            return true;
+            
+        default:
+            return false;
+    }
+}
 }

@@ -8,4 +8,6 @@ import java.util.Optional;
 
 public interface CaregiverRepository extends JpaRepository<Caregiver, Long> {
     Optional<Caregiver> findByUser(User user);
+    boolean existsByIdAndUserId(Long caregiverId, Long userId);
+
  }

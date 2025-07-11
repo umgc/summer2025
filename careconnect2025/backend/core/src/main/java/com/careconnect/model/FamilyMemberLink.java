@@ -76,6 +76,11 @@ public class FamilyMemberLink {
         this.linkType = linkType;
     }
 
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+
     // Helper methods
     public boolean isActive() {
         if (status != LinkStatus.ACTIVE) {

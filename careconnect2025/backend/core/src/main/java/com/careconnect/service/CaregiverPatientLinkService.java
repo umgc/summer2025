@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class CaregiverPatientLinkService {
 
-    private final CaregiverPatientLinkRepository linkRepository;
+    private final CaregiverPatientLinkRepository caregiverPatientLinkRepository;
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
     private final CaregiverRepository caregiverRepository;
@@ -41,7 +41,7 @@ public class CaregiverPatientLinkService {
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Creator user not found"));
 
         // Check if active link already exists
-        if (linkRepository.existsByCaregiverUserAndPatientUserAndStatus(
+        if (caregiverPatientLinkRepository.existsByCaregiverUserAndPatientUserAndStatus(
                 caregiverUser, patientUser, CaregiverPatientLink.LinkStatus.ACTIVE)) {
             throw new AppException(HttpStatus.CONFLICT, "Active link already exists between caregiver and patient");
         }
@@ -54,7 +54,7 @@ public class CaregiverPatientLinkService {
         link.setExpiresAt(request.expiresAt());
         link.setNotes(request.notes());
 
-        linkRepository.save(link);
+        caregiverPatientLinkRepository.save(link);
         return toCaregiverPatientLinkResponse(link);
     }
 
@@ -62,7 +62,7 @@ public class CaregiverPatientLinkService {
      * Update an existing link (suspend, reactivate, change type, etc.)
      */
     public CaregiverPatientLinkResponse updateLink(Long linkId, UpdateLinkRequest request, Long updatedByUserId) {
-        CaregiverPatientLink link = linkRepository.findById(linkId)
+        CaregiverPatientLink link = caregiverPatientLinkRepository.findById(linkId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Link not found"));
 
         if (request.status() != null) {
@@ -78,7 +78,7 @@ public class CaregiverPatientLinkService {
             link.setNotes(request.notes());
         }
 
-        linkRepository.save(link);
+        caregiverPatientLinkRepository.save(link);
         return toCaregiverPatientLinkResponse(link);
     }
 
@@ -86,11 +86,11 @@ public class CaregiverPatientLinkService {
      * Temporarily suspend a link
      */
     public CaregiverPatientLinkResponse suspendLink(Long linkId, Long suspendedByUserId) {
-        CaregiverPatientLink link = linkRepository.findById(linkId)
+        CaregiverPatientLink link = caregiverPatientLinkRepository.findById(linkId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Link not found"));
 
         link.setStatus(CaregiverPatientLink.LinkStatus.SUSPENDED);
-        linkRepository.save(link);
+        caregiverPatientLinkRepository.save(link);
 
         return toCaregiverPatientLinkResponse(link);
     }
@@ -99,7 +99,7 @@ public class CaregiverPatientLinkService {
      * Reactivate a suspended link
      */
     public CaregiverPatientLinkResponse reactivateLink(Long linkId, Long reactivatedByUserId) {
-        CaregiverPatientLink link = linkRepository.findById(linkId)
+        CaregiverPatientLink link = caregiverPatientLinkRepository.findById(linkId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Link not found"));
 
         if (link.getStatus() != CaregiverPatientLink.LinkStatus.SUSPENDED) {
@@ -107,7 +107,7 @@ public class CaregiverPatientLinkService {
         }
 
         link.setStatus(CaregiverPatientLink.LinkStatus.ACTIVE);
-        linkRepository.save(link);
+        caregiverPatientLinkRepository.save(link);
 
         return toCaregiverPatientLinkResponse(link);
     }
@@ -116,11 +116,11 @@ public class CaregiverPatientLinkService {
      * Permanently revoke a link
      */
     public void revokeLink(Long linkId, Long revokedByUserId) {
-        CaregiverPatientLink link = linkRepository.findById(linkId)
+        CaregiverPatientLink link = caregiverPatientLinkRepository.findById(linkId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Link not found"));
 
         link.setStatus(CaregiverPatientLink.LinkStatus.REVOKED);
-        linkRepository.save(link);
+        caregiverPatientLinkRepository.save(link);
     }
 
     /**
@@ -131,7 +131,7 @@ public class CaregiverPatientLinkService {
         User caregiverUser = userRepository.findById(caregiverUserId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Caregiver not found"));
 
-        List<CaregiverPatientLink> links = linkRepository.findActivePatientsByCaregiver(caregiverUser, LocalDateTime.now());
+        List<CaregiverPatientLink> links = caregiverPatientLinkRepository.findActivePatientsByCaregiver(caregiverUser, LocalDateTime.now());
         return links.stream()
                 .map(this::toCaregiverPatientLinkResponse)
                 .collect(Collectors.toList());
@@ -145,7 +145,7 @@ public class CaregiverPatientLinkService {
         User patientUser = userRepository.findById(patientUserId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Patient not found"));
 
-        List<CaregiverPatientLink> links = linkRepository.findActiveCaregiversByPatient(patientUser, LocalDateTime.now());
+        List<CaregiverPatientLink> links = caregiverPatientLinkRepository.findActiveCaregiversByPatient(patientUser, LocalDateTime.now());
         return links.stream()
                 .map(this::toCaregiverPatientLinkResponse)
                 .collect(Collectors.toList());
@@ -163,7 +163,7 @@ public class CaregiverPatientLinkService {
             return false;
         }
 
-        return linkRepository.existsActiveNonExpiredLink(caregiverUser, patientUser, LocalDateTime.now());
+        return caregiverPatientLinkRepository.existsActiveNonExpiredLink(caregiverUser, patientUser, LocalDateTime.now());
     }
 
     /**
@@ -171,7 +171,7 @@ public class CaregiverPatientLinkService {
      */
     @Transactional(readOnly = true)
     public List<CaregiverPatientLinkResponse> getAllLinks() {
-        return linkRepository.findAll().stream()
+        return caregiverPatientLinkRepository.findAll().stream()
                 .map(this::toCaregiverPatientLinkResponse)
                 .collect(Collectors.toList());
     }
@@ -180,10 +180,10 @@ public class CaregiverPatientLinkService {
      * Cleanup expired links (should be run periodically)
      */
     public void cleanupExpiredLinks() {
-        List<CaregiverPatientLink> expiredLinks = linkRepository.findExpiredActiveLinks(LocalDateTime.now());
+        List<CaregiverPatientLink> expiredLinks = caregiverPatientLinkRepository.findExpiredActiveLinks(LocalDateTime.now());
         expiredLinks.forEach(link -> {
             link.setStatus(CaregiverPatientLink.LinkStatus.EXPIRED);
-            linkRepository.save(link);
+            caregiverPatientLinkRepository.save(link);
         });
     }
 
@@ -198,7 +198,7 @@ public class CaregiverPatientLinkService {
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Patient not found"));
 
         // Check if active link already exists
-        if (linkRepository.existsActiveNonExpiredLink(caregiverUser, patientUser, LocalDateTime.now())) {
+        if (caregiverPatientLinkRepository.existsActiveNonExpiredLink(caregiverUser, patientUser, LocalDateTime.now())) {
             return; // Link already exists, no need to create another one
         }
 
@@ -209,7 +209,7 @@ public class CaregiverPatientLinkService {
         link.setLinkType(CaregiverPatientLink.LinkType.PERMANENT);
         link.setNotes(notes);
 
-        linkRepository.save(link);
+        caregiverPatientLinkRepository.save(link);
     }
 
     // Helper methods
@@ -259,4 +259,15 @@ public class CaregiverPatientLinkService {
                 return user.getEmail();
         }
     }
+
+  public boolean hasActiveLink(Long caregiverUserId, Long patientUserId) {
+    User caregiverUser = userRepository.findById(caregiverUserId)
+        .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Caregiver user not found"));
+        
+    User patientUser = userRepository.findById(patientUserId)
+        .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Patient user not found"));
+        
+    return caregiverPatientLinkRepository.existsByCaregiverUserAndPatientUserAndStatus(
+        caregiverUser, patientUser, CaregiverPatientLink.LinkStatus.ACTIVE);
+}
 }

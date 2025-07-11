@@ -277,7 +277,7 @@ public class PatientController {
             throw new AppException(HttpStatus.FORBIDDEN, "Only patients can access this endpoint");
         }
         
-        Patient patient = patientService.getPatientByUserId(currentUser.getId());
+        Patient patient = patientService.getPatientById(currentUser.getId());
         log.debug("Retrieved patient profile: id={}, userId={}", patient.getId(), patient.getUser().getId());
         return ResponseEntity.ok(patient);
     }

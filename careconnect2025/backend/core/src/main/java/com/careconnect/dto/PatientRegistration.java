@@ -10,8 +10,17 @@ public class PatientRegistration {
     private String phone;
     private AddressDto address;
     private String dob;
-    private Long caregiverId;      
+    private Long caregiverId;     
+    private Long familyMemberId;
     private String relationship;   
+
+    public Long getFamilyMemberId() {
+        return familyMemberId;
+    }
+
+    public void setFamilyMemberId(Long familyMemberId) {
+        this.familyMemberId = familyMemberId;
+    }
 
     public String getFirstName() {
         return firstName;
