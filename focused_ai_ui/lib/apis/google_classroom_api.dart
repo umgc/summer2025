@@ -1,0 +1,78 @@
+import 'dart:convert' show json, jsonEncode;
+import 'package:focused_ai_ui/constants/server_constants.dart';
+import 'package:focused_ai_ui/services/auth_service.dart';
+import 'package:http/http.dart' as http;
+
+class GoogleClassroomApi {
+
+  // final AuthService _authService = authService;
+
+  // Template for protected requests. Method is 'GET' or 'POST'. Endpoint will match request mapping in Spring Boot e.g. '/caila'.
+  Future<dynamic> protectedRequest(
+    String method, 
+    String endpoint, 
+    {dynamic body}
+  ) async {
+    final uri = Uri.parse('${ServerConstants.serverUrl}$endpoint');
+    try {
+      final response = http.Request(method, uri)
+        ..headers.addAll(authService.authHeaders)
+        ..body = (body != null ? jsonEncode(body) : null)!;
+
+      final streamed = await response.send();
+      final resp = await http.Response.fromStream(streamed);
+
+      if (resp.statusCode == 401) {
+        await authService.handleUnauthorized();
+        throw SessionExpiredException();
+      }
+
+      return json.decode(resp.body);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Don't send or validate JWT with auth methods
+  Future<Map<String, dynamic>?> googleLogin(
+    String serverAuthCode,
+    String userId,
+    String email,
+  ) async {
+    print('GoogleApi: Logging in to Google...');
+
+    final Uri uri = Uri.parse('${ServerConstants.serverUrl}${ServerConstants.googleLoginEndpoint}');
+
+    try {
+      final http.Response response = await http.post(
+        uri,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'serverAuthCode': serverAuthCode,
+          'userId': userId,
+          'email': email,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body) as Map<String, dynamic>;
+      } else {
+        final errorBody = json.decode(response.body);
+        final errorMessage = errorBody['message'] ?? 'Unknown error';
+        print(
+          'BackendApi: Google login failed on backend: ${response.statusCode} - $errorMessage',
+        );
+        throw Exception(
+          'Backend Google login failed: $errorMessage (Status: ${response.statusCode})',
+        );
+      }
+    } catch (e) {
+      print(
+        'BackendApi: Network or parsing error during Google backend call: $e',
+      );
+      rethrow;
+    }
+  }
+}
