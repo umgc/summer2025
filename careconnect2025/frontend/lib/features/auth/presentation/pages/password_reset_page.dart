@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/services/api_service.dart';
 import 'dart:convert';
+import '../../../../services/auth_service.dart';
 
 class PasswordResetPage extends StatefulWidget {
   final String? token;
@@ -13,245 +13,314 @@ class PasswordResetPage extends StatefulWidget {
   State<PasswordResetPage> createState() => _PasswordResetPageState();
 }
 
+// In your PasswordResetPage class, update the password reset method
 class _PasswordResetPageState extends State<PasswordResetPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   bool _isLoading = false;
-  String? _status;
-  bool _isError = false;
+  String? _message;
+  String? _error;
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
-    _confirmController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  Future<void> _setPassword() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_emailController.text.trim().isEmpty) {
+      setState(() {
+        _error = 'Email is required';
+        _message = null;
+      });
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      setState(() {
+        _error = 'Passwords do not match';
+        _message = null;
+      });
+      return;
+    }
+
+    if (_passwordController.text.length < 6) {
+      setState(() {
+        _error = 'Password must be at least 6 characters';
+        _message = null;
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
-      _status = null;
-      _isError = false;
+      _error = null;
+      _message = null;
     });
 
     try {
-      final response = await ApiService.resetUserPassword(
-        username: _usernameController.text.trim(),
-        resetToken: widget.token!,
+      // Use the new setupPassword method
+      final result = await AuthService.resetPassword(
+        email: _emailController.text.trim(),
+        resetToken: widget.token ?? '',
         newPassword: _passwordController.text.trim(),
       );
 
-      if (response.statusCode == 200) {
-        setState(() {
-          _isLoading = false;
-          _status = 'Password reset successfully! Redirecting to login...';
-          _isError = false;
-        });
+      print('🔍 Password setup result: $result');
 
-        // Wait 2 seconds to show success message, then navigate to login
-        await Future.delayed(const Duration(seconds: 2));
+      setState(() {
+        _message = result;
+        _isLoading = false;
+      });
 
+      // Navigate to login after successful setup
+      Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           context.go('/login');
         }
-      } else {
-        final errorData = response.body.isNotEmpty
-            ? jsonDecode(response.body)
-            : {};
-        setState(() {
-          _isLoading = false;
-          _status =
-              errorData['message'] ??
-              errorData['error'] ??
-              'Password reset failed. Please try again.';
-          _isError = true;
-        });
-      }
+      });
     } catch (e) {
       setState(() {
+        _error = 'Failed to set password: ${e.toString()}';
         _isLoading = false;
-        _status = 'An error occurred. Please try again later.';
-        _isError = true;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasToken = widget.token != null && widget.token!.isNotEmpty;
+    // Detect if this is a setup token (family member) based on UUID format
+    final isSetupToken =
+        widget.token != null &&
+        widget.token!.contains('-') &&
+        widget.token!.length > 20;
+    final title = isSetupToken ? 'Set Your Password' : 'Reset Your Password';
+    final description = isSetupToken
+        ? 'Welcome! Please set your password to access your account.'
+        : 'Enter your new password below.';
+    final buttonText = isSetupToken ? 'Set Password' : 'Reset Password';
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Set New Password',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: const Color(0xFF14366E),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
-        child: Center(
-          child: SingleChildScrollView(
-            child: hasToken
-                ? Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.lock,
-                          size: 64,
-                          color: Color(0xFF14366E),
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Enter your email and new password',
-                          style: TextStyle(fontSize: 16, color: Colors.black87),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        TextFormField(
-                          controller: _usernameController,
-                          decoration: InputDecoration(
-                            labelText: 'Email',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your email';
-                            }
-                            if (!RegExp(
-                              r'^[^@]+@[^@]+\.[^@]+',
-                            ).hasMatch(value)) {
-                              return 'Please enter a valid email address';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _passwordController,
-                          decoration: InputDecoration(
-                            labelText: 'New Password',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          obscureText: true,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a new password';
-                            }
-                            if (value.length < 8) {
-                              return 'Password must be at least 8 characters';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _confirmController,
-                          decoration: InputDecoration(
-                            labelText: 'Confirm Password',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          obscureText: true,
-                          validator: (value) {
-                            if (value != _passwordController.text) {
-                              return 'Passwords do not match';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF14366E),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              textStyle: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: _isLoading ? null : _submit,
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text('Set Password'),
-                          ),
-                        ),
-                        if (_status != null) ...[
-                          const SizedBox(height: 24),
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: _isError
-                                  ? Colors.red.shade50
-                                  : Colors.green.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: _isError
-                                    ? Colors.red.shade300
-                                    : Colors.green.shade300,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  _isError ? Icons.error : Icons.check_circle,
-                                  color: _isError ? Colors.red : Colors.green,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    _status!,
-                                    style: TextStyle(
-                                      color: _isError
-                                          ? Colors.red.shade700
-                                          : Colors.green.shade700,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  )
-                : const Center(
-                    child: Text(
-                      'Invalid or missing reset token.',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Text(
+                'Care Connect',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF003366),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Closer Connections. Better Care',
+                style: TextStyle(fontSize: 14, color: Colors.black54),
+              ),
+              const SizedBox(height: 40),
+              const Icon(Icons.lock, size: 64, color: Color(0xFF14366E)),
+              const SizedBox(height: 24),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                description,
+                style: const TextStyle(fontSize: 14, color: Colors.black54),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              TextFormField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email Address',
+                  labelStyle: const TextStyle(color: Color(0xFF14366E)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF14366E)),
+                  ),
+                  prefixIcon: const Icon(Icons.email_outlined),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                    return 'Please enter a valid email address';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  labelText: 'New Password',
+                  labelStyle: const TextStyle(color: Color(0xFF14366E)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF14366E)),
+                  ),
+                  prefixIcon: const Icon(Icons.lock_outline),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a password';
+                  }
+                  if (value.length < 6) {
+                    return 'Password must be at least 6 characters';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _confirmPasswordController,
+                decoration: InputDecoration(
+                  labelText: 'Confirm New Password',
+                  labelStyle: const TextStyle(color: Color(0xFF14366E)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF14366E)),
+                  ),
+                  prefixIcon: const Icon(Icons.lock_outline),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please confirm your password';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+              if (_error != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: Colors.red.shade700,
+                        size: 20,
                       ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _error!,
+                          style: TextStyle(color: Colors.red.shade700),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (_message != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle_outline,
+                        color: Colors.green.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _message!,
+                          style: TextStyle(color: Colors.green.shade700),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF14366E),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
+                  onPressed: _isLoading ? null : _setPassword,
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          buttonText,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => context.go('/login'),
+                child: const Text(
+                  'Back to Login',
+                  style: TextStyle(color: Color(0xFF14366E)),
+                ),
+              ),
+            ],
           ),
         ),
       ),

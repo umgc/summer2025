@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:care_connect_app/services/api_service.dart';
 
 class MoodWellnessCheckIn extends StatefulWidget {
   const MoodWellnessCheckIn({super.key});
@@ -11,6 +12,7 @@ class _MoodWellnessCheckInState extends State<MoodWellnessCheckIn> {
   double _moodValue = 5;
   double _painValue = 5;
   final TextEditingController _noteController = TextEditingController();
+  bool _isSubmitting = false;
 
   final Map<int, String> moodEmojis = {
     1: '🙁', // 🙁 Very Sad
@@ -38,7 +40,8 @@ class _MoodWellnessCheckInState extends State<MoodWellnessCheckIn> {
     10: '😱', // 😱 Worst Pain
   };
 
-  void _submitMoodLog() {
+  // FIX: Make the method async and add proper error handling
+  Future<void> _submitMoodLog() async {
     final now = DateTime.now();
     final moodEntry = {
       'timestamp': now.toIso8601String(),
@@ -49,19 +52,55 @@ class _MoodWellnessCheckInState extends State<MoodWellnessCheckIn> {
       'note': _noteController.text.trim(),
     };
 
-    // Placeholder for backend submission
-    debugPrint('Mood & Pain log submitted: $moodEntry');
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Mood & Pain submitted successfully.')),
-    );
-
-    // Clear the input
+    // Show loading state
     setState(() {
-      _moodValue = 5;
-      _painValue = 5;
-      _noteController.clear();
+      _isSubmitting = true;
     });
+
+    try {
+      // Send to backend
+      final response = await ApiService.submitMoodAndPainLog(
+        moodValue: _moodValue.toInt(),
+        painValue: _painValue.toInt(),
+        note: _noteController.text.trim(),
+        timestamp: now,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Mood & Pain submitted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Clear the input on success
+          setState(() {
+            _moodValue = 5;
+            _painValue = 5;
+            _noteController.clear();
+          });
+        }
+      } else {
+        throw Exception('Failed to submit data');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to submit: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -74,8 +113,12 @@ class _MoodWellnessCheckInState extends State<MoodWellnessCheckIn> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mood & Wellness Check-In'),
+        title: const Text(
+          'Mood & Wellness Check-In',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.blue.shade900,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -98,6 +141,7 @@ class _MoodWellnessCheckInState extends State<MoodWellnessCheckIn> {
               label: _moodValue.toStringAsFixed(0),
               value: _moodValue,
               onChanged: (value) => setState(() => _moodValue = value),
+              activeColor: Colors.blue.shade900,
             ),
             const SizedBox(height: 24),
             const Text(
@@ -116,6 +160,7 @@ class _MoodWellnessCheckInState extends State<MoodWellnessCheckIn> {
               label: _painValue.toStringAsFixed(0),
               value: _painValue,
               onChanged: (value) => setState(() => _painValue = value),
+              activeColor: Colors.red.shade700,
             ),
             const SizedBox(height: 24),
             const Text(
@@ -132,11 +177,32 @@ class _MoodWellnessCheckInState extends State<MoodWellnessCheckIn> {
               ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _submitMoodLog,
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade900),
-              child: const Text('Submit'),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submitMoodLog,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue.shade900,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Submit',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
             ),
           ],
         ),

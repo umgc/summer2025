@@ -41,7 +41,7 @@ public class PasswordResetService {
         this.encoder = encoder;
     }
 
-    private static final Duration TTL = Duration.ofMinutes(20);
+    private static final Duration TTL = Duration.ofHours(3);  // Increased to 3 hours
 
     /* Step 1 – request */
     public void startReset(String email, String appUrl) {
@@ -51,13 +51,20 @@ public class PasswordResetService {
         String raw   = generateSecureRandomString(48);
         String hash  = hash(raw);
 
+        // First, invalidate any existing tokens for this user
+        tokens.findByUser(user).ifPresent(oldToken -> {
+            oldToken.setUsed(true);
+            tokens.save(oldToken);
+        });
+
         PasswordResetToken entity = new PasswordResetToken();
         entity.setUser(user);
         entity.setTokenHash(hash);
-        entity.setExpiresAt(Instant.now().plus(TTL));
+        // Add a small buffer to account for time zone differences and processing time
+        entity.setExpiresAt(Instant.now().plus(TTL).plus(Duration.ofMinutes(5)));
         tokens.save(entity);
 
-        String link = appUrl + "/reset?token=" + raw;
+        String link = appUrl + "/setup-password?token=" + raw;
         sendPasswordResetEmail(user.getEmail(), link);   // Send the email properly
     }
 
@@ -65,8 +72,17 @@ public class PasswordResetService {
     public void finalizeReset(String rawToken, String newPassword) {
         String hash = hash(rawToken);
 
-        PasswordResetToken t = tokens.findValid(hash, Instant.now())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired token"));
+        PasswordResetToken t = tokens.findByTokenHash(hash)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
+
+        // Separate checks for better error messages
+        if (t.isUsed()) {
+            throw new IllegalArgumentException("This reset token has already been used");
+        }
+        
+        if (t.getExpiresAt().isBefore(Instant.now())) {
+            throw new IllegalArgumentException("This reset token has expired. Please request a new one");
+        }
 
         User user = t.getUser();
         String encodedPassword = encoder.encode(newPassword);
@@ -75,7 +91,7 @@ public class PasswordResetService {
         users.save(user);
 
         t.setUsed(true);
-        tokens.save(t);                         // or delete
+        tokens.save(t);
     }
 
     /**

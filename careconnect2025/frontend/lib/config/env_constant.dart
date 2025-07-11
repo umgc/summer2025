@@ -165,3 +165,16 @@ String getOAuthRedirectUri() {
     return 'https://$domain/oauth2/callback/google';
   }
 }
+
+String getWebBaseUrl() {
+  final domain = getAppDomain();
+  final port = getAppPort();
+
+  // For development/localhost
+  if (domain == 'localhost' || domain.startsWith('127.0.0.1')) {
+    return 'http://$domain:$port';
+  }
+
+  // For production
+  return 'https://$domain';
+}

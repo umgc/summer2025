@@ -19,6 +19,8 @@ import '../../features/payments/presentation/pages/stripe_checkout_page.dart';
 import '../../features/analytics/analytics_page.dart';
 import '../../features/payments/presentation/pages/payment_success_page.dart';
 import '../../features/payments/presentation/pages/payment_cancel_page.dart';
+import '../../providers/user_provider.dart';
+import 'package:provider/provider.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -27,15 +29,86 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
     GoRoute(path: '/signup', builder: (_, __) => const SignUpScreen()),
     GoRoute(
-      path: '/dashboard/caregiver',
-      builder: (_, __) => const CaregiverDashboard(),
+      path: '/dashboard',
+      builder: (context, state) {
+        final urlRole = state.uri.queryParameters['role'];
+
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        final sessionRole = userProvider.user?.role;
+
+        final userRole = urlRole ?? sessionRole;
+
+        if (userRole == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.go('/login');
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        switch (userRole.toUpperCase()) {
+          case 'PATIENT':
+            return const PatientDashboard();
+          case 'CAREGIVER':
+          case 'FAMILY_LINK':
+          case 'ADMIN':
+            return const CaregiverDashboard();
+          default:
+            // Unknown role, redirect to login
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.go('/login');
+            });
+            return const Scaffold(
+              body: Center(
+                child: Text('Unknown user role. Redirecting to login...'),
+              ),
+            );
+        }
+      },
     ),
     GoRoute(
       path: '/dashboard/patient',
       builder: (context, state) {
         final userIdStr = state.uri.queryParameters['userId'];
         final userId = userIdStr != null ? int.tryParse(userIdStr) : null;
-        return PatientDashboard(userId: userId);
+        return PatientDashboard(userId: userId); // Pass userId if provided
+      },
+    ),
+
+    // Caregiver dashboard route (backend redirects)
+    GoRoute(
+      path: '/dashboard/caregiver',
+      builder: (context, state) {
+        final caregiverIdStr = state.uri.queryParameters['caregiverId'];
+        final patientIdStr = state.uri.queryParameters['patientId'];
+        final userRole = state.uri.queryParameters['userRole'] ?? 'CAREGIVER';
+
+        final caregiverId = caregiverIdStr != null
+            ? int.tryParse(caregiverIdStr)
+            : 1;
+        final patientId = patientIdStr != null
+            ? int.tryParse(patientIdStr)
+            : null;
+
+        return CaregiverDashboard(
+          userRole: userRole,
+          patientId: patientId,
+          caregiverId: caregiverId ?? 1,
+        );
+      },
+    ),
+    // Add a redirect route for authenticated users going to root
+    GoRoute(
+      path: '/home',
+      redirect: (context, state) {
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        final userRole = userProvider.user?.role;
+
+        if (userRole != null) {
+          return '/dashboard?role=$userRole';
+        }
+        return '/';
       },
     ),
     GoRoute(
@@ -62,18 +135,29 @@ final GoRouter appRouter = GoRouter(
       path: '/select-package',
       builder: (_, __) => const SelectPackagePage(),
     ),
-    // FIX: Use ResetPasswordScreen for requesting reset link
     GoRoute(
       path: '/reset-password',
       builder: (_, __) => const ResetPasswordScreen(),
     ),
-    // FIX: Use PasswordResetPage for setting new password with token
     GoRoute(
-      path: '/reset',
+      path: '/setup-password',
       builder: (context, state) {
-        final token = state
-            .uri
-            .queryParameters['token']; // FIX: queryParameters not queryParams
+        final token = state.uri.queryParameters['token'];
+        // Add redirect if no token
+        if (token == null || token.isEmpty) {
+          return const Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Invalid or missing reset token'),
+                  SizedBox(height: 16),
+                  BackButton(color: Colors.blue),
+                ],
+              ),
+            ),
+          );
+        }
         return PasswordResetPage(token: token);
       },
     ),

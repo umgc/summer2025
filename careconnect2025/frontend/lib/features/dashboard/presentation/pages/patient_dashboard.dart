@@ -7,6 +7,8 @@ import 'package:care_connect_app/providers/user_provider.dart';
 import 'package:care_connect_app/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../widgets/ai_chat.dart';
+import '../../../../widgets/family_member_card.dart';
+import '../../../../widgets/add_family_member_dialog.dart';
 
 class PatientDashboard extends StatefulWidget {
   final int? userId;
@@ -19,17 +21,23 @@ class PatientDashboard extends StatefulWidget {
 class _PatientDashboardState extends State<PatientDashboard> {
   Map<String, dynamic>? patient;
   List<Map<String, dynamic>> caregivers = [];
+  List<Map<String, dynamic>> familyMembers = [];
   bool loading = true;
+  bool isLoading = false;
   String? error;
 
   // Mood and pain selection (UI only)
   String? selectedMood;
   String? selectedPain;
 
+  bool _isSavingMoodPain = false;
+  bool _showSaveButton = false;
+
   @override
   void initState() {
     super.initState();
     fetchPatientAndCaregivers();
+    _loadFamilyMembers();
   }
 
   Future<void> fetchPatientAndCaregivers() async {
@@ -108,6 +116,117 @@ class _PatientDashboardState extends State<PatientDashboard> {
     }
   }
 
+  Future<void> _loadFamilyMembers() async {
+    if (!isLoading) {
+      setState(() {
+        isLoading = true;
+        error = null;
+      });
+    }
+
+    try {
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+      final userId = widget.userId ?? user?.patientId ?? user?.id ?? 1;
+
+      print('🔍 Loading family members for userId: $userId');
+
+      final response = await ApiService.getFamilyMembers(userId);
+
+      print('🔍 Family members response: ${response.statusCode}');
+      print('🔍 Family members body: ${response.body}');
+
+      if (mounted) {
+        if (response.statusCode == 200) {
+          final List<dynamic> data = jsonDecode(response.body);
+          setState(() {
+            familyMembers = List<Map<String, dynamic>>.from(data);
+            isLoading = false;
+            error = null;
+          });
+          print(
+            '🔍 Family members loaded successfully: ${familyMembers.length} members',
+          );
+        } else {
+          setState(() {
+            error = 'Failed to load family members: ${response.statusCode}';
+            isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print('🔍 Error loading family members: $e');
+      if (mounted) {
+        setState(() {
+          error = 'Error loading family members: ${e.toString()}';
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _addFamilyMember() async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => AddFamilyMemberDialog(),
+    );
+
+    if (result != null) {
+      try {
+        // Show loading message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Adding family member...'),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        }
+
+        final user = Provider.of<UserProvider>(context, listen: false).user;
+        final userId = widget.userId ?? user?.patientId ?? user?.id ?? 1;
+
+        print('🔍 Adding family member for userId: $userId');
+        print('🔍 Family member data: $result');
+
+        final response = await ApiService.addFamilyMember(userId, result);
+
+        print('🔍 Add family member response: ${response.statusCode}');
+        print('🔍 Add family member body: ${response.body}');
+
+        if (response.statusCode == 201) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Family member added successfully!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+
+          // Force refresh the list
+          await _loadFamilyMembers();
+        } else {
+          final errorData = jsonDecode(response.body);
+          throw Exception(
+            errorData['message'] ?? 'Failed to add family member',
+          );
+        }
+      } catch (e) {
+        print('🔍 Error adding family member: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
+  }
+
   String greeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good morning';
@@ -158,7 +277,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                         ),
                         const SizedBox(height: 10),
                         _buildMoodSelector(),
-                        const Divider(height: 30, thickness: 2),
+                        const SizedBox(height: 16),
 
                         const Text(
                           'How is your pain today?',
@@ -169,14 +288,112 @@ class _PatientDashboardState extends State<PatientDashboard> {
                         ),
                         const SizedBox(height: 10),
                         _buildPainSelector(),
+
+                        // Save button (show when both are selected)
+                        if (_showSaveButton) ...[
+                          const SizedBox(height: 20),
+                          Center(
+                            child: ElevatedButton.icon(
+                              onPressed: _isSavingMoodPain
+                                  ? null
+                                  : _saveMoodAndPain,
+                              icon: _isSavingMoodPain
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    )
+                                  : const Icon(Icons.save),
+                              label: Text(
+                                _isSavingMoodPain
+                                    ? 'Saving...'
+                                    : 'Save Today\'s Status',
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green.shade600,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+
                         const Divider(height: 30, thickness: 2),
 
+                        // Caregivers section
+                        const Text(
+                          'Your Caregivers',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
                         ...caregivers.map(
                           (caregiver) => _buildCaregiverCard(caregiver),
                         ),
 
                         const SizedBox(height: 20),
+                        const Divider(height: 30, thickness: 2),
 
+                        // Family Members section
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Family Members',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: _addFamilyMember,
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Add Family Member'),
+                                ),
+                              ],
+                            ),
+                            if (isLoading)
+                              const Center(child: CircularProgressIndicator())
+                            else if (error != null)
+                              Text(
+                                'Error: $error',
+                                style: const TextStyle(color: Colors.red),
+                              )
+                            else if (familyMembers.isEmpty)
+                              const Text('No family members added yet')
+                            else
+                              ...familyMembers.map(
+                                (f) => FamilyMemberCard(
+                                  firstName: f['firstName'] ?? '',
+                                  lastName: f['lastName'] ?? '',
+                                  relationship: f['relationship'] ?? '',
+                                  phone: f['phone'] ?? '',
+                                  email: f['email'] ?? '',
+                                  lastInteraction:
+                                      f['lastSeen'] ?? 'Not available',
+                                ),
+                              ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
                         GestureDetector(
                           onTap: () => context.go('/tasks/today'),
                           child: const Text(
@@ -227,6 +444,96 @@ class _PatientDashboardState extends State<PatientDashboard> {
     );
   }
 
+  void _checkSaveButtonVisibility() {
+    setState(() {
+      _showSaveButton = selectedMood != null && selectedPain != null;
+    });
+  }
+
+  Future<void> _saveMoodAndPain() async {
+    if (selectedMood == null || selectedPain == null) return;
+
+    setState(() {
+      _isSavingMoodPain = true;
+    });
+
+    try {
+      // Convert mood to number value
+      final moodValue = _getMoodValueFromLabel(selectedMood!);
+      final painValue = _getPainLevelFromLabel(selectedPain!);
+
+      final response = await ApiService.submitMoodAndPainLog(
+        moodValue: moodValue,
+        painValue: painValue,
+        note: 'Daily mood and pain check-in',
+        timestamp: DateTime.now(),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Mood and pain levels saved successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Reset selections after saving
+          setState(() {
+            selectedMood = null;
+            selectedPain = null;
+            _showSaveButton = false;
+          });
+        }
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw Exception(
+          errorData['error'] ?? 'Failed to save mood and pain data',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving data: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isSavingMoodPain = false;
+      });
+    }
+  }
+
+  int _getMoodValueFromLabel(String mood) {
+    switch (mood.toLowerCase()) {
+      case 'angry':
+        return 1;
+      case 'sad':
+        return 2;
+      case 'tired':
+        return 3;
+      case 'fearful':
+        return 4;
+      case 'neutral':
+        return 5;
+      case 'happy':
+        return 6;
+      default:
+        return 5; // Default to neutral
+    }
+  }
+
+  int _getPainLevelFromLabel(String label) {
+    if (label.startsWith('1')) return 1;
+    if (label.startsWith('2')) return 2;
+    if (label.startsWith('3')) return 3;
+    if (label.startsWith('4')) return 4;
+    if (label.startsWith('5')) return 5;
+    return 1; // Default
+  }
+
   Widget _buildMoodSelector() {
     final moods = [
       {'emoji': '😡', 'label': 'Angry'},
@@ -247,6 +554,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
               setState(() {
                 selectedMood = mood['label'] as String;
               });
+              _checkSaveButtonVisibility(); // Add this line
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -298,6 +606,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
             setState(() {
               selectedPain = pain['label'] as String;
             });
+            _checkSaveButtonVisibility(); // Add this line
           },
           child: Column(
             children: [

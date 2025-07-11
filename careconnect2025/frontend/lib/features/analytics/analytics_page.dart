@@ -21,12 +21,64 @@ class AnalyticsPage extends StatefulWidget {
   State<AnalyticsPage> createState() => _AnalyticsPageState();
 }
 
+List<FlSpot> _getSafeSpots(List<double?> values, {double defaultValue = 0.0}) {
+  List<FlSpot> spots = [];
+  for (int i = 0; i < values.length; i++) {
+    spots.add(FlSpot(i.toDouble(), values[i] ?? defaultValue));
+  }
+  return spots.isEmpty ? [FlSpot(0, defaultValue)] : spots;
+}
+
+DashboardAnalytics _getDefaultDashboard() {
+  return DashboardAnalytics(
+    adherenceRate: 0,
+    avgHeartRate: 0,
+    avgSpo2: 0,
+    avgSystolic: 0,
+    avgDiastolic: 0,
+    avgWeight: 0,
+    avgMoodValue: 0, // Changed from avgMoodLevel
+    avgPainValue: 0, // Changed from avgPainLevel
+    moodValues: [], // Add this
+    painValues: [], // Add this
+    periodStart: DateTime.now().subtract(const Duration(days: 7)),
+    periodEnd: DateTime.now(),
+  );
+}
+
 class _AnalyticsPageState extends State<AnalyticsPage> {
   List<Vital> vitals = [];
   DashboardAnalytics? dashboard;
   bool loading = true;
   String? error;
   int selectedDays = 7; // Default to 7 days
+
+  final Map<int, String> moodEmojis = {
+    1: '🙁',
+    2: '😔',
+    3: '😕',
+    4: '😐',
+    5: '🙂',
+    6: '😊',
+    7: '😃',
+    8: '😄',
+    9: '😁',
+    10: '😍',
+  };
+
+  // Add pain emoji mapping
+  final Map<int, String> painEmojis = {
+    1: '😀',
+    2: '🙂',
+    3: '😐',
+    4: '😕',
+    5: '🙁',
+    6: '😞',
+    7: '😢',
+    8: '😥',
+    9: '😭',
+    10: '😱',
+  };
 
   @override
   void initState() {
@@ -156,6 +208,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       csvContent.writeln(
         'Avg Weight,lbs,${dashboard!.avgWeight?.toStringAsFixed(1) ?? 'N/A'}',
       );
+      csvContent.writeln(
+        'Avg Mood,/10,${dashboard!.avgMoodValue?.toStringAsFixed(1) ?? 'N/A'}',
+      );
+      csvContent.writeln(
+        'Avg Pain Level,/10,${dashboard!.avgPainValue?.toStringAsFixed(1) ?? 'N/A'}',
+      );
     }
 
     final fileName =
@@ -270,6 +328,20 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                         ),
                       ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8),
+                        child: pw.Text(
+                          'Mood',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8),
+                        child: pw.Text(
+                          'Pain',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        ),
+                      ),
                     ],
                   ),
                   // Data rows
@@ -300,6 +372,22 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                             pw.Padding(
                               padding: const pw.EdgeInsets.all(8),
                               child: pw.Text('${vital.weight} lbs'),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(8),
+                              child: pw.Text(
+                                vital.moodValue != null
+                                    ? '${vital.moodValue}/10'
+                                    : 'N/A',
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(8),
+                              child: pw.Text(
+                                vital.painValue != null
+                                    ? '${vital.painValue}/10'
+                                    : 'N/A',
+                              ),
                             ),
                           ],
                         ),
@@ -362,81 +450,113 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
   String _getHealthDataContext() {
     if (vitals.isEmpty && dashboard == null) {
-      return "No health data available for analysis.";
-    }
-
-    StringBuffer context = StringBuffer();
-    context.writeln("PATIENT HEALTH DATA SUMMARY (Last $selectedDays days):");
-    context.writeln(
-      "Note: Personal identifiers have been removed for privacy.",
-    );
-    context.writeln("");
-
-    // Add dashboard summary if available
-    if (dashboard != null) {
-      context.writeln("OVERVIEW METRICS:");
+      final defaultSpots = [FlSpot(0, 0)];
+      // default them t 0 if number of other indicate data not available but not as error
+      return "No health data available for this patient in the selected period.";
+    } else {
+      StringBuffer context = StringBuffer();
+      context.writeln("PATIENT HEALTH DATA SUMMARY (Last $selectedDays days):");
       context.writeln(
-        "• Adherence Rate: ${dashboard!.adherenceRate?.toStringAsFixed(1) ?? 'N/A'}%",
-      );
-      context.writeln(
-        "• Average Heart Rate: ${dashboard!.avgHeartRate?.toStringAsFixed(1) ?? 'N/A'} bpm",
-      );
-      context.writeln(
-        "• Average SpO₂: ${dashboard!.avgSpo2?.toStringAsFixed(1) ?? 'N/A'}%",
-      );
-      context.writeln(
-        "• Average Blood Pressure: ${dashboard!.avgSystolic?.toStringAsFixed(1) ?? 'N/A'}/${dashboard!.avgDiastolic?.toStringAsFixed(1) ?? 'N/A'} mmHg",
-      );
-      context.writeln(
-        "• Average Weight: ${dashboard!.avgWeight?.toStringAsFixed(1) ?? 'N/A'} lbs",
+        "Note: Personal identifiers have been removed for privacy.",
       );
       context.writeln("");
-    }
 
-    // Add recent vitals data (limit to last 10 entries for context)
-    if (vitals.isNotEmpty) {
-      context.writeln("RECENT VITAL SIGNS:");
-      final recentVitals = vitals.take(10).toList();
-      for (var vital in recentVitals) {
+      // Add dashboard summary if available
+      if (dashboard != null) {
+        context.writeln("OVERVIEW METRICS:");
         context.writeln(
-          "• ${vital.timestamp.toString().substring(0, 10)}: HR ${vital.heartRate}bpm, SpO₂ ${vital.spo2}%, BP ${vital.systolic}/${vital.diastolic}mmHg, Weight ${vital.weight}lbs",
+          "• Adherence Rate: ${dashboard!.adherenceRate?.toStringAsFixed(1) ?? 'N/A'}%",
         );
+        context.writeln(
+          "• Average Heart Rate: ${dashboard!.avgHeartRate?.toStringAsFixed(1) ?? 'N/A'} bpm",
+        );
+        context.writeln(
+          "• Average SpO₂: ${dashboard!.avgSpo2?.toStringAsFixed(1) ?? 'N/A'}%",
+        );
+        context.writeln(
+          "• Average Blood Pressure: ${dashboard!.avgSystolic?.toStringAsFixed(1) ?? 'N/A'}/${dashboard!.avgDiastolic?.toStringAsFixed(1) ?? 'N/A'} mmHg",
+        );
+        context.writeln(
+          "• Average Weight: ${dashboard!.avgWeight?.toStringAsFixed(1) ?? 'N/A'} lbs",
+        );
+        // ADD THESE LINES:
+        context.writeln(
+          "• Average Mood: ${dashboard!.avgMoodValue?.toStringAsFixed(1) ?? 'N/A'}/10",
+        );
+        context.writeln(
+          "• Average Pain Level: ${dashboard!.avgPainValue?.toStringAsFixed(1) ?? 'N/A'}/10",
+        );
+        context.writeln("");
       }
-      if (vitals.length > 10) {
-        context.writeln("... and ${vitals.length - 10} more entries");
+
+      // Add recent vitals data including mood and pain
+      if (vitals.isNotEmpty) {
+        context.writeln("RECENT VITAL SIGNS:");
+        final recentVitals = vitals.take(10).toList();
+        for (var vital in recentVitals) {
+          String moodStr = vital.moodValue != null
+              ? 'Mood ${vital.moodValue}/10'
+              : 'Mood N/A';
+          String painStr = vital.painValue != null
+              ? 'Pain ${vital.painValue}/10'
+              : 'Pain N/A';
+          context.writeln(
+            "• ${vital.timestamp.toString().substring(0, 10)}: HR ${vital.heartRate}bpm, SpO₂ ${vital.spo2}%, BP ${vital.systolic}/${vital.diastolic}mmHg, Weight ${vital.weight}lbs, $moodStr, $painStr",
+          );
+        }
+        if (vitals.length > 10) {
+          context.writeln("... and ${vitals.length - 10} more entries");
+        }
+        context.writeln("");
       }
-      context.writeln("");
+
+      // Add trends including mood and pain
+      if (vitals.length > 1) {
+        final firstVital = vitals.last; // oldest
+        final lastVital = vitals.first; // newest
+
+        context.writeln("TRENDS OVER PERIOD:");
+        context.writeln(
+          "• Heart Rate: ${firstVital.heartRate}bpm → ${lastVital.heartRate}bpm (${lastVital.heartRate - firstVital.heartRate > 0 ? '+' : ''}${lastVital.heartRate - firstVital.heartRate})",
+        );
+        context.writeln(
+          "• SpO₂: ${firstVital.spo2}% → ${lastVital.spo2}% (${lastVital.spo2 - firstVital.spo2 > 0 ? '+' : ''}${lastVital.spo2 - firstVital.spo2})",
+        );
+        context.writeln(
+          "• Weight: ${firstVital.weight}lbs → ${lastVital.weight}lbs (${lastVital.weight - firstVital.weight > 0 ? '+' : ''}${(lastVital.weight - firstVital.weight).toStringAsFixed(1)})",
+        );
+
+        // ADD MOOD AND PAIN TRENDS:
+        if (firstVital.moodValue != null && lastVital.moodValue != null) {
+          context.writeln(
+            "• Mood: ${firstVital.moodValue}/10 → ${lastVital.moodValue}/10 (${lastVital.moodValue! - firstVital.moodValue! > 0 ? '+' : ''}${lastVital.moodValue! - firstVital.moodValue!})",
+          );
+        }
+        if (firstVital.painValue != null && lastVital.painValue != null) {
+          context.writeln(
+            "• Pain Level: ${firstVital.painValue}/10 → ${lastVital.painValue}/10 (${lastVital.painValue! - firstVital.painValue! > 0 ? '+' : ''}${lastVital.painValue! - firstVital.painValue!})",
+          );
+        }
+        context.writeln("");
+      }
+
+      context.writeln("You can ask questions about:");
+      context.writeln("• Health trends and patterns");
+      context.writeln("• Normal ranges and what values mean");
+      context.writeln("• Potential health concerns or improvements");
+      context.writeln("• Medication adherence insights");
+      context.writeln("• Lifestyle recommendations");
+      context.writeln("• Data interpretation and analysis");
+      context.writeln("• Mood and pain level correlations"); // ADD THIS
+
+      return context.toString();
     }
-
-    // Add trends and patterns
-    if (vitals.length > 1) {
-      final firstVital = vitals.last; // oldest
-      final lastVital = vitals.first; // newest
-
-      context.writeln("TRENDS OVER PERIOD:");
-      context.writeln(
-        "• Heart Rate: ${firstVital.heartRate}bpm → ${lastVital.heartRate}bpm (${lastVital.heartRate - firstVital.heartRate > 0 ? '+' : ''}${lastVital.heartRate - firstVital.heartRate})",
-      );
-      context.writeln(
-        "• SpO₂: ${firstVital.spo2}% → ${lastVital.spo2}% (${lastVital.spo2 - firstVital.spo2 > 0 ? '+' : ''}${lastVital.spo2 - firstVital.spo2})",
-      );
-      context.writeln(
-        "• Weight: ${firstVital.weight}lbs → ${lastVital.weight}lbs (${lastVital.weight - firstVital.weight > 0 ? '+' : ''}${(lastVital.weight - firstVital.weight).toStringAsFixed(1)})",
-      );
-      context.writeln("");
-    }
-
-    context.writeln("You can ask questions about:");
-    context.writeln("• Health trends and patterns");
-    context.writeln("• Normal ranges and what values mean");
-    context.writeln("• Potential health concerns or improvements");
-    context.writeln("• Medication adherence insights");
-    context.writeln("• Lifestyle recommendations");
-    context.writeln("• Data interpretation and analysis");
-
-    return context.toString();
   }
 
+  // Ensures a non-nullable String is always returned for health data context.
+  // If no data, returns a default message; otherwise, returns the summary.
+  // This prevents null errors and avoids throwing exceptions.
+  // Always returns a valid String for display.
   Widget _buildAIAssistantCard() {
     return Card(
       elevation: 4,
@@ -667,6 +787,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     Color? primaryColor,
     String? unit,
   }) {
+    final displaySpots = spots.isEmpty ? [FlSpot(0, 0)] : spots;
+    final bool hasData = spots.isNotEmpty;
+
     return Card(
       elevation: 4,
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -729,99 +852,127 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 ],
               ),
               const SizedBox(height: 16),
-              SizedBox(
-                height: 200,
-                child: LineChart(
-                  LineChartData(
-                    minY: minY,
-                    maxY: maxY,
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: spots,
-                        isCurved: true,
-                        color: primaryColor ?? Colors.blue.shade600,
-                        barWidth: 3,
-                        dotData: FlDotData(
-                          show: spots.length <= 10,
-                          getDotPainter: (spot, percent, barData, index) =>
-                              FlDotCirclePainter(
-                                radius: 4,
-                                color: primaryColor ?? Colors.blue.shade600,
-                                strokeWidth: 2,
-                                strokeColor: Colors.white,
-                              ),
+              if (!hasData)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.show_chart,
+                          size: 48,
+                          color: Colors.grey.shade300,
                         ),
-                        belowBarData: BarAreaData(
-                          show: true,
-                          color: (primaryColor ?? Colors.blue.shade600)
-                              .withValues(alpha: 0.1),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No data available for this period',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
-                      ),
-                    ],
-                    titlesData: FlTitlesData(
-                      rightTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      topTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 50,
-                          getTitlesWidget: (value, meta) {
-                            return Text(
-                              value.toStringAsFixed(0),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey.shade600,
-                              ),
-                            );
-                          },
+                      ],
+                    ),
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 200,
+                  child: LineChart(
+                    LineChartData(
+                      minY: minY,
+                      maxY: maxY,
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: spots,
+                          isCurved: true,
+                          color: primaryColor ?? Colors.blue.shade600,
+                          barWidth: 3,
+                          dotData: FlDotData(
+                            show: spots.length <= 10,
+                            getDotPainter: (spot, percent, barData, index) =>
+                                FlDotCirclePainter(
+                                  radius: 4,
+                                  color: primaryColor ?? Colors.blue.shade600,
+                                  strokeWidth: 2,
+                                  strokeColor: Colors.white,
+                                ),
+                          ),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: (primaryColor ?? Colors.blue.shade600)
+                                .withValues(alpha: 0.1),
+                          ),
                         ),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            final idx = value.toInt();
-                            if (idx < 0 || idx >= vitals.length) {
-                              return const SizedBox();
-                            }
-                            final date = vitals[idx].timestamp;
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                '${date.month}/${date.day}',
+                      ],
+                      titlesData: FlTitlesData(
+                        rightTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 50,
+                            getTitlesWidget: (value, meta) {
+                              return Text(
+                                value.toStringAsFixed(0),
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: Colors.grey.shade600,
                                 ),
-                              ),
-                            );
-                          },
-                          reservedSize: 32,
+                              );
+                            },
+                          ),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              final idx = value.toInt();
+                              if (idx < 0 || idx >= vitals.length) {
+                                return const SizedBox();
+                              }
+                              final date = vitals[idx].timestamp;
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                  '${date.month}/${date.day}',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              );
+                            },
+                            reservedSize: 32,
+                          ),
+                        ),
+                      ),
+                      gridData: FlGridData(
+                        show: true,
+                        drawHorizontalLine: true,
+                        drawVerticalLine: false,
+                        getDrawingHorizontalLine: (value) {
+                          return FlLine(
+                            color: Colors.grey.shade300,
+                            strokeWidth: 1,
+                          );
+                        },
+                      ),
+                      borderData: FlBorderData(
+                        show: true,
+                        border: Border.all(
+                          color: Colors.grey.shade300,
+                          width: 1,
                         ),
                       ),
                     ),
-                    gridData: FlGridData(
-                      show: true,
-                      drawHorizontalLine: true,
-                      drawVerticalLine: false,
-                      getDrawingHorizontalLine: (value) {
-                        return FlLine(
-                          color: Colors.grey.shade300,
-                          strokeWidth: 1,
-                        );
-                      },
-                    ),
-                    borderData: FlBorderData(
-                      show: true,
-                      border: Border.all(color: Colors.grey.shade300, width: 1),
-                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -830,22 +981,19 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }
 
   Widget _buildSummaryGrid() {
+    final dashData = dashboard ?? _getDefaultDashboard();
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Use responsive aspect ratio and cross count based on screen width
         double aspectRatio;
         int crossAxisCount;
 
         if (constraints.maxWidth < 350) {
-          // Very small screens: single column
           aspectRatio = 6.0;
           crossAxisCount = 1;
         } else if (constraints.maxWidth < 450) {
-          // Small screens: higher aspect ratio for 2 columns
           aspectRatio = 4.5;
           crossAxisCount = 2;
         } else {
-          // Normal screens: standard 2 columns
           aspectRatio = 3.5;
           crossAxisCount = 2;
         }
@@ -860,23 +1008,28 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           children: [
             _buildSummaryItem(
               'Adherence Rate',
-              '${dashboard!.adherenceRate?.toStringAsFixed(1) ?? 'N/A'}%',
+              '${dashData.adherenceRate?.toStringAsFixed(1) ?? '0.0'}%',
               Icons.check_circle,
+              hasData: dashData.adherenceRate != null,
             ),
             _buildSummaryItem(
               'Avg Heart Rate',
-              '${dashboard!.avgHeartRate?.toStringAsFixed(0) ?? 'N/A'} bpm',
+              '${dashData.avgHeartRate?.toStringAsFixed(0) ?? '0'} bpm',
               Icons.favorite,
+              hasData: dashData.avgHeartRate != null,
+            ),
+            // ... other summary items ...
+            _buildSummaryItem(
+              'Avg Mood',
+              '${dashData.avgMoodValue?.toStringAsFixed(1) ?? '0.0'}/10',
+              Icons.mood,
+              hasData: dashData.avgMoodValue != null,
             ),
             _buildSummaryItem(
-              'Avg SpO₂',
-              '${dashboard!.avgSpo2?.toStringAsFixed(1) ?? 'N/A'}%',
-              Icons.air,
-            ),
-            _buildSummaryItem(
-              'Avg Blood Pressure',
-              '${dashboard!.avgSystolic?.toStringAsFixed(0) ?? 'N/A'}/${dashboard!.avgDiastolic?.toStringAsFixed(0) ?? 'N/A'}',
-              Icons.monitor_heart,
+              'Avg Pain Level',
+              '${dashData.avgPainValue?.toStringAsFixed(1) ?? '0.0'}/10',
+              Icons.healing,
+              hasData: dashData.avgPainValue != null,
             ),
           ],
         );
@@ -884,22 +1037,37 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     );
   }
 
-  Widget _buildSummaryItem(String title, String value, IconData icon) {
+  Widget _buildSummaryItem(
+    String title,
+    String value,
+    IconData icon, {
+    bool hasData = true,
+  }) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Adjust sizing based on available width
-        double iconSize = constraints.maxWidth < 150 ? 10 : 12;
-        double titleFontSize = constraints.maxWidth < 150 ? 8 : 9;
-        double valueFontSize = constraints.maxWidth < 150 ? 10 : 12;
-        double padding = constraints.maxWidth < 150 ? 4 : 6;
-
+        // Define sizes based on constraints
+        double padding = 16;
+        double iconSize = 28;
+        double titleFontSize = 14;
+        double valueFontSize = 18;
+        if (constraints.maxWidth < 200) {
+          padding = 8;
+          iconSize = 20;
+          titleFontSize = 12;
+          valueFontSize = 14;
+        } else if (constraints.maxWidth < 300) {
+          padding = 12;
+          iconSize = 24;
+          titleFontSize = 13;
+          valueFontSize = 16;
+        }
         return Container(
           padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
+            color: Colors.white.withValues(alpha: hasData ? 0.15 : 0.1),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.3),
+              color: Colors.white.withValues(alpha: hasData ? 0.3 : 0.2),
               width: 1,
             ),
           ),
@@ -911,7 +1079,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 children: [
                   Icon(
                     icon,
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Colors.white.withValues(alpha: hasData ? 0.9 : 0.6),
                     size: iconSize,
                   ),
                   const SizedBox(width: 4),
@@ -931,15 +1099,24 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               ),
               const SizedBox(height: 1),
               Text(
-                value,
+                hasData ? value : 'No data',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.white.withValues(alpha: hasData ? 1.0 : 0.6),
                   fontSize: valueFontSize,
                   fontWeight: FontWeight.bold,
                 ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
+              if (!hasData)
+                Text(
+                  'No records yet',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: titleFontSize * 0.8,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
             ],
           ),
         );
@@ -1027,6 +1204,15 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       for (int i = 0; i < vitals.length; i++)
         FlSpot(i.toDouble(), vitals[i].weight),
     ];
+    List<FlSpot> moodSpots = _getSafeSpots(
+      vitals.map((v) => v.moodValue?.toDouble()).toList(),
+      defaultValue: 0.0,
+    );
+
+    List<FlSpot> painSpots = _getSafeSpots(
+      vitals.map((v) => v.painValue?.toDouble()).toList(),
+      defaultValue: 0.0,
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -1256,7 +1442,25 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
+                      if (moodSpots.isNotEmpty)
+                        buildChart(
+                          'Mood Level',
+                          moodSpots,
+                          minY: 1,
+                          maxY: 10,
+                          primaryColor: Colors.amber.shade600,
+                          unit: '/10',
+                        ),
 
+                      if (painSpots.isNotEmpty)
+                        buildChart(
+                          'Pain Level',
+                          painSpots,
+                          minY: 1,
+                          maxY: 10,
+                          primaryColor: Colors.red.shade800,
+                          unit: '/10',
+                        ),
                       buildChart(
                         'Heart Rate',
                         heartRateSpots,

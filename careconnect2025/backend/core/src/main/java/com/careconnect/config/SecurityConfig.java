@@ -56,10 +56,12 @@ public class SecurityConfig {
                         "/api/v1/auth/**",  // Support both URL patterns
                         "/api/auth/**",     // Support auth endpoints under /api/auth/
                         "/v1/api/users/reset-password",  // Allow password reset (current)
+                        "/v1/api/users/setup-password",
                         "/v1/api/caregivers/**",
                         "/v1/api/subscriptions/**",
                         "/v1/api/email-test/**",  // Allow email testing endpoints
-                        "/v1/api/test/**"  // Allow test endpoints (health check, swagger info)
+                        "/v1/api/test/**",  // Allow test endpoints (health check, swagger info)
+                        "/v1/api/patients/*/family-members"  // Temporarily allow family member creation for testing
                 ).permitAll()
 
                 /* ---------- public static assets ------------------------ */

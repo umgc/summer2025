@@ -14,23 +14,18 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    private static final Duration ACCESS_TTL        = Duration.ofMinutes(15);
     private static final Duration SLIDING_WINDOW    = Duration.ofHours(3);
     private static final Duration RENEW_THRESHOLD   = Duration.ofMinutes(5);
     private static final String   ISSUER            = "careconnect";
 
     private final Key key;
-    // private final long validityMillis;
+    private final Duration accessTtl;
 
-    // public JwtTokenProvider(@Value("${security.jwt.secret}") String secret,
-    //                         @Value("${security.jwt.ms:3600000}") long validityMillis) {
-    //     this.key = Keys.hmacShaKeyFor(secret.getBytes()); 
-    //     this.validityMillis = validityMillis;
-    // }
-
-    public JwtTokenProvider(@Value("${security.jwt.secret}") String secretBase64) {
+    public JwtTokenProvider(@Value("${security.jwt.secret}") String secretBase64,
+                           @Value("${jwt.expiration.ms:10800000}") long expirationMs) {
         // decode once;  256-bit (32-byte) secret recommended
         this.key = Keys.hmacShaKeyFor(java.util.Base64.getDecoder().decode(secretBase64));
+        this.accessTtl = Duration.ofMillis(expirationMs);
     }
 
     // public String createToken(String email, Role role) {
@@ -49,7 +44,7 @@ public class JwtTokenProvider {
     // }
 
     public String createToken(String email, Role role) {
-        return buildToken(email, role, ACCESS_TTL);
+        return buildToken(email, role, accessTtl);
     }
 
     private String buildToken(String email, Role role, Duration ttl) {
@@ -98,7 +93,7 @@ public class JwtTokenProvider {
     public String refresh(Claims oldClaims) {
         String email = oldClaims.getSubject();
         Role   role  = Role.valueOf(oldClaims.get("role", String.class));
-        return buildToken(email, role, ACCESS_TTL);
+        return buildToken(email, role, accessTtl);
     }
 
     public Claims getClaims(String token) {

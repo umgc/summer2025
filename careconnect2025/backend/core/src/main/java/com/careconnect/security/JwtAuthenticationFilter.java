@@ -5,6 +5,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private static final String COOKIE_NAME = "AUTH";
     
     // Paths that should be excluded from JWT authentication
@@ -39,6 +42,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwt;
     private final UserDetailsService uds;
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
@@ -52,13 +57,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain chain)
             throws ServletException, IOException {
 
+        String requestURI = req.getRequestURI();
+        log.debug("Processing JWT authentication for: {}", requestURI);
+
         /* ---------- 1. Find token (header or cookie) --------------------- */
         String token = resolveToken(req);
+        log.debug("Resolved token: {}", token != null ? "present" : "null");
 
         /* ---------- 2. Validate & build Authentication ------------------- */
         if (token != null && jwt.validateToken(token)) {
+            log.debug("Token is valid, processing authentication");
             Claims claims = jwt.getClaims(token);
             String email  = claims.getSubject();
+            log.debug("Token email subject: {}", email);
 
             UserDetails userDetails = uds.loadUserByUsername(email);
             UsernamePasswordAuthenticationToken auth =
@@ -66,6 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         userDetails, null, userDetails.getAuthorities());
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
             SecurityContextHolder.getContext().setAuthentication(auth);
+            log.debug("Authentication set for user: {}", email);
 
             /* ---------- 3. Silent renew (<5 min left) -------------------- */
             if (jwt.needsRenewal(claims)) {
@@ -75,6 +87,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .maxAge(Duration.ofHours(3))            // sliding-window cap
                         .build();
                 res.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+                log.debug("Token renewed for user: {}", email);
+            }
+        } else {
+            if (token != null) {
+                log.warn("Invalid token provided");
+            } else {
+                log.debug("No token found in request");
             }
         }
 

@@ -13,5 +13,7 @@ public record VitalSampleDTO(
         Double spo2,
         Integer systolic,
         Integer diastolic,
-        Double weight
+        Double weight,
+        Integer moodValue,         // 1-10 scale
+        Integer painValue          // 1-10 scale
 ) {}

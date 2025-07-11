@@ -26,8 +26,7 @@ class UserSession {
       id: json['id'],
       email: json['email'],
       role: json['role'],
-      token:
-          json['token'] ?? '', // Provide default empty string if token is null
+      token: json['token'] ?? '',
       patientId: json['patientId'],
       caregiverId: json['caregiverId'],
       name: json['name'],
@@ -45,6 +44,11 @@ class UserSession {
       'name': name,
     };
   }
+
+  bool get isFamilyMember => role == 'FAMILY_MEMBER';
+  bool get isCaregiver => role == 'CAREGIVER';
+  bool get isPatient => role == 'PATIENT';
+  bool get hasWriteAccess => role == 'CAREGIVER';
 }
 
 class UserProvider extends ChangeNotifier {
