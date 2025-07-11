@@ -109,6 +109,13 @@ module "sfn_sm" {
   default_tags    = var.default_tags
 }
 
+module "amplify" {
+  source  = "./modules/amplify"
+  default_tags    = var.default_tags
+  primary_region = var.primary_region
+  cc_app_role_arn = module.iam.cc_app_role_arn
+}
+
 
 # module "cognito" {
 #   source       = "./modules/cognito"
