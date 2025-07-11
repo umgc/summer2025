@@ -19,6 +19,10 @@ public class FamilyMemberLink {
     @JoinColumn(name = "patient_user_id")
     private User patientUser;
 
+    // Denormalized patient_id for faster queries (avoiding joins)
+    @Column(name = "patient_id")
+    private Long patientId;
+
     @ManyToOne
     @JoinColumn(name = "granted_by")
     private User grantedBy;
@@ -95,7 +99,17 @@ public class FamilyMemberLink {
     public void setFamilyUser(User familyUser) { this.familyUser = familyUser; }
 
     public User getPatientUser() { return patientUser; }
-    public void setPatientUser(User patientUser) { this.patientUser = patientUser; }
+    public void setPatientUser(User patientUser) { 
+        this.patientUser = patientUser;
+        // Auto-populate patientId when patientUser is set
+        if (patientUser != null) {
+            // Find patient by user to get patient ID
+            // This will be handled in the service layer
+        }
+    }
+
+    public Long getPatientId() { return patientId; }
+    public void setPatientId(Long patientId) { this.patientId = patientId; }
 
     public User getGrantedBy() { return grantedBy; }
     public void setGrantedBy(User grantedBy) { this.grantedBy = grantedBy; }

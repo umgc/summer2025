@@ -4,8 +4,13 @@ import '../../../../services/auth_service.dart';
 
 class PasswordResetConfirmScreen extends StatefulWidget {
   final String token;
+  final String email;
 
-  const PasswordResetConfirmScreen({super.key, required this.token});
+  const PasswordResetConfirmScreen({
+    super.key,
+    required this.token,
+    required this.email,
+  });
 
   @override
   State<PasswordResetConfirmScreen> createState() =>
@@ -61,7 +66,8 @@ class _PasswordResetConfirmScreenState
 
     try {
       final result = await AuthService.resetPassword(
-        token: widget.token,
+        email: widget.email,
+        resetToken: widget.token,
         newPassword: _passwordController.text.trim(),
       );
 

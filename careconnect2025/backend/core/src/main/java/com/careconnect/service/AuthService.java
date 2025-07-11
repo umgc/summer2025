@@ -18,9 +18,11 @@ import com.careconnect.dto.LoginRequest;
 import com.careconnect.dto.LoginResponse;
 import com.careconnect.model.Caregiver;
 import com.careconnect.model.Patient;
+import com.careconnect.model.FamilyMember;
 import com.careconnect.model.ProfessionalInfo;
 import com.careconnect.model.User;
 import com.careconnect.repository.CaregiverRepository;
+import com.careconnect.repository.FamilyMemberRepository;
 import com.careconnect.repository.PatientRepository;
 import com.careconnect.repository.UserRepository;
 import com.careconnect.security.JwtTokenProvider;
@@ -66,6 +68,9 @@ public class AuthService {
 
     @Autowired
     private CaregiverRepository caregivers;
+
+    @Autowired 
+    private FamilyMemberRepository familyMembers;
 
     @Autowired
     private JwtTokenProvider jwt;
@@ -260,10 +265,14 @@ public LoginResponse loginV2(LoginRequest req,
             if (c != null) { caregiverId = c.getId(); name = c.getFirstName()+" "+c.getLastName(); }
         }
         case FAMILY_MEMBER -> {
-            // TODO: FAMILY_MEMBER implementation
+            FamilyMember fm = familyMembers.findByUser(user).orElse(null);
+            if (fm != null) {
+                name = fm.getFirstName() + " " + fm.getLastName();
+                caregiverId = fm.getId(); 
+            }
         }
         case ADMIN -> {
-            // TODO: ADMIN implementation
+            name = user.getName();
         }
     }
 
@@ -319,10 +328,16 @@ public LoginResponse loginV2(LoginRequest req,
                 if (c != null) { caregiverId = c.getId(); name = c.getFirstName()+" "+c.getLastName(); }
             }
             case FAMILY_MEMBER -> {
-                // TODO: FAMILY_MEMBER implementation
+                FamilyMember fm = familyMembers.findByUser(user).orElse(null);
+                if (fm != null) {
+                    name = fm.getFirstName() + " " + fm.getLastName();
+                    // Set the family member's ID so it can be used to fetch patient relationships later
+                    caregiverId = fm.getId(); // Using caregiverId field to store family member ID
+                }
             }
             case ADMIN -> {
-                // TODO: ADMIN implementation
+                // Admin case - just use the user's name
+                name = user.getName();
             }
         }
 
@@ -489,11 +504,11 @@ public LoginResponse loginV2(LoginRequest req,
             HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
 
             // Use exchange method to send the request with explicit headers
-            ResponseEntity<Map> response = restTemplate.exchange(
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
                 tokenUrl,
-                HttpMethod.POST, // Specify POST method
+                HttpMethod.POST,
                 requestEntity,
-                Map.class
+                new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {}
             );
 
             // Add logging for the response body for further debugging if needed
@@ -548,7 +563,12 @@ public LoginResponse loginV2(LoginRequest req,
             String userInfoUrl = "https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + accessToken;
 
             RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<Map> response = restTemplate.getForEntity(userInfoUrl, Map.class);
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                userInfoUrl,
+                HttpMethod.GET,
+                null,
+                new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {}
+            );
 
             if (response.getBody() == null) {
                 throw new AuthenticationException("No user info received from Google");

@@ -9,8 +9,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../widgets/ai_chat.dart';
 
 class CaregiverDashboard extends StatefulWidget {
+  final String userRole;
+  final int? patientId;
   final int caregiverId;
-  const CaregiverDashboard({super.key, this.caregiverId = 1});
+
+  const CaregiverDashboard({
+    super.key,
+    this.userRole = 'CAREGIVER',
+    this.patientId,
+    this.caregiverId = 1,
+  });
 
   @override
   State<CaregiverDashboard> createState() => _CaregiverDashboardState();
@@ -24,6 +32,13 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
   @override
   void initState() {
     super.initState();
+    fetchPatients();
+  }
+
+  @override
+  void didUpdateWidget(CaregiverDashboard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Refresh patients when widget updates
     fetchPatients();
   }
 
@@ -69,7 +84,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
       final response = await ApiService.getPatientVitals(
         patientId,
       ).timeout(const Duration(seconds: 180));
-      if (response.statusCode == 200) {
+      if (response != null && response.statusCode == 200) {
         final List data = json.decode(response.body);
         return List<Map<String, dynamic>>.from(data);
       }
@@ -144,6 +159,9 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final isFamilyMember =
+        Provider.of<UserProvider>(context).user?.role == 'FAMILY_MEMBER';
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -154,98 +172,149 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue.shade700),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, size: 30),
-                  ),
-                  const SizedBox(height: 8),
-                  Consumer<UserProvider>(
-                    builder: (context, userProvider, child) {
-                      final userName =
-                          userProvider.user?.name ?? 'Caregiver Name';
-                      return Text(
-                        userName,
+      // Replace the existing drawer in the build method with this:
+      drawer: Consumer<UserProvider>(
+        builder: (context, userProvider, child) {
+          final user = userProvider.user;
+          final isFamilyMember = user?.role == 'FAMILY_MEMBER';
+
+          return Drawer(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                DrawerHeader(
+                  decoration: BoxDecoration(color: Colors.blue.shade700),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const CircleAvatar(
+                        radius: 28,
+                        backgroundColor: Colors.white,
+                        child: Icon(Icons.person, size: 30),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        user?.name ?? 'User Name',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
-                      );
+                      ),
+                      Text(
+                        isFamilyMember ? 'Family Member' : 'Caregiver',
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.dashboard),
+                  title: const Text('Dashboard'),
+                  onTap: () => Navigator.pop(context),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.emoji_events),
+                  title: const Text('Gamification'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/gamification');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.people),
+                  title: Text(isFamilyMember ? 'My Patients' : 'Patients'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (isFamilyMember) {
+                      context.go('/family-patients');
+                    } else {
+                      context.go('/patients');
+                    }
+                  },
+                ),
+                // Only show these options for caregivers
+                if (!isFamilyMember) ...[
+                  ListTile(
+                    leading: const Icon(Icons.person_add),
+                    title: const Text('Register Patient'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.go('/register/patient');
                     },
                   ),
-                  const Text(
-                    'Caregiver',
-                    style: TextStyle(color: Colors.white70),
+                  ListTile(
+                    leading: const Icon(Icons.payment),
+                    title: const Text('Subscribe'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.go('/select-package');
+                    },
                   ),
                 ],
-              ),
+                // Show read-only badge for family members
+                if (isFamilyMember)
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: Colors.blue.shade700,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Read-only access',
+                            style: TextStyle(
+                              color: Colors.blue.shade700,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.settings),
+                  title: const Text('Settings'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/settings');
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.clear();
+                    if (!context.mounted) return;
+                    context.go('/');
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.dashboard),
-              title: const Text('Dashboard'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.emoji_events),
-              title: const Text('Gamification'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/gamification');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.people),
-              title: const Text('Social Network'),
-              onTap: () async {
-                final prefs = await SharedPreferences.getInstance();
-                final userId = prefs.getString('userId');
-                Navigator.pop(context);
-                if (userId != null) {
-                  context.go('/social-feed?userId=$userId');
-                } else {
-                  context.go('/social-feed?userId=1');
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.payment),
-              title: const Text('Subscribe'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/select-package');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/settings');
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Logout', style: TextStyle(color: Colors.red)),
-              onTap: () async {
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.clear();
-                if (!context.mounted) return;
-                context.go('/');
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
       body: Stack(
         children: [
@@ -267,9 +336,11 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                             color: Colors.grey.shade400,
                           ),
                           const SizedBox(height: 16),
-                          const Text(
-                            'No patients found',
-                            style: TextStyle(
+                          Text(
+                            isFamilyMember
+                                ? 'No accessible patients'
+                                : 'No patients found',
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w500,
                               color: Colors.grey,

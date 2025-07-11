@@ -17,7 +17,7 @@ class PatientStatusPage extends StatefulWidget {
 
 class _PatientStatusPageState extends State<PatientStatusPage> {
   Patient? patient;
-  DashboardAnalyticsModel? vitals;
+  DashboardAnalytics? vitals;
   bool loading = true;
   String? error;
 
@@ -75,7 +75,7 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
         return;
       }
       final vitalsData = json.decode(vitalsRes.body);
-      vitals = DashboardAnalyticsModel.fromJson(vitalsData);
+      vitals = DashboardAnalytics.fromJson(vitalsData);
 
       setState(() {
         loading = false;
@@ -197,7 +197,7 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
     );
   }
 
-  Widget buildVitalsSummary(DashboardAnalyticsModel? vitals) {
+  Widget buildVitalsSummary(DashboardAnalytics? vitals) {
     if (vitals == null) {
       return const Text('No vitals data available for summary.');
     }

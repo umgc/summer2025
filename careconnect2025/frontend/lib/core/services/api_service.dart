@@ -178,10 +178,12 @@ class ApiService {
     required String resetToken,
     required String newPassword,
   }) async {
-    final url = Uri.parse('${ApiConstants.users}/reset-password');
     return await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
+      Uri.parse('${ApiConstants.users}/reset-password'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
       body: jsonEncode({
         'username': username,
         'resetToken': resetToken,

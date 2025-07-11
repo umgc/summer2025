@@ -72,39 +72,47 @@ public class EmailService {
         /**
      * Send password setup email with backend-generated credentials
      */
-    public void sendPasswordSetupEmailWithCredentials(String recipientEmail, String passwordSetupToken, String firstName, String username, String tempPassword) {
-        String passwordSetupLink = frontendBaseUrl + "/setup-password?token=" + passwordSetupToken;
-        String subject = "CareConnect - Your Account Credentials & Set Up Password";
-        String htmlContent = buildPasswordSetupEmailWithCredentialsHtml(firstName, passwordSetupLink, username, tempPassword);
+    public void sendPasswordSetupEmailWithCredentials(String recipientEmail, String passwordSetupToken, String firstName, String username, String password) {
+        String setupLink = frontendBaseUrl + "/setup-password?token=" + passwordSetupToken;
+        String subject = "Welcome to CareConnect - Complete Your Registration";
+        
+        boolean isTemporaryPassword = password.length() == 12 && password.matches(".*[A-Z].*[a-z].*[0-9].*[!@#$%^&*()_+\\-=].*");
+        String htmlContent = buildWelcomeEmailHtml(firstName, setupLink, username, password, isTemporaryPassword);
+        
         String textContent = "Hello " + (firstName != null ? firstName : "") + ",\n\n" +
                 "Your CareConnect account has been created.\n" +
                 "Username: " + username + "\n" +
-                "Temporary Password: " + tempPassword + "\n\n" +
-                "Please set up your password using the following link: " + passwordSetupLink + "\n\n" +
-                "For security, please change your password after logging in.";
+                (isTemporaryPassword ? "Temporary Password: " : "Password: ") + password + "\n\n" +
+                "Please complete your registration by clicking this link: " + setupLink + "\n\n" +
+                (isTemporaryPassword ? "For security, please change your password after logging in." : "");
+        
         sendEmail(recipientEmail, subject, htmlContent, textContent);
     }
 
     /**
      * HTML template for password setup email with credentials
      */
-    private String buildPasswordSetupEmailWithCredentialsHtml(String firstName, String passwordSetupLink, String username, String tempPassword) {
+    private String buildWelcomeEmailHtml(String firstName, String setupLink, String username, String password, boolean isTemporary) {
         return "<html><body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>" +
                 "<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>" +
                 "<h2 style='color: #007bff;'>Welcome to CareConnect!</h2>" +
                 "<p>Hello " + (firstName != null ? firstName : "") + ",</p>" +
-                "<p>Your CareConnect account has been created. Here are your credentials:</p>" +
+                "<p>Your CareConnect account has been created. Here are your login credentials:</p>" +
                 "<div style='background: #f8f9fa; border-radius: 5px; padding: 15px; margin: 20px 0;'>" +
                 "<strong>Username (Email):</strong> " + username + "<br>" +
-                "<strong>Temporary Password:</strong> <span style='font-family: monospace;'>" + tempPassword + "</span>" +
+                "<strong>" + (isTemporary ? "Temporary Password" : "Password") + ":</strong> " +
+                "<span style='font-family: monospace;'>" + password + "</span>" +
                 "</div>" +
-                "<p style='color: #dc3545; font-weight: bold;'>For your security, please change your password after logging in.</p>" +
-                "<p>To set up your password, click the button below:</p>" +
-                "<p style='text-align: center; margin: 30px 0;'>" +
-                "<a href='" + passwordSetupLink + "' style='background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;'>SET UP PASSWORD</a>" +
-                "</p>" +
-                "<p>If the button doesn't work, copy and paste this link into your browser:</p>" +
-                "<p style='word-break: break-all; color: #666;'>" + passwordSetupLink + "</p>" +
+                "<p><strong>Next Steps:</strong></p>" +
+                "<ol>" +
+                "<li>Click the button below to complete your registration</li>" +
+                (isTemporary ? "<li>After registering, please change your temporary password</li>" : "") +
+                "</ol>" +
+                "<div style='text-align: center; margin: 30px 0;'>" +
+                "<a href='" + setupLink + "' style='background-color: #007bff; color: white; padding: 12px 24px; " +
+                "text-decoration: none; border-radius: 5px;'>Complete Registration</a>" +
+                "</div>" +
+                "</div>" +
                 "<p style='margin-top: 30px; font-size: 14px; color: #666;'>If you did not expect this email, please contact your caregiver.</p>" +
                 "</div></body></html>";
     }
@@ -141,6 +149,39 @@ public class EmailService {
         String textContent = "You've been invited to CareConnect. Set up your password: " + passwordSetupLink;
         
         sendEmail(recipientEmail, subject, htmlContent, textContent);
+    }
+
+    public void sendFamilyMemberAccessGrantedEmail(String recipientEmail, String firstName, String patientName) {
+        String loginLink = frontendBaseUrl + "/login";
+        String subject = "CareConnect - New Patient Access Granted";
+        String htmlContent = buildFamilyMemberAccessGrantedEmailHtml(firstName, patientName, loginLink);
+        String textContent = "Hello " + (firstName != null ? firstName : "") + ",\n\n" +
+                "You have been granted access to a new patient in CareConnect: " + patientName + ".\n\n" +
+                "You can now log in to view their information: " + loginLink + "\n\n" +
+                "Best regards,\nThe CareConnect Team";
+        
+        sendEmail(recipientEmail, subject, htmlContent, textContent);
+    }
+
+    /**
+     * HTML template for family member access granted email
+     */
+    private String buildFamilyMemberAccessGrantedEmailHtml(String firstName, String patientName, String loginLink) {
+        return "<html><body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>" +
+                "<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>" +
+                "<h2 style='color: #007bff;'>New Patient Access Granted</h2>" +
+                "<p>Hello " + (firstName != null ? firstName : "") + ",</p>" +
+                "<p>You have been granted access to a new patient in CareConnect:</p>" +
+                "<div style='background: #f8f9fa; border-radius: 5px; padding: 15px; margin: 20px 0;'>" +
+                "<strong>Patient:</strong> " + patientName +
+                "</div>" +
+                "<p>You can now log in to view their information and assist with their care.</p>" +
+                "<div style='text-align: center; margin: 30px 0;'>" +
+                "<a href='" + loginLink + "' style='background-color: #007bff; color: white; padding: 12px 24px; " +
+                "text-decoration: none; border-radius: 5px;'>Log In to CareConnect</a>" +
+                "</div>" +
+                "<p style='margin-top: 30px; font-size: 14px; color: #666;'>If you did not expect this access, please contact the patient or their caregiver.</p>" +
+                "</div></body></html>";
     }
 
     /**

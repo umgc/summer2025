@@ -34,6 +34,10 @@ public interface FamilyMemberLinkRepository extends JpaRepository<FamilyMemberLi
     @Query("SELECT fml FROM FamilyMemberLink fml WHERE fml.patientUser.id = :patientUserId AND fml.status = 'ACTIVE' AND (fml.expiresAt IS NULL OR fml.expiresAt > :now)")
     List<FamilyMemberLink> findActiveFamilyMembersByPatient(@Param("patientUserId") Long patientUserId, @Param("now") LocalDateTime now);
     
+    // Optimized queries using denormalized patient_id (faster, no joins needed)
+    @Query("SELECT fml FROM FamilyMemberLink fml WHERE fml.patientId = :patientId AND fml.status = 'ACTIVE' AND (fml.expiresAt IS NULL OR fml.expiresAt > :now)")
+    List<FamilyMemberLink> findActiveFamilyMembersByPatientId(@Param("patientId") Long patientId, @Param("now") LocalDateTime now);
+    
     boolean existsByFamilyUserAndPatientUserAndStatus(
         User familyUser, User patientUser, FamilyMemberLink.LinkStatus status);
 }

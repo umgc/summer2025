@@ -87,6 +87,63 @@ public class UserController {
     }
 
 
+    /**
+     * Set up password for new users using verification token (from patient registration)
+     */
+    @PostMapping("/setup-password")
+    @Operation(
+        summary = "Set up password for new user",
+        description = "Set up password for new users (patients) using verification token from registration email. This is different from password reset - it's for users who haven't set their password yet.",
+        tags = {"Authentication", "User Management"},
+        security = {}, // No authentication required for password setup
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Password setup request containing username (email), verification token, and new password",
+            required = true,
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = com.careconnect.dto.SetupPasswordRequest.class),
+                examples = @ExampleObject(
+                    name = "Password Setup Example",
+                    value = """
+                    {
+                        "username": "patient@example.com",
+                        "verificationToken": "c4de0569-80a6-44f5-a6ad-dd0adba19c6e",
+                        "newPassword": "MyNewPassword123!"
+                    }
+                    """
+                )
+            )
+        )
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Password setup successful",
+            content = @Content(mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                        "message": "Password setup completed successfully"
+                    }
+                    """)
+            )
+        ),
+        @ApiResponse(responseCode = "400", description = "Invalid request or token",
+            content = @Content(mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                        "error": "Invalid or expired verification token"
+                    }
+                    """)
+            )
+        )
+    })
+    public ResponseEntity<?> setupPassword(@RequestBody com.careconnect.dto.SetupPasswordRequest req) {
+        try {
+            userPasswordService.setupPasswordWithVerificationToken(req.username(), req.verificationToken(), req.newPassword());
+            return ResponseEntity.ok(Collections.singletonMap("message", "Password setup completed successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/search")
     public ResponseEntity<List<UserResponse>> searchUsers(
             @RequestParam String query,

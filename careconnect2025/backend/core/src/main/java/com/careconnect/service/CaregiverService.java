@@ -113,19 +113,22 @@ public Patient registerPatient(PatientRegistration reg) {
     // Generate a temporary token for password setup
     String passwordSetupToken = java.util.UUID.randomUUID().toString();
 
-    // Generate a backend random password
-    String randomPassword = generateRandomPassword(12);
-    String encodedPassword = encoder.encode(randomPassword);
+    // Always generate a random password for patient registration (they'll set their own via email)
+    String password = generateRandomPassword(12);
+    
+    String encodedPassword = encoder.encode(password);
 
     User user = User.builder()
             .email(reg.getEmail())
-            .passwordHash(encodedPassword) // Save encoded random password
+            .password(encodedPassword)  // Set both for consistency
+            .passwordHash(encodedPassword)
             .role(Role.PATIENT)
             .isVerified(false) // Not verified until password is set
             .verificationToken(passwordSetupToken) // Use this token for password setup
+            .createdAt(new java.sql.Timestamp(System.currentTimeMillis()))
             .build();
 
-    Address addr = toAddress(reg.getAddress());
+    Address addr = reg.getAddress() != null ? toAddress(reg.getAddress()) : null;
 
     Caregiver caregiver = null;
     if (reg.getCaregiverId() != null) {
@@ -152,13 +155,13 @@ public Patient registerPatient(PatientRegistration reg) {
             caregiverPatientLinkService.createPermanentLink(caregiver.getUser().getId(), savedPatient.getUser().getId(), "Patient registered by caregiver");
         }
         
-        // Send password setup email to patient, including username and random password
+        // Send password setup email to patient, including username and password
         emailService.sendPasswordSetupEmailWithCredentials(
             reg.getEmail(),
             passwordSetupToken,
             reg.getFirstName(),
             reg.getEmail(),
-            randomPassword
+            password // Use the actual password (either provided or generated)
         );
         
         return savedPatient;

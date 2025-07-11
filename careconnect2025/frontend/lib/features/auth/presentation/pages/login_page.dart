@@ -45,9 +45,11 @@ class _LoginPageState extends State<LoginPage> {
       await Future.delayed(const Duration(milliseconds: 100));
 
       if (user.role.toUpperCase() == 'CAREGIVER') {
-        context.go('/dashboard/caregiver');
+        context.go('/dashboard?role=CAREGIVER');
       } else if (user.role.toUpperCase() == 'PATIENT') {
         context.go('/dashboard/patient');
+      } else if (user.role.toUpperCase() == 'FAMILY_MEMBER') {
+        context.go('/dashboard?role=FAMILY_MEMBER');
       } else {
         setState(() {
           _error = 'Unknown user role: ${user.role}';

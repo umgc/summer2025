@@ -12,6 +12,8 @@ class ApiConstants {
   static final String _host = getBackendBaseUrl();
   static final String auth = '${_host}/v1/api/auth';
   static final String caregivers = '${_host}/v1/api/caregivers';
+  static final String users = '${_host}/v1/api/users';
+  static final String webBaseUrl = getWebBaseUrl();
   static String get baseUrl => _host;
 }
 
@@ -323,41 +325,74 @@ class AuthService {
     }
   }
 
-  static Future<String> requestPasswordReset(String email) async {
+  static Future<String> requestPasswordReset({required String email}) async {
     try {
-      final response = await ApiService.requestPasswordReset(email);
-      final data = jsonDecode(response.body);
+      // Fix: Use ApiConstants.auth which includes the full path
+      final fullUrl = '${ApiConstants.auth}/password/forgot';
+      print('🔍 Request password reset URL: $fullUrl');
+
+      final response = await http.post(
+        Uri.parse(fullUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
 
       if (response.statusCode == 200) {
-        print("✅ Password reset request: $data");
-        return data['message'] ?? 'Password reset email sent!';
+        final responseData = jsonDecode(response.body);
+        return responseData['message'] ??
+            'Password reset link sent to your email';
       } else {
-        print("❌ Password reset request error: $data");
-        throw Exception(data['error'] ?? 'Password reset request failed');
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['message'] ?? 'Failed to send reset link');
       }
     } catch (e) {
-      print("❌ Password reset request exception: $e");
-      rethrow;
+      throw Exception('Network error: ${e.toString()}');
     }
   }
 
   static Future<String> resetPassword({
-    required String token,
+    required String email,
+    required String resetToken,
     required String newPassword,
   }) async {
     try {
-      final response = await ApiService.resetPassword(
-        token: token,
-        newPassword: newPassword,
+      final response = await http.post(
+        Uri.parse('${ApiConstants.users}/reset-password'), // Correct endpoint
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'username': email, // Use email as username
+          'resetToken': resetToken, // 48-character token from email
+          'newPassword': newPassword,
+        }),
       );
+
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        print("✅ Password reset: $data");
+        print("✅ Password reset successful: $data");
         return data['message'] ?? 'Password reset successfully!';
       } else {
-        print("❌ Password reset error: $data");
-        throw Exception(data['error'] ?? 'Password reset failed');
+        print(
+          "❌ Password reset error: ${response.statusCode} - ${response.body}",
+        );
+        final errorMessage =
+            data['error'] ?? data['message'] ?? 'Password reset failed';
+
+        // Handle specific error cases
+        if (errorMessage.toLowerCase().contains('expired')) {
+          throw Exception(
+            'Password reset link has expired. Please request a new one.',
+          );
+        } else if (errorMessage.toLowerCase().contains('invalid')) {
+          throw Exception(
+            'Invalid reset token. Please request a new password reset.',
+          );
+        }
+
+        throw Exception(errorMessage);
       }
     } catch (e) {
       print("❌ Password reset exception: $e");
@@ -463,4 +498,38 @@ class AuthService {
   static Future<void> updateUserActivity() async {
     await AuthTokenManager.updateLastActivity();
   }
+
+  // static Future<String> setupPassword({
+  //   required String email,
+  //   required String resetToken,
+  //   required String newPassword,
+  // }) async {
+  //   try {
+  //     final fullUrl = '${ApiConstants.users}/reset-password';
+  //     final requestBody = {
+  //       'username': email,
+  //       'resetToken': resetToken,
+  //       'newPassword': newPassword,
+  //     };
+
+  //     final response = await http.post(
+  //       Uri.parse(fullUrl),
+  //       headers: {'Content-Type': 'application/json'},
+  //       body: jsonEncode(requestBody),
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       final responseData = jsonDecode(response.body);
+  //       return responseData['message'] ?? 'Password updated successfully';
+  //     } else {
+  //       final errorData = jsonDecode(response.body);
+  //       throw Exception(
+  //         errorData['message'] ??
+  //         errorData['error'] ??
+  //         'Failed to update password',
+  //       );
+  //     }
+  //   } catch (e)
+  //     throw Exception('Network error: ${e.toString()}');
+  //   }
 }

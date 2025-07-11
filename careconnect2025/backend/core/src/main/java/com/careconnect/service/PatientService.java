@@ -86,4 +86,5 @@ public class PatientService {
         User user = userRepository.findById(userId).orElse(null);
         return user != null && patientRepository.existsByUser(user);
     }
+
 }
