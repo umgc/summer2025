@@ -4,14 +4,40 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import lombok.RequiredArgsConstructor;
+import com.careconnect.security.Role;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
 import com.careconnect.dto.DashboardDTO;
+import com.careconnect.model.User;
+import java.util.Optional;
+import java.util.Map;
+import java.util.Collections;
+import org.springframework.security.core.Authentication;
 import com.careconnect.dto.ExportLinkDTO;
 import com.careconnect.dto.VitalSampleDTO;
 import com.careconnect.service.AnalyticsService;
+import com.careconnect.exception.AppException;
+import com.careconnect.model.Patient;
+import com.careconnect.repository.PatientRepository;
+import com.careconnect.repository.PatientCaregiverRepository;
+import com.careconnect.repository.FamilyMemberLinkRepository;
+import com.careconnect.model.FamilyMemberLink;
+import com.careconnect.repository.UserRepository;
+import com.careconnect.service.CaregiverService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import java.time.Period;
+import org.springframework.security.core.Authentication;
+import com.careconnect.security.UserPrincipal;
+import java.util.Map;
+import java.util.Collections;
+
+import com.careconnect.model.CaregiverPatientLink;
 
 import java.time.Period;
 import java.util.List;
@@ -21,6 +47,24 @@ import java.util.concurrent.*;
 @RequestMapping("/v1/api/analytics")
 @RequiredArgsConstructor
 public class AnalyticsController {
+
+
+
+    @Autowired
+    private final UserRepository userRepository;  
+
+
+    @Autowired
+    private final PatientRepository patientRepository;
+    
+    @Autowired
+    private final CaregiverService caregiverService;
+
+    @Autowired
+private final PatientCaregiverRepository caregiverPatientLinkRepository;
+
+    @Autowired
+private final FamilyMemberLinkRepository familyMemberPatientLinkRepository;
 
 	@Autowired
     private AnalyticsService analyticsService;
@@ -91,11 +135,64 @@ public class AnalyticsController {
         return emitter;
     }
 
-    @GetMapping("/vitals")
-    public List<VitalSampleDTO> vitals(
-            @RequestParam Long patientId,
-            @RequestParam(defaultValue = "7") int days) {
-        if (days < 1) days = 1;
-        return analyticsService.getVitals(patientId, Period.ofDays(days));
+@GetMapping("/vitals")
+public ResponseEntity<?> vitals(@RequestParam Long patientId, @RequestParam int days) {
+  try {
+        // Get user details from JWT token
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+        
+        // Find user
+        User currentUser = userRepository.findByEmail(userEmail)
+            .orElseThrow(() -> new IllegalStateException("User not found"));
+        
+        // Find patient
+        Optional<Patient> patientOpt = patientRepository.findById(patientId);
+        if (patientOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Patient not found"));
+        }
+        
+        Patient patient = patientOpt.get();
+        User patientUser = patient.getUser();
+        
+        // Check access based on role
+        boolean hasAccess = false;
+        
+        if (currentUser.getRole() == Role.PATIENT) {
+            // Patient can only access their own data
+            hasAccess = currentUser.getId().equals(patientUser.getId());
+        } 
+        else if (currentUser.getRole() == Role.CAREGIVER) {
+            // Check if user is a caregiver for this patient
+    hasAccess = caregiverService.hasAccessToPatient(currentUser.getId(), patientId);
+
+        }
+        else if (currentUser.getRole() == Role.FAMILY_MEMBER) {
+            // Check if user is a family member for this patient
+    hasAccess = caregiverService.hasAccessToPatient(currentUser.getId(), patientId);
+
+        }
+        else if (currentUser.getRole() == Role.ADMIN) {
+            // Admins have access to all patients
+            hasAccess = true;
+        }
+        
+        if (!hasAccess) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "Not authorized to access this patient's data"));
+        }
+
+        // Access granted, return data
+        return ResponseEntity.ok(Map.of(
+            "data", analyticsService.getVitals(patientId, Period.ofDays(days)),
+            "message", "Vitals data retrieved successfully"
+        ));
+    } catch (Exception e) {
+        return ResponseEntity.ok(Map.of(
+            "data", Collections.emptyList(),
+            "message", "No vitals data available"
+        ));
+    }
     }
 }

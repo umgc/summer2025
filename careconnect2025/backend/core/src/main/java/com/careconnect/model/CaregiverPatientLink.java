@@ -44,8 +44,9 @@ public class CaregiverPatientLink {
     private String notes;
 
     public enum LinkStatus {
-        ACTIVE, SUSPENDED, REVOKED, EXPIRED
+        PENDING, ACTIVE, SUSPENDED, REVOKED, EXPIRED, REJECTED
     }
+    
 
     public enum LinkType {
         PERMANENT, TEMPORARY, EMERGENCY
@@ -74,6 +75,18 @@ public class CaregiverPatientLink {
 
     public boolean isExpired() {
         return expiresAt != null && LocalDateTime.now().isAfter(expiresAt);
+    }
+
+        
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 
     // Getters and Setters

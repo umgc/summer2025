@@ -84,11 +84,16 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
       final response = await ApiService.getPatientVitals(
         patientId,
       ).timeout(const Duration(seconds: 180));
-      if (response != null && response.statusCode == 200) {
+
+      if (response.statusCode == 200) {
         final List data = json.decode(response.body);
         return List<Map<String, dynamic>>.from(data);
+      } else {
+        print('❌ Failed to fetch vitals: ${response.body}');
       }
-    } catch (_) {}
+    } catch (e) {
+      return [];
+    }
     return [];
   }
 

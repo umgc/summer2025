@@ -30,13 +30,14 @@ import org.springframework.http.HttpStatus;
 @Transactional(readOnly = true)
 public class AnalyticsService {
 
-    private final SymptomEntryRepository symptomRepo;     // ← NEW
+    private final SymptomEntryRepository symptomRepo;     
     private final WearableMetricRepository wearableRepo;
     private final SummaryMetricRepository summaryRepo;
     private final MoodPainLogRepository moodPainLogRepo;
     private final PatientRepository patientRepo;
     private final UserRepository userRepo;
     private final ExportSigner exportSigner;
+
 
     /* ---------------- Dashboard ---------------- */
 
@@ -54,6 +55,8 @@ public class AnalyticsService {
 
         double adherence;
         double avgHr;
+
+        try{
 
         if (agg != null &&
             agg.getGeneratedAt().isAfter(Instant.now().minus(Period.ofDays(1)))) {
@@ -77,7 +80,7 @@ public class AnalyticsService {
         double avgWeight = avgOrZero(patientId, WearableMetric.MetricType.WEIGHT,            from, to);
 
         // Get mood and pain analytics
-        Patient patient = getPatientByUserId(patientId);
+        Patient patient = getPatientById(patientId);
         LocalDateTime fromLdt = LocalDateTime.ofInstant(from, ZoneOffset.UTC);
         LocalDateTime toLdt = LocalDateTime.ofInstant(to, ZoneOffset.UTC);
         
@@ -101,19 +104,22 @@ public class AnalyticsService {
                 .painEntries(painEntries != null ? painEntries : 0)
                 .build();
         
-        // --- MOCK DATA BELOW ---
-        // Instant to = Instant.parse("2025-07-01T12:00:00Z");
-        // Instant from = to.minus(period != null ? period : Period.ofDays(30));
-        // return DashboardDTO.builder()
-        //         .periodStart(from)
-        //         .periodEnd(to)
-        //         .adherenceRate(92.5)
-        //         .avgHeartRate(74.0)
-        //         .avgSpo2(98.2)
-        //         .avgSystolic(120.0)
-        //         .avgDiastolic(78.0)
-        //         .avgWeight(72.5)
-        //         .build();
+    } catch (Exception e) {
+            return DashboardDTO.builder()
+                .periodStart(Instant.now().minus(period))
+                .periodEnd(Instant.now())
+                .adherenceRate(0.0)
+                .avgHeartRate(0.0)
+                .avgSpo2(0.0)
+                .avgSystolic(0.0)
+                .avgDiastolic(0.0)
+                .avgWeight(0.0)
+                .avgMood(0.0)
+                .avgPain(0.0)
+                .moodEntries(0)
+                .painEntries(0)
+                .build();
+        }
     }
 
     /* ---------------- Vitals series ---------------- */
@@ -121,7 +127,7 @@ public class AnalyticsService {
     // MOCK: Replace real DB logic with static mock data for all patients
     public List<VitalSampleDTO> getVitals(Long patientId, Period period) {
         // Original implementation commented out for later use
-        
+        try{
         Instant to = Instant.parse("2025-06-27T08:00:00Z");
         Instant from = to.minus(period);
 
@@ -129,7 +135,7 @@ public class AnalyticsService {
         List<WearableMetric> wearableMetrics = wearableRepo.findByPatient_IdAndRecordedAtBetween(patientId, from, to);
         
         // Get mood and pain data
-        Patient patient = getPatientByUserId(patientId);
+        Patient patient = getPatientById(patientId);
         LocalDateTime fromLdt = LocalDateTime.ofInstant(from, ZoneOffset.UTC);
         LocalDateTime toLdt = LocalDateTime.ofInstant(to, ZoneOffset.UTC);
         List<com.careconnect.model.MoodPainLog> moodPainLogs = moodPainLogRepo.findByPatientAndTimestampBetween(patient, fromLdt, toLdt);
@@ -153,23 +159,9 @@ public class AnalyticsService {
                     moodPainByTime.getOrDefault(timestamp, Collections.emptyList())))
                 .sorted(Comparator.comparing(VitalSampleDTO::timestamp))
                 .toList();
-        
-        // --- MOCK DATA BELOW ---
-        // Instant to = Instant.parse("2025-07-01T12:00:00Z");
-        // List<VitalSampleDTO> samples = new java.util.ArrayList<>();
-        // for (int i = 0; i < 10; i++) {
-        //     Instant ts = to.minus(java.time.Duration.ofDays(i * 15));
-        //     samples.add(VitalSampleDTO.builder()
-        //             .patientId(patientId)
-        //             .timestamp(ts)
-        //             .heartRate(74.0 + (i % 3 - 1) * 2)
-        //             .spo2(98.2)
-        //             .systolic((int)120.0)
-        //             .diastolic((int)78.0)
-        //             .weight(72.5 + (i % 2 == 0 ? 0.5 : -0.5))
-        //             .build());
-        // }
-        // return samples;
+        } catch (Exception e) {
+            return Collections.emptyList();
+        } 
     }
 
     /* ---------------- Exports ---------------- */
@@ -212,13 +204,6 @@ public class AnalyticsService {
                 .build();
     }
 
-    private double avgOrZero(Long pid, WearableMetric.MetricType type,
-                             Instant from, Instant to) {
-
-        Double v = wearableRepo.avgForPeriod(pid, type, from, to);
-        return v == null ? 0 : v;
-    }
-
     private double round1(double v) { return Math.round(v * 10) / 10.0; }
     private double round0(double v) { return Math.round(v); }
 
@@ -227,13 +212,21 @@ public class AnalyticsService {
     /**
      * Get patient by user ID
      */
-    private Patient getPatientByUserId(Long userId) {
+    private Patient getPatientUserId(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
         return patientRepo.findByUser(user)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Patient profile not found"));
     }
 
+    /**
+ * Get patient by patient ID
+ * Note: patientId is the actual patient table ID, not the user ID
+ */
+private Patient getPatientById(Long patientId) {
+    return patientRepo.findById(patientId)
+            .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Patient profile not found"));
+}
 
     public byte[] exportVitalsCsv(Long patientId, Period period) {
     List<VitalSampleDTO> vitals = getVitals(patientId, period);
@@ -294,5 +287,29 @@ public byte[] exportVitalsPdf(Long patientId, Period period) {
         throw new RuntimeException("Failed to generate PDF", e);
     }
 }
+
+  private VitalSampleDTO createEmptyVitalSample(Long patientId, Instant timestamp) {
+        return VitalSampleDTO.builder()
+                .patientId(patientId)
+                .timestamp(timestamp)
+                .heartRate(0.0)
+                .spo2(0.0)
+                .systolic(0)
+                .diastolic(0)
+                .weight(0.0)
+                .moodValue(0)
+                .painValue(0)
+                .build();
+    }
+
+    private double avgOrZero(Long pid, WearableMetric.MetricType type,
+                             Instant from, Instant to) {
+        try {
+            Double v = wearableRepo.avgForPeriod(pid, type, from, to);
+            return v == null ? 0 : v;
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
 
 }

@@ -402,7 +402,7 @@ class ApiService {
       return await _httpClient
           .get(
             Uri.parse(
-              '${ApiConstants._host}/v1/api/family-members/patients/$patientId/vitals?days=$days',
+              '${ApiConstants.baseUrl}analytics/vitals?patientId=${patientId}&days=$days',
             ),
             headers: headers,
           )
@@ -506,20 +506,20 @@ class ApiService {
   }
 
   static Future<http.Response> registerPatientForCaregiver({
-  required int caregiverId,
-  required Map<String, dynamic> patientData,
-}) async {
-  final headers = await AuthTokenManager.getAuthHeaders();
-  
-  print('🔍 registerPatientForCaregiver caregiverId: $caregiverId');
-  print('🔍 patientData with structured address: ${jsonEncode(patientData)}');
+    required int caregiverId,
+    required Map<String, dynamic> patientData,
+  }) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
 
-  return await _httpClient
-      .post(
-        Uri.parse('${ApiConstants.baseUrl}caregivers/$caregiverId/patients'),
-        headers: headers,
-        body: jsonEncode(patientData),
-      )
-      .timeout(const Duration(seconds: 30));
-}
+    print('🔍 registerPatientForCaregiver caregiverId: $caregiverId');
+    print('🔍 patientData with structured address: ${jsonEncode(patientData)}');
+
+    return await _httpClient
+        .post(
+          Uri.parse('${ApiConstants.baseUrl}caregivers/$caregiverId/patients'),
+          headers: headers,
+          body: jsonEncode(patientData),
+        )
+        .timeout(const Duration(seconds: 30));
+  }
 }
