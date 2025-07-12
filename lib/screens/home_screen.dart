@@ -7,6 +7,8 @@ import 'package:lottie/lottie.dart';
 import '/auth/login_screen.dart';
 import '/auth/register_screen.dart';
 import '/screens/features_screen.dart';
+import 'package:go_router/go_router.dart';
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -57,13 +59,21 @@ class HomeScreen extends StatelessWidget {
 
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-          },
-          child: const Text('Log In', style: TextStyle(color: Color(0xFF6366F1))),
-        ),
+     actions: [
+  TextButton(
+    onPressed: () {
+      context.push('/login'); 
+    },
+    child: const Text(
+      'Log In',
+      style: TextStyle(color: Color(0xFF6366F1)),
+    ),
+  ),
+
+
+
+
+
         const SizedBox(width: 8),
         ElevatedButton(
           onPressed: () {

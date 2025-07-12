@@ -6,7 +6,10 @@ class KpiDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('KPI Dashboard')),
+      appBar: AppBar(
+        automaticallyImplyLeading: true, // 👈 shows back arrow if possible
+        title: const Text('KPI Dashboard'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

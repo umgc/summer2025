@@ -683,7 +683,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
             ? null
             : IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.go('/dashboard'),
+                onPressed: () => context.pop(),
               ),
         title: Text('Scenario Designer - $selectedDomain'),
         actions: [

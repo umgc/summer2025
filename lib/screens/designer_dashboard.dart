@@ -5,8 +5,8 @@ import 'package:fl_chart/fl_chart.dart';
 import '/shared/widgets/voice_assistant_lottie.dart';
 
 
-class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+class DesignerDashboardScreen extends StatelessWidget {
+  const DesignerDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +123,7 @@ class DashboardScreen extends StatelessWidget {
                   );
                   break;
                 case 'logout':
-                  router.pushReplacement('/');
+                  router.go('/');
                   break;
               }
             },
@@ -188,21 +188,21 @@ class DashboardScreen extends StatelessWidget {
               height: 60,
             ),
           ),
-       
+         
           ListTile(
             leading: const Icon(Icons.build),
             title: const Text("Scenario Builder"),
-            onTap: () => router.go('/scenario'),
+            onTap: () => router.push('/scenario'),
           ),
           ListTile(
             leading: const Icon(Icons.smart_toy),
             title: const Text("Simulator"),
-            onTap: () => router.go('/simulator'),
+            onTap: () => router.push('/simulator'),
           ),
           ListTile(
             leading: const Icon(Icons.analytics),
             title: const Text("KPI Dashboard"),
-            onTap: () => router.go('/kpi'),
+            onTap: () => router.push('/kpi'),
           ),
           const Divider(),
          
@@ -257,21 +257,21 @@ class DashboardScreen extends StatelessWidget {
                 iconColor: Colors.black,
                 leading: const Icon(Icons.build),
                 title: const Text("Scenario Builder"),
-                onTap: () => router.go('/builder'),
+                onTap: () => router.push('/scenario'),
               ),
               ListTile(
                 textColor: Colors.black,
                 iconColor: Colors.black,
                 leading: const Icon(Icons.smart_toy),
                 title: const Text("Simulator"),
-                onTap: () => router.go('/simulator'),
+                onTap: () => router.push('/simulator'),
               ),
               ListTile(
                 textColor: Colors.black,
                 iconColor: Colors.black,
                 leading: const Icon(Icons.analytics),
                 title: const Text("KPI Dashboard"),
-                onTap: () => router.go('/kpi'),
+                onTap: () => router.push('/kpi'),
               ),
               const Divider(color: Colors.white),
             
