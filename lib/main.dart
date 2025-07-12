@@ -1,82 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
-import 'screens/home_screen.dart';
-import 'screens/dashboard_screen.dart';
-import 'screens/scenario_builder_screen.dart';
-import 'screens/simulator_screen.dart';
-import 'screens/kpi_dashboard_screen.dart';
-import 'auth/login_screen.dart';
-import 'auth/register_screen.dart';
-import 'auth/auth_confirm_screen.dart';
-import 'auth/auth_reset_password.dart';
-
-final _router = GoRouter(
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const HomeScreen(),
-      routes: [
-        GoRoute(
-          path: 'dashboard',
-          builder: (context, state) => const DashboardScreen(),
-        ),
-        GoRoute(
-          path: 'Builder',
-          builder: (context, state) => const ScenarioBuilderScreen(initialDomain: 'Healthcare'),
-        ),
-        GoRoute(
-          path: 'simulator',
-          builder: (context, state) => const SimulatorScreen(),
-        ),
-        GoRoute(
-          path: 'kpi',
-          builder: (context, state) => const KpiDashboardScreen(),
-        ), 
-        
-      ],
-    ),
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
-    GoRoute(
-      path: '/signUp',
-      builder: (context, state) => const RegisterScreen(),
-    ),
-    GoRoute(
-      path: '/confirm',
-      builder: (context, state) {
-        final email = state.extra as String;
-        return AuthConfirmScreen(email: email);
-      },
-    ),
-    GoRoute(
-      path: '/reset-password',
-      builder: (context, state) => const ResetPasswordScreen(),
-    ),
-  ],
-);
+import 'router/router_provider.dart';
 
 void main() {
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+
     return MaterialApp.router(
       title: 'DeepTrain',
       debugShowCheckedModeBanner: false,
-      routerConfig: _router,
       theme: ThemeData(primarySwatch: Colors.indigo),
+      routerConfig: router,
     );
   }
 }
