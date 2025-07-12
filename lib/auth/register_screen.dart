@@ -20,6 +20,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _authService = AuthService();
   bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
+  String _selectedRole = 'Trainee';
+  final List<String> _roles = ['Admin', 'Designer', 'Trainee'];
+
 
   void _registerUser() async {
     if (!_formKey.currentState!.validate()) return;
@@ -31,14 +34,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final success = await _authService.signUpUser(
-        email: email,
-        password: password,
-        firstName: firstName,
-        lastName: lastName,
-      );
+     final success = await _authService.signUpUser(
+  email: email,
+  password: password,
+  firstName: firstName,
+  lastName: lastName,
+  role: _selectedRole, // pass role
+);
+
+      
       if (success && mounted) {
-        context.go('/confirm', extra: email);
+        context.push('/confirm', extra: email);
       }
     } catch (e) {
       if (mounted) {
@@ -159,6 +165,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             value == null || value.isEmpty ? 'Last name is required' : null,
                       ),
                       const SizedBox(height: 16),
+DropdownButtonFormField<String>(
+  value: _selectedRole,
+  decoration: InputDecoration(
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    labelText: 'Select Role',
+  ),
+  items: _roles.map((role) {
+    return DropdownMenuItem<String>(
+      value: role,
+      child: Text(role),
+    );
+  }).toList(),
+  onChanged: (value) {
+    if (value != null) {
+      setState(() {
+        _selectedRole = value;
+      });
+    }
+  },
+),
+
+
+
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(
@@ -209,7 +239,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               const Text("Already have an account? "),
                               GestureDetector(
                                 onTap: () {
-                                  if (mounted) GoRouter.of(context).go('/login');
+                                  if (mounted) GoRouter.of(context).push('/login');
                                 },
                                 child: const Text(
                                   'Sign In',
@@ -223,7 +253,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const SizedBox(height: 12),
                           GestureDetector(
                             onTap: () {
-                              if (mounted) GoRouter.of(context).go('/reset-password');
+                              if (mounted) GoRouter.of(context).push('/reset-password');
                             },
                             child: const Text(
                               'Forgot password?',

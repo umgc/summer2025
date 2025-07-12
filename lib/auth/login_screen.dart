@@ -1,18 +1,20 @@
-import '/auth/register_screen.dart';
 import 'package:flutter/material.dart';
-import 'auth_service.dart';
-import '/screens/dashboard_screen.dart';
-import '/screens/home_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class LoginScreen extends StatefulWidget {
+import 'auth_service.dart';
+import '/screens/home_screen.dart';
+import '/state/auth_providers.dart'; 
+import '/auth/register_screen.dart';
+
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
@@ -20,39 +22,53 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
 
   void _login() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+  final email = _emailController.text.trim();
+  final password = _passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter both email and password")),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-    try {
-      final jwt = await _authService.signInUser(
-        email: email,
-        password: password,
-      );
-      if (jwt != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Login successful!")));
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login error: Incorrect Username/Password")),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
+  if (email.isEmpty || password.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Please enter both email and password")),
+    );
+    return;
   }
+
+  setState(() => _isLoading = true);
+  try {
+    final response = await _authService.signInUser(
+      email: email,
+      password: password,
+    );
+
+    if (response != null && mounted) {
+      final token = response['token']!;
+      final role = response['role']!;
+
+      // Set providers BEFORE navigation
+      ref.read(jwtTokenProvider.notifier).state = token;
+      ref.read(userRoleProvider.notifier).state = role;
+
+      
+
+      // 🎯 Route based on role manually
+      if (role == 'Admin') {
+        context.go('/admin');
+      } else if (role == 'Designer') {
+        context.go('/designer');
+      } else {
+        context.go('/trainee');
+      }
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login successful!")),
+      );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Login error: Incorrect Username/Password")),
+    );
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -158,11 +174,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: 8,
-                          ), // 👈 bottom margin here
+                          padding: const EdgeInsets.only(bottom: 8),
                           child: GestureDetector(
-                            onTap: () => context.go('/reset-password'),
+                            onTap: () => context.push('/reset-password'),
                             child: const Text(
                               'Forgot Password?',
                               style: TextStyle(
@@ -174,13 +188,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text("Don't have an account? "),
                         GestureDetector(
-                          onTap: () => context.go('/signUp'),
+                          onTap: () => context.push('/signUp'),
                           child: const Text(
                             'Sign Up',
                             style: TextStyle(

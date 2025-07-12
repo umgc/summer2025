@@ -34,7 +34,7 @@ class _AuthConfirmScreenState extends State<AuthConfirmScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Your account has been verified! Please log in.")),
         );
-        context.go('/login');
+        context.push('/login');
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -66,7 +66,7 @@ class _AuthConfirmScreenState extends State<AuthConfirmScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: GestureDetector(
-                      onTap: () => context.go('/'),
+                      onTap: () => context.push('/'),
                       child: Image.asset(
                         'assets/images/DeepTrain_Logo_small.webp',
                         height: 50,
@@ -108,7 +108,7 @@ class _AuthConfirmScreenState extends State<AuthConfirmScreen> {
                     ),
                     const SizedBox(height: 20),
                     GestureDetector(
-                      onTap: () => context.go('/login'),
+                      onTap: () => context.push('/login'),
                       child: const Text(
                         'Back to Login',
                         style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.bold),
