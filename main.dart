@@ -6,15 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'screens/home_screen.dart';
-import 'screens/dashboard_screen.dart';
-import 'screens/scenario_builder_screen.dart';
-import 'screens/simulator_screen.dart';
-import 'screens/kpi_dashboard_screen.dart';
-import 'auth/login_screen.dart';
-import 'auth/register_screen.dart';
-import 'auth/auth_confirm_screen.dart';
-import 'auth/auth_reset_password.dart';
+import 'lib/screens/home_screen.dart';
+import 'lib/screens/dashboard_screen.dart';
+import 'lib/screens/scenario_builder_screen.dart';
+import 'lib/screens/simulator_screen.dart';
+import 'lib/screens/kpi_dashboard_screen.dart';
+import 'lib/auth/login_screen.dart';
+import 'lib/auth/register_screen.dart';
+import 'lib/auth/auth_confirm_screen.dart';
+import 'lib/auth/auth_reset_password.dart';
 
 final _router = GoRouter(
   routes: [
