@@ -1,0 +1,204 @@
+# CareConnect API Documentation
+
+## Overview
+
+CareConnect Backend API provides comprehensive healthcare management services with OpenAPI 3.0 documentation. The API supports JWT-based authentication, social feed management, comment systems, and more.
+
+## API Documentation Access
+
+### Development Environment
+
+Once the application is running locally, you can access the API documentation at:
+
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **OpenAPI JSON**: http://localhost:8080/api-docs
+
+### Production Environment
+
+- **Swagger UI**: https://api.careconnect.com/swagger-ui.html
+- **OpenAPI JSON**: https://api.careconnect.com/api-docs
+
+## Features
+
+### 🔐 Authentication & Authorization
+- JWT-based authentication
+- Google OAuth integration
+- HttpOnly cookie support
+- Role-based access control (PATIENT, CAREGIVER, ADMIN)
+
+### 👥 User Management
+- User registration with email verification
+- Profile management
+- Patient and caregiver profiles
+- Account verification system
+
+### 📱 Social Feed
+- Global feed for all users
+- User-specific feeds
+- Post creation with image upload
+- Real-time content sharing
+
+### 💬 Comments System
+- Comment on posts
+- Threaded discussions
+- User attribution
+- Timestamp tracking
+
+### 🎮 Gamification
+- Points and achievements system
+- User progress tracking
+- Leaderboards
+
+### 💳 Payment Integration
+- Stripe payment processing
+- Subscription management
+- Webhook handling
+
+### 📧 Email Services
+- Multi-provider email support
+- SendGrid, Mailgun, Mailtrap integration
+- Email verification
+- Password reset functionality
+
+## Authentication
+
+Most API endpoints require authentication. The API supports two authentication methods:
+
+### 1. JWT Bearer Token
+```bash
+Authorization: Bearer <your-jwt-token>
+```
+
+### 2. HTTP-Only Cookie
+The API automatically sets an HTTP-only cookie named `AUTH` after successful login.
+
+## Getting Started
+
+### 1. Register a New User
+```bash
+POST /v1/api/auth/register
+Content-Type: application/json
+
+{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "securePassword123",
+    "role": "PATIENT"
+}
+```
+
+### 2. Login
+```bash
+POST /v1/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "john@example.com",
+    "password": "securePassword123"
+}
+```
+
+### 3. Use the API
+Include the JWT token in the Authorization header:
+```bash
+GET /api/feed/all
+Authorization: Bearer <your-jwt-token>
+```
+
+## API Endpoints
+
+### Authentication
+- `POST /v1/api/auth/register` - Register new user
+- `POST /v1/api/auth/login` - Login user
+- `GET /v1/api/auth/verify/{token}` - Verify email
+- `POST /v1/api/auth/password/forgot` - Request password reset
+- `GET /v1/api/auth/google` - Google OAuth login
+
+### Feed Management
+- `GET /api/feed/all` - Get global feed
+- `GET /api/feed/user/{userId}` - Get user feed
+- `POST /api/feed/create` - Create new post
+
+### Comments
+- `GET /api/comments/post/{postId}` - Get comments for post
+- `POST /api/comments/post/{postId}` - Add comment to post
+
+### Gamification
+- `GET /api/gamification/points/{userId}` - Get user points
+- `POST /api/gamification/award` - Award points
+
+## Error Handling
+
+The API returns consistent error responses:
+
+```json
+{
+    "error": "Error message",
+    "timestamp": "2025-01-15T10:30:00Z",
+    "status": 400,
+    "path": "/api/endpoint"
+}
+```
+
+## Rate Limiting
+
+API endpoints are rate-limited to ensure fair usage:
+- **Authentication endpoints**: 5 requests per minute
+- **General endpoints**: 100 requests per minute
+- **Upload endpoints**: 10 requests per minute
+
+## Security
+
+- All passwords are hashed using bcrypt
+- JWT tokens expire after 3 hours
+- CORS is configured for frontend integration
+- SQL injection protection with parameterized queries
+- Input validation on all endpoints
+
+## Environment Variables
+
+Key environment variables for configuration:
+
+```bash
+# Database
+JDBC_URI=jdbc:mysql://localhost:3306/careconnect
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+
+# JWT
+SECURITY_JWT_SECRET=your-base64-jwt-secret
+JWT_EXPIRATION=10800000
+
+# Email
+EMAIL_PROVIDER=sendgrid
+SENDGRID_API_KEY=your-sendgrid-key
+FROM_EMAIL=noreply@careconnect.com
+
+# OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Stripe
+STRIPE_SECRET_KEY=your-stripe-secret-key
+STRIPE_WEBHOOK_SIGNING_SECRET=your-webhook-secret
+```
+
+## Testing
+
+Use the interactive Swagger UI to test endpoints:
+
+1. Navigate to http://localhost:8080/swagger-ui.html
+2. Click "Authorize" button
+3. Enter your JWT token (with "Bearer " prefix)
+4. Test endpoints directly in the browser
+
+## Support
+
+For API support and questions:
+- Email: support@careconnect.com
+- Documentation: This OpenAPI specification
+- GitHub Issues: [Repository Issues](https://github.com/careconnect/backend/issues)
+
+---
+
+*Generated by OpenAPI 3.0 specification*

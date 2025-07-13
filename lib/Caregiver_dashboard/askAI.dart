@@ -39,7 +39,7 @@ class _AskAIScreenState extends State<AskAIScreen> {
       final key = dotenv.env['deepSeek_key'];
 
       if (uri == null || key == null) {
-        throw Exception('Missing deepSeek_uri or deepSeek_key in .env');
+        throw Exception('Missing deepSeek_uri or deepSeek_key in .env.local');
       }
 
       final response = await http.post(

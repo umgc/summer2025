@@ -1,0 +1,65 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Security - Environment Variables ###
+.env
+.env.local
+.env.*.local
+*.env
+
+### Local Development Scripts ###
+load-env.sh
+load-env.bat
+set-env.sh
+set-env.bat
+test-env.sh
+
+### Application Logs ###
+*.log
+app.log
+
+### Upload Directory ###
+/uploads/
+/Documents/uploads/
+
+### Temporary Files ###
+*.tmp
+*.temp
+
+### Documentation Files ###
+SECURITY_CONFIG.md
+SECURITY_AUDIT.md
+CONSOLE_CLEANUP.md
+STARTUP_OPTIMIZATION.md
+.env.example
