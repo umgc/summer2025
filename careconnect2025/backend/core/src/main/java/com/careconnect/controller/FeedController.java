@@ -1,14 +1,27 @@
 package com.careconnect.controller;
-import com.careconnect.security.service.FeedService;
 import org.springframework.beans.factory.annotation.Value;
 import com.careconnect.model.Post;
-import jakarta.servlet.http.HttpSession;
+import com.careconnect.service.FeedService;
+import com.careconnect.repository.UserRepository;
+import com.careconnect.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +30,8 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/feed")
+@Tag(name = "Feed", description = "Social feed management endpoints for posts and content sharing")
+@SecurityRequirement(name = "JWT Authentication")
 public class FeedController {
 
     @Value("${careconnect.upload.dir}")
@@ -25,14 +40,50 @@ public class FeedController {
     @Autowired
     private FeedService feedService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping("/all")
-    public ResponseEntity<?> getGlobalFeed(HttpSession session) {
-        Object userId = session.getAttribute("userId");
-
-        System.out.println("🧪 [FeedController] Session ID: " + session.getId());
-        System.out.println("🧪 [FeedController] Session userId: " + userId);
-
-        if (userId == null) {
+    @Operation(
+        summary = "Get global feed",
+        description = "Retrieve all posts from the global feed. Requires authentication."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Global feed retrieved successfully",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = Post.class, type = "array"),
+                examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "userId": 123,
+                            "content": "Had a great therapy session today!",
+                            "imageUrl": "/uploads/image123.jpg",
+                            "createdAt": "2025-01-15T10:30:00Z"
+                        }
+                    ]
+                    """)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Not authenticated",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                        "error": "Not authenticated"
+                    }
+                    """)
+            )
+        )
+    })
+    public ResponseEntity<?> getGlobalFeed() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
         }
 
@@ -40,11 +91,22 @@ public class FeedController {
         return ResponseEntity.ok(posts);
     }
 
-
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserFeed(@PathVariable Long userId, HttpSession session) {
-        Object sessionUserId = session.getAttribute("userId");
-        if (sessionUserId == null || !sessionUserId.toString().equals(userId.toString())) {
+    public ResponseEntity<?> getUserFeed(@PathVariable Long userId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
+        }
+        
+        // Get user from JWT token (email is the subject)
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
+        }
+        
+        // Allow users to view their own feed, or admins to view any feed
+        if (!user.getId().equals(userId) && !user.getRole().name().equals("ADMIN")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
         }
 
@@ -56,12 +118,23 @@ public class FeedController {
     public ResponseEntity<?> createPost(
             @RequestParam("userId") Long userId,
             @RequestParam("content") String content,
-            @RequestPart(value = "image", required = false) MultipartFile imageFile,
-            HttpSession session
+            @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) {
-        Object sessionUserId = session.getAttribute("userId");
-        if (sessionUserId == null || !sessionUserId.toString().equals(userId.toString())) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
+        }
+        
+        // Get user from JWT token (email is the subject)
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
+        }
+        
+        // Verify the post belongs to the authenticated user
+        if (!user.getId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot create post as another user");
         }
 
         try {
@@ -102,7 +175,5 @@ public class FeedController {
                     .body("Error creating post: " + e.getMessage());
         }
     }
-
-
 }
 

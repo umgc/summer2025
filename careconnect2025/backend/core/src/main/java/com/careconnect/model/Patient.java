@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+// import java.util.List;
+// import java.util.ArrayList;
 import lombok.*;
 
 @Getter
@@ -30,11 +32,6 @@ public class Patient {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "caregiver_id")
-    @JsonBackReference
-    private Caregiver caregiver;
 
     private String relationship; // e.g. "daughter", "client", etc.
 }

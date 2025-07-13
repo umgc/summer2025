@@ -1,5 +1,5 @@
 # CareConnect CORE Backend App
-This is the first backend app after the prototype of CareConnect that is ready for testing.
+This is the first backend app after the prototype of CareConnect that is ready for testing. 
 This README will help you set it up on your local computer.
 
 
@@ -20,26 +20,26 @@ Although, the following would be similar to most platforms an IDEs you want to u
 1. Open your IDE and open the ***`core`*** project/folder with your IDE
 
 2. Add your env variables
-
-    - By Default advanced IDE like Intellij just generate a Run Configuration for you
-      based of the file with the entrypoint/touchpoint.<br/>To keep things simple just edit it.
+    
+    - By Default advanced IDE like Intellij just generate a Run Configuration for you 
+    based of the file with the entrypoint/touchpoint.<br/>To keep things simple just edit it.
         1. Go to the name of the main class show on the top right see image below. Click on `Edit Configurations...`
-           ![Edit Configuration](_readme/Edit_Config.png)
-
+        ![Edit Configuration](_readme/Edit_Config.png)
+    
         2. With the Run Configuration of the name of the class selected make sure `Environment Variables` is showing up.
-
+        
             - If you do not see `Environment Variables`<br/>Click on the `Modify options` dropdown and check `Environment Variables`. See below
-              ![Modify options](_readme/Modify_options.png)
+            ![Modify options](_readme/Modify_options.png)
 
         3. Add your variables in the `Environment Variables` field, like so. The values in the example should match what you can use.
         ```
         ADMIN_EMAIL=bomplar@gmail.com;ADMIN_EMAIL_PASSWORD=<SENSITIVE>;DB_PASSWORD=<ADD YOUR USER DB PASSWORD HERE>;DB_USER=root;JDBC_URI=jdbc:mysql://localhost:3306/careconnect;MAIL_HOSTNAME=smtp.gmail.com;MAIL_PORT=587
         ```
-
-      The format is simple `KEY=value;NEW_KEY=value` <br/>You can also use a file if you prefer or add the variable with the GUI.
-
+        
+        The format is simple `KEY=value;NEW_KEY=value` <br/>You can also use a file if you prefer or add the variable with the GUI. 
+        
         - Click on the last button of the `Envirionment Variables` field. You should see a screen like below, fill it out like by line.
-          ![Add Environment Variables with GUI](_readme/Add_Variable_w_GUI.png)
+                ![Add Environment Variables with GUI](_readme/Add_Variable_w_GUI.png)
 
 
 
@@ -74,12 +74,12 @@ For credentials, setup help, or onboarding, contact your team lead or project ma
 
 ## Deployment on AWS
 This can be done after create the infrastructure resources using the Terraform scripts. Follow the README(s) for more on the Terraform scripts.
-<br/>Those commands are provided on AWS ECR as well.
+<br/>Those commands are provided on AWS ECR as well. 
 
 1. Install Docker on your computer. Jump to step 2 if you already have docker.
 2. Install and Configure your AWS Cli. Jump to step 3 if you have done that already.
 3. Create a .env file in the same directory of the DOckerfile. Add all the required environment variables with the their value on one single line each. Format: `VARIALBLE=VALUE`. Those variables would be the same as what you would use in the run configirations explained above.
-4. Run these commands:
+4. Run these commands: 
 ```sh
 aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin 641592448579.dkr.ecr.us-east-1.amazonaws.com # To authenticate to ECR
 

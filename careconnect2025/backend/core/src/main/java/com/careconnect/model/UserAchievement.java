@@ -27,4 +27,14 @@ public class UserAchievement {
     private Achievement achievement;
 
     private LocalDateTime earnedAt = LocalDateTime.now();
+
+    // Explicit setters to ensure compilation works if Lombok isn't processing
+    public void setUserId(Long userId) { this.userId = userId; }
+    public void setAchievement(Achievement achievement) { this.achievement = achievement; }
+    public void setEarnedAt(LocalDateTime earnedAt) { this.earnedAt = earnedAt; }
+
+    // Explicit getters to ensure compilation works if Lombok isn't processing
+    public Achievement getAchievement() { return achievement; }
+    public Long getUserId() { return userId; }
+    public LocalDateTime getEarnedAt() { return earnedAt; }
 }

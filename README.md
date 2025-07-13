@@ -1,13 +1,6 @@
-# CareConnect
+# summer2025
+Summer 2025 Cohort
 
+Add your name here along with the team you're on. It verifies that you have write access.
 
-
-## References
-https://www.youtube.com/watch?v=99NpHtt5PVg
-
-
-#for video/call : using Base64 encryption
-
-
-
-
+Alyssa Harding - Team A - CareConnect

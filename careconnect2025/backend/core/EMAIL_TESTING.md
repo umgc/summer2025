@@ -25,10 +25,10 @@ SendGrid is a cloud-based email service that provides reliable email delivery fo
 
 1. **Sign up for SendGrid** at [sendgrid.com](https://sendgrid.com)
 2. **Create an API key** in your SendGrid dashboard:
-    - Go to Settings → API Keys
-    - Click "Create API Key"
-    - Choose "Full Access" or "Restricted Access" with Mail Send permissions
-    - Copy the generated API key
+   - Go to Settings → API Keys
+   - Click "Create API Key"
+   - Choose "Full Access" or "Restricted Access" with Mail Send permissions
+   - Copy the generated API key
 3. **Configure environment variables:**
    ```bash
    export EMAIL_PROVIDER=sendgrid
@@ -50,13 +50,13 @@ Mailtrap is a professional email testing service that captures all emails sent f
 ### How to Use Mailtrap
 
 1. **Sign up for Mailtrap:**
-    - Go to [mailtrap.io](https://mailtrap.io)
-    - Create a free account
-    - Create a new inbox
+   - Go to [mailtrap.io](https://mailtrap.io)
+   - Create a free account
+   - Create a new inbox
 
 2. **Get your Mailtrap credentials:**
-    - Go to your inbox settings
-    - Copy the SMTP credentials
+   - Go to your inbox settings
+   - Copy the SMTP credentials
 
 3. **Configure environment variables:**
    ```bash

@@ -1,0 +1,84 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Security - Environment Variables and Secrets
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
+*.env
+*.secret
+*.key
+*.pem
+
+# OAuth2 and API Credentials
+credentials.json
+service-account.json
+google-credentials.json
+oauth-credentials.json
+
+# JWT and Encryption Keys
+jwt.key
+private.key
+public.key
+
+# Database and API Keys
+database.env
+api-keys.env
+
+careconnect-backend/.env
+
+# Test coverage reports
+coverage/
+
+# Documentation files (except README)
+*.md
+!README.md
+!readme.md
+!README.MD
+!readme.MD

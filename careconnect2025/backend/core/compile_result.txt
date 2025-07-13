@@ -1,25 +1,25 @@
 [INFO] Scanning for projects...
-[INFO]
+[INFO] 
 [INFO] ----------------< com.careconnect:careconnect-backend >-----------------
 [INFO] Building CareConnect Backend 0.0.1-SNAPSHOT
 [INFO]   from pom.xml
 [INFO] --------------------------------[ jar ]---------------------------------
 [WARNING] The artifact mysql:mysql-connector-java:jar:8.0.33 has been relocated to com.mysql:mysql-connector-j:jar:8.0.33: MySQL Connector/J artifacts moved to reverse-DNS compliant Maven 2+ coordinates.
-[INFO]
+[INFO] 
 [INFO] --- clean:3.3.2:clean (default-clean) @ careconnect-backend ---
 [INFO] Deleting /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/target
-[INFO]
+[INFO] 
 [INFO] --- resources:3.3.1:resources (default-resources) @ careconnect-backend ---
 [INFO] Copying 1 resource from src/main/resources to target/classes
 [INFO] Copying 5 resources from src/main/resources to target/classes
-[INFO]
+[INFO] 
 [INFO] --- compiler:3.11.0:compile (default-compile) @ careconnect-backend ---
 [INFO] Changes detected - recompiling the module! :source
 [INFO] Compiling 137 source files with javac [debug release 17] to target/classes
 [INFO] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java uses unchecked or unsafe operations.
 [INFO] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java: Recompile with -Xlint:unchecked for details.
 [INFO] -------------------------------------------------------------
-[ERROR] COMPILATION ERROR :
+[ERROR] COMPILATION ERROR : 
 [INFO] -------------------------------------------------------------
 [ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/PasswordResetService.java:[40,34] variable mail is already defined in class com.careconnect.service.PasswordResetService
 [ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/ExportSigner.java:[36,29] cannot find symbol
@@ -172,7 +172,7 @@
 [ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/StripeCheckoutService.java:[47,34] cannot find symbol
   symbol:   method builder()
   location: class com.careconnect.model.Payment
-[INFO] 51 errors
+[INFO] 51 errors 
 [INFO] -------------------------------------------------------------
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD FAILURE
@@ -180,7 +180,7 @@
 [INFO] Total time:  16.184 s
 [INFO] Finished at: 2025-07-05T23:10:06-04:00
 [INFO] ------------------------------------------------------------------------
-[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile (default-compile) on project careconnect-backend: Compilation failure: Compilation failure:
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile (default-compile) on project careconnect-backend: Compilation failure: Compilation failure: 
 [ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/PasswordResetService.java:[40,34] variable mail is already defined in class com.careconnect.service.PasswordResetService
 [ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/ExportSigner.java:[36,29] cannot find symbol
 [ERROR]   symbol:   method builder()
@@ -333,9 +333,9 @@
 [ERROR]   symbol:   method builder()
 [ERROR]   location: class com.careconnect.model.Payment
 [ERROR] -> [Help 1]
-[ERROR]
+[ERROR] 
 [ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
 [ERROR] Re-run Maven using the -X switch to enable full debug logging.
-[ERROR]
+[ERROR] 
 [ERROR] For more information about the errors and possible solutions, please read the following articles:
 [ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

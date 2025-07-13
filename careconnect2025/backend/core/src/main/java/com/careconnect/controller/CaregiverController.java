@@ -2,9 +2,9 @@ package com.careconnect.controller;
 
 import com.careconnect.model.Caregiver;
 import com.careconnect.model.Patient;
+import com.careconnect.service.CaregiverService;
 import com.careconnect.dto.CaregiverRegistration;
 import com.careconnect.dto.PatientRegistration;
-import com.careconnect.security.service.CaregiverService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 // import com.careconnect.security.Role;
 import jakarta.servlet.http.HttpServletRequest;
+
 
 import java.util.List;
 

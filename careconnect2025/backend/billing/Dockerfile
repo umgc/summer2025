@@ -1,7 +1,7 @@
 # ---------- build stage ----------
 FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
-COPY ../../../../../Downloads/Backup%20code/billing .
+COPY . .
 RUN mvn -q -DskipTests clean package
 
 # ---------- runtime stage ----------

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.careconnect.dto.SubscriptionCancelRequestDTO;
 import com.careconnect.dto.PlanDTO;
 import org.springframework.web.bind.annotation.RequestBody;
-import com.careconnect.security.service.SubscriptionService;
+import com.careconnect.service.SubscriptionService;
 import com.stripe.model.SubscriptionCollection;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.Map;
@@ -18,7 +18,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
-import com.careconnect.security.service.StripeService;
+import com.careconnect.service.StripeService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -76,12 +76,13 @@ public class SubscriptionController {
     public ResponseEntity<?> createCheckoutSession(
             HttpServletRequest request,
             @RequestParam String plan,
-            @RequestParam Long userId) {
-        return subscriptionService.createCheckoutSession(request, plan, userId);
+            @RequestParam(required = false, defaultValue = "0") Long userId,
+            @RequestParam(required = false) Long amount) { 
+        return subscriptionService.createCheckoutSession(request, plan, userId, amount);
     }
 
-    @PutMapping("/{id}/payment-method")
-    public ResponseEntity<String> updatePayment(@PathVariable String id) { return ResponseEntity.ok("Payment updated: " + id); }
+    // @PutMapping("/{id}/payment-method")
+    // public ResponseEntity<String> updatePayment(@PathVariable String id) { return ResponseEntity.ok("Payment updated: " + id); }
     
 
     @PostMapping("/{id}/cancel")

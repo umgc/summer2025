@@ -16,9 +16,13 @@ public class CorsFilterConfig {
     public Filter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(List.of(
-                "http://localhost:8080",
+                "http://localhost",
+                "http://localhost:*",           // ✅ Allow any localhost port
+                "http://127.0.0.1",
+                "http://127.0.0.1:*",          // ✅ Allow any 127.0.0.1 port
                 "http://10.0.2.2:8080",
-                "http://localhost:3000"
+                "http://localhost:50030",       // ✅ Specific Flutter web port
+                "http://localhost:3000"         // ✅ Common dev port
         ));
         config.setAllowCredentials(true);
         config.setAllowedHeaders(List.of("*"));
@@ -26,7 +30,7 @@ public class CorsFilterConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-        System.out.println("Custom CorsFilter applied.");
+        // System.out.println("Custom CorsFilter applied.");
         return new CorsFilter(source);
     }
 }
