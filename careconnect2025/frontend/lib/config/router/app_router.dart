@@ -1,3 +1,7 @@
+import 'package:care_connect_app/features/integrations/presentation/pages/home_monitoring_screen.dart';
+import 'package:care_connect_app/features/integrations/presentation/pages/medication_management.dart';
+import 'package:care_connect_app/features/integrations/presentation/pages/smart_devices.dart';
+import 'package:care_connect_app/features/integrations/presentation/pages/wearables_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -223,6 +227,22 @@ final GoRouter appRouter = GoRouter(
         final error = state.uri.queryParameters['error'];
         return OAuthCallbackPage(token: token, user: user, error: error);
       },
+    ),
+    GoRoute(
+      path: '/wearables',
+      builder: (_, __) => const WearablesScreen(),
+    ),
+    GoRoute(
+      path: '/home-monitoring',
+      builder: (_, __) => const HomeMonitoringScreen(),
+    ),
+    GoRoute(
+      path: '/smart-devices',
+      builder: (_, __) => const SmartDevicesScreen(),
+    ),
+    GoRoute(
+      path: '/medication',
+      builder: (_, __) => const MedicationManagementScreen(),
     ),
   ],
 );
