@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import '../state/scenario_provider.dart';
 import '../shared/models/node_block.dart';
+import 'dart:typed_data';
 
 class ScenarioBuilderScreen extends ConsumerStatefulWidget {
   final String initialDomain;
@@ -706,6 +707,61 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Save feature not implemented')),
               );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.download),
+            tooltip: 'Export Scenario to JSON',
+            onPressed: () async {
+              try {
+                // Convert the current list of NodeBlock objects to a list of JSON maps
+                final List<Map<String, dynamic>> scenarioJsonList = blocks
+                    .map((block) => block.toJson())
+                    .toList();
+
+                // Encode the list of JSON maps into a JSON string
+                final String jsonString = const JsonEncoder.withIndent(
+                  '  ',
+                ).convert(scenarioJsonList);
+
+                // Suggest a default filename based on the current scenario ID or domain
+                String defaultFileName = 'scenario_export.json';
+                if (blocks.isNotEmpty &&
+                    blocks.first.scenarioId != 'DEFAULT_SCENARIO') {
+                  defaultFileName = '${blocks.first.scenarioId}.json';
+                } else if (selectedDomain.isNotEmpty) {
+                  defaultFileName =
+                      '${selectedDomain.replaceAll(' ', '_').toLowerCase()}_scenario.json';
+                }
+
+                // Use file_picker to save the file
+                final String? filePath = await FilePicker.platform.saveFile(
+                  fileName: defaultFileName,
+                  type: FileType.custom,
+                  allowedExtensions: ['json'],
+                  bytes: Uint8List.fromList(
+                    jsonString.codeUnits,
+                  ), // Provide content as bytes
+                );
+
+                if (filePath != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Scenario exported to: $filePath')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Scenario export initiated. Check your downloads folder..',
+                      ),
+                    ),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error exporting scenario: $e')),
+                );
+              }
             },
           ),
           IconButton(
