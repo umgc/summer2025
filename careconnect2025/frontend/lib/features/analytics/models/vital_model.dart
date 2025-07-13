@@ -7,6 +7,7 @@ class Vital {
   final double weight;
   final int? moodValue;
   final int? painValue;
+  final int patientId;
 
   Vital({
     required this.timestamp,
@@ -15,12 +16,14 @@ class Vital {
     required this.systolic,
     required this.diastolic,
     required this.weight,
+    required this.patientId,
     this.moodValue,
     this.painValue,
   });
 
   factory Vital.fromJson(Map<String, dynamic> json) {
     return Vital(
+      patientId: json['id'],
       timestamp: DateTime.parse(json['timestamp']),
       heartRate: (json['heartRate'] as num).toDouble(),
       spo2: (json['spo2'] as num).toDouble(),
