@@ -14,7 +14,8 @@ import '/screens/home_screen.dart';
 import '/screens/admin_dashboard.dart';
 import '/screens/designer_dashboard.dart';
 import '/screens/trainee_dashboard.dart';
-
+import '../screens/pricing_screen.dart';
+import '../screens/contact_screen.dart';
 
 import '/state/auth_providers.dart';
 
@@ -31,6 +32,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         '/signUp',
         '/confirm',
         '/reset-password',
+        '/pricing', // Added to allow access without login if desired
+        '/contact', // Added to allow access without login if desired
       ].contains(path);
 
       // Not logged in and trying to access a protected route
@@ -57,28 +60,61 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/signUp', builder: (context, state) => const RegisterScreen()),
-      GoRoute(path: '/confirm', builder: (context, state) {
-        final email = state.extra as String;
-        return AuthConfirmScreen(email: email);
-      }),
-      GoRoute(path: '/reset-password', builder: (context, state) => const ResetPasswordScreen()),
-     GoRoute(
-  path: '/scenario',
-  builder: (context, state) => const ScenarioBuilderScreen(initialDomain: 'Healthcare'),
-),
+      GoRoute(
+        path: '/signUp',
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/confirm',
+        builder: (context, state) {
+          final email = state.extra as String;
+          return AuthConfirmScreen(email: email);
+        },
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) => const ResetPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/scenario',
+        builder: (context, state) =>
+            const ScenarioBuilderScreen(initialDomain: 'Healthcare'),
+      ),
+      // Added route for PricingScreen
+      GoRoute(
+        path: '/pricing',
+        builder: (context, state) => const PricingScreen(),
+      ),
+      // Added route for ContactScreen
+      GoRoute(
+        path: '/contact',
+        builder: (context, state) => const ContactScreen(),
+      ),
+      GoRoute(
+        path: '/admin',
+        builder: (context, state) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/designer',
+        builder: (context, state) => const DesignerDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/trainee',
+        builder: (context, state) => const TraineeDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/simulator',
+        builder: (context, state) => const SimulatorScreen(),
+      ),
+      GoRoute(
+        path: '/Kpi',
+        builder: (context, state) => const KpiDashboardScreen(),
+      ),
 
-      GoRoute(path: '/admin', builder: (context, state) => const AdminDashboardScreen()),
-      GoRoute(path: '/designer', builder: (context, state) => const DesignerDashboardScreen()),
-      GoRoute(path: '/trainee', builder: (context, state) => const TraineeDashboardScreen()),
-      GoRoute(path: '/simulator', builder: (context, state) => const SimulatorScreen()),
-      GoRoute(path: '/Kpi', builder: (context, state) => const KpiDashboardScreen()),
-      
       GoRoute(
         path: '/unauthorized',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('Unauthorized access')),
-        ),
+        builder: (context, state) =>
+            const Scaffold(body: Center(child: Text('Unauthorized access'))),
       ),
     ],
   );

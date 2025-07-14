@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart'; // Import go_router for navigation
+import 'contact_screen.dart';
 
 class PricingScreen extends StatelessWidget {
   const PricingScreen({super.key});
@@ -10,10 +12,7 @@ class PricingScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          "Pricing",
-          style: TextStyle(color: Colors.black),
-        ),
+        title: const Text("Pricing", style: TextStyle(color: Colors.black)),
         backgroundColor: const Color(0xFFF1F5F9),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
@@ -39,53 +38,66 @@ class PricingScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 40),
-              LayoutBuilder(builder: (context, constraints) {
-                int columnCount = constraints.maxWidth > 1000
-                    ? 3
-                    : constraints.maxWidth > 600
-                        ? 2
-                        : 1;
-                return Wrap(
-                  spacing: 24,
-                  runSpacing: 24,
-                  alignment: WrapAlignment.center,
-                  children: [
-                    _pricingCard(
-                      title: "Starter",
-                      price: "\$19/mo",
-                      features: [
-                        "Access to all basic lessons",
-                        "Interactive quizzes",
-                        "Limited scenarios",
-                        "Email support",
-                      ],
-                      highlight: false,
-                    ),
-                    _pricingCard(
-                      title: "Professional",
-                      price: "\$49/mo",
-                      features: [
-                        "Everything in Starter",
-                        "Unlimited scenarios",
-                        "Team collaboration tools",
-                        "Priority support",
-                      ],
-                      highlight: true,
-                    ),
-                    _pricingCard(
-                      title: "Enterprise",
-                      price: "Contact Us",
-                      features: [
-                        "Custom integrations",
-                        "Advanced analytics",
-                        "Dedicated account manager",
-                        "Enterprise-grade security",
-                      ],
-                      highlight: false,
-                    ),
-                  ].map((child) => SizedBox(width: constraints.maxWidth / columnCount - 24, child: child)).toList(),
-                );
-              }),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  int columnCount = constraints.maxWidth > 1000
+                      ? 3
+                      : constraints.maxWidth > 600
+                      ? 2
+                      : 1;
+                  return Wrap(
+                    spacing: 24,
+                    runSpacing: 24,
+                    alignment: WrapAlignment.center,
+                    children:
+                        [
+                              _pricingCard(
+                                title: "Starter",
+                                price: "\$19/mo",
+                                features: [
+                                  "Access to all basic lessons",
+                                  "Interactive quizzes",
+                                  "Limited scenarios",
+                                  "Email support",
+                                ],
+                                highlight: false,
+                                context: context,
+                              ),
+                              _pricingCard(
+                                title: "Professional",
+                                price: "\$49/mo",
+                                features: [
+                                  "Everything in Starter",
+                                  "Unlimited scenarios",
+                                  "Team collaboration tools",
+                                  "Priority support",
+                                ],
+                                highlight: true,
+                                context: context,
+                              ),
+                              _pricingCard(
+                                title: "Enterprise",
+                                price: "Contact Us",
+                                features: [
+                                  "Custom integrations",
+                                  "Advanced analytics",
+                                  "Dedicated account manager",
+                                  "Enterprise-grade security",
+                                ],
+                                highlight: false,
+                                context: context,
+                              ),
+                            ]
+                            .map(
+                              (child) => SizedBox(
+                                width: constraints.maxWidth / columnCount - 24,
+                                child: child,
+                              ),
+                            )
+                            .toList(),
+                  );
+                },
+              ),
               const SizedBox(height: 60),
               const Divider(thickness: 1, color: Colors.grey),
               const SizedBox(height: 40),
@@ -96,14 +108,18 @@ class PricingScreen extends StatelessWidget {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Contact sales coming soon!')),
-                  );
+                  // Navigate to the ContactScreen using GoRouter
+                  context.go('/contact');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6366F1),
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 child: const Text("Contact Sales"),
               ),
@@ -120,6 +136,7 @@ class PricingScreen extends StatelessWidget {
     required String price,
     required List<String> features,
     bool highlight = false,
+    required BuildContext context, // Added to get the get started btns to work
   }) {
     return Card(
       elevation: highlight ? 8 : 2,
@@ -150,31 +167,43 @@ class PricingScreen extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: features
-                  .map((f) => Row(
-                        children: [
-                          Icon(Icons.check_circle,
-                              color: highlight ? Colors.white : Color(0xFF6366F1), size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              f,
-                              style: TextStyle(
-                                  color: highlight ? Colors.white : Colors.black),
+                  .map(
+                    (f) => Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle,
+                          color: highlight ? Colors.white : Color(0xFF6366F1),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            f,
+                            style: TextStyle(
+                              color: highlight ? Colors.white : Colors.black,
                             ),
                           ),
-                        ],
-                      ))
+                        ),
+                      ],
+                    ),
+                  )
                   .toList(),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                // Add signup or payment action
+                context.go('/signUp'); // Navigate to the registration page
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: highlight ? Colors.white : const Color(0xFF6366F1),
-                foregroundColor: highlight ? const Color(0xFF6366F1) : Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                backgroundColor: highlight
+                    ? Colors.white
+                    : const Color(0xFF6366F1),
+                foregroundColor: highlight
+                    ? const Color(0xFF6366F1)
+                    : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               child: const Text("Get Started"),
             ),
