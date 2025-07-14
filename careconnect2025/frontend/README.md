@@ -104,3 +104,31 @@ Once both servers are running:
 
 ---
 
+## AWS Amplify Front-End Deployment
+
+This section covers the steps to deploy the latest front-end code to the AWS Console. This action is normally intended with an automated action through GitHub, but until the repository permissions are set with the UMGC class repository, manual deployments will be taken for now.
+
+### Prequisites
+* You will need an AWS account with an AWS Amplify resource created for your account.
+*  You will need to have flutter installed for commands
+
+### Steps
+1. In your IDE terminal, go into the front-end directory with the command: 
+```bash
+cd into ./careconnect2025/frontend
+```
+2. Once in the front-end directory, run the following flutter command to build the web files needed for deployment to AWS Amplify:
+```bash
+flutter build web --base-href "/"
+```
+3. In your file explorer, locate the ../frontend/build/web file folder and open the web folder.
+4. Select all of the files in the web folder and zip them together into one folder. Save the zip file somewhere where you will remember its location.
+5. In your AWS Amplify resource in your AWS account, select the Amplify app you wish to deploy your latest front-end code. The app will list all of the branches you have in the app.
+6. Locate the branch you wish to deploy updates and select the 'Deploy Updates' button.
+7. Select the "Drag and drop" button. Then select the "Choose .zip folder" button. This will open your file explorer.
+8. In your file explorer, locate where you saved your zip file from Step #4 and choose the zip file to deploy.
+9. Back in the AWS console, select the "Save a deploy" button. This will start the deployment process.
+10. Once the deployment finishes and succeeds, the latest front-end code will be deployed.
+11. Done!
+
+
