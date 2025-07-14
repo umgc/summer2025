@@ -73,6 +73,10 @@ dependencies:
   porcupine_flutter: ^3.0.2
   speech_to_text: ^7.0.0
 
+  # device integration
+  fitbitter: ^2.0.0
+  health: ^13.1.1
+
 
   flutter:
     sdk: flutter

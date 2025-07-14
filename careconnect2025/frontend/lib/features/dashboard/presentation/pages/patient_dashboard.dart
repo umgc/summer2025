@@ -782,6 +782,26 @@ class _PatientDashboardState extends State<PatientDashboard> {
               'title': 'Social Network',
               'route': '/social-feed',
             },
+            {
+              'icon': Icons.watch,
+              'title': 'Wearables',
+              'route': '/wearables',
+            },
+            {
+              'icon': Icons.home_outlined,
+              'title': 'Home Monitoring',
+              'route': '/home-monitoring',
+            },
+            {
+              'icon': Icons.devices,
+              'title': 'Smart Devices',
+              'route': '/smart-devices',
+            },
+            {
+              'icon': Icons.medication,
+              'title': 'Medication Management',
+              'route': '/medication',
+            },
             {'icon': Icons.settings, 'title': 'Settings', 'route': '/settings'},
             {
               'icon': Icons.help_outline,
@@ -806,6 +826,14 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     final patientId =
                         user?.patientId ?? user?.id ?? widget.userId ?? 1;
                     context.go('$route?patientId=$patientId');
+                  } else if (route == '/wearables') {
+                    context.push(route);
+                  } else if (route == '/home-monitoring') {
+                    context.push(route);
+                  } else if (route == '/smart-devices') {
+                    context.push(route);
+                  } else if (route == '/medication') {
+                    context.push(route);
                   } else {
                     context.go(route);
                   }
