@@ -32,12 +32,12 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
     final urlString = dotenv.env['backend_AddPatient_Url'];
 
     if (authToken == null || authToken.isEmpty) {
-      _showError("Missing 'backend_token' in .env.local");
+      _showError("Missing 'backend_token' in .env");
       return;
     }
 
     if (urlString == null || urlString.isEmpty) {
-      _showError("Missing 'backend_AddPatient_url' in .env.local");
+      _showError("Missing 'backend_AddPatient_url' in .env");
       return;
     }
 

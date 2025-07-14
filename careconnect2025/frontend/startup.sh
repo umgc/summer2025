@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Load .env and .env.local into the current shell session
+# Load .env and .env into the current shell session
 
 ENV_FILES=(".env" ".env.local")
 

@@ -59,7 +59,7 @@ echo ""
 echo "📋 Checking for .env.local setup..."
 
 if [ -f ".env.local" ]; then
-    if grep -q "your_.*_key_here" .env.local; then
+    if grep -q "your_.*_key_here" .env; then
         echo -e "${YELLOW}⚠️ .env.local needs configuration${NC}"
     else
         echo -e "${GREEN}✅ .env.local is configured${NC}"

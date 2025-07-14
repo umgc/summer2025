@@ -30,7 +30,7 @@ String getBackendToken() {
       return '';
     }
     throw Exception(
-      'CC_BACKEND_TOKEN is not configured. Please set it in .env.local or environment variables.',
+      'CC_BACKEND_TOKEN is not configured. Please set it in .env or environment variables.',
     );
   }
 
@@ -51,7 +51,7 @@ String getJWTSecret() {
       return '';
     }
     throw Exception(
-      'JWT_SECRET is not configured. Please set it in .env.local or environment variables.',
+      'JWT_SECRET is not configured. Please set it in .env or environment variables.',
     );
   }
 
@@ -89,7 +89,7 @@ String getOpenAIKey() {
       return '';
     }
     throw Exception(
-      'OPENAI_API_KEY is not configured. Please set it in .env.local or environment variables.',
+      'OPENAI_API_KEY is not configured. Please set it in .env or environment variables.',
     );
   }
 
@@ -121,7 +121,7 @@ String getDeepSeekKey() {
       return '';
     }
     throw Exception(
-      'DEEPSEEK_API_KEY is not configured. Please set it in .env.local or environment variables.',
+      'DEEPSEEK_API_KEY is not configured. Please set it in .env or environment variables.',
     );
   }
 

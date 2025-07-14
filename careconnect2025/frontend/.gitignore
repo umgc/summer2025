@@ -46,7 +46,7 @@ app.*.map.json
 
 # Security - Environment Variables and Secrets
 .env
-.env.local
+.env
 .env.development
 .env.production
 .env.staging
