@@ -19,6 +19,10 @@ class ScenarioController extends StateNotifier<List<NodeBlock>> {
     state = [...state, block];
   }
 
+  void removeNode(String nodeId) {
+    state = state.where((node) => node.id != nodeId).toList();
+  }
+
 void replace(List<NodeBlock> newState) {
   state = newState;
   _undoStack.clear();

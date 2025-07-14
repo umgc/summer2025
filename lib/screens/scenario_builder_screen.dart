@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import '../state/scenario_provider.dart';
 import '../shared/models/node_block.dart';
-import 'dart:typed_data';
+import 'dart:typed_data'; // Required for FilePicker.platform.saveFile bytes
 
 class ScenarioBuilderScreen extends ConsumerStatefulWidget {
   final String initialDomain;
@@ -40,10 +40,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
     'Finance',
   ];
 
-  /**
- * Domain-specific images
- */
-  ///
+  /// Domain-specific images
   final Map<String, String> domainImages = {
     'Oil & Gas': 'assets/images/oil-pumps.jpg',
     'IT Project Management': 'assets/images/it_management_background.jpg',
@@ -53,11 +50,8 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
     'Finance': 'assets/images/finance_background.jpg',
   };
 
-  /**
- * Domain-specific event templates
- * These can be used to generate random events based on the selected domain.
- */
-  ///
+  /// Domain-specific event templates
+  /// These can be used to generate random events based on the selected domain.
   final Map<String, List<Map<String, String>>> domainEventTemplates = {
     'Healthcare': [
       {'type': 'Pop Quiz', 'content': 'What is the normal blood pressure?'},
@@ -154,11 +148,8 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
     ],
   };
 
-  /**
- * Returns a random event for the given domain.
- * If no specific events are defined for the domain, returns a generic event.
- */
-  ///
+  /// Returns a random event for the given domain.
+  /// If no specific events are defined for the domain, returns a generic event.
   Map<String, String> getRandomEventForDomain(String domain) {
     final events = domainEventTemplates[domain];
     if (events == null || events.isEmpty) {
@@ -176,12 +167,19 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
     selectedDomain = widget.initialDomain;
   }
 
+  // --- MODIFIED: _addNode to include parentId logic ---
   void _addNode(String type, Offset offset) {
+    final currentNodes = ref.read(scenarioProvider);
+    String? lastNodeId;
+
+    // If there are existing nodes, the last one becomes the parent of the new node.
+    if (currentNodes.isNotEmpty) {
+      lastNodeId = currentNodes.last.id;
+    }
+
     if (type == 'Event') {
       final randomEvent = getRandomEventForDomain(selectedDomain);
-      ref
-          .read(scenarioProvider.notifier)
-          .addNode(
+      ref.read(scenarioProvider.notifier).addNode(
             NodeBlock(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
               offset: offset,
@@ -189,21 +187,22 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
               title: randomEvent['type']!,
               eventType: randomEvent['type'],
               eventContent: randomEvent['content'],
+              parentId: lastNodeId, // <--- Crucial: Assign parentId here
             ),
           );
     } else {
-      ref
-          .read(scenarioProvider.notifier)
-          .addNode(
+      ref.read(scenarioProvider.notifier).addNode(
             NodeBlock(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
               offset: offset,
               type: type,
               title: type,
+              parentId: lastNodeId, // <--- Crucial: Assign parentId here
             ),
           );
     }
   }
+  // --- END MODIFIED _addNode ---
 
   void _editNode(NodeBlock block) {
     showDialog(
@@ -522,10 +521,8 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                       ),
                     ],
 
-                    /**
-                     * Event nodes allow for dynamic interactions
-                     * like pop quizzes or surprise tasks.
-                     */
+                    /// Event nodes allow for dynamic interactions
+                    /// like pop quizzes or surprise tasks.
                     if (currentBlock.type == 'Event') ...[
                       TextFormField(
                         initialValue: currentBlock.eventType ?? '',
@@ -579,6 +576,41 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
               ),
             ),
             actions: [
+              // NEW: Delete button
+              TextButton(
+                onPressed: () {
+                  // Show a confirmation dialog before deleting
+                  showDialog(
+                    context: context,
+                    builder: (deleteContext) => AlertDialog(
+                      title: const Text('Confirm Deletion'),
+                      content: Text(
+                          'Are you sure you want to delete "${currentBlock.title}"?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.pop(deleteContext), // Close confirmation
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                          onPressed: () {
+                            ref.read(scenarioProvider.notifier).removeNode(currentBlock.id);
+                            Navigator.pop(deleteContext); // Close confirmation
+                            Navigator.pop(context); // Close the edit dialog
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Node "${currentBlock.title}" deleted')),
+                                );
+                          },
+                          child: const Text('Delete', style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              ),
+              // Your existing "Done" button
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Done'),
@@ -589,6 +621,129 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
       ),
     );
   }
+
+  // Helper functions for node colors
+  Color _getNodeColor(String type) {
+    switch (type) {
+      case 'Start':
+        return Colors.green.shade200;
+      case 'Lesson':
+        return Colors.blue.shade200;
+      case 'Quiz':
+        return Colors.orange.shade200;
+      case 'Decision':
+        return Colors.purple.shade200;
+      case 'Checkpoint':
+        return Colors.teal.shade200;
+      case 'End':
+        return Colors.red.shade200;
+      case 'Interactive':
+        return Colors.yellow.shade200;
+      case 'Event':
+        return Colors.cyan.shade200;
+      default:
+        return Colors.grey.shade200;
+    }
+  }
+
+  Color _getTextColor(String type) {
+    switch (type) {
+      case 'Start':
+      case 'Lesson':
+      case 'Quiz':
+      case 'Decision':
+      case 'Checkpoint':
+      case 'End':
+      case 'Interactive':
+      case 'Event':
+        return Colors.black87; // Dark text for lighter backgrounds
+      default:
+        return Colors.black54;
+    }
+  }
+
+  // _buildNodeCard is included for completeness and context
+  Widget _buildNodeCard(NodeBlock block, bool isDragging) {
+    final cardContent = Card(
+      elevation: isDragging ? 10 : 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      color: _getNodeColor(block.type),
+      child: Container(
+        width: 150,
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              block.title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: _getTextColor(block.type),
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              block.type,
+              style: TextStyle(
+                fontSize: 12,
+                color: _getTextColor(block.type).withOpacity(0.8),
+              ),
+            ),
+            if (block.type == 'Event' && block.eventType != null)
+              Text(
+                block.eventType!,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: _getTextColor(block.type).withOpacity(0.6),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            if (block.estimatedTime != null && block.estimatedTime!.isNotEmpty)
+              Text(
+                'Est. Time: ${block.estimatedTime} min',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: _getTextColor(block.type).withOpacity(0.6),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+
+    return GestureDetector(
+      onTap: () => _editNode(block),
+      onLongPress: () {
+        showModalBottomSheet(
+          context: context,
+          builder: (context) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                ListTile(
+                  leading: const Icon(Icons.delete),
+                  title: const Text('Delete Node'),
+                  onTap: () {
+                    // This is for quick delete from long press, but the
+                    // main delete button is in the edit dialog.
+                    // Consider unifying delete logic or having a confirmation here too.
+                    Navigator.pop(context); // Close the bottom sheet
+                    ref.read(scenarioProvider.notifier).removeNode(block.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Node "${block.title}" deleted')),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      child: cardContent,
+    );
+  }
+  // END _buildNodeCard
 
   Widget _buildSidebar(BuildContext context, bool isMobile) {
     return Drawer(
@@ -704,11 +859,17 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
             icon: const Icon(Icons.save),
             tooltip: 'Save',
             onPressed: () {
+              // Serialize the 'blocks' list to JSON and save it.
+              // This uses the toJson method we added to NodeBlock.
+              final jsonString = jsonEncode(blocks.map((block) => block.toJson()).toList());
+              // In a real app, you'd save jsonString to a file.
+              print('Scenario JSON: $jsonString'); // For demonstration
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Save feature not implemented')),
+                const SnackBar(content: Text('Scenario data printed to console (save feature needs file system access)')),
               );
             },
           ),
+          // --- NEW/MODIFIED: Export to JSON functionality ---
           IconButton(
             icon: const Icon(Icons.download),
             tooltip: 'Export Scenario to JSON',
@@ -719,29 +880,28 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                     .map((block) => block.toJson())
                     .toList();
 
-                // Encode the list of JSON maps into a JSON string
+                // Encode the list of JSON maps into a JSON string with indentation for readability
                 final String jsonString = const JsonEncoder.withIndent(
                   '  ',
                 ).convert(scenarioJsonList);
 
-                // Suggest a default filename based on the current scenario ID or domain
+                // Suggest a default filename
                 String defaultFileName = 'scenario_export.json';
-                if (blocks.isNotEmpty &&
-                    blocks.first.scenarioId != 'DEFAULT_SCENARIO') {
-                  defaultFileName = '${blocks.first.scenarioId}.json';
-                } else if (selectedDomain.isNotEmpty) {
+                // You might want to derive a more meaningful name here, e.g., from the scenario's first node's title or the selected domain.
+                if (selectedDomain.isNotEmpty) {
                   defaultFileName =
                       '${selectedDomain.replaceAll(' ', '_').toLowerCase()}_scenario.json';
+                } else if (blocks.isNotEmpty && blocks.first.title.isNotEmpty) {
+                  defaultFileName = '${blocks.first.title.replaceAll(' ', '_').toLowerCase()}_scenario.json';
                 }
 
                 // Use file_picker to save the file
+                // On web, this will trigger a download. On desktop, it will open a save dialog.
                 final String? filePath = await FilePicker.platform.saveFile(
                   fileName: defaultFileName,
                   type: FileType.custom,
                   allowedExtensions: ['json'],
-                  bytes: Uint8List.fromList(
-                    jsonString.codeUnits,
-                  ), // Provide content as bytes
+                  bytes: Uint8List.fromList(jsonString.codeUnits), // Provide content as bytes
                 );
 
                 if (filePath != null) {
@@ -749,21 +909,22 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                     SnackBar(content: Text('Scenario exported to: $filePath')),
                   );
                 } else {
+                  // User cancelled the save operation
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Scenario export initiated. Check your downloads folder..',
-                      ),
-                    ),
+                    const SnackBar(content: Text('Scenario export cancelled.')),
                   );
                 }
               } catch (e) {
+                // Catch any errors during the export process
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error exporting scenario: $e')),
                 );
               }
             },
           ),
+          // --- END NEW/MODIFIED: Export to JSON functionality ---
+
+          // --- MODIFIED: Load Scenario functionality ---
           IconButton(
             icon: const Icon(Icons.folder_open),
             tooltip: 'Load Scenario',
@@ -783,111 +944,74 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                     throw Exception("Expected JSON array at the top level");
                   }
 
-                  final loadedBlocks = parsedJson
-                      .map(
-                        (e) => NodeBlock(
-                          id: e['id'],
-                          offset: Offset(
-                            (e['offset']['dx'] as num).toDouble(),
-                            (e['offset']['dy'] as num).toDouble(),
-                          ),
-                          title: e['title'],
-                          type: e['type'],
-                          description: e['description'],
-                          welcomeMessage: e['welcomeMessage'],
-                          lessonType: e['lessonType'],
-                          lessonContent: e['lessonContent'],
-                          estimatedTime: e['estimatedTime'],
-                          quizTitle: e['quizTitle'],
-                          passingScore: e['passingScore'],
-                          timeLimit: e['timeLimit'],
-                          conditionExpression: e['conditionExpression'],
-                          truePathLabel: e['truePathLabel'],
-                          falsePathLabel: e['falsePathLabel'],
-                          checkpointTitle: e['checkpointTitle'],
-                          checkpointNote: e['checkpointNote'],
-                          questions: (e['questions'] as List?)
-                              ?.map((q) => (q as Map).cast<String, String>())
-                              .toList(),
-                        ),
-                      )
-                      .toList();
+                  // CORRECTED: Use NodeBlock.fromJson to properly deserialize
+                  final loadedBlocks = (parsedJson as List)
+                      .map((e) => NodeBlock.fromJson(e as Map<String, dynamic>))
+                      .toList()
+                      .cast<NodeBlock>(); // Explicit cast for safety
 
                   ref.read(scenarioProvider.notifier).replace(loadedBlocks);
-
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Scenario loaded successfully!'),
-                    ),
+                    const SnackBar(content: Text('Scenario loaded')),
                   );
-                } catch (err) {
+                } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Error loading: $err")),
+                    SnackBar(content: Text('Failed to load scenario: $e')),
                   );
                 }
               }
             },
           ),
+          // --- END MODIFIED: Load Scenario functionality ---
         ],
       ),
       drawer: isMobile ? _buildSidebar(context, isMobile) : null,
       body: Row(
         children: [
-          if (!isMobile)
-            SizedBox(width: 260, child: _buildSidebar(context, isMobile)),
+          if (!isMobile) _buildSidebar(context, isMobile),
           Expanded(
             child: DragTarget<String>(
+              // This DragTarget accepts String (for new nodes from sidebar)
               onAcceptWithDetails: (details) {
                 final renderBox = context.findRenderObject() as RenderBox;
                 final offset = renderBox.globalToLocal(details.offset);
-                _addNode(details.data, offset);
+                _addNode(details.data, offset); // This adds a new node
               },
               builder: (context, candidate, rejected) {
                 return Stack(
                   children: [
                     CustomPaint(
-                      painter: _ConnectionPainter(blocks),
+                      painter: _ConnectionPainter(blocks), // Pass all blocks
                       child: Container(),
                     ),
                     ...blocks.map(
                       (block) => Positioned(
                         left: block.offset.dx,
                         top: block.offset.dy,
-                        child: GestureDetector(
-                          onPanUpdate: (details) {
-                            scenario.moveNode(
-                              block,
-                              block.offset + details.delta,
-                            );
-                          },
-                          onTap: () => _editNode(block),
-                          child: Card(
-                            color: Colors.indigo,
-                            elevation: 4,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    block.type,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    block.title,
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                        // MODIFIED: Draggable for existing nodes
+                        child: Draggable<NodeBlock>(
+                          // Draggable now takes NodeBlock as data
+                          data: block, // Pass the entire NodeBlock as data
+                          feedback: Material(
+                            color: Colors.transparent,
+                            child: _buildNodeCard(block,
+                                true), // Use _buildNodeCard for visual feedback
                           ),
+                          onDragEnd: (details) {
+                            // Use onDragEnd for final position update
+                            final renderBox =
+                                context.findRenderObject() as RenderBox;
+                            final localOffset =
+                                renderBox.globalToLocal(details.offset);
+
+                            ref
+                                .read(scenarioProvider.notifier)
+                                .updateNode(block.copyWith(offset: localOffset));
+                          },
+                          child: _buildNodeCard(
+                              block, false), // Use _buildNodeCard here
                         ),
+                        // END MODIFIED
                       ),
                     ),
                   ],
@@ -901,22 +1025,58 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
   }
 }
 
+/// Custom painter for drawing connections between NodeBlocks.
 class _ConnectionPainter extends CustomPainter {
   final List<NodeBlock> blocks;
+
   _ConnectionPainter(this.blocks);
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black38
-      ..strokeWidth = 2;
-    for (int i = 0; i < blocks.length - 1; i++) {
-      final from = blocks[i].offset + const Offset(50, 20);
-      final to = blocks[i + 1].offset + const Offset(50, 20);
-      canvas.drawLine(from, to, paint);
+      ..color = Colors.grey
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    // A map to quickly look up nodes by ID
+    final Map<String, NodeBlock> nodeMap = {
+      for (var block in blocks) block.id: block
+    };
+
+    // Iterate through all blocks to draw connections
+    for (var block in blocks) {
+      // Only draw a connection if the block has a parentId
+      if (block.parentId != null) {
+        final parentNode = nodeMap[block.parentId];
+        if (parentNode != null) {
+          // Calculate the center of each node for drawing connections
+          // Assuming node width 150, height 100 for connection points
+          const nodeWidth = 100.0;
+          const nodeHeight = 50.0;
+
+          // Connect from the bottom-center of the parent to the top-center of the child
+          final Offset parentBottomCenter = parentNode.offset + const Offset(nodeWidth / 2, nodeHeight);
+          final Offset childTopCenter = block.offset + const Offset(nodeWidth / 2, 0);
+
+          canvas.drawLine(parentBottomCenter, childTopCenter, paint);
+        }
+      }
     }
   }
 
   @override
-  bool shouldRepaint(covariant _ConnectionPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    // Repaint if the list of blocks changes (e.g., nodes are added, removed, or moved)
+    return (oldDelegate as _ConnectionPainter).blocks != blocks;
+  }
+}
+
+// Extension to allow .firstWhereOrNull (often built into newer Flutter/Dart versions)
+extension IterableExt<T> on Iterable<T> {
+  T? firstWhereOrNull(bool Function(T element) test) {
+    for (var element in this) {
+      if (test(element)) return element;
+    }
+    return null;
+  }
 }
