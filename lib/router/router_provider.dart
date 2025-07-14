@@ -16,6 +16,8 @@ import '/screens/designer_dashboard.dart';
 import '/screens/trainee_dashboard.dart';
 import '../screens/pricing_screen.dart';
 import '../screens/contact_screen.dart';
+import '../screens/about_screen.dart';
+import '../screens/features_screen.dart';
 
 import '/state/auth_providers.dart';
 
@@ -34,6 +36,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         '/reset-password',
         '/pricing', // Added to allow access without login if desired
         '/contact', // Added to allow access without login if desired
+        '/about', // NEW: Added /about to allow access without login
+        '/features', // NEW: Added /features to allow access without login
+        '/privacy-policy', // Assuming this should also be public
       ].contains(path);
 
       // Not logged in and trying to access a protected route
@@ -89,6 +94,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/contact',
         builder: (context, state) => const ContactScreen(),
+      ),
+      // NEW: Added routes for AboutScreen and FeaturesScreen
+      GoRoute(path: '/about', builder: (context, state) => const AboutScreen()),
+      GoRoute(
+        path: '/features',
+        builder: (context, state) => const FeaturesScreen(),
       ),
       GoRoute(
         path: '/admin',

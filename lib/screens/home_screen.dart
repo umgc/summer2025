@@ -9,7 +9,6 @@ import '/auth/register_screen.dart';
 import '/screens/features_screen.dart';
 import 'package:go_router/go_router.dart';
 
-
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -43,45 +42,42 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           const Spacer(),
-         kIsWeb && !isMobile
-    ? Expanded(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _navLink(context, 'Features'),
-            _navLink(context, 'Pricing'),
-            _navLink(context, 'About'),
-            _navLink(context, 'Contact'),
-          ],
-        ),
-      )
-    : const SizedBox.shrink(),
-
+          kIsWeb && !isMobile
+              ? Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _navLink(context, 'Features'),
+                      _navLink(context, 'Pricing'),
+                      _navLink(context, 'About'),
+                      _navLink(context, 'Contact'),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
         ],
       ),
-     actions: [
-  TextButton(
-    onPressed: () {
-      context.push('/login'); 
-    },
-    child: const Text(
-      'Log In',
-      style: TextStyle(color: Color(0xFF6366F1)),
-    ),
-  ),
-
-
-
-
-
+      actions: [
+        TextButton(
+          onPressed: () {
+            context.push('/login');
+          },
+          child: const Text(
+            'Log In',
+            style: TextStyle(color: Color(0xFF6366F1)),
+          ),
+        ),
         const SizedBox(width: 8),
         ElevatedButton(
           onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen()));
+            // Using context.go() for consistency with GoRouter
+            context.go('/signUp');
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF6366F1),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
           ),
           child: const Text("Get Started →"),
         ),
@@ -90,46 +86,33 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-Widget _navLink(BuildContext context, String title) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 12),
-    child: TextButton(
-      onPressed: () {
-        switch (title) {
-          case 'Features':
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const FeaturesScreen()),
-            );
-            break;
-          case 'Pricing':
-           Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PricingScreen()),
-            );
-            break;
-          case 'About':
-           Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AboutScreen()),
-            );
-            break;
-          case 'Contact':
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ContactScreen()),
-            );
-            break;
-        }
-      },
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 16, color: Colors.black),
+  Widget _navLink(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: TextButton(
+        onPressed: () {
+          switch (title) {
+            case 'Features':
+              context.go('/features'); // Using context.go() for consistency
+              break;
+            case 'Pricing':
+              context.go('/pricing'); // Using context.go() for consistency
+              break;
+            case 'About':
+              context.go('/about'); // Using context.go() for consistency
+              break;
+            case 'Contact':
+              context.go('/contact'); // Using context.go() for consistency
+              break;
+          }
+        },
+        child: Text(
+          title,
+          style: const TextStyle(fontSize: 16, color: Colors.black),
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _buildMobileLayout(BuildContext context) {
     return LayoutBuilder(
@@ -180,20 +163,25 @@ Widget _navLink(BuildContext context, String title) {
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen()));
+                        // Using context.go() for consistency with GoRouter
+                        context.go('/signUp');
                       },
                       icon: const Icon(Icons.arrow_forward),
                       label: const Text("Get Started"),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2563EB),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              
             ],
           ),
         );
@@ -245,14 +233,20 @@ Widget _navLink(BuildContext context, String title) {
                       const SizedBox(height: 32),
                       ElevatedButton.icon(
                         onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen()));
+                          // Using context.go() for consistency with GoRouter
+                          context.go('/signUp');
                         },
                         icon: const Icon(Icons.arrow_forward),
                         label: const Text("Get Started"),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2563EB),
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                     ],
@@ -277,7 +271,7 @@ Widget _navLink(BuildContext context, String title) {
             color: const Color(0xFFF0F0EF),
             child: _buildTestimonialSection(),
           ),
-          _buildFooter(),
+          _buildFooter(context), // FIX: Pass context here
         ],
       ),
     );
@@ -301,22 +295,45 @@ Widget _navLink(BuildContext context, String title) {
             style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 40),
-          LayoutBuilder(builder: (context, constraints) {
-            int columnCount = constraints.maxWidth > 1000 ? 3 : constraints.maxWidth > 600 ? 2 : 1;
-            return Wrap(
-              spacing: 24,
-              runSpacing: 24,
-              alignment: WrapAlignment.center,
-              children: [
-                _featureCard(Icons.psychology, "AI-Powered Learning Paths",
-                    "Personalized curriculum that adapts to your learning style, pace, and goals using advanced machine learning algorithms."),
-                _featureCard(Icons.trending_up, "Real-Time Progress Tracking",
-                    "Monitor your advancement with detailed analytics, performance metrics, and intelligent insights to optimize your learning journey."),
-                _featureCard(Icons.groups, "Seamless Team Integration",
-                    "Collaborate effectively with team members, share progress, and learn together in a unified development environment."),
-              ].map((child) => SizedBox(width: constraints.maxWidth / columnCount - 24, child: child)).toList(),
-            );
-          }),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              int columnCount = constraints.maxWidth > 1000
+                  ? 3
+                  : constraints.maxWidth > 600
+                  ? 2
+                  : 1;
+              return Wrap(
+                spacing: 24,
+                runSpacing: 24,
+                alignment: WrapAlignment.center,
+                children:
+                    [
+                          _featureCard(
+                            Icons.psychology,
+                            "AI-Powered Learning Paths",
+                            "Personalized curriculum that adapts to your learning style, pace, and goals using advanced machine learning algorithms.",
+                          ),
+                          _featureCard(
+                            Icons.trending_up,
+                            "Real-Time Progress Tracking",
+                            "Monitor your advancement with detailed analytics, performance metrics, and intelligent insights to optimize your learning journey.",
+                          ),
+                          _featureCard(
+                            Icons.groups,
+                            "Seamless Team Integration",
+                            "Collaborate effectively with team members, share progress, and learn together in a unified development environment.",
+                          ),
+                        ]
+                        .map(
+                          (child) => SizedBox(
+                            width: constraints.maxWidth / columnCount - 24,
+                            child: child,
+                          ),
+                        )
+                        .toList(),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -336,9 +353,17 @@ Widget _navLink(BuildContext context, String title) {
               child: Icon(icon, color: Colors.white, size: 30),
             ),
             const SizedBox(height: 16),
-            Text(title, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
             const SizedBox(height: 12),
-            Text(description, textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey),
+            ),
           ],
         ),
       ),
@@ -362,47 +387,72 @@ Widget _navLink(BuildContext context, String title) {
             style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 40),
-          LayoutBuilder(builder: (context, constraints) {
-            int columnCount = constraints.maxWidth > 1000 ? 3 : constraints.maxWidth > 600 ? 2 : 1;
-            return Wrap(
-              spacing: 24,
-              runSpacing: 24,
-              alignment: WrapAlignment.center,
-              children: [
-                _testimonialCard(
-                  quote: "DeepTrain transformed how I approach learning new technologies. The AI-powered paths are incredibly intuitive and effective.",
-                  name: "Sarah Chen",
-                  role: "Senior Developer",
-                ),
-                _testimonialCard(
-                  quote: "The real-time progress tracking keeps our entire team aligned and motivated. Best investment we've made in team development.",
-                  name: "Marcus Rodriguez",
-                  role: "Tech Lead",
-                ),
-                _testimonialCard(
-                  quote: "Seamless integration with our workflow. DeepTrain makes continuous learning feel natural and engaging for everyone.",
-                  name: "Emily Watson",
-                  role: "Product Manager",
-                ),
-              ].map((child) => SizedBox(width: constraints.maxWidth / columnCount - 24, child: child)).toList(),
-            );
-          }),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              int columnCount = constraints.maxWidth > 1000
+                  ? 3
+                  : constraints.maxWidth > 600
+                  ? 2
+                  : 1;
+              return Wrap(
+                spacing: 24,
+                runSpacing: 24,
+                alignment: WrapAlignment.center,
+                children:
+                    [
+                          _testimonialCard(
+                            quote:
+                                "DeepTrain transformed how I approach learning new technologies. The AI-powered paths are incredibly intuitive and effective.",
+                            name: "Sarah Chen",
+                            role: "Senior Developer",
+                          ),
+                          _testimonialCard(
+                            quote:
+                                "The real-time progress tracking keeps our entire team aligned and motivated. Best investment we've made in team development.",
+                            name: "Marcus Rodriguez",
+                            role: "Tech Lead",
+                          ),
+                          _testimonialCard(
+                            quote:
+                                "Seamless integration with our workflow. DeepTrain makes continuous learning feel natural and engaging for everyone.",
+                            name: "Emily Watson",
+                            role: "Product Manager",
+                          ),
+                        ]
+                        .map(
+                          (child) => SizedBox(
+                            width: constraints.maxWidth / columnCount - 24,
+                            child: child,
+                          ),
+                        )
+                        .toList(),
+              );
+            },
+          ),
         ],
       ),
     );
   }
 
-  Widget _testimonialCard({required String quote, required String name, required String role}) {
+  Widget _testimonialCard({
+    required String quote,
+    required String name,
+    required String role,
+  }) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: Colors.white, // Ensure card has a background color
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
             const Icon(Icons.format_quote, size: 40, color: Color(0xFF6366F1)),
             const SizedBox(height: 16),
-            Text('"$quote"', style: const TextStyle(fontStyle: FontStyle.italic)),
+            Text(
+              '"$quote"',
+              style: const TextStyle(fontStyle: FontStyle.italic),
+            ),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -411,19 +461,23 @@ Widget _navLink(BuildContext context, String title) {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     Text(role, style: const TextStyle(color: Colors.grey)),
                   ],
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFooter() {
+  // MODIFIED: _buildFooter now accepts BuildContext
+  Widget _buildFooter(BuildContext context) {
     return Container(
       color: const Color(0xFF1E293B),
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
@@ -437,7 +491,11 @@ Widget _navLink(BuildContext context, String title) {
                   children: const [
                     Text(
                       'DeepTrain',
-                      style: TextStyle(color: Color(0xFF6366F1), fontSize: 22, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Color(0xFF6366F1),
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     SizedBox(height: 12),
                     Text(
@@ -450,13 +508,84 @@ Widget _navLink(BuildContext context, String title) {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  children: const [
-                    Text('Quick Links', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 12),
-                    Text('About', style: TextStyle(color: Colors.grey)),
-                    Text('Contact', style: TextStyle(color: Colors.grey)),
-                    Text('Privacy Policy', style: TextStyle(color: Colors.grey)),
-                    Text('Terms of Service', style: TextStyle(color: Colors.grey)),
+                  children: [
+                    const Text(
+                      'Quick Links',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Removed 'const' from TextButton and its child Text widgets
+                    TextButton(
+                      onPressed: () => context.go('/about'),
+                      child: const Text(
+                        'About',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.go('/contact'),
+                      child: const Text(
+                        'Contact',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.go('/pricing'),
+                      child: const Text(
+                        'Pricing',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('Privacy Policy'),
+                            content: const Text(
+                              'Your privacy matters to us. DeepTrain collects minimal data to personalize your learning experience and improve our services. We never share your personal information with third parties without your consent.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Privacy Policy',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+
+                    TextButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('Terms of Service'),
+                            content: const Text(
+                              'By using DeepTrain, you agree to our Terms of Service. These terms outline your rights and responsibilities, acceptable use of the platform, and our commitment to providing a secure and effective learning environment. Continued use signifies your acceptance.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Terms of Service',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -465,7 +594,10 @@ Widget _navLink(BuildContext context, String title) {
           const SizedBox(height: 40),
           const Divider(color: Colors.grey),
           const SizedBox(height: 20),
-          const Text('© 2025 DeepTrain. All rights reserved.', style: TextStyle(color: Colors.grey)),
+          const Text(
+            '© 2025 DeepTrain. All rights reserved.',
+            style: TextStyle(color: Colors.grey),
+          ),
         ],
       ),
     );
