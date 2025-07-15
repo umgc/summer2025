@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
-import 'package:care_connect_app/config/constants/api_constants.dart';
+import 'package:care_connect_app/services/api_service.dart';
 import '../../models/package_model.dart';
 
 class StripeCheckoutPage extends StatefulWidget {
