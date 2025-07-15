@@ -5,7 +5,7 @@ import '../../models/package_model.dart';
 import '../../../payments/models/subscription_plan_model.dart';
 import 'stripe_checkout_page.dart';
 import 'package:go_router/go_router.dart';
-import 'package:care_connect_app/config/constants/api_constants.dart';
+import 'package:care_connect_app/services/api_service.dart';
 
 class SelectPackagePage extends StatefulWidget {
   const SelectPackagePage({super.key});
