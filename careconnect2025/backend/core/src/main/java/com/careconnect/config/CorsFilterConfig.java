@@ -1,6 +1,7 @@
 package com.careconnect.config;
 
 import jakarta.servlet.Filter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -12,18 +13,13 @@ import java.util.List;
 @Configuration
 public class CorsFilterConfig {
 
+    @Value("${careconnect.cors_allowed}")
+    List<String> allowedOrigins;
+
     @Bean
     public Filter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of(
-                "http://localhost",
-                "http://localhost:*",           // ✅ Allow any localhost port
-                "http://127.0.0.1",
-                "http://127.0.0.1:*",          // ✅ Allow any 127.0.0.1 port
-                "http://10.0.2.2:8080",
-                "http://localhost:50030",       // ✅ Specific Flutter web port
-                "http://localhost:3000"         // ✅ Common dev port
-        ));
+        config.setAllowedOriginPatterns(allowedOrigins);
         config.setAllowCredentials(true);
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
