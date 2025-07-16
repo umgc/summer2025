@@ -140,14 +140,6 @@ public class S3StorageService implements StorageService {
         } catch (Exception e) {
             log.error("Failed to delete file from S3: {}", path, e);
             throw new RuntimeException("Failed to delete file", e);
-        }
-    }
-
-    @Override
-    public List<String> listUserFiles(Long userId, String userType) {
-        try {
-            String prefix = userType.toLowerCase() + "_" + userId + "/";
-            log.info("DEBUG: Listing files for user - Bucket: {}, Prefix: {}", props.getBucket(), prefix);
 
             ListObjectsV2Response response = s3.listObjectsV2(
                     ListObjectsV2Request.builder()
