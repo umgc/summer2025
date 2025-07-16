@@ -4,8 +4,6 @@ C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\DashboardDTO.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\FamilyMemberRegistration.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\model\User.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\AuthService.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\PatientService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\MoodPainLogRequest.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\model\WearableMetric.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\config\StripeConfig.java
@@ -14,7 +12,6 @@ C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\service\CaregiverPatientLinkService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\model\XPProgress.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\controller\TestController.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\EmailService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\ResetPasswordRequest.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\UserDetailsServiceImpl.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\repository\CaregiverRepository.java
@@ -23,7 +20,6 @@ C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\ProductDTO.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\model\UserAchievement.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\repository\PostRepository.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\ProfessionalInfoDto.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\service\PasswordResetService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\config\FlywayConfig.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\JwtTokenProvider.java
@@ -32,8 +28,6 @@ C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\util\SecurityUtil.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\controller\FeedController.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\controller\PatientController.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\PaymentService.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\FitbitService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\repository\PatientCaregiverRepository.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\controller\LinkManagementController.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\exception\AuthExceptionHandler.java
@@ -62,7 +56,6 @@ C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\PatientRegistration.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\util\YOPmailHelper.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\model\Plan.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\PasswordResetService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\service\GamificationService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\repository\CaregiverPatientLinkRepository.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\repository\PasswordResetTokenRepo.java
@@ -73,7 +66,6 @@ C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\RegisterRequest.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\Metrics.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\CaregiverPatientLinkResponse.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\TokenProvider.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\ExportLinkDTO.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\service\UserPasswordService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\config\WebMvcConfig.java
@@ -97,10 +89,8 @@ C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\config\CorsFilterConfig.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\UserPrincipal.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\repository\UserRepository.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\StripeService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\model\MoodPainLog.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\controller\CaregiverPatientLinkController.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\ExportSigner.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\service\TokenProvider.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\repository\SummaryMetricRepository.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\service\FamilyMemberService.java
@@ -120,28 +110,22 @@ C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\config\WebClientConfig.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\model\Caregiver.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\service\AnalyticsService.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\CaregiverService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\CaregiverRegistration.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\UpdateLinkRequest.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\AnalyticsService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\controller\CommentController.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\service\SubscriptionService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\repository\MoodPainLogRepository.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\SubscriptionService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\SubscriptionCancelRequestDTO.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\service\FeedService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\User.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\exception\OAuthException.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\controller\CaregiverController.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\CareconnectBackendApplication.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\StripeCheckoutService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\Credentials.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\GamificationService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\repository\UserAchievementRepository.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\model\MetricType.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\model\Address.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\repository\PatientRepository.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\FeedService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\repository\SubscriptionRepository.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\model\Permission.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\dto\CreateLinkRequest.java
@@ -163,7 +147,6 @@ C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\exception\ResourceNotFoundException.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\exception\AuthenticationException.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\model\ResetToken.java
-C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\service\CommentService.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\config\AchievementInitializer.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\controller\EmailTestController.java
 C:\Users\bompl\FlutterApp\care_connect_app\careconnect2025\backend\core\src\main\java\com\careconnect\security\SessionAuthenticationFilter.java

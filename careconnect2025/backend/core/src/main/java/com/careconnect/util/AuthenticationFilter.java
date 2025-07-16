@@ -2,6 +2,7 @@ package com.careconnect.util;
 
 import java.io.IOException;
 
+import com.careconnect.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -10,7 +11,6 @@ import com.careconnect.dto.LoginRequest;
 import com.careconnect.dto.LoginResponse;
 import com.careconnect.exception.AuthenticationException;
 import com.careconnect.security.JwtTokenProvider;
-import com.careconnect.security.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.FilterChain;

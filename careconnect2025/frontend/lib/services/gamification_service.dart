@@ -1,8 +1,7 @@
 import 'dart:convert';
-// import 'dart:io';
 import '../config/env_constant.dart';
-
-import '../services/session_manager.dart';
+import 'package:http/http.dart' as http;
+import '../services/auth_token_manager.dart';
 
 class ApiConstants {
   static final String _host = getBackendBaseUrl();
@@ -10,17 +9,19 @@ class ApiConstants {
 }
 
 class GamificationService {
-  static final session = SessionManager();
 
   static Future<Map<String, dynamic>> fetchXPProgress(int userId) async {
-    await session.restoreSession(); // Ensure cookie is restored
+    final headers = await AuthTokenManager.getAuthHeaders();
 
-    final response = await session.get(
-      '${ApiConstants.gamification}/progress/$userId',
+    final response = await http.get(
+      Uri.parse('${ApiConstants.gamification}/progress/$userId'),
+      headers: headers,
     );
 
     if (response.statusCode == 200 && response.body.isNotEmpty) {
       return jsonDecode(response.body);
+    } else if (response.statusCode == 401) {
+      throw Exception("Not authorized. Please log in again.");
     } else {
       print("Status: ${response.statusCode}, Body: '${response.body}'");
       throw Exception("Failed to load XP Progress");
@@ -28,21 +29,34 @@ class GamificationService {
   }
 
   static Future<List<dynamic>> fetchAchievements(int userId) async {
-    final res = await session.get(
-      '${ApiConstants.gamification}/achievements/$userId',
+    final headers = await AuthTokenManager.getAuthHeaders();
+
+    final res = await http.get(
+      Uri.parse('${ApiConstants.gamification}/achievements/$userId'),
+      headers: headers,
     );
     if (res.statusCode == 200) return jsonDecode(res.body);
 
+    if (res.statusCode == 401) {
+      throw Exception("Not authorized. Please log in again.");
+    }
     final error = jsonDecode(res.body);
     throw Exception(error['error'] ?? 'Failed to load achievements');
   }
 
+
   static Future<List<dynamic>> fetchAllAchievements(int userId) async {
-    final res = await session.get(
-      '${ApiConstants.gamification}/all-achievements',
+    final headers = await AuthTokenManager.getAuthHeaders();
+
+    final res = await http.get(
+      Uri.parse('${ApiConstants.gamification}/all-achievements'),
+      headers: headers,
     );
     if (res.statusCode == 200) return jsonDecode(res.body);
 
+    if (res.statusCode == 401) {
+      throw Exception("Not authorized. Please log in again.");
+    }
     final error = jsonDecode(res.body);
     throw Exception(error['error'] ?? 'Failed to load all achievements');
   }

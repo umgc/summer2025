@@ -347,6 +347,7 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
       key: _formKeys[1],
       child: Column(
         children: [
+          // Address Line 1 (Required)
           TextFormField(
             controller: _addressLine1Controller,
             decoration: InputDecoration(
@@ -368,6 +369,8 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
             },
           ),
           const SizedBox(height: 16),
+
+          // Address Line 2 (Optional)
           TextFormField(
             controller: _addressLine2Controller,
             decoration: InputDecoration(
@@ -383,6 +386,8 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
             ),
           ),
           const SizedBox(height: 16),
+
+          // City and State Row (Both Required)
           Row(
             children: [
               Expanded(
@@ -433,6 +438,8 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
             ],
           ),
           const SizedBox(height: 16),
+
+          // ZIP and Phone Row (Both Required)
           Row(
             children: [
               Expanded(
@@ -487,6 +494,7 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
       ),
     );
   }
+
 
   Widget _buildRelationshipStep() {
     return Form(

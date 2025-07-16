@@ -102,4 +102,19 @@ public class GamificationService {
         userAchievementRepository.save(userAchievement);
     }
 
+    public XPProgress getOrInitXpProgress(Long userId) {
+        // Try to find existing XP progress
+        Optional<XPProgress> opt = xpProgressRepository.findByUserId(userId);
+        if (opt.isPresent()) {
+            return opt.get();
+        }
+        // If not found, create and save new XP progress row
+        XPProgress xp = new XPProgress();
+        xp.setUserId(userId);
+        xp.setXp(0);
+        xp.setLevel(1);
+        xp.setUpdatedAt(LocalDateTime.now());
+        return xpProgressRepository.save(xp);
+    }
+
 }

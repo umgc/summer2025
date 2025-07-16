@@ -22,7 +22,8 @@ public class CorsFilterConfig {
                 "http://127.0.0.1:*",          // ✅ Allow any 127.0.0.1 port
                 "http://10.0.2.2:8080",
                 "http://localhost:50030",       // ✅ Specific Flutter web port
-                "http://localhost:3000"         // ✅ Common dev port
+                "http://localhost:3000",         // ✅ Common dev port
+                "http://192.168.1.155:*"
         ));
         config.setAllowCredentials(true);
         config.setAllowedHeaders(List.of("*"));

@@ -100,6 +100,9 @@ public class AuthService {
 
     /** ───────────────────────  helper  ────────────────────────────── */
     private Address toAddress(AddressDto dto) {
+        if (dto == null) {
+            return null; // or throw an exception if address must exist
+        }
         Address a = new Address();
         a.setLine1(dto.line1());
         a.setLine2(dto.line2());
