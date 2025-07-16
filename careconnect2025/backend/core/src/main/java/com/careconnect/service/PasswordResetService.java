@@ -29,10 +29,10 @@ public class PasswordResetService {
     @Autowired(required = false)
     private JavaMailSender mail;
     
-    @Value("${careconnect.email.provider:mailtrap}")
+    @Value("${careconnect.email.provider:sendgrid}")
     private String emailProvider;
     
-    @Value("${careconnect.email.from:noreply@careconnect.com}")
+    @Value("${careconnect.email.from:smpestest@gmail.com}")
     private String fromEmail;
 
     public PasswordResetService(UserRepository users, PasswordResetTokenRepo tokens, PasswordEncoder encoder) {
@@ -181,7 +181,7 @@ public class PasswordResetService {
             
             helper.setText(emailBody, true);
             mail.send(message);
-            String providerInfo = getProviderInfo();
+            // String providerInfo = getProviderInfo();
             // System.out.println("✅ Password reset email sent via " + providerInfo + " to " + to);
         } catch (Exception e) {
             System.err.println("❌ Failed to send password reset email to " + to + ": " + e.getMessage());
