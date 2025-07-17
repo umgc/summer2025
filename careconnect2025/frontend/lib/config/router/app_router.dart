@@ -11,7 +11,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/calls/presentation/pages/mobile_web_call.dart';
 import '../../features/calls/presentation/pages/web_emotion_detector.dart';
 import '../../features/dashboard/presentation/pages/edit_patient.dart';
-import '../../features/payments/presentation/pages/subscription_managemetn_page.dart';
+import '../../features/payments/presentation/pages/subscription_management_page.dart';
 import '../../features/welcome/presentation/pages/welcome_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/oauth_callback_page.dart';
