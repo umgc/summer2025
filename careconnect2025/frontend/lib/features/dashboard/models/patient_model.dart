@@ -68,4 +68,19 @@ class Patient {
     profileImageUrl: json['profileImageUrl'] ?? '',
     address: json['address'] != null ? Address.fromJson(json['address']) : null,
   );
+
+  // adding teh getter to display
+  // Getter for linkId - returns the patient ID (or another unique identifier)
+  int get linkId => id;
+
+  // Getter for calculating the patient's age from the 'dob' field
+  int get age {
+    DateTime birthDate = DateTime.parse(dob);
+    DateTime now = DateTime.now();
+    int years = now.year - birthDate.year;
+    if (now.month < birthDate.month || (now.month == birthDate.month && now.day < birthDate.day)) {
+      years--;
+    }
+    return years;
+  }
 }

@@ -179,7 +179,7 @@ class _CallScreenState extends State<CallScreen> {
               if (widget.isCaller)  // Caregiver sees the patient's emotion
                 Text(
                   "Patient Emotion: $patientEmotion",
-                  style: const TextStyle(fontSize: 18, color: Colors.white, backgroundColor: Colors.black54),
+                  style: const TextStyle(fontSize: 18, color: Colors.white),
                 ),
               const SizedBox(height: 6),
               Text(caregiverFaceStatus, style: const TextStyle(fontSize: 48)), // Caregiver’s face status
