@@ -1,6 +1,6 @@
 package com.careconnect.service;
 
-import com.careconnect.config.S3Props;
+import com.careconnect.dto.S3Props;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
