@@ -93,7 +93,7 @@ dependencies:
 
 
   speech_to_text: ^6.0.0
-
+  google_fonts: ^6.0.0
 
 
 
