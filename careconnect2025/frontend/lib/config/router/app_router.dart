@@ -1,3 +1,6 @@
+import 'package:care_connect_app/features/dashboard/presentation/pages/archive_patient.dart';
+import 'package:care_connect_app/features/dashboard/presentation/pages/invite_family_member.dart';
+import 'package:care_connect_app/features/dashboard/presentation/pages/media_upload.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/home_monitoring_screen.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/medication_management.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/smart_devices.dart';
@@ -5,6 +8,10 @@ import 'package:care_connect_app/features/integrations/presentation/pages/wearab
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/calls/presentation/pages/mobile_web_call.dart';
+import '../../features/calls/presentation/pages/web_emotion_detector.dart';
+import '../../features/dashboard/presentation/pages/edit_patient.dart';
+import '../../features/payments/presentation/pages/subscription_managemetn_page.dart';
 import '../../features/welcome/presentation/pages/welcome_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/oauth_callback_page.dart';
@@ -244,5 +251,56 @@ final GoRouter appRouter = GoRouter(
       path: '/medication',
       builder: (_, __) => const MedicationManagementScreen(),
     ),
+
+
+    GoRoute(
+      path: '/edit',
+      builder: (context, state) {
+        final patientId = state.uri.queryParameters['patientId'] ?? '';
+        return EditScreen(linkId: patientId);
+      },
+    ),
+
+    GoRoute(
+      path: '/archive',
+      builder: (_, __) => const ArchiveScreen(linkId: '',),
+    ),
+
+    GoRoute(
+      path: '/invite_Family_Member',
+       builder: (_, __) => const InviteFamilyMemberScreen(),
+),
+
+  GoRoute(
+      path: '/MediaScreen',
+      builder: (_, __) => const MediaScreen(),
+),
+
+    GoRoute(
+      path: '/mobile-web-call',
+      builder: (context, state) {
+        // Retrieve the query parameters
+        final patientName = state.uri.queryParameters['patientName'] ?? 'Unknown';
+        final roomId = state.uri.queryParameters['roomId'] ?? 'Unknown';
+
+        // Return the CallScreen widget and pass the parameters
+        return CallScreen(
+          patientName: patientName,
+          roomId: roomId,
+          isCaller: true, // Adjust this flag as needed
+        );
+      },
+    ),
+
+    GoRoute(
+      path: '/subscription-management',
+      builder: (context, state) => const SubscriptionManagementPage(),
+    ),
+
+
+
+
+
+
   ],
 );
