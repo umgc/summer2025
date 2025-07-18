@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:care_connect_app/services/api_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:care_connect_app/shared/widgets/user_avatar.dart';
-import 'package:care_connect_app/services/session_manager.dart';
 import 'search_user_screen.dart';
 import 'comment_screen.dart';
 import 'friend_requests_screen.dart';
@@ -30,13 +29,12 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
 
   Future<void> fetchFeed() async {
     setState(() => isLoading = true);
-    final session = SessionManager();
-    await session.restoreSession();
 
     try {
-      print('Headers before request: ${session.headers}');
-      final http.Response response = await session.get(
-        '${ApiConstants.feed}/all',
+      final headers = await ApiService.getAuthHeaders();
+      final response = await http.get(
+        Uri.parse('${ApiConstants.feed}/all'),
+        headers: headers,
       );
 
       print('Feed status: ${response.statusCode}');

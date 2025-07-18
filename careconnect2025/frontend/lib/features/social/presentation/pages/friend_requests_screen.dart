@@ -2,6 +2,7 @@ import 'package:care_connect_app/config/env_constant.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:care_connect_app/services/api_service.dart';
 import 'package:care_connect_app/features/social/presentation/pages/my_friend_screen.dart';
 
 class FriendRequestsScreen extends StatefulWidget {
@@ -27,12 +28,8 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
     final url = Uri.parse(
       '${getBackendBaseUrl()}/api/friends/requests/${widget.userId}',
     );
-    final response = await http
-        .get(url)
-        .timeout(
-          const Duration(seconds: 180),
-          onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
-        );
+    final headers = await ApiService.getAuthHeaders();
+    final response = await http.get(url, headers: headers);
 
     if (response.statusCode == 200) {
       setState(() {
@@ -48,9 +45,13 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
   }
 
   Future<void> acceptRequest(int requestId) async {
+    final url = Uri.parse('${getBackendBaseUrl()}/api/friends/accept');
+    final headers = await ApiService.getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
+
     final response = await http.post(
-      Uri.parse('${getBackendBaseUrl()}/api/friends/accept'),
-      headers: {'Content-Type': 'application/json'},
+      url,
+      headers: headers,
       body: jsonEncode({'requestId': requestId}),
     );
 
@@ -67,9 +68,13 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
   }
 
   Future<void> rejectRequest(int requestId) async {
+    final url = Uri.parse('${getBackendBaseUrl()}/api/friends/reject');
+    final headers = await ApiService.getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
+
     final response = await http.post(
-      Uri.parse('${getBackendBaseUrl()}/api/friends/reject'),
-      headers: {'Content-Type': 'application/json'},
+      url,
+      headers: headers,
       body: jsonEncode({'requestId': requestId}),
     );
 

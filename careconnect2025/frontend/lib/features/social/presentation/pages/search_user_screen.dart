@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:care_connect_app/services/api_service.dart';
 
@@ -18,7 +17,8 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
 
   Future<void> searchUsers() async {
     setState(() => isLoading = true);
-    final response = await ApiService.searchUsers(
+    try{
+      final response = await ApiService.searchUsers(
       _controller.text.trim(),
       widget.userId,
     );
@@ -30,10 +30,17 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('Search failed')));
     }
+    } catch(e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}'))
+      );
+    }
     setState(() => isLoading = false);
   }
 
   Future<void> sendRequest(int toUserId) async {
+    try{
     final response = await ApiService.sendFriendRequest(
       widget.userId,
       toUserId,
@@ -47,7 +54,13 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('Request failed')));
     }
+  } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
