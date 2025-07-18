@@ -7,31 +7,31 @@ import 'package:care_connect_app/features/integrations/presentation/pages/smart_
 import 'package:care_connect_app/features/integrations/presentation/pages/wearables_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
-import '../../features/calls/presentation/pages/mobile_web_call.dart';
-import '../../features/calls/presentation/pages/web_emotion_detector.dart';
-import '../../features/dashboard/presentation/pages/edit_patient.dart';
-import '../../features/payments/presentation/pages/subscription_management_page.dart';
-import '../../features/welcome/presentation/pages/welcome_page.dart';
+import '../../features/analytics/analytics_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/oauth_callback_page.dart';
-import '../../features/dashboard/presentation/pages/caregiver_dashboard.dart';
-import '../../features/dashboard/presentation/pages/patient_dashboard.dart';
-import '../../features/onboarding/presentation/pages/patient_registration.dart';
-import '../../features/auth/presentation/pages/sign_up_screen.dart';
-import '../../features/payments/presentation/pages/select_package_page.dart';
 import '../../features/auth/presentation/pages/password_reset_page.dart';
 import '../../features/auth/presentation/pages/reset_password_screen.dart'; // ADD THIS IMPORT
-import '../../features/payments/models/package_model.dart';
-import '../../features/social/presentation/pages/main_feed_screen.dart';
+import '../../features/auth/presentation/pages/sign_up_screen.dart';
+import '../../features/calls/presentation/pages/mobile_web_call.dart';
+import '../../features/calls/presentation/pages/web_emotion_detector.dart';
+import '../../features/dashboard/presentation/pages/caregiver_dashboard.dart';
+import '../../features/dashboard/presentation/pages/edit_patient.dart';
+import '../../features/dashboard/presentation/pages/patient_dashboard.dart';
 import '../../features/gamification/presentation/pages/caregiver_gamification_landingpage.dart';
 import '../../features/gamification/presentation/pages/gamification_screen.dart';
-import '../../features/payments/presentation/pages/stripe_checkout_page.dart';
-import '../../features/analytics/analytics_page.dart';
-import '../../features/payments/presentation/pages/payment_success_page.dart';
+import '../../features/onboarding/presentation/pages/patient_registration.dart';
+import '../../features/payments/models/package_model.dart';
 import '../../features/payments/presentation/pages/payment_cancel_page.dart';
+import '../../features/payments/presentation/pages/payment_success_page.dart';
+import '../../features/payments/presentation/pages/select_package_page.dart';
+import '../../features/payments/presentation/pages/stripe_checkout_page.dart';
+import '../../features/payments/presentation/pages/subscription_management_page.dart';
+import '../../features/social/presentation/pages/main_feed_screen.dart';
+import '../../features/welcome/presentation/pages/welcome_page.dart';
 import '../../providers/user_provider.dart';
-import 'package:provider/provider.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -235,10 +235,7 @@ final GoRouter appRouter = GoRouter(
         return OAuthCallbackPage(token: token, user: user, error: error);
       },
     ),
-    GoRoute(
-      path: '/wearables',
-      builder: (_, __) => const WearablesScreen(),
-    ),
+    GoRoute(path: '/wearables', builder: (_, __) => const WearablesScreen()),
     GoRoute(
       path: '/home-monitoring',
       builder: (_, __) => const HomeMonitoringScreen(),
@@ -252,7 +249,6 @@ final GoRouter appRouter = GoRouter(
       builder: (_, __) => const MedicationManagementScreen(),
     ),
 
-
     GoRoute(
       path: '/edit',
       builder: (context, state) {
@@ -263,24 +259,22 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(
       path: '/archive',
-      builder: (_, __) => const ArchiveScreen(linkId: '',),
+      builder: (_, __) => const ArchiveScreen(linkId: ''),
     ),
 
     GoRoute(
       path: '/invite_Family_Member',
-       builder: (_, __) => const InviteFamilyMemberScreen(),
-),
+      builder: (_, __) => const InviteFamilyMemberScreen(),
+    ),
 
-  GoRoute(
-      path: '/MediaScreen',
-      builder: (_, __) => const MediaScreen(),
-),
+    GoRoute(path: '/MediaScreen', builder: (_, __) => const MediaScreen()),
 
     GoRoute(
       path: '/mobile-web-call',
       builder: (context, state) {
         // Retrieve the query parameters
-        final patientName = state.uri.queryParameters['patientName'] ?? 'Unknown';
+        final patientName =
+            state.uri.queryParameters['patientName'] ?? 'Unknown';
         final roomId = state.uri.queryParameters['roomId'] ?? 'Unknown';
 
         // Return the CallScreen widget and pass the parameters
@@ -296,11 +290,5 @@ final GoRouter appRouter = GoRouter(
       path: '/subscription-management',
       builder: (context, state) => const SubscriptionManagementPage(),
     ),
-
-
-
-
-
-
   ],
 );
