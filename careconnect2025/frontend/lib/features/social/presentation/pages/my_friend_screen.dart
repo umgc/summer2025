@@ -1,7 +1,9 @@
+import 'dart:convert';
+
 import 'package:care_connect_app/config/env_constant.dart';
+import 'package:care_connect_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class MyFriendsScreen extends StatefulWidget {
   final int userId;
@@ -22,9 +24,11 @@ class _MyFriendsScreenState extends State<MyFriendsScreen> {
   }
 
   Future<void> fetchFriends() async {
-    final response = await http.get(
-      Uri.parse('${getBackendBaseUrl()}/api/friends/list/${widget.userId}'),
+    final url = Uri.parse(
+      '{$getBackendBaseUrl()}/api/friends/list${widget.userId}',
     );
+    final headers = await ApiService.getAuthHeaders();
+    final response = await http.get(url, headers: headers);
 
     if (response.statusCode == 200) {
       setState(() {
