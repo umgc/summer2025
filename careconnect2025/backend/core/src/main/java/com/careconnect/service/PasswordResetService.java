@@ -29,10 +29,10 @@ public class PasswordResetService {
     @Autowired(required = false)
     private JavaMailSender mail;
     
-    @Value("${careconnect.email.provider:mailtrap}")
+    @Value("${careconnect.email.provider:sendgrid}")
     private String emailProvider;
     
-    @Value("${careconnect.email.from:noreply@careconnect.com}")
+    @Value("${careconnect.email.from:smpestest@gmail.com}")
     private String fromEmail;
 
     public PasswordResetService(UserRepository users, PasswordResetTokenRepo tokens, PasswordEncoder encoder) {
@@ -44,67 +44,122 @@ public class PasswordResetService {
     private static final Duration TTL = Duration.ofHours(3);  // Increased to 3 hours
 
     /* Step 1 – request */
-    public void startReset(String email, String appUrl) {
-        User user = users.findByEmail(email)
-                         .orElseThrow(() -> new IllegalArgumentException("Email not found"));
+    // public void startReset(String email, String appUrl) {
+    //     User user = users.findByEmail(email)
+    //                      .orElseThrow(() -> new IllegalArgumentException("Email not found"));
 
-        String raw   = generateSecureRandomString(48);
-        String hash  = hash(raw);
+    //     String raw   = generateSecureRandomString(48);
+    //     String hash  = hash(raw);
 
-        // First, invalidate any existing tokens for this user
-        tokens.findByUser(user).ifPresent(oldToken -> {
-            oldToken.setUsed(true);
-            tokens.save(oldToken);
-        });
+    //     // First, invalidate any existing tokens for this user
+    //     tokens.findByUser(user).ifPresent(oldToken -> {
+    //         oldToken.setUsed(true);
+    //         tokens.save(oldToken);
+    //     });
 
-        PasswordResetToken entity = new PasswordResetToken();
-        entity.setUser(user);
-        entity.setTokenHash(hash);
-        // Add a small buffer to account for time zone differences and processing time
-        entity.setExpiresAt(Instant.now().plus(TTL).plus(Duration.ofMinutes(5)));
-        tokens.save(entity);
+    //     PasswordResetToken entity = new PasswordResetToken();
+    //     entity.setUser(user);
+    //     entity.setTokenHash(hash);
+    //     // Add a small buffer to account for time zone differences and processing time
+    //     entity.setExpiresAt(Instant.now().plus(TTL).plus(Duration.ofMinutes(5)));
+    //     tokens.save(entity);
 
-        String link = appUrl + "/setup-password?token=" + raw;
-        sendPasswordResetEmail(user.getEmail(), link);   // Send the email properly
-    }
+    //     String link = appUrl + "/setup-password?token=" + raw;
+    //     sendPasswordResetEmail(user.getEmail(), link);   // Send the email properly
+    // }
 
-    /* Step 2 – confirmation */
-    public void finalizeReset(String rawToken, String newPassword) {
-        String hash = hash(rawToken);
+    /* Step 1 – request */
+public void startReset(String email, String appUrl) {
+    User user = users.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("Email not found"));
 
-        PasswordResetToken t = tokens.findByTokenHash(hash)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
-
-        // Separate checks for better error messages
-        if (t.isUsed()) {
-            throw new IllegalArgumentException("This reset token has already been used");
-        }
+    // SIMPLIFIED FLOW: Generate a base64 encoded user ID
+    String encodedUserId = Base64.getUrlEncoder().encodeToString(
+        user.getId().toString().getBytes());
+    
+    // SIMPLIFIED FLOW: Create the reset link using 'token' parameter for client compatibility
+    // but the value will actually be the encoded user ID
+    String link = appUrl + "/setup-password?token=" + encodedUserId;
+    sendPasswordResetEmail(user.getEmail(), link);
+}
+  /* Step 2 – confirmation */
+public void finalizeReset(String rawToken, String newPassword) {
+    try {
+        // SIMPLIFIED FLOW: Treat the rawToken as the encoded user ID
+        String userIdStr = new String(Base64.getUrlDecoder().decode(rawToken));
+        Long userId = Long.parseLong(userIdStr);
         
-        if (t.getExpiresAt().isBefore(Instant.now())) {
-            throw new IllegalArgumentException("This reset token has expired. Please request a new one");
-        }
-
-        User user = t.getUser();
+        User user = users.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or missing reset token"));
+        
         String encodedPassword = encoder.encode(newPassword);
         user.setPassword(encodedPassword);
         user.setPasswordHash(encodedPassword);
         users.save(user);
 
-        t.setUsed(true);
-        tokens.save(t);
+    } catch (IllegalArgumentException e) {
+        throw e;
+    } catch (Exception e) {
+        throw new IllegalArgumentException("Invalid or missing reset token");
     }
+}
+    /* Step 2 – confirmation */
+    // public void finalizeReset(String rawToken, String newPassword) {
+    //     String hash = hash(rawToken);
+
+    //     PasswordResetToken t = tokens.findByTokenHash(hash)
+    //             .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
+
+    //     // Separate checks for better error messages
+    //     if (t.isUsed()) {
+    //         throw new IllegalArgumentException("This reset token has already been used");
+    //     }
+        
+    //     if (t.getExpiresAt().isBefore(Instant.now())) {
+    //         throw new IllegalArgumentException("This reset token has expired. Please request a new one");
+    //     }
+
+    //     User user = t.getUser();
+    //     String encodedPassword = encoder.encode(newPassword);
+    //     user.setPassword(encodedPassword);
+    //     user.setPasswordHash(encodedPassword);
+    //     users.save(user);
+
+    //     t.setUsed(true);
+    //     tokens.save(t);
+    // }
 
     /**
      * Check if a reset token is valid
      */
-    public boolean isTokenValid(String rawToken) {
-        try {
-            String hash = hash(rawToken);
-            return tokens.findValid(hash, Instant.now()).isPresent();
-        } catch (Exception e) {
-            return false;
-        }
+    // public boolean isTokenValid(String rawToken) {
+    //     try {
+    //         String hash = hash(rawToken);
+    //         return tokens.findValid(hash, Instant.now()).isPresent();
+    //     } catch (Exception e) {
+    //         return false;
+    //     }
+    // }
+
+    /**
+ * Check if a user ID is valid
+ */
+public boolean isTokenValid(String encodedUserId) {
+    // SIMPLIFIED FLOW: Just check if the user exists
+    try {
+        String userIdStr = new String(Base64.getUrlDecoder().decode(encodedUserId));
+        Long userId = Long.parseLong(userIdStr);
+        return users.findById(userId).isPresent();
+        
+        // SIMPLIFIED FLOW: Original token validation - not used anymore
+        /*
+        String hash = hash(rawToken);
+        return tokens.findValid(hash, Instant.now()).isPresent();
+        */
+    } catch (Exception e) {
+        return false;
     }
+}
 
     /* ---------- helpers ------------------------------------------------ */
     private String generateSecureRandomString(int len) {
@@ -181,7 +236,7 @@ public class PasswordResetService {
             
             helper.setText(emailBody, true);
             mail.send(message);
-            String providerInfo = getProviderInfo();
+            // String providerInfo = getProviderInfo();
             // System.out.println("✅ Password reset email sent via " + providerInfo + " to " + to);
         } catch (Exception e) {
             System.err.println("❌ Failed to send password reset email to " + to + ": " + e.getMessage());
