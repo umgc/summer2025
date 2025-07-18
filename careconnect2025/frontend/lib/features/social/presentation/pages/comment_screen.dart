@@ -1,8 +1,9 @@
 import 'package:care_connect_app/config/env_constant.dart';
-import 'package:care_connect_app/services/session_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:care_connect_app/services/api_service.dart';
 
 class CommentScreen extends StatefulWidget {
   final int postId;
@@ -28,13 +29,14 @@ class _CommentScreenState extends State<CommentScreen> {
   Future<void> fetchComments() async {
     setState(() => isLoading = true);
 
-    final session = SessionManager();
-    await session.restoreSession();
-
     final url = '${getBackendBaseUrl()}/api/comments/post/${widget.postId}';
 
     try {
-      final response = await session.get(url);
+      final headers = await ApiService.getAuthHeaders();
+      final response = await http.get(
+        Uri.parse(url),
+        headers: headers,
+      );
       print('Comments GET status: ${response.statusCode}');
       print('Comments GET body: ${response.body}');
 
@@ -69,10 +71,9 @@ class _CommentScreenState extends State<CommentScreen> {
 
     setState(() => isSubmitting = true);
 
-    final session = SessionManager();
-    await session.restoreSession();
-
     final url = '${getBackendBaseUrl()}/api/comments/post/${widget.postId}';
+    final headers = await ApiService.getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
 
     final body = jsonEncode({
       'userId': int.parse(userId),
@@ -80,7 +81,11 @@ class _CommentScreenState extends State<CommentScreen> {
       'content': _commentController.text.trim(),
     });
 
-    final response = await session.post(url, body: body);
+    final response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body
+    );
 
     setState(() => isSubmitting = false);
 

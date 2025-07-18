@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:care_connect_app/services/api_service.dart';
-import 'package:care_connect_app/services/session_manager.dart';
+
 
 class NewPostScreen extends StatefulWidget {
   final int userId;
@@ -34,9 +34,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
       return;
     }
 
-    // Call restoreSession() here to ensure the session cookie is restored
-    final session = SessionManager();
-    await session.restoreSession(); // This will restore the session cookie
+
 
     setState(() => isPosting = true);
     try {
