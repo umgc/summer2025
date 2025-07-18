@@ -8,6 +8,7 @@ import com.careconnect.dto.PatientRegistration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import com.careconnect.dto.PatientWithLinkDto;
 // import com.careconnect.util.SecurityUtil;
 import org.springframework.web.bind.annotation.*;
 // import com.careconnect.security.Role;
@@ -29,20 +30,11 @@ public class CaregiverController {
 
     // 1. List patients under a caregiver, with optional filtering
     @GetMapping("/{caregiverId}/patients")
-    public ResponseEntity<List<Patient>> getPatientsByCaregiver(
-            @PathVariable Long caregiverId,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) String name,
-            HttpServletRequest request) {
-
-        // SecurityUtil.UserInfo user = securityUtil.getCurrentUser(request);
-        // Caregiver caregiver = caregiverService.getCaregiverById(caregiverId);
-
-        // if (user.role != Role.CAREGIVER || !caregiver.getEmail().equals(user.email)) {
-        //     return ResponseEntity.status(403).build();
-        // }
-
-        List<Patient> patients = caregiverService.getPatientsByCaregiver(caregiverId, email, name);
+    public ResponseEntity<List<PatientWithLinkDto>> getPatientsByCaregiver(
+        @PathVariable("caregiverId") Long caregiverId,
+        @RequestParam(required = false) String email,
+        @RequestParam(required = false) String name) {
+        List<PatientWithLinkDto> patients = caregiverService.getPatientsByCaregiver(caregiverId, email, name);
         return ResponseEntity.ok(patients);
     }
 

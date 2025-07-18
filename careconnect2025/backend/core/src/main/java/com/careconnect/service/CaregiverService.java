@@ -21,9 +21,10 @@ import com.careconnect.security.JwtTokenProvider;
 import com.careconnect.security.Role;
 import com.careconnect.dto.ProfessionalInfoDto;
 import com.careconnect.dto.AddressDto;
+import com.careconnect.dto.PatientWithLinkDto;
 import com.careconnect.model.Address;
 import com.careconnect.repository.FamilyMemberLinkRepository;
-
+import java.util.Objects;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.HttpStatus;
 
@@ -59,37 +60,77 @@ public class CaregiverService {
     private  FamilyMemberLinkRepository familyMemberLinkRepository;
 
     // 1. List patients under a caregiver, with optional filtering (ACTIVE links only)
-    public List<Patient> getPatientsByCaregiver(Long caregiverId, String email, String name) {
-        // Get caregiver user
-        Caregiver caregiver = getCaregiverById(caregiverId);
-        User caregiverUser = caregiver.getUser();
+    // public List<Patient> getPatientsByCaregiver(Long caregiverId, String email, String name) {
+    //     // Get caregiver user
+    //     Caregiver caregiver = getCaregiverById(caregiverId);
+    //     User caregiverUser = caregiver.getUser();
         
-        // Get active patient links via CaregiverPatientLinkService
-        List<CaregiverPatientLinkResponse> activeLinks = caregiverPatientLinkService.getPatientsByCaregiver(caregiverUser.getId());
+    //     // Get active patient links via CaregiverPatientLinkService
+    //     List<CaregiverPatientLinkResponse> activeLinks = caregiverPatientLinkService.getPatientsByCaregiver(caregiverUser.getId());
         
-        // Extract patient user IDs from active links and get Patient objects
-        List<Patient> patients = activeLinks.stream()
-                .map(link -> users.findById(link.patientUserId()))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .map(user -> patientRepository.findByUser(user))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toList());
+    //     // Extract patient user IDs from active links and get Patient objects
+    //     List<Patient> patients = activeLinks.stream()
+    //             .map(link -> users.findById(link.patientUserId()))
+    //             .filter(Optional::isPresent)
+    //             .map(Optional::get)
+    //             .map(user -> patientRepository.findByUser(user))
+    //             .filter(Optional::isPresent)
+    //             .map(Optional::get)
+    //             .collect(Collectors.toList());
 
-        // Apply filters
-        if (email != null && !email.isEmpty()) {
-            patients = patients.stream()
-                    .filter(p -> p.getEmail() != null && p.getEmail().equalsIgnoreCase(email))
-                    .collect(Collectors.toList());
-        }
-        if (name != null && !name.isEmpty()) {
-            patients = patients.stream()
-                    .filter(p -> (p.getFirstName() + " " + p.getLastName()).toLowerCase().contains(name.toLowerCase()))
-                    .collect(Collectors.toList());
-        }
-        return patients;
-    }
+    //     // Apply filters
+    //     if (email != null && !email.isEmpty()) {
+    //         patients = patients.stream()
+    //                 .filter(p -> p.getEmail() != null && p.getEmail().equalsIgnoreCase(email))
+    //                 .collect(Collectors.toList());
+    //     }
+    //     if (name != null && !name.isEmpty()) {
+    //         patients = patients.stream()
+    //                 .filter(p -> (p.getFirstName() + " " + p.getLastName()).toLowerCase().contains(name.toLowerCase()))
+    //                 .collect(Collectors.toList());
+    //     }
+    //     return patients;
+    // }
+
+    // 1. List patients under a caregiver, with optional filtering (ACTIVE links only)
+public List<PatientWithLinkDto> getPatientsByCaregiver(Long caregiverId, String email, String name) {
+    // Get caregiver user
+    Caregiver caregiver = getCaregiverById(caregiverId);
+    User caregiverUser = caregiver.getUser();
+    
+    // Get active patient links via CaregiverPatientLinkService
+    List<CaregiverPatientLinkResponse> activeLinks = caregiverPatientLinkService.getPatientsByCaregiver(caregiverUser.getId());
+    
+    // Get patient objects and combine with link data
+    return activeLinks.stream()
+            .map(link -> {
+                Optional<User> userOpt = users.findById(link.patientUserId());
+                if (userOpt.isPresent()) {
+                    Optional<Patient> patientOpt = patientRepository.findByUser(userOpt.get());
+                    if (patientOpt.isPresent()) {
+                        Patient patient = patientOpt.get();
+                        
+                        // Apply filters
+                        if (email != null && !email.isEmpty() && 
+                           (patient.getEmail() == null || !patient.getEmail().equalsIgnoreCase(email))) {
+                            return null;
+                        }
+                        
+                        if (name != null && !name.isEmpty() && 
+                           !(patient.getFirstName() + " " + patient.getLastName())
+                           .toLowerCase().contains(name.toLowerCase())) {
+                            return null;
+                        }
+                        
+                        // Return combined data
+                        return new PatientWithLinkDto(patient, link);
+                    }
+                }
+                return null;
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+}
 
     // 2. Get caregiver details
     public Caregiver getCaregiverById(Long caregiverId) {
