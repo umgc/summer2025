@@ -1,12 +1,15 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:app_links/app_links.dart';
 import 'dart:async';
+import 'dart:convert';
+
+import 'package:app_links/app_links.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../config/env_constant.dart';
-import 'api_service.dart';
-import 'oauth_service.dart';
 import '../providers/user_provider.dart';
+import 'api_service.dart';
 import 'auth_token_manager.dart';
+import 'oauth_service.dart';
 
 class ApiConstants {
   static final String _host = getBackendBaseUrl();
@@ -87,6 +90,14 @@ class AuthService {
               // Create user session
               final userSession = UserSession.fromJson(userData);
 
+              // Store userId and username for comment support
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('userId', userSession.id.toString());
+              await prefs.setString(
+                'username',
+                userSession.name ?? userSession.email,
+              );
+
               // Force update JWT token and session using the new token manager
               // This ensures fresh tokens are always used after OAuth login
               await AuthTokenManager.saveAuthData(
@@ -148,6 +159,11 @@ class AuthService {
 
     if (response.statusCode == 200) {
       final userSession = UserSession.fromJson(data);
+
+      // ✅ Store userId and username in SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userId', userSession.id.toString());
+      await prefs.setString('username', userSession.name ?? "");
 
       // Force update JWT token and session using the new token manager
       // This ensures fresh tokens are always used after login
