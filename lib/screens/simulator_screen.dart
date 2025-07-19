@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
@@ -19,6 +20,7 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
   bool simulating = false;
   int? currentQuestionIndex;
   final TextEditingController _responseController = TextEditingController();
+  final Random _random = Random();
 
   void _zoomIn() => setState(() => _scale = (_scale + 0.1).clamp(0.3, 3.0));
   void _zoomOut() => setState(() => _scale = (_scale - 0.1).clamp(0.3, 3.0));
@@ -34,26 +36,82 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
       currentNode = startNode;
       currentQuestionIndex = null;
     });
+    _processCurrentNode(blocks);
   }
 
+  // MODIFIED: _continueSimulation to handle event probability
   void _continueSimulation(List<NodeBlock> blocks) {
-    if (currentNode == null) return;
-    final currentIndex = blocks.indexWhere((b) => b.id == currentNode!.id);
-    if (currentIndex + 1 < blocks.length) {
-      setState(() {
-        currentNode = blocks[currentIndex + 1];
-        currentQuestionIndex = null;
-      });
-    } else {
-      setState(() {
-        simulating = false;
-        currentNode = null;
-        currentQuestionIndex = null;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Simulation complete.")),
-      );
+    if (currentNode == null) {
+      _endSimulation(); // If no current node, just end
+      return;
     }
+
+    // Find the current node's index
+    final currentIndex = blocks.indexWhere((b) => b.id == currentNode!.id);
+
+    // Determine the next node to potentially move to
+    int nextIndex = currentIndex + 1;
+
+    // Loop to find the *actual* next node, skipping non-triggered events
+    while (nextIndex < blocks.length) {
+      final potentialNextNode = blocks[nextIndex];
+
+      if (potentialNextNode.type.toLowerCase() == 'event') {
+        final int probability = potentialNextNode.randomTriggerChance ?? 100; // Default to 100% if not set
+        final int randomNumber = _random.nextInt(100); // 0-99
+
+        print('Event "${potentialNextNode.title}" (ID: ${potentialNextNode.id})');
+        print('  Trigger Chance: $probability%, Rolled: $randomNumber');
+
+        if (randomNumber < probability) {
+          // Event *should* trigger, so this is our next node
+          setState(() {
+            currentNode = potentialNextNode;
+            currentQuestionIndex = null;
+          });
+          _processCurrentNode(blocks); // Process the newly set current node
+          return; // Exit the loop, we found our next node
+        } else {
+          // Event *should not* trigger, skip it and check the next one
+          print('  Event "${potentialNextNode.title}" skipped.');
+          nextIndex++; // Move to the node after this skipped event
+        }
+      } else {
+        // Not an event node, so it's the next valid node in the sequence
+        setState(() {
+          currentNode = potentialNextNode;
+          currentQuestionIndex = null;
+        });
+        _processCurrentNode(blocks); // Process the newly set current node
+        return; // Exit the loop, we found our next node
+      }
+    }
+
+    // If the loop finishes, it means we've reached the end of the scenario
+    _endSimulation();
+  }
+
+  void _processCurrentNode(List<NodeBlock> blocks) {
+    if (currentNode == null) return;
+
+    // You can add logic here that should run every time a new node becomes active.
+    // For example, if you want to immediately move past a "Start" or "End" node
+    // or display a message specific to the node type.
+
+    // For now, let's let the user press 'Continue' for all non-quiz/decision nodes.
+    // This method is primarily a placeholder for more complex node-specific logic
+    // that you might add later (e.g., auto-advancing past simple informational nodes).
+  }
+
+  void _endSimulation() { // <--- ADD THIS NEW METHOD
+    setState(() {
+      simulating = false;
+      currentNode = null;
+      currentQuestionIndex = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Simulation complete.")),
+    );
   }
 
   void _clearCanvas() {
@@ -84,31 +142,32 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
                 ? parsedJson['nodes']
                 : throw Exception("Invalid JSON format");
 
-        final loadedBlocks = nodes.map<NodeBlock>((e) => NodeBlock(
-              id: e['id'],
-              offset: Offset(
-                (e['offset']['dx'] as num).toDouble(),
-                (e['offset']['dy'] as num).toDouble(),
-              ),
-              title: e['title'],
-              type: e['type'],
-              description: e['description'],
-              welcomeMessage: e['welcomeMessage'],
-              lessonType: e['lessonType'],
-              lessonContent: e['lessonContent'],
-              estimatedTime: e['estimatedTime'],
-              quizTitle: e['quizTitle'],
-              passingScore: e['passingScore'],
-              timeLimit: e['timeLimit'],
-              conditionExpression: e['conditionExpression'],
-              truePathLabel: e['truePathLabel'],
-              falsePathLabel: e['falsePathLabel'],
-              checkpointTitle: e['checkpointTitle'],
-              checkpointNote: e['checkpointNote'],
-              questions: (e['questions'] as List?)
-                  ?.map((q) => (q as Map).cast<String, String>())
-                  .toList(),
-            )).toList();
+        final loadedBlocks = nodes.map<NodeBlock>((e) => NodeBlock.fromJson(e as Map<String, dynamic>)).toList();
+        // final loadedBlocks = nodes.map<NodeBlock>((e) => NodeBlock(
+        //       id: e['id'],
+        //       offset: Offset(
+        //         (e['offset']['dx'] as num).toDouble(),
+        //         (e['offset']['dy'] as num).toDouble(),
+        //       ),
+        //       title: e['title'],
+        //       type: e['type'],
+        //       description: e['description'],
+        //       welcomeMessage: e['welcomeMessage'],
+        //       lessonType: e['lessonType'],
+        //       lessonContent: e['lessonContent'],
+        //       estimatedTime: e['estimatedTime'],
+        //       quizTitle: e['quizTitle'],
+        //       passingScore: e['passingScore'],
+        //       timeLimit: e['timeLimit'],
+        //       conditionExpression: e['conditionExpression'],
+        //       truePathLabel: e['truePathLabel'],
+        //       falsePathLabel: e['falsePathLabel'],
+        //       checkpointTitle: e['checkpointTitle'],
+        //       checkpointNote: e['checkpointNote'],
+        //       questions: (e['questions'] as List?)
+        //           ?.map((q) => (q as Map).cast<String, String>())
+        //           .toList(),
+        //     )).toList();
 
         ref.read(scenarioProvider.notifier).replace(loadedBlocks);
         ScaffoldMessenger.of(context).showSnackBar(

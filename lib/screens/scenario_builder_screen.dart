@@ -546,6 +546,33 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                               'Trigger Condition (e.g., Random, After Lesson)',
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Random Trigger Chance: ${currentBlock.randomTriggerChance ?? 0}%",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          // Watch for changes specifically to this block to update the slider
+                          final liveBlock = ref.watch(scenarioProvider).firstWhere(
+                                (b) => b.id == currentBlock.id,
+                                orElse: () => currentBlock, // Fallback if block somehow not found
+                              );
+
+                          return Slider(
+                            value: (liveBlock.randomTriggerChance ?? 0).toDouble(),
+                            min: 0,
+                            max: 100,
+                            divisions: 100, // Allows for 0-100 integer values
+                            label: "${liveBlock.randomTriggerChance ?? 0}%",
+                            onChanged: (val) {
+                              ref.read(scenarioProvider.notifier).updateNode(
+                                    liveBlock.copyWith(randomTriggerChance: val.round()),
+                                  );
+                            },
+                          );
+                        },
+                      ),
                       TextFormField(
                         initialValue: currentBlock.eventContent ?? '',
                         maxLines: 6,
