@@ -1,4 +1,5 @@
 package com.careconnect.controller;
+import com.careconnect.dto.PostWithCommentCountDto;
 import org.springframework.beans.factory.annotation.Value;
 import com.careconnect.model.Post;
 import com.careconnect.service.FeedService;
@@ -54,18 +55,7 @@ public class FeedController {
             description = "Global feed retrieved successfully",
             content = @Content(
                 mediaType = "application/json",
-                schema = @Schema(implementation = Post.class, type = "array"),
-                examples = @ExampleObject(value = """
-                    [
-                        {
-                            "id": 1,
-                            "userId": 123,
-                            "content": "Had a great therapy session today!",
-                            "imageUrl": "/uploads/image123.jpg",
-                            "createdAt": "2025-01-15T10:30:00Z"
-                        }
-                    ]
-                    """)
+                    schema = @Schema(implementation = PostWithCommentCountDto.class, type = "array")
             )
         ),
         @ApiResponse(
@@ -87,7 +77,7 @@ public class FeedController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
         }
 
-        List<Post> posts = feedService.getAllPosts();
+        List<PostWithCommentCountDto> posts = feedService.getAllPostsWithCommentCount();
         return ResponseEntity.ok(posts);
     }
 
@@ -97,14 +87,14 @@ public class FeedController {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
         }
-        
+
         // Get user from JWT token (email is the subject)
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
         }
-        
+
         // Allow users to view their own feed, or admins to view any feed
         if (!user.getId().equals(userId) && !user.getRole().name().equals("ADMIN")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
@@ -124,14 +114,14 @@ public class FeedController {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
         }
-        
+
         // Get user from JWT token (email is the subject)
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
         }
-        
+
         // Verify the post belongs to the authenticated user
         if (!user.getId().equals(userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot create post as another user");

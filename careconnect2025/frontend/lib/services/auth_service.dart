@@ -244,6 +244,7 @@ class AuthService {
       'dob': dob ?? "01/01/1990",
       'email': email,
       'phone': phone ?? "000-000-0000",
+      'name': '$firstName $lastName',
     };
 
     print('🔍 Debug: Basic data added successfully');

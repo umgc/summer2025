@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import 'dart:io';
-import 'package:care_connect_app/services/api_service.dart';
 
+import 'package:care_connect_app/services/api_service.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NewPostScreen extends StatefulWidget {
   final int userId;
@@ -34,12 +35,17 @@ class _NewPostScreenState extends State<NewPostScreen> {
       return;
     }
 
-
-
     setState(() => isPosting = true);
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
+
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+
       final response = await ApiService.createPost(
-        widget.userId,
+        int.parse(userId), // Use stored user ID
         content,
         _selectedImage,
       );
