@@ -28,9 +28,22 @@ public class CaregiverPatientLinkController {
     // Helper method to get current user
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long currentUserId = Long.parseLong(authentication.getName());
-        return userRepository.findById(currentUserId)
-                .orElseThrow(() -> new AppException(HttpStatus.UNAUTHORIZED, "User not authenticated"));
+        String principal = authentication.getName();
+        
+        // Check if the principal is a numeric ID or an email
+        User user;
+        try {
+            // Try to parse as Long (user ID)
+            Long currentUserId = Long.parseLong(principal);
+            user = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new AppException(HttpStatus.UNAUTHORIZED, "User not found with ID: " + currentUserId));
+        } catch (NumberFormatException e) {
+            // If not a number, assume it's an email
+            user = userRepository.findByEmail(principal)
+                .orElseThrow(() -> new AppException(HttpStatus.UNAUTHORIZED, "User not found with email: " + principal));
+        }
+        
+        return user;
     }
 
     // 1. Create a new caregiver-patient link

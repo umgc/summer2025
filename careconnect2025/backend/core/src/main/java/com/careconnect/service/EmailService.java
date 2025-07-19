@@ -420,6 +420,22 @@ public class EmailService {
         sendEmail(recipientEmail, subject, content, content);
     }
 
+    public void sendHtmlEmail(String recipientEmail, String subject, String htmlContent) {
+    // Use the same HTML content as text content for the fallback
+    // This isn't ideal for accessibility, but works as a simple solution
+    String textContent = htmlContent.replaceAll("<[^>]*>", "")
+                                   .replaceAll("\\s+", " ")
+                                   .trim();
+    
+    sendEmail(recipientEmail, subject, htmlContent, textContent);
+    }
+    
+    // Overload for backward compatibility with code that includes content type
+    public void sendHtmlEmail(String recipientEmail, String subject, String htmlContent, String contentType) {
+        // Ignore the contentType parameter as we're always sending HTML
+        sendHtmlEmail(recipientEmail, subject, htmlContent);
+}
+
     /**
      * HTML email templates
      */
