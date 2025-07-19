@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/feed")
+@RequestMapping("/v1/api/feed")
 @Tag(name = "Feed", description = "Social feed management endpoints for posts and content sharing")
 @SecurityRequirement(name = "JWT Authentication")
 public class FeedController {

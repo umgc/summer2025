@@ -1,6 +1,6 @@
-import 'package:care_connect_app/features/dashboard/presentation/pages/archive_patient.dart';
-import 'package:care_connect_app/features/dashboard/presentation/pages/invite_family_member.dart';
-import 'package:care_connect_app/features/dashboard/presentation/pages/media_upload.dart';
+//import 'package:care_connect_app/features/dashboard/presentation/pages/archive_patient.dart';
+//import 'package:care_connect_app/features/dashboard/presentation/pages/invite_family_member.dart';
+//import 'package:care_connect_app/features/dashboard/presentation/pages/media_upload.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/home_monitoring_screen.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/medication_management.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/smart_devices.dart';
@@ -16,9 +16,8 @@ import '../../features/auth/presentation/pages/password_reset_page.dart';
 import '../../features/auth/presentation/pages/reset_password_screen.dart'; // ADD THIS IMPORT
 import '../../features/auth/presentation/pages/sign_up_screen.dart';
 import '../../features/calls/presentation/pages/mobile_web_call.dart';
-import '../../features/calls/presentation/pages/web_emotion_detector.dart';
 import '../../features/dashboard/presentation/pages/caregiver_dashboard.dart';
-import '../../features/dashboard/presentation/pages/edit_patient.dart';
+//import '../../features/dashboard/presentation/pages/edit_patient.dart';
 import '../../features/dashboard/presentation/pages/patient_dashboard.dart';
 import '../../features/gamification/presentation/pages/caregiver_gamification_landingpage.dart';
 import '../../features/gamification/presentation/pages/gamification_screen.dart';
@@ -249,26 +248,24 @@ final GoRouter appRouter = GoRouter(
       builder: (_, __) => const MedicationManagementScreen(),
     ),
 
-    GoRoute(
+    /*GoRoute(
       path: '/edit',
       builder: (context, state) {
         final patientId = state.uri.queryParameters['patientId'] ?? '';
         return EditScreen(linkId: patientId);
       },
-    ),
-
-    GoRoute(
+    ),*/
+    /*GoRoute(
       path: '/archive',
       builder: (_, __) => const ArchiveScreen(linkId: ''),
-    ),
+    ),*/
 
-    GoRoute(
+    /*GoRoute(
       path: '/invite_Family_Member',
       builder: (_, __) => const InviteFamilyMemberScreen(),
-    ),
+    ),*/
 
-    GoRoute(path: '/MediaScreen', builder: (_, __) => const MediaScreen()),
-
+    //GoRoute(path: '/MediaScreen', builder: (_, __) => const MediaScreen()),
     GoRoute(
       path: '/mobile-web-call',
       builder: (context, state) {
