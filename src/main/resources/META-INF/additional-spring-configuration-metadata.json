@@ -1,0 +1,37 @@
+{"properties": [
+  {
+    "name": "moodle.admin.api.token",
+    "type": "java.lang.String",
+    "description": "The Moodle API token for the FocusEd AI service account"
+  },
+  {
+    "name": "moodle.external.service",
+    "type": "java.lang.String",
+    "description": "The external web service for FocusEd AI to perform functions in Moodle"
+  },
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "JWT secret for token gen"
+  },
+  {
+    "name": "google.client.id",
+    "type": "java.lang.String",
+    "description": "FocusEd AI Google cloud project client ID"
+  },
+  {
+    "name": "google.client.secret",
+    "type": "java.lang.String",
+    "description": "FocusEd AI Google cloud project client secret'"
+  },
+  {
+    "name": "moodle.login.endpoint",
+    "type": "java.lang.String",
+    "description": "A description for 'moodle.login.endpoint'"
+  },
+  {
+    "name": "moodle.web.service.endpoint",
+    "type": "java.lang.String",
+    "description": "A description for 'moodle.web.service.endpoint'"
+  }
+]}
