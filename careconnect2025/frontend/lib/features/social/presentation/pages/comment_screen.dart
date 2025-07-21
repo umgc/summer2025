@@ -1,9 +1,10 @@
-import 'package:care_connect_app/config/env_constant.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+
+import 'package:care_connect_app/config/env_constant.dart';
 import 'package:care_connect_app/services/api_service.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 
 class CommentScreen extends StatefulWidget {
   final int postId;
@@ -33,10 +34,7 @@ class _CommentScreenState extends State<CommentScreen> {
 
     try {
       final headers = await ApiService.getAuthHeaders();
-      final response = await http.get(
-        Uri.parse(url),
-        headers: headers,
-      );
+      final response = await http.get(Uri.parse(url), headers: headers);
       print('Comments GET status: ${response.statusCode}');
       print('Comments GET body: ${response.body}');
 
@@ -58,9 +56,9 @@ class _CommentScreenState extends State<CommentScreen> {
   }
 
   Future<void> submitComment() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('userId');
-    final username = prefs.getString('username'); // If you have it stored
+    final storage = FlutterSecureStorage();
+    final userId = await storage.read(key: 'userId');
+    final username = await storage.read(key: 'username');
 
     if (userId == null || _commentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -82,9 +80,9 @@ class _CommentScreenState extends State<CommentScreen> {
     });
 
     final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: body
+      Uri.parse(url),
+      headers: headers,
+      body: body,
     );
 
     setState(() => isSubmitting = false);
