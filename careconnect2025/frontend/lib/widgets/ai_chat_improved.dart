@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'dart:math' as math;
 import '../services/ai_service.dart';
 
 /// This is a consolidated AI Chat component that serves all use cases:
@@ -54,46 +55,67 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
       curve: Curves.easeInOut,
     );
 
-    // Set reasonable default sizes for the chat window
-    _chatHeight =
-        MediaQuery.of(context).size.height * 0.6; // 60% of screen height
-    _chatWidth = MediaQuery.of(context).size.width < 600
-        ? MediaQuery.of(context).size.width *
-              0.9 // 90% width on mobile
-        : 400.0; // Fixed width on larger screens
+    // Set default initial sizes before proper measurement
+    _chatHeight = 500.0;
+    _chatWidth = 400.0;
 
     // If this is a modal view, expand by default
     if (widget.isModal) {
       _isExpanded = true;
       _animationController.value = 1.0;
+    }
+  }
 
-      // Show welcome message for modal view
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_hasSeenWelcome) {
-          _hasSeenWelcome = true;
-          // Customize welcome message based on role
-          String welcomeMessage = 'Hello! I\'m your health assistant. ';
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-          if (widget.role == 'analytics') {
-            welcomeMessage +=
-                'I can help analyze health data and provide insights based on the information you share. You can upload files like health reports or ask questions about the displayed analytics.';
-          } else if (widget.role == 'caregiver') {
-            welcomeMessage +=
-                'I can help with patient care questions, medical information, and treatment guidance. You can also upload patient reports or health documents for analysis.';
-          } else {
-            welcomeMessage +=
-                'I can help with health, wellness, and medical questions. You can also upload your health documents or reports for personalized advice.';
-          }
+    final screenSize = MediaQuery.of(context).size;
 
-          _messages.add(
-            ChatMessage(
-              text: welcomeMessage,
-              isUser: false,
-              timestamp: DateTime.now(),
-            ),
-          );
-        }
-      });
+    // Responsive sizing with constraints - only relevant for non-modal
+    if (!widget.isModal) {
+      // Limit the width based on screen size but with a hard cap
+      _chatWidth = screenSize.width < 768 ? 320.0 : 380.0;
+
+      // Never let the chat width exceed 35% of the screen width
+      // Ensure max value is always greater than min value to avoid clamp errors
+      double maxWidth = screenSize.width * 0.35;
+      _chatWidth = _chatWidth.clamp(280.0, math.max(281.0, maxWidth));
+
+      // Adjust height based on screen size
+      _chatHeight = screenSize.height < 600
+          ? 400.0
+          : screenSize.height > 900
+          ? 600.0
+          : screenSize.height * 0.6;
+      _chatHeight = _chatHeight.clamp(400.0, 600.0);
+    }
+
+    // Show welcome message for modal view
+    if (widget.isModal && !_hasSeenWelcome) {
+      _hasSeenWelcome = true;
+
+      // Customize welcome message based on role
+      String welcomeMessage;
+      if (widget.role == 'analytics') {
+        welcomeMessage =
+            'Welcome to the Healthcare Analytics Assistant. How can I help you analyze your data today?';
+      } else if (widget.role == 'caregiver') {
+        welcomeMessage =
+            'Welcome to the Caregiver Assistant. I can help you with patient information, care protocols, and medical references.';
+      } else {
+        welcomeMessage =
+            'Welcome to CareConnect AI Assistant. How can I help you today?';
+      }
+
+      // Add system welcome message
+      _messages.add(
+        ChatMessage(
+          text: welcomeMessage,
+          isUser: false,
+          timestamp: DateTime.now(),
+        ),
+      );
     }
   }
 
@@ -357,10 +379,12 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
   }
 
   void _toggleChat() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-    });
-    if (_isExpanded) {
+    if (!_isExpanded) {
+      // Expand the chat
+      setState(() {
+        _isExpanded = true;
+      });
+      _animationController.reset();
       _animationController.forward();
       // Show welcome message on first expansion
       if (!_hasSeenWelcome) {
@@ -390,7 +414,12 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       }
     } else {
-      _animationController.reverse();
+      // Collapse the chat
+      _animationController.reverse().then((_) {
+        setState(() {
+          _isExpanded = false;
+        });
+      });
     }
   }
 
@@ -469,7 +498,8 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
 
       // Never let the chat width exceed 35% of the screen width
       // This ensures it stays properly on the right side and doesn't take too much space
-      _chatWidth = _chatWidth.clamp(280.0, screenSize.width * 0.35);
+      double maxWidth = screenSize.width * 0.35;
+      _chatWidth = _chatWidth.clamp(280.0, math.max(281.0, maxWidth));
 
       // Adjust height based on screen size
       _chatHeight = screenSize.height < 600
@@ -821,17 +851,17 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.end, // Align to bottom
         crossAxisAlignment: CrossAxisAlignment.end, // Align to right
         children: [
-          AnimatedBuilder(
-            animation: _animation,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: _animation.value,
-                child: _animation.value > 0
-                    ? chatContent
-                    : const SizedBox.shrink(),
-              );
-            },
-          ),
+          // Only show chat content when expanded
+          if (_isExpanded)
+            AnimatedBuilder(
+              animation: _animation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _animation.value,
+                  child: chatContent,
+                );
+              },
+            ),
           const SizedBox(height: 8),
           // Floating action button - only show when not in modal
           if (!widget.isModal)
