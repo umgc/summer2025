@@ -9,11 +9,13 @@ import '../../../../widgets/responsive_container.dart';
 class PaymentSuccessPage extends StatefulWidget {
   final String? sessionId;
   final bool? isRegistration;
+  final bool fromPortal;
 
   const PaymentSuccessPage({
     super.key,
     this.sessionId,
     this.isRegistration = false,
+    this.fromPortal = false,
   });
 
   @override
@@ -62,6 +64,9 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
           : 'caregiver'; // Default to caregiver for registration flows
 
       context.go('/login', extra: {'userType': userType});
+    } else if (widget.fromPortal) {
+      // If coming from subscription management portal, return to subscription management page
+      context.go('/select-package');
     } else {
       // For existing users, go to dashboard based on their role
       navigateToDashboard(context);
@@ -150,6 +155,8 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                     child: Text(
                       widget.isRegistration == true
                           ? 'Continue to Login'
+                          : widget.fromPortal
+                          ? 'Return to Subscription Management'
                           : 'Continue to Dashboard',
                       style: const TextStyle(
                         fontSize: 16,

@@ -14,11 +14,13 @@ class StripeCheckoutPage extends StatefulWidget {
   final PackageModel package;
   final String? userId;
   final String? stripeCustomerId;
+  final bool fromPortal;
   const StripeCheckoutPage({
     super.key,
     required this.package,
     this.userId,
     this.stripeCustomerId,
+    this.fromPortal = false,
   });
 
   @override
@@ -63,6 +65,11 @@ class _StripeCheckoutPageState extends State<StripeCheckoutPage> {
         'amount': widget.package.priceCents
             .toString(), // Send the actual amount
       };
+
+      // Add portal parameter if coming from subscription management
+      if (widget.fromPortal) {
+        requestBody['portal'] = 'update';
+      }
 
       // Add stripeCustomerId to request only if it's available
       if (widget.stripeCustomerId != null &&

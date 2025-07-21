@@ -148,5 +148,22 @@ class UserProvider extends ChangeNotifier {
 
   bool get isLoggedIn => _user != null;
   bool get isCaregiver => _user?.role.toUpperCase() == 'CAREGIVER';
+
+  // Update user name
+  void updateUserName(String newName) {
+    if (_user != null) {
+      _user = UserSession(
+        id: _user!.id,
+        email: _user!.email,
+        role: _user!.role,
+        token: _user!.token,
+        patientId: _user!.patientId,
+        caregiverId: _user!.caregiverId,
+        name: newName,
+      );
+      notifyListeners();
+    }
+  }
+
   bool get isPatient => _user?.role.toUpperCase() == 'PATIENT';
 }

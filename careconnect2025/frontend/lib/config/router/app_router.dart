@@ -3,6 +3,7 @@ import 'package:care_connect_app/features/integrations/presentation/pages/medica
 import 'package:care_connect_app/features/integrations/presentation/pages/smart_devices.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/wearables_screen.dart';
 import 'package:care_connect_app/features/calls/presentation/pages/jitsi_meeting_screen.dart';
+import 'package:care_connect_app/features/profile/presentation/pages/profile_settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:care_connect_app/config/theme/app_theme.dart';
@@ -261,9 +262,11 @@ final GoRouter appRouter = GoRouter(
         final sessionId = state.uri.queryParameters['session_id'];
         final isRegistration =
             state.uri.queryParameters['registration'] == 'complete';
+        final fromPortal = state.uri.queryParameters['portal'] == 'update';
         return PaymentSuccessPage(
           sessionId: sessionId,
           isRegistration: isRegistration,
+          fromPortal: fromPortal,
         );
       },
     ),
@@ -457,6 +460,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/medication',
       builder: (_, __) => const MedicationManagementScreen(),
+    ),
+    GoRoute(
+      path: '/profile-settings',
+      builder: (_, __) => const ProfileSettingsPage(),
     ),
 
     // Handle routes from legacy menus

@@ -81,8 +81,10 @@ class Subscription {
     );
   }
 
-  bool get isActive => status == 'active' || status == 'trialing';
-  bool get isCancelled => status == 'canceled' || cancelAtPeriodEnd;
+  bool get isActive =>
+      status.toLowerCase() == 'active' || status.toLowerCase() == 'trialing';
+  bool get isCancelled =>
+      status.toLowerCase() == 'canceled' || cancelAtPeriodEnd;
 
   String get formattedAmount => '\$${planAmount.toStringAsFixed(2)}';
 
@@ -93,11 +95,12 @@ class Subscription {
   }
 
   String get statusDisplay {
+    final lowerStatus = status.toLowerCase();
     if (cancelAtPeriodEnd) return 'Canceling at period end';
-    if (status == 'active') return 'Active';
-    if (status == 'trialing') return 'Trial';
-    if (status == 'canceled') return 'Cancelled';
-    if (status == 'unpaid') return 'Unpaid';
+    if (lowerStatus == 'active') return 'Active';
+    if (lowerStatus == 'trialing') return 'Trial';
+    if (lowerStatus == 'canceled') return 'Cancelled';
+    if (lowerStatus == 'unpaid') return 'Unpaid';
     return status;
   }
 }
