@@ -103,8 +103,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         _isPatient = userRole.toUpperCase() == 'PATIENT';
         _isCaregiver =
             userRole.toUpperCase() == 'CAREGIVER' ||
-                userRole.toUpperCase() == 'FAMILY_LINK' ||
-                userRole.toUpperCase() == 'ADMIN';
+            userRole.toUpperCase() == 'FAMILY_LINK' ||
+            userRole.toUpperCase() == 'ADMIN';
       });
 
       // First, retrieve the user's profile using the appropriate ID from the session
@@ -196,17 +196,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           'state': rawData['address']?['state'] ?? '',
           'zipCode': rawData['address']?['zip'] ?? '',
           'country': '', // Default to empty as it's not in the response
-          // Extract specialization from the professional object - use yearsExperience as a string
-          'specialization': rawData['professional'] != null
-              ? rawData['professional']['yearsExperience']?.toString() ?? ''
-              : '',
-          // Use caregiverType for organization if available
-          'organization': rawData['caregiverType'] ?? '',
-          // Use license number from the professional object if available
-          'license': rawData['professional'] != null
-              ? rawData['professional']['licenseNumber'] ?? ''
-              : '',
-          'dateOfBirth': rawData['dob'] ?? '', // Added date of birth handling
+          'specialization': rawData['professional'] ?? '',
+          'organization': '', // Default to empty as it's not in the response
+          'license': '', // Default to empty as it's not in the response
           'profilePictureUrl': profilePictureUrl,
         };
       } else if (_isPatient) {
@@ -263,8 +255,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     _specializationController.text = profile.specialization ?? '';
     _organizationController.text = profile.organization ?? '';
     _licenseController.text = profile.license ?? '';
-    _dateOfBirthController.text =
-        profile.dateOfBirth ?? ''; // Added date of birth handling
   }
 
   void _populatePatientFields() {
@@ -382,54 +372,30 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     });
 
     try {
+      Map<String, dynamic> profileData = {
+        'name': _nameController.text,
+        'email': _emailController.text,
+        'phoneNumber': _phoneController.text,
+        'address': _addressController.text,
+        'city': _cityController.text,
+        'state': _stateController.text,
+        'zipCode': _zipCodeController.text,
+        'country': _countryController.text,
+      };
+
       // Get the user session to retrieve the correct ID based on role
       final userSession = await AuthTokenManager.getUserSession();
 
       // Add role-specific fields
       if (_isCaregiver) {
-        // Build caregiver profile data based on the expected backend structure
-        final Map<String, dynamic> profileData = {
-          'firstName': _nameController.text.split(' ').first,
-          'lastName': _nameController.text.contains(' ')
-              ? _nameController.text.split(' ').last
-              : '',
-          'dob': _dateOfBirthController.text,
-          'email': _emailController.text,
-          'phone': _phoneController.text,
-          // Professional info
-          'professional': {
-            'licenseNumber': _licenseController.text,
-            'issuingState':
-            _stateController.text, // Using state as issuing state
-            'yearsExperience':
-            int.tryParse(_specializationController.text) ??
-                1, // Using specialization field for years of experience
-          },
-          // Address info
-          'address': {
-            'line1': _addressController.text,
-            'line2': '', // No separate field for line2 in the form
-            'city': _cityController.text,
-            'state': _stateController.text,
-            'zip': _zipCodeController.text,
-            'phone': _phoneController.text,
-          },
-          // Organization can be included as caregiverType
-          'caregiverType': _organizationController.text,
-          // Add credentials for update operation
-          'credentials': {
-            'email': _emailController.text,
-            // No password needed for update
-          },
-        };
+        profileData['specialization'] = _specializationController.text;
+        profileData['organization'] = _organizationController.text;
+        profileData['license'] = _licenseController.text;
 
         final caregiverId = userSession?['caregiverId'] as int?;
         if (caregiverId == null) {
           throw Exception('Caregiver ID not found in user session');
         }
-
-        // Debug the request payload
-        print('🔍 Caregiver update payload: ${jsonEncode(profileData)}');
 
         final response = await ApiService.updateCaregiverProfile(
           caregiverId,
@@ -453,57 +419,24 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           );
           userProvider.updateUserName(_nameController.text);
         } else {
-          print('❌ Caregiver profile update failed: ${response.statusCode}');
-          print('❌ Error response: ${response.body}');
-          throw Exception(
-            'Failed to update caregiver profile: ${response.statusCode} - ${response.body}',
-          );
+          throw Exception('Failed to update profile: ${response.statusCode}');
         }
       } else if (_isPatient) {
-        // Build patient profile data based on the expected backend structure
-        final Map<String, dynamic> patientData = {
-          'firstName': _nameController.text.split(' ').first,
-          'lastName': _nameController.text.contains(' ')
-              ? _nameController.text.split(' ').last
-              : '',
-          'dob': _dateOfBirthController.text,
-          'email': _emailController.text,
-          'phone': _phoneController.text,
-          'gender': _genderController.text,
-          'emergencyContact': _emergencyContactController.text,
-          // Medical information
-          'medicalInfo': {
-            'conditions': _medicalConditionsController.text,
-            'allergies': _allergiesController.text,
-            'medications': _medicationsController.text,
-          },
-          // Address info
-          'address': {
-            'line1': _addressController.text,
-            'line2': '', // No separate field for line2 in the form
-            'city': _cityController.text,
-            'state': _stateController.text,
-            'zip': _zipCodeController.text,
-            'phone': _phoneController.text,
-          },
-          // Add credentials for update operation
-          'credentials': {
-            'email': _emailController.text,
-            // No password needed for update
-          },
-        };
+        profileData['dateOfBirth'] = _dateOfBirthController.text;
+        profileData['gender'] = _genderController.text;
+        profileData['emergencyContact'] = _emergencyContactController.text;
+        profileData['medicalConditions'] = _medicalConditionsController.text;
+        profileData['allergies'] = _allergiesController.text;
+        profileData['medications'] = _medicationsController.text;
 
         final patientId = userSession?['patientId'] as int?;
         if (patientId == null) {
           throw Exception('Patient ID not found in user session');
         }
 
-        // Debug the request payload
-        print('🔍 Patient update payload: ${jsonEncode(patientData)}');
-
         final response = await ApiService.updatePatientProfile(
           patientId,
-          patientData,
+          profileData,
         );
 
         if (response.statusCode == 200) {
@@ -523,11 +456,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           );
           userProvider.updateUserName(_nameController.text);
         } else {
-          print('❌ Patient profile update failed: ${response.statusCode}');
-          print('❌ Error response: ${response.body}');
-          throw Exception(
-            'Failed to update patient profile: ${response.statusCode} - ${response.body}',
-          );
+          throw Exception('Failed to update profile: ${response.statusCode}');
         }
       }
     } catch (e) {
@@ -751,9 +680,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                     child: _isSaving
                         ? const CircularProgressIndicator()
                         : const Text(
-                      'SAVE CHANGES',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                            'SAVE CHANGES',
+                            style: TextStyle(fontSize: 16),
+                          ),
                   ),
                 ),
               ],
@@ -783,22 +712,22 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                         : null,
                     // Only provide onBackgroundImageError when we have a backgroundImage
                     onBackgroundImageError:
-                    _imageFile != null ||
-                        _userProfile?.profilePictureUrl != null
+                        _imageFile != null ||
+                            _userProfile?.profilePictureUrl != null
                         ? (exception, stackTrace) {
-                      // Silently handle network image loading errors
-                      print('Error loading profile picture: $exception');
-                      // No setState needed as we'll show the fallback icon
-                    }
+                            // Silently handle network image loading errors
+                            print('Error loading profile picture: $exception');
+                            // No setState needed as we'll show the fallback icon
+                          }
                         : null,
                     child:
-                    _userProfile?.profilePictureUrl == null &&
-                        _imageFile == null
+                        _userProfile?.profilePictureUrl == null &&
+                            _imageFile == null
                         ? Icon(
-                      Icons.person,
-                      size: 60,
-                      color: AppTheme.textSecondary,
-                    )
+                            Icons.person,
+                            size: 60,
+                            color: AppTheme.textSecondary,
+                          )
                         : null,
                   ),
                   Positioned(

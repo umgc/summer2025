@@ -68,7 +68,6 @@ class CaregiverProfile extends UserProfile {
   String? specialization;
   String? organization;
   String? license;
-  String? dateOfBirth; // Added date of birth field
 
   CaregiverProfile({
     required super.id,
@@ -84,7 +83,6 @@ class CaregiverProfile extends UserProfile {
     this.specialization,
     this.organization,
     this.license,
-    this.dateOfBirth, // Added parameter
   });
 
   factory CaregiverProfile.fromJson(Map<String, dynamic> json) {
@@ -102,7 +100,6 @@ class CaregiverProfile extends UserProfile {
       specialization: json['specialization'],
       organization: json['organization'],
       license: json['license'],
-      dateOfBirth: json['dateOfBirth'], // Added dateOfBirth
     );
   }
 
@@ -114,7 +111,6 @@ class CaregiverProfile extends UserProfile {
       'specialization': specialization,
       'organization': organization,
       'license': license,
-      'dateOfBirth': dateOfBirth, // Added dateOfBirth
     };
   }
 
@@ -132,7 +128,6 @@ class CaregiverProfile extends UserProfile {
     String? specialization,
     String? organization,
     String? license,
-    String? dateOfBirth, // Added parameter
   }) {
     return CaregiverProfile(
       id: this.id,
@@ -148,7 +143,6 @@ class CaregiverProfile extends UserProfile {
       specialization: specialization ?? this.specialization,
       organization: organization ?? this.organization,
       license: license ?? this.license,
-      dateOfBirth: dateOfBirth ?? this.dateOfBirth, // Added parameter
     );
   }
 }

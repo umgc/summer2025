@@ -141,7 +141,8 @@ public class SubscriptionService {
             String plan,
             Long userId,
             Long amount,
-            String stripeCustomerId
+            String stripeCustomerId,
+            String portal
     ) {
         try {
             String domain = request.getScheme() + "://" + request.getServerName() +
@@ -185,9 +186,16 @@ public class SubscriptionService {
 
             com.stripe.param.checkout.SessionCreateParams.Builder paramsBuilder =
                     com.stripe.param.checkout.SessionCreateParams.builder()
-                            .setMode(com.stripe.param.checkout.SessionCreateParams.Mode.SUBSCRIPTION)
-                            .setSuccessUrl(frontendBaseUrl + "/login")
-                            .setCancelUrl(frontendBaseUrl + "/payment-cancel?registration=complete");
+                            .setMode(com.stripe.param.checkout.SessionCreateParams.Mode.SUBSCRIPTION);
+                            
+            // Set the success URL based on whether this is a portal update
+            if (portal == "update") {
+                paramsBuilder.setSuccessUrl(frontendBaseUrl + "/payment-success?portal=update");
+            } else {
+                paramsBuilder.setSuccessUrl(frontendBaseUrl + "/payment-success");
+            }
+            
+            paramsBuilder.setCancelUrl(frontendBaseUrl + "/payment-cancel?registration=complete");
 
             if (customerId != null) {
                 paramsBuilder.setCustomer(customerId);
@@ -741,24 +749,61 @@ public class SubscriptionService {
         
         /**
          * Get all subscriptions for a user
+         * Syncs with Stripe first to ensure data is up to date
          */
-        @Transactional(readOnly = true)
+        @Transactional
         public List<Subscription> getUserSubscriptions(Long userId) {
             User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+            
+            // Only sync with Stripe if the user has a Stripe customer ID
+            if (user.getStripeCustomerId() != null && !user.getStripeCustomerId().isEmpty()) {
+                try {
+                    // Sync subscriptions from Stripe before returning
+                    syncAllSubscriptionsForCustomer(user.getStripeCustomerId());
+                } catch (StripeException e) {
+                    System.err.println("Warning: Failed to sync subscriptions from Stripe: " + e.getMessage());
+                    // Continue with database records even if sync fails
+                }
+            }
                 
             return subscriptionRepository.findByUser(user);
         }
         
     /**
      * Get all active subscriptions for a user
+     * Syncs with Stripe first to ensure data is up to date
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public List<Subscription> getUserActiveSubscriptions(Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+        
+        // Only sync with Stripe if the user has a Stripe customer ID
+        if (user.getStripeCustomerId() != null && !user.getStripeCustomerId().isEmpty()) {
+            try {
+                // Sync subscriptions from Stripe before returning
+                syncAllSubscriptionsForCustomer(user.getStripeCustomerId());
+            } catch (StripeException e) {
+                System.err.println("Warning: Failed to sync subscriptions from Stripe: " + e.getMessage());
+                // Continue with database records even if sync fails
+            }
+        }
             
         return subscriptionRepository.findByUserAndStatus(user, "ACTIVE");
+    }
+    
+    /**
+     * API endpoint to manually refresh a user's subscriptions from Stripe
+     * Returns the refreshed subscriptions
+     */
+    @Transactional
+    public List<Subscription> refreshUserSubscriptionsFromStripe(Long userId) {
+        try {
+            return syncUserSubscriptionsFromStripe(userId);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to refresh subscriptions from Stripe: " + e.getMessage(), e);
+        }
     }
     
     /**

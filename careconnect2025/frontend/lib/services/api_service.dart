@@ -16,6 +16,9 @@ class ApiConstants {
   static final String baseUrl = '$_host/v1/api/';
   static final String familyMembers = '$_host/v1/api/family-members';
   static final String patient = '$_host/v1/api/patient';
+  static final String patients = '$_host/v1/api/patients';
+  static final String caregivers = '$_host/v1/api/caregivers';
+  static final String files = '$_host/v1/api/files';
   static final String connectionRequests = '$_host/v1/api/connection-requests';
   static final String subscriptions = '$_host/v1/api/subscriptions';
 }
@@ -781,5 +784,135 @@ class ApiService {
           body: jsonEncode(patientData),
         )
         .timeout(const Duration(seconds: 30));
+  }
+
+  // ========================
+  // PROFILE MANAGEMENT METHODS
+  // ========================
+
+  /// Get caregiver profile data
+  static Future<http.Response> getCaregiverProfile(int caregiverId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .get(
+          Uri.parse('${ApiConstants.caregivers}/$caregiverId'),
+          headers: headers,
+        )
+        .timeout(const Duration(seconds: 15));
+  }
+
+  /// Update caregiver profile
+  static Future<http.Response> updateCaregiverProfile(
+    int caregiverId,
+    Map<String, dynamic> updatedProfile,
+  ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .put(
+          Uri.parse('${ApiConstants.caregivers}/$caregiverId'),
+          headers: headers,
+          body: jsonEncode(updatedProfile),
+        )
+        .timeout(const Duration(seconds: 15));
+  }
+
+  /// Get patient profile data
+  static Future<http.Response> getPatientProfile(int patientId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .get(Uri.parse('${ApiConstants.patients}/$patientId'), headers: headers)
+        .timeout(const Duration(seconds: 15));
+  }
+
+  /// Update patient profile
+  static Future<http.Response> updatePatientProfile(
+    int patientId,
+    Map<String, dynamic> updatedProfile,
+  ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .put(
+          Uri.parse('${ApiConstants.patients}/$patientId'),
+          headers: headers,
+          body: jsonEncode(updatedProfile),
+        )
+        .timeout(const Duration(seconds: 15));
+  }
+
+  /// Upload profile picture or other files
+  static Future<http.Response> uploadUserFile({
+    required int userId,
+    required File file,
+    required String category,
+    String? role,
+  }) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    // Remove Content-Type as it will be set by multipart request
+    headers.remove('Content-Type');
+
+    // Use users endpoint for file uploads
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ApiConstants.files}/users/$userId/upload'),
+    );
+
+    // Add headers
+    request.headers.addAll(headers);
+
+    // Add file
+    var fileStream = http.ByteStream(file.openRead());
+    var fileLength = await file.length();
+    var multipartFile = http.MultipartFile(
+      'file',
+      fileStream,
+      fileLength,
+      filename: path.basename(file.path),
+    );
+
+    // Add form fields
+    request.files.add(multipartFile);
+    request.fields['category'] = category;
+
+    // Send the request
+    var streamedResponse = await request.send().timeout(
+      const Duration(seconds: 30),
+    );
+    var response = await http.Response.fromStream(streamedResponse);
+
+    return response;
+  }
+
+  /// Get user profile picture URL based on role
+  static Future<String?> getUserProfilePictureUrl(
+    int userId, [
+    String? role,
+  ]) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    // Use the users endpoint to get files consistently
+    final endpoint = 'users';
+
+    try {
+      final response = await _httpClient
+          .get(
+            Uri.parse(
+              '${ApiConstants.files}/$endpoint/$userId?category=profilePicture',
+            ),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is List && data.isNotEmpty) {
+          return data.first['fileUrl'];
+        } else if (data is Map && data.containsKey('fileUrl')) {
+          return data['fileUrl'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error getting profile picture URL: $e');
+      return null;
+    }
   }
 }

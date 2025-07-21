@@ -9,6 +9,8 @@ import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:care_connect_app/config/theme/app_theme.dart';
 import '../../models/subscription_model.dart';
+import '../../models/package_model.dart';
+import '../pages/stripe_checkout_page.dart';
 
 class SubscriptionManagementPage extends StatefulWidget {
   const SubscriptionManagementPage({Key? key}) : super(key: key);
@@ -115,7 +117,7 @@ class _SubscriptionManagementPageState
                   (sub) =>
                       sub is Map<String, dynamic> &&
                       sub.containsKey('status') &&
-                      sub['status'] == 'active',
+                      sub['status'].toString().toLowerCase() == 'active',
                 )
                 .toList();
 
@@ -279,149 +281,139 @@ class _SubscriptionManagementPageState
       print('⚠️ No current subscription');
     }
 
-    // Ensure we have a customerId for new subscriptions or continue with existing subscription update
+    // Ensure we have a customerId for new subscriptions
     if (_processingAction) return;
 
-    // Get customerId from current user if not available from subscription
-    if (_customerId == null && _currentSubscription == null) {
+    // For existing active subscriptions that need to be changed,
+    // first cancel the existing subscription, then redirect to checkout
+    if (_currentSubscription != null && _currentSubscription!.isActive) {
+      // Show confirmation dialog before proceeding
+      final bool? confirmSwitch = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Change Subscription'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'To switch to the ${newPlan.name}, your current plan will first be cancelled, then you\'ll complete payment for the new plan.',
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'You will not be charged for the remainder of your current billing period.',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 12),
+              const Text('Do you want to continue?'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('CANCEL'),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.primary,
+              ),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('CONTINUE'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmSwitch != true) return;
+
+      setState(() {
+        _processingAction = true;
+      });
+
       try {
-        // Attempt to get customer ID from user info if missing
+        // First cancel the current subscription
+        final response = await ApiService.cancelSubscription(
+          _currentSubscription!.stripeSubscriptionId,
+        );
+
+        if (response.statusCode != 200) {
+          final errorData = jsonDecode(response.body);
+          throw Exception(
+            errorData['error'] ?? 'Failed to cancel current subscription',
+          );
+        }
+
+        // Get the user's ID for checkout
         final userSession = await AuthTokenManager.getUserSession();
         final userId = userSession != null
             ? userSession['id']?.toString()
             : null;
 
-        if (userId != null) {
-          // Try to get user's stripe info
-          final response = await ApiService.getCurrentSubscription();
+        // Extract customer ID from existing subscription
+        final customerId = _currentSubscription!.customerId;
 
-          if (response.statusCode == 200) {
-            final data = jsonDecode(response.body);
-            if (data is List &&
-                data.isNotEmpty &&
-                data.first is Map<String, dynamic>) {
-              if (data.first.containsKey('stripeCustomerId')) {
-                _customerId = data.first['stripeCustomerId'];
-                print(
-                  '⚠️ Retrieved stripeCustomerId from subscription: $_customerId',
-                );
-              } else if (data.first.containsKey('customer')) {
-                _customerId = data.first['customer'];
-                print(
-                  '⚠️ Retrieved customerId from subscription: $_customerId',
-                );
-              } else if (data.first.containsKey('customerId')) {
-                _customerId = data.first['customerId'];
-                print(
-                  '⚠️ Retrieved customerId from subscription: $_customerId',
-                );
-              }
-            }
-          }
-        }
+        // Now redirect to checkout flow with the new plan
+        _redirectToCheckout(newPlan, userId, customerId);
       } catch (e) {
-        print('⚠️ Error getting customer ID: $e');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        setState(() {
+          _processingAction = false;
+        });
       }
+    } else {
+      // For new subscriptions or inactive subscriptions,
+      // get the user ID and customer ID if available, then redirect to checkout
+      try {
+        final userSession = await AuthTokenManager.getUserSession();
+        final userId = userSession != null
+            ? userSession['id']?.toString()
+            : null;
 
-      // Still no customer ID - show error
-      if (_customerId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Unable to find customer information. Please contact support.',
-            ),
-          ),
-        );
-        return;
+        // Redirect to checkout flow for a new subscription
+        _redirectToCheckout(newPlan, userId, _customerId);
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
+  }
 
-    setState(() {
-      _processingAction = true;
-    });
+  // Helper method to redirect to the checkout page
+  void _redirectToCheckout(
+    SubscriptionPlan plan,
+    String? userId,
+    String? customerId,
+  ) {
+    // Convert SubscriptionPlan to PackageModel for the checkout page
+    final package = PackageModel(
+      id: plan.id,
+      name: plan.name,
+      description: plan.description,
+      priceCents: (plan.amount * 100).toInt(), // Convert dollars to cents
+    );
 
-    try {
-      if (_currentSubscription == null || !_currentSubscription!.isActive) {
-        // Create a new subscription if there's no subscription or if the current one is not active
-        print(
-          '⚠️ Creating new subscription with customerId: $_customerId and priceId: ${newPlan.id}' +
-              (_currentSubscription != null
-                  ? ' (current subscription is not active)'
-                  : ''),
-        );
-        // Print the exact values we're sending to the API
-        print(
-          '⚠️ Creating subscription with customerId: $_customerId, priceId: ${newPlan.id}',
-        );
-
-        final response = await ApiService.createSubscription(
-          _customerId!,
-          newPlan.id,
-        );
-        print(
-          '⚠️ Create subscription response: ${response.statusCode} - ${response.body}',
-        );
-
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Subscription created successfully!'),
-              backgroundColor: AppTheme.success,
-            ),
-          );
-          _loadSubscriptionData();
-        } else {
-          final errorData = jsonDecode(response.body);
-          throw Exception(
-            errorData['error'] ??
-                'Failed to create subscription: ${response.statusCode}',
-          );
-        }
-      } else {
-        // Switch plans using the upgrade-or-downgrade endpoint
-        final String oldSubscriptionId =
-            _currentSubscription!.stripeSubscriptionId;
-        final String newPriceId = newPlan.id;
-
-        print(
-          '⚠️ Switching subscription: $oldSubscriptionId to new pricing plan: $newPriceId',
-        );
-
-        // Call the API with both parameters required by the endpoint
-        final response = await ApiService.changeSubscriptionPlan(
-          oldSubscriptionId, // The old subscription ID parameter
-          newPriceId, // The new pricing plan ID parameter
-        );
-
-        print(
-          '⚠️ Subscription switch response: ${response.statusCode} - ${response.body}',
-        );
-
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Plan switched successfully!'),
-              backgroundColor: AppTheme.success,
-            ),
-          );
-          _loadSubscriptionData();
-        } else {
-          final errorData = jsonDecode(response.body);
-          throw Exception(
-            errorData['error'] ??
-                'Failed to switch subscription plan: ${response.statusCode}',
-          );
-        }
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
-    } finally {
+    // Navigate to checkout page
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StripeCheckoutPage(
+          package: package,
+          userId: userId,
+          stripeCustomerId: customerId,
+          fromPortal:
+              true, // Indicate this is coming from subscription management page
+        ),
+      ),
+    ).then((_) {
+      // Refresh data when returning from checkout
+      _loadSubscriptionData();
       setState(() {
         _processingAction = false;
       });
-    }
+    });
   }
 
   Future<void> _cancelSubscription() async {
@@ -808,9 +800,20 @@ class _SubscriptionManagementPageState
           )
         else
           ..._plans.map((plan) {
+            // Check if this is the current plan using ID, name, and price as fallbacks
             final isCurrentPlan =
                 _currentSubscription != null &&
-                _currentSubscription!.planId == plan.id;
+                (_currentSubscription!.planId == plan.id ||
+                    _currentSubscription!.planName.toLowerCase().contains(
+                      plan.name.toLowerCase(),
+                    ) ||
+                    plan.name.toLowerCase().contains(
+                      _currentSubscription!.planName.toLowerCase(),
+                    ) ||
+                    (_currentSubscription!.planAmount > 0 &&
+                        plan.amount > 0 &&
+                        _currentSubscription!.planAmount ==
+                            plan.amount)); // Price equality as last resort
             final isSelectedPlan = _selectedPlan?.id == plan.id;
 
             return Card(
@@ -939,42 +942,72 @@ class _SubscriptionManagementPageState
                       const SizedBox(height: 16),
 
                       // Action button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _processingAction || isCurrentPlan
-                              ? null // Disable if current plan or processing
-                              : () => _changePlan(plan),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
-                            foregroundColor: Theme.of(
-                              context,
-                            ).colorScheme.onPrimary,
-                            disabledBackgroundColor: Theme.of(
-                              context,
-                            ).disabledColor,
-                          ),
-                          child: _processingAction && isSelectedPlan
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  isCurrentPlan
-                                      ? 'Current Plan'
-                                      : _currentSubscription != null &&
-                                            _currentSubscription!.isActive
-                                      ? 'Switch to This Plan'
-                                      : 'Subscribe Now',
+                      if (isCurrentPlan)
+                        // For current plan, show a different styled button indicating it's the current plan
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: null, // Always disabled for current plan
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.surface,
+                              side: BorderSide(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  size: 18,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.secondary,
                                 ),
+                                const SizedBox(width: 8),
+                                const Text('Current Active Plan'),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        // For other plans, show the regular action button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _processingAction
+                                ? null // Disable if processing
+                                : () => _changePlan(plan),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onPrimary,
+                              disabledBackgroundColor: Theme.of(
+                                context,
+                              ).disabledColor,
+                            ),
+                            child: _processingAction && isSelectedPlan
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    _currentSubscription != null &&
+                                            _currentSubscription!.isActive
+                                        ? 'Switch to This Plan'
+                                        : 'Subscribe Now',
+                                  ),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
