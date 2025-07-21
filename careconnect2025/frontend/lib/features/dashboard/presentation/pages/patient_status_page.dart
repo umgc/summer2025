@@ -77,7 +77,7 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
           user.role.toUpperCase() == 'FAMILY_LINK') {
         final caregiverId = user.caregiverId;
         apiUrl =
-        '${ApiConstants.baseUrl}caregivers/$caregiverId/patients/$patientId';
+            '${ApiConstants.baseUrl}caregivers/$caregiverId/patients/$patientId';
         print('🔍 Using caregiver-specific endpoint: $apiUrl');
       } else {
         // If the user is a patient, use the users endpoint
@@ -93,7 +93,7 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
       if (profileRes.statusCode != 200) {
         setState(() {
           error =
-          'Failed to load patient profile. Status: ${profileRes.statusCode}';
+              'Failed to load patient profile. Status: ${profileRes.statusCode}';
           loading = false;
         });
         print('🔍 API Error: ${profileRes.statusCode} - ${profileRes.body}');
@@ -137,7 +137,7 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
       if (vitalsRes.statusCode != 200) {
         setState(() {
           error =
-          'Failed to load vitals summary. Status: ${vitalsRes.statusCode}';
+              'Failed to load vitals summary. Status: ${vitalsRes.statusCode}';
           loading = false;
         });
         print(
@@ -180,73 +180,73 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
           : patient == null
           ? const Center(child: Text('No patient data found.'))
           : SingleChildScrollView(
-        child: ResponsiveContainer(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundImage: NetworkImage(
-                      (patient!.profileImageUrl ??
-                          'https://randomuser.me/api/portraits/men/32.jpg'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${patient!.firstName} ${patient!.lastName}',
-                        style: Theme.of(context).textTheme.titleLarge
-                            ?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
+              child: ResponsiveContainer(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 32,
+                          backgroundImage: NetworkImage(
+                            (patient!.profileImageUrl ??
+                                'https://randomuser.me/api/portraits/men/32.jpg'),
+                          ),
                         ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${patient!.firstName} ${patient!.lastName}',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            Text('Age: ${_calculateAge(patient!.dob)}'),
+                            Text('Phone: ${patient!.phone}'),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Current Condition',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
                       ),
-                      Text('Age: ${_calculateAge(patient!.dob)}'),
-                      Text('Phone: ${patient!.phone}'),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Current Condition',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      patient!.relationship,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Address',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${patient!.address?.line1 ?? ''} ${patient!.address?.line2 ?? ''}\n'
+                      '${patient!.address?.city ?? ''}, ${patient!.address?.state ?? ''} ${patient!.address?.zip ?? ''}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 24),
+                    buildVitalsSummary(vitals),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                patient!.relationship,
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Address',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${patient!.address?.line1 ?? ''} ${patient!.address?.line2 ?? ''}\n'
-                    '${patient!.address?.city ?? ''}, ${patient!.address?.state ?? ''} ${patient!.address?.zip ?? ''}',
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 24),
-              buildVitalsSummary(vitals),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 

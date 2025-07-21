@@ -5,9 +5,9 @@ import 'package:permission_handler/permission_handler.dart';
 class CommunicationService {
   // Make a phone call
   static Future<void> makePhoneCall(
-      String phoneNumber,
-      BuildContext context,
-      ) async {
+    String phoneNumber,
+    BuildContext context,
+  ) async {
     try {
       // Clean phone number
       final cleanPhone = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
@@ -41,10 +41,10 @@ class CommunicationService {
 
   // Send SMS
   static Future<void> sendSMS(
-      String phoneNumber,
-      BuildContext context, {
-        String? message,
-      }) async {
+    String phoneNumber,
+    BuildContext context, {
+    String? message,
+  }) async {
     try {
       // Clean phone number
       final cleanPhone = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
@@ -70,10 +70,10 @@ class CommunicationService {
 
   // Start a video call (using a simple web-based approach for now)
   static Future<void> startVideoCall(
-      String patientId,
-      String patientName,
-      BuildContext context,
-      ) async {
+    String patientId,
+    String patientName,
+    BuildContext context,
+  ) async {
     try {
       // For now, we'll use a simple web-based video call solution
       // In a real app, you'd integrate a proper video SDK like Agora, Twilio, etc.

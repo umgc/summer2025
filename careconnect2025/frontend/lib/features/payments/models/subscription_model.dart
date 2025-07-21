@@ -38,9 +38,9 @@ class Subscription {
       return Subscription(
         id: json['id']?.toString() ?? '', // Database ID
         stripeSubscriptionId:
-        stripeSubId, // Stripe subscription ID for API operations
+            stripeSubId, // Stripe subscription ID for API operations
         customerId:
-        json['stripeCustomerId']?.toString() ??
+            json['stripeCustomerId']?.toString() ??
             json['customer']?.toString() ??
             json['customerId']?.toString() ??
             '',
@@ -49,7 +49,7 @@ class Subscription {
         currentPeriodEnd: json['currentPeriodEnd']?.toString() ?? '',
         cancelAtPeriodEnd: false, // Default since it's not in the new format
         planId:
-        json['planId']?.toString() ?? json['planCode']?.toString() ?? '',
+            json['planId']?.toString() ?? json['planCode']?.toString() ?? '',
         planName: json['planName']?.toString() ?? 'Standard Plan',
         planAmount: json['priceCents'] != null
             ? ((json['priceCents'] as num).toDouble() / 100)
@@ -61,14 +61,14 @@ class Subscription {
     // Original Stripe format
     final planData =
         json['plan'] as Map<String, dynamic>? ??
-            json['items']?['data']?[0]?['plan'] as Map<String, dynamic>? ??
-            {};
+        json['items']?['data']?[0]?['plan'] as Map<String, dynamic>? ??
+        {};
 
     final stripeId = json['id']?.toString() ?? '';
     return Subscription(
       id: stripeId, // In direct Stripe format, id is the subscription ID
       stripeSubscriptionId:
-      stripeId, // Same value as id for direct Stripe format
+          stripeId, // Same value as id for direct Stripe format
       customerId: (json['customer'] ?? '').toString(),
       status: json['status']?.toString() ?? '',
       currentPeriodStart: json['current_period_start']?.toString() ?? '',
@@ -81,10 +81,8 @@ class Subscription {
     );
   }
 
-  bool get isActive =>
-      status.toLowerCase() == 'active' || status.toLowerCase() == 'trialing';
-  bool get isCancelled =>
-      status.toLowerCase() == 'canceled' || cancelAtPeriodEnd;
+  bool get isActive => status == 'active' || status == 'trialing';
+  bool get isCancelled => status == 'canceled' || cancelAtPeriodEnd;
 
   String get formattedAmount => '\$${planAmount.toStringAsFixed(2)}';
 
@@ -95,12 +93,11 @@ class Subscription {
   }
 
   String get statusDisplay {
-    final lowerStatus = status.toLowerCase();
     if (cancelAtPeriodEnd) return 'Canceling at period end';
-    if (lowerStatus == 'active') return 'Active';
-    if (lowerStatus == 'trialing') return 'Trial';
-    if (lowerStatus == 'canceled') return 'Cancelled';
-    if (lowerStatus == 'unpaid') return 'Unpaid';
+    if (status == 'active') return 'Active';
+    if (status == 'trialing') return 'Trial';
+    if (status == 'canceled') return 'Cancelled';
+    if (status == 'unpaid') return 'Unpaid';
     return status;
   }
 }

@@ -1,14 +1,16 @@
-import 'dart:convert';
-
-import 'package:care_connect_app/providers/user_provider.dart';
-import 'package:care_connect_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../../../widgets/ai_chat.dart';
+import 'dart:convert';
 import '../../models/patient_model.dart';
+import 'package:provider/provider.dart';
+import 'package:care_connect_app/providers/user_provider.dart';
+import 'package:care_connect_app/services/api_service.dart';
+import 'package:care_connect_app/services/auth_token_manager.dart';
+import 'package:http/http.dart' as http;
+import '../../../../widgets/ai_chat_improved.dart';
+import '../../../../widgets/responsive_page_wrapper.dart';
+import '../../../../utils/responsive_utils.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
 
 class CaregiverDashboard extends StatefulWidget {
   final String userRole;
@@ -34,14 +36,17 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
   @override
   void initState() {
     super.initState();
-    fetchPatients();
+    // Use Future.microtask to avoid calling setState during build
+    Future.microtask(() => fetchPatients());
   }
 
   @override
   void didUpdateWidget(CaregiverDashboard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Refresh patients when widget updates
-    fetchPatients();
+    // Only refresh if the caregiverId changed
+    if (oldWidget.caregiverId != widget.caregiverId) {
+      fetchPatients();
+    }
   }
 
   Future<void> fetchPatients() async {
@@ -49,27 +54,70 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
       loading = true;
       error = null;
     });
+
     try {
-      final user = Provider.of<UserProvider>(context, listen: false).user;
-      if (user == null) {
-        setState(() {
-          error = 'User not logged in.';
-          loading = false;
-        });
-        return;
-      }
-      final response = await ApiService.getCaregiverPatients(
-        user.caregiverId ?? 0,
-      ).timeout(const Duration(seconds: 180));
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final caregiverId = userProvider.user?.caregiverId ?? widget.caregiverId;
+
+      // Get auth headers
+      final headers = await AuthTokenManager.getAuthHeaders();
+
+      // Use ApiConstants for the URL
+      final baseUrl = ApiConstants.baseUrl;
+      final url = Uri.parse('${baseUrl}caregivers/$caregiverId/patients');
+      print('🔍 Fetching patients from: $url');
+      final response = await http.get(url, headers: headers);
+
       if (response.statusCode == 200) {
-        final List data = json.decode(response.body);
+        final List<dynamic> data = jsonDecode(response.body);
+        print('🔍 Received patient data: $data');
+
+        // Safely parse each patient, skipping any that cause errors
+        List<Patient> parsedPatients = [];
+        for (var json in data) {
+          try {
+            // Check if we have a nested structure
+            if (json.containsKey('patient') &&
+                json['patient'] is Map<String, dynamic>) {
+              print('🔍 Found nested patient data structure');
+
+              // Extract link info if available
+              if (json.containsKey('link') &&
+                  json['link'] is Map<String, dynamic>) {
+                final link = json['link'] as Map<String, dynamic>;
+                if (link.containsKey('id')) {
+                  json['linkId'] = link['id'];
+                  json['linkStatus'] = link['status'] ?? 'ACTIVE';
+                  print(
+                    '🔍 Extracted link info: ID=${link['id']}, status=${link['status']}',
+                  );
+                }
+              }
+            }
+
+            final patient = Patient.fromJson(json);
+            if (patient.id <= 0) {
+              print(
+                '⚠️ Warning: Parsed patient has invalid ID (${patient.id}): $json',
+              );
+            } else {
+              print(
+                '✅ Successfully parsed patient with ID: ${patient.id}, name: ${patient.firstName} ${patient.lastName}',
+              );
+              parsedPatients.add(patient);
+            }
+          } catch (e) {
+            print('❌ Error parsing patient: $e, data: $json');
+          }
+        }
+
         setState(() {
-          patients = data.map((e) => Patient.fromJson(e)).toList();
+          patients = parsedPatients;
           loading = false;
         });
       } else {
         setState(() {
-          error = 'Failed to load patients';
+          error = 'Failed to load patients. Status: ${response.statusCode}';
           loading = false;
         });
       }
@@ -81,649 +129,792 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchPatientVitals(int patientId) async {
-    try {
-      final response = await ApiService.getPatientVitals(
-        patientId,
-      ).timeout(const Duration(seconds: 180));
+  // Calculate age from date of birth
+  int _calculateAgeFromDob(String dob) {
+    if (dob.isEmpty) {
+      return 0;
+    }
 
-      if (response.statusCode == 200) {
-        final List data = json.decode(response.body);
-        return List<Map<String, dynamic>>.from(data);
-      } else {
-        print('❌ Failed to fetch vitals: ${response.body}');
+    try {
+      // Parse MM/DD/YYYY format
+      final parts = dob.split('/');
+      if (parts.length != 3) {
+        print('🔍 Invalid DOB format: $dob');
+        return 0;
       }
+
+      final month = int.tryParse(parts[0]);
+      final day = int.tryParse(parts[1]);
+      final year = int.tryParse(parts[2]);
+
+      if (month == null || day == null || year == null) {
+        print('🔍 Could not parse date parts from DOB: $dob');
+        return 0;
+      }
+
+      final birthDate = DateTime(year, month, day);
+      final today = DateTime.now();
+
+      int age = today.year - birthDate.year;
+
+      // Adjust age if birthday hasn't occurred yet this year
+      final birthMonth = birthDate.month;
+      final birthDay = birthDate.day;
+      final currentMonth = today.month;
+      final currentDay = today.day;
+
+      if (currentMonth < birthMonth ||
+          (currentMonth == birthMonth && currentDay < birthDay)) {
+        age--;
+      }
+
+      // Sanity check - ages should be reasonable
+      if (age < 0 || age > 120) {
+        print('🔍 Unusual age calculated: $age from DOB: $dob');
+        return 0;
+      }
+
+      return age;
     } catch (e) {
-      return [];
+      // Log the error for debugging
+      print('🔍 Error calculating age from DOB: $dob, error: $e');
+      return 0;
     }
-    return [];
-  }
-
-  String formatDate(String dob) {
-    try {
-      final date = DateTime.parse(dob);
-      return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    } catch (_) {
-      return dob;
-    }
-  }
-
-  Widget buildVitalsSummary(List<Map<String, dynamic>> vitals) {
-    if (vitals.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    double avg(List<num> values) =>
-        values.isEmpty ? 0 : values.reduce((a, b) => a + b) / values.length;
-
-    final heartRates = vitals.map((e) => (e['heartRate'] as num)).toList();
-    final spo2s = vitals.map((e) => (e['spo2'] as num)).toList();
-    final systolics = vitals.map((e) => (e['systolic'] as num)).toList();
-    final diastolics = vitals.map((e) => (e['diastolic'] as num)).toList();
-
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.blue.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.favorite, size: 16, color: Colors.red.shade600),
-              const SizedBox(width: 4),
-              const Text(
-                'Recent Vitals (7 days)',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'HR: ${avg(heartRates).toStringAsFixed(0)} bpm',
-                style: const TextStyle(fontSize: 11),
-              ),
-              Text(
-                'SpO₂: ${avg(spo2s).toStringAsFixed(0)}%',
-                style: const TextStyle(fontSize: 11),
-              ),
-              Text(
-                'BP: ${avg(systolics).toStringAsFixed(0)}/${avg(diastolics).toStringAsFixed(0)}',
-                style: const TextStyle(fontSize: 11),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isFamilyMember =
-        Provider.of<UserProvider>(context).user?.role == 'FAMILY_MEMBER';
+    // Get user provider for context
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.blue.shade900,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Caregiver Dashboard',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
-      // Replace the existing drawer in the build method with this:
-      drawer: Consumer<UserProvider>(
-        builder: (context, userProvider, child) {
-          final user = userProvider.user;
-          final isFamilyMember = user?.role == 'FAMILY_MEMBER';
+    // Use the responsive utilities for screen size detection
+    final isLargeScreen = context.isLargeDesktop;
 
-          return Drawer(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(color: Colors.blue.shade700),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const CircleAvatar(
-                        radius: 28,
-                        backgroundColor: Colors.white,
-                        child: Icon(Icons.person, size: 30),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        user?.name ?? 'User Name',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        isFamilyMember ? 'Family Member' : 'Caregiver',
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.dashboard),
-                  title: const Text('Dashboard'),
-                  onTap: () => Navigator.pop(context),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.emoji_events),
-                  title: const Text('Gamification'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/gamification');
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.emoji_events),
-                  title: const Text('Subscription Management'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/subscription-management');
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.people),
-                  title: Text(isFamilyMember ? 'My Patients' : 'Patients'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    if (isFamilyMember) {
-                      context.go('/family-patients');
-                    } else {
-                      context.go('/patients');
-                    }
-                  },
-                ),
-                // Only show these options for caregivers
-                if (!isFamilyMember) ...[
-                  ListTile(
-                    leading: const Icon(Icons.person_add),
-                    title: const Text('Register Patient'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.go('/register/patient');
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.payment),
-                    title: const Text('Subscribe'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.go('/select-package');
-                    },
-                  ),
-                ],
-                // Show read-only badge for family members
-                if (isFamilyMember)
-                  Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+    return ResponsiveScaffold(
+      title: 'Caregiver Dashboard',
+      // Optionally add responsive elements to app bar for large screens
+      appBarActions: isLargeScreen
+          ? [
+              IconButton(
+                icon: const Icon(Icons.help_outline),
+                onPressed: () {
+                  // Show help dialog
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Help documentation coming soon'),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 16,
-                          color: Colors.blue.shade700,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Read-only access',
-                            style: TextStyle(
-                              color: Colors.blue.shade700,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ListTile(
-                  leading: const Icon(Icons.settings),
-                  title: const Text('Settings'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/settings');
-                  },
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.logout, color: Colors.red),
-                  title: const Text(
-                    'Logout',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  onTap: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.clear();
-                    if (!context.mounted) return;
-                    context.go('/');
-                  },
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+            ]
+          : null,
+      currentRoute: '/dashboard',
       body: Stack(
         children: [
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : error != null
-                  ? Center(child: Text(error!))
-                  : patients.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.person_add,
-                            size: 80,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            isFamilyMember
-                                ? 'No accessible patients'
-                                : 'No patients found',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Add your first patient to get started',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                          const SizedBox(height: 24),
-                          ElevatedButton.icon(
-                            onPressed: () => context.go('/register/patient'),
-                            icon: const Icon(Icons.person_add),
-                            label: const Text('Register New Patient'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade900,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Column(
-                      children: [
-                        // Add patient button at the top
-                        Container(
-                          width: double.infinity,
-                          margin: const EdgeInsets.only(bottom: 16),
-                          child: ElevatedButton.icon(
-                            onPressed: () => context.go('/register/patient'),
-                            icon: const Icon(Icons.person_add),
-                            label: const Text('Register New Patient'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade900,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Patient list
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: patients.length,
-                            itemBuilder: (context, index) {
-                              final patient = patients[index];
-                              return Card(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  side: BorderSide(color: Colors.blue.shade900),
-                                ),
-                                margin: const EdgeInsets.only(bottom: 20),
-                                elevation: 1,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          CircleAvatar(
-                                            radius: 24,
-                                            backgroundColor:
-                                                Colors.blue.shade900,
-                                            child: Text(
-                                              (patient.firstName.isNotEmpty
-                                                      ? patient.firstName[0]
-                                                      : 'P')
-                                                  .toUpperCase(),
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 18,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  '${patient.firstName} ${patient.lastName}',
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  'DOB: ${formatDate(patient.dob)}',
-                                                ),
-                                                Text('Phone: ${patient.phone}'),
-                                                Text(
-                                                  'Relationship: ${patient.relationship}',
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+          // The ResponsiveScaffold already handles content centering and constraints
+          _buildMainContent(),
 
-                                          /* //Adding the PopupMenuButton
-                                          PopupMenuButton<String>(
-                                            onSelected: (value) {
-                                              if (value == 'edit') {
-                                                Navigator.pushNamed(context, '/edit', arguments: patient.linkId);
-                                              } else if (value == 'archive') {
-                                                Navigator.pushNamed(context, '/archive', arguments: patient.linkId);
-                                              } else if (value == 'inviteFamilyMember') {
-                                                Navigator.pushNamed(context, '/invite_Family_Member');
-                                              } else if (value == 'MediaScreen') {
-                                                Navigator.pushNamed(context, '/MediaScreen');
-                                              }
-                                            },
-                                            itemBuilder: (BuildContext context) => const [
-                                              PopupMenuItem(value: 'edit', child: Text('Edit')),
-                                              PopupMenuItem(value: 'archive', child: Text('Archive')),
-                                              PopupMenuItem(value: 'inviteFamilyMember', child: Text('Invite Family Member')),
-                                              PopupMenuItem(value: 'MediaScreen', child: Text('Media Upload')),
-                                            ],
-                                          ), */
-                                        ],
-                                      ),
+          // Always show AI Chat button at the bottom right
+          // Using responsive utils for positioning
+          Positioned(
+            right: context.responsiveValue(
+              mobile: 16.0,
+              tablet: 24.0,
+              desktop: 32.0,
+            ),
+            bottom: context.responsiveValue(
+              mobile: 16.0,
+              tablet: 24.0,
+              desktop: 32.0,
+            ),
+            child: FloatingActionButton(
+              heroTag: 'chatButton',
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: Icon(
+                Icons.chat,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+              onPressed: () {
+                // Use responsive height for the sheet based on screen size
+                double sheetHeight = context.responsiveValue(
+                  mobile: MediaQuery.of(context).size.height * 0.75,
+                  desktop: MediaQuery.of(context).size.height * 0.8,
+                );
 
-                                      const SizedBox(height: 12),
-
-                                      // Vitals summary for this patient
-                                      FutureBuilder<List<Map<String, dynamic>>>(
-                                        future: fetchPatientVitals(patient.id),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                              ConnectionState.waiting) {
-                                            return const Padding(
-                                              padding: EdgeInsets.only(
-                                                bottom: 12,
-                                              ),
-                                              child: LinearProgressIndicator(),
-                                            );
-                                          }
-                                          if (snapshot.hasData &&
-                                              snapshot.data!.isNotEmpty) {
-                                            return Padding(
-                                              padding: const EdgeInsets.only(
-                                                bottom: 12,
-                                              ),
-                                              child: buildVitalsSummary(
-                                                snapshot.data!,
-                                              ),
-                                            );
-                                          }
-                                          return const SizedBox.shrink();
-                                        },
-                                      ),
-
-                                      // Responsive button layout
-                                      LayoutBuilder(
-                                        builder: (context, constraints) {
-                                          // If width is too small, use 2x2 grid
-                                          if (constraints.maxWidth < 380) {
-                                            return Column(
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: _dashboardButton(
-                                                        context,
-                                                        Icons.analytics,
-                                                        'Analytics',
-                                                        () => context.go(
-                                                          '/analytics?patientId=${patient.id}',
-                                                        ),
-                                                        isAnalytics: true,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Expanded(
-                                                      child: _dashboardButton(
-                                                        context,
-                                                        Icons.view_list,
-                                                        'View Logs',
-                                                        () =>
-                                                            ScaffoldMessenger.of(
-                                                              context,
-                                                            ).showSnackBar(
-                                                              const SnackBar(
-                                                                content: Text(
-                                                                  'View Logs feature coming soon!',
-                                                                ),
-                                                              ),
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 8),
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: _dashboardButton(
-                                                        context,
-                                                        Icons.call,
-                                                        'Call',
-                                                        () {
-                                                          final String
-                                                          patientName =
-                                                              '${patient.firstName} ${patient.lastName}';
-                                                          final String roomId =
-                                                              'room-${patient.id}'; // or any room ID logic you use
-
-                                                          context.go(
-                                                            '/mobile-web-call?patientName=${Uri.encodeComponent(patientName)}&roomId=${Uri.encodeComponent(roomId)}',
-                                                          );
-                                                        },
-                                                      ),
-                                                    ),
-
-                                                    const SizedBox(width: 8),
-                                                    Expanded(
-                                                      child: _dashboardButton(
-                                                        context,
-                                                        Icons.message,
-                                                        'Message',
-                                                        () =>
-                                                            ScaffoldMessenger.of(
-                                                              context,
-                                                            ).showSnackBar(
-                                                              const SnackBar(
-                                                                content: Text(
-                                                                  'Message feature coming soon!',
-                                                                ),
-                                                              ),
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            );
-                                          } else {
-                                            // Use single row for wider screens
-                                            return Row(
-                                              children: [
-                                                Expanded(
-                                                  child: _dashboardButton(
-                                                    context,
-                                                    Icons.analytics,
-                                                    'Analytics',
-                                                    () => context.go(
-                                                      '/analytics?patientId=${patient.id}',
-                                                    ),
-                                                    isAnalytics: true,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 6),
-                                                Expanded(
-                                                  child: _dashboardButton(
-                                                    context,
-                                                    Icons.view_list,
-                                                    'View Logs',
-                                                    () =>
-                                                        ScaffoldMessenger.of(
-                                                          context,
-                                                        ).showSnackBar(
-                                                          const SnackBar(
-                                                            content: Text(
-                                                              'View Logs feature coming soon!',
-                                                            ),
-                                                          ),
-                                                        ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 6),
-                                                Expanded(
-                                                  child: _dashboardButton(
-                                                    context,
-                                                    Icons.call,
-                                                    'Call',
-                                                    () {
-                                                      final String patientName =
-                                                          '${patient.firstName} ${patient.lastName}';
-                                                      final String roomId =
-                                                          'room-${patient.id}'; // or any room ID logic you use
-
-                                                      context.go(
-                                                        '/mobile-web-call?patientName=${Uri.encodeComponent(patientName)}&roomId=${Uri.encodeComponent(roomId)}',
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-
-                                                const SizedBox(width: 6),
-                                                Expanded(
-                                                  child: _dashboardButton(
-                                                    context,
-                                                    Icons.message,
-                                                    'Message',
-                                                    () =>
-                                                        ScaffoldMessenger.of(
-                                                          context,
-                                                        ).showSnackBar(
-                                                          const SnackBar(
-                                                            content: Text(
-                                                              'Message feature coming soon!',
-                                                            ),
-                                                          ),
-                                                        ),
-                                                  ),
-                                                ),
-                                              ],
-                                            );
-                                          }
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                showModalBottomSheet(
+                  isScrollControlled: true,
+                  context: context,
+                  backgroundColor: Colors.white,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(16),
                     ),
+                  ),
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width,
+                  ),
+                  builder: (context) => SizedBox(
+                    height: sheetHeight,
+                    child: const AIChat(role: 'caregiver', isModal: true),
+                  ),
+                );
+              },
             ),
           ),
-          // AI Chat Widget
-          const AIChat(role: 'caregiver'),
+        ],
+      ),
+      // Removed "Add Patient" floating action button as requested
+    );
+  }
+
+  // Extract main content to a separate method for better organization
+  Widget _buildMainContent() {
+    if (loading) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Error Loading Patients',
+                style: AppTheme.headingSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error!,
+                style: AppTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: fetchPatients,
+                style: AppTheme.primaryButtonStyle,
+                child: const Text('Try Again'),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else if (patients.isEmpty) {
+      return _buildEmptyState();
+    } else {
+      return _buildPatientList();
+    }
+  }
+
+  Widget _buildEmptyState() {
+    // Use responsive utils for width calculation
+    final isMobile = context.isMobile;
+
+    // Create a container with responsive width
+    return Center(
+      child: Container(
+        width: context.responsiveValue(
+          mobile: MediaQuery.of(context).size.width * 0.85,
+          tablet: 400.0,
+        ),
+        padding: const EdgeInsets.all(24),
+        decoration: !isMobile
+            ? BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ],
+              )
+            : null,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.person_search,
+              size: context.responsiveValue(mobile: 80.0, tablet: 96.0),
+              color: Theme.of(context).disabledColor,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No patients yet',
+              style: AppTheme.headingMedium.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Add patients to begin monitoring',
+              style: AppTheme.bodyLarge.copyWith(
+                color: Theme.of(context).hintColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: context.responsiveValue(
+                mobile: double.infinity,
+                tablet: 200.0,
+              ),
+              child: ElevatedButton.icon(
+                style: AppTheme.primaryButtonStyle,
+                icon: const Icon(Icons.person_add),
+                label: const Text('Add Patient'),
+                onPressed: () => context.go('/add-patient'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPatientList() {
+    // Use responsive utils for margins
+    final horizontalMargin = context.horizontalMargin;
+
+    return RefreshIndicator(
+      onRefresh: fetchPatients,
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(
+              horizontalMargin,
+              16.0,
+              horizontalMargin,
+              8.0,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                Text('Your Patients', style: AppTheme.headingSmall),
+                const SizedBox(height: 8),
+                Text(
+                  'Showing ${patients.length} patients',
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: Theme.of(context).hintColor,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ]),
+            ),
+          ),
+          // Use responsive grid for larger screens or list for smaller screens
+          context.isDesktopOrLarger
+              ? _buildResponsivePatientGrid(horizontalMargin)
+              : SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalMargin,
+                    0,
+                    horizontalMargin,
+                    16,
+                  ),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final patient = patients[index];
+                      return _buildPatientCard(patient);
+                    }, childCount: patients.length),
+                  ),
+                ),
         ],
       ),
     );
   }
 
-  Widget _dashboardButton(
-    BuildContext context,
-    IconData icon,
-    String label,
-    VoidCallback onPressed, {
-    bool isAnalytics = false,
-  }) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 16), // Reduced from 18 to 16
-      label: Text(
-        label,
-        style: const TextStyle(fontSize: 11), // Reduced from 12 to 11
-        overflow: TextOverflow.ellipsis,
-        maxLines: 1,
+  // New method to create a responsive grid for larger screens
+  Widget _buildResponsivePatientGrid(double horizontalMargin) {
+    // Use responsive utils to get the grid column count
+    int crossAxisCount = context.gridColumns;
+
+    // Ensure we have at least 1 column
+    if (crossAxisCount > 3) {
+      crossAxisCount = 3; // Limit to 3 columns max for patient cards
+    }
+
+    return SliverPadding(
+      padding: EdgeInsets.fromLTRB(horizontalMargin, 0, horizontalMargin, 16),
+      sliver: SliverGrid(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          childAspectRatio: 1.1,
+          crossAxisSpacing: 16.0,
+          mainAxisSpacing: 16.0,
+        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final patient = patients[index];
+          return _buildPatientCard(patient);
+        }, childCount: patients.length),
       ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isAnalytics
-            ? Colors.green.shade700
-            : Colors.blue.shade900,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 8,
-          vertical: 6,
-        ), // Reduced padding
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-        minimumSize: const Size(0, 32), // Set minimum height
+    );
+  }
+
+  Widget _buildPatientCard(Patient patient) {
+    // Use responsive utils for device type detection
+    final bool isGridView = context.isDesktopOrLarger;
+
+    // Use responsive values for avatar sizes
+    final double avatarSize = context.responsiveValue(
+      mobile: 30.0,
+      desktop: 40.0,
+    );
+
+    return Card(
+      margin: isGridView ? EdgeInsets.zero : const EdgeInsets.only(bottom: 16),
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Theme.of(context).dividerColor.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            leading: CircleAvatar(
+              radius: avatarSize,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.primary.withOpacity(0.2),
+              child: Text(
+                patient.firstName.isNotEmpty
+                    ? patient.firstName.substring(0, 1).toUpperCase()
+                    : patient.lastName.isNotEmpty
+                    ? patient.lastName.substring(0, 1).toUpperCase()
+                    : '?',
+                style: AppTheme.headingSmall.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: isGridView ? 24 : 20,
+                ),
+              ),
+            ),
+            title: Text(
+              "${patient.firstName} ${patient.lastName}",
+              style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.cake,
+                      size: 16,
+                      color: Theme.of(context).hintColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      patient.dob.isNotEmpty
+                          ? '${_calculateAgeFromDob(patient.dob)} years old'
+                          : 'N/A',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: Theme.of(context).hintColor,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.family_restroom,
+                      size: 16,
+                      color: Theme.of(context).hintColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      patient.relationship.isNotEmpty
+                          ? patient.relationship
+                          : 'Patient',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: Theme.of(context).hintColor,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.healing,
+                      size: 16,
+                      color: Theme.of(context).hintColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'No conditions listed',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: Theme.of(context).hintColor,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            trailing: PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_vert,
+                color: Theme.of(context).colorScheme.primary,
+                size: 28,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              onSelected: (value) async {
+                // Verify we have a valid patient ID and linkId before taking action
+                if (patient.id <= 0) {
+                  print('⚠️ Warning: Invalid patient ID: ${patient.id}');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Error: Invalid patient ID')),
+                  );
+                  return;
+                }
+
+                if (value == 'view') {
+                  print('✅ Navigating to patient profile: ${patient.id}');
+                  context.go('/patient/${patient.id}');
+                } else if (value == 'suspend') {
+                  // Show confirmation dialog
+                  final bool? confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Suspend Relationship'),
+                      content: Text(
+                        'Are you sure you want to suspend your relationship with ${patient.firstName} ${patient.lastName}?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('CANCEL'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('SUSPEND'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true) {
+                    try {
+                      final linkId = patient.linkId;
+                      if (linkId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Error: Missing link ID'),
+                          ),
+                        );
+                        return;
+                      }
+
+                      final response =
+                          await ApiService.suspendCaregiverPatientLink(linkId);
+                      if (response.statusCode == 200) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Relationship with ${patient.firstName} suspended',
+                            ),
+                          ),
+                        );
+                        fetchPatients(); // Refresh the patient list
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Failed to suspend relationship: ${response.statusCode}',
+                            ),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                    }
+                  }
+                } else if (value == 'reactivate') {
+                  // Show confirmation dialog
+                  final bool? confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Reactivate Relationship'),
+                      content: Text(
+                        'Do you want to reactivate your relationship with ${patient.firstName} ${patient.lastName}?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('CANCEL'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('REACTIVATE'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true) {
+                    try {
+                      final linkId = patient.linkId;
+                      if (linkId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Error: Missing link ID'),
+                          ),
+                        );
+                        return;
+                      }
+
+                      final response =
+                          await ApiService.reactivateCaregiverPatientLink(
+                            linkId,
+                          );
+                      if (response.statusCode == 200) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Relationship with ${patient.firstName} reactivated',
+                            ),
+                          ),
+                        );
+                        fetchPatients(); // Refresh the patient list
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Failed to reactivate relationship: ${response.statusCode}',
+                            ),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                    }
+                  }
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem<String>(
+                  value: 'view',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.visibility,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('View Profile'),
+                    ],
+                  ),
+                ),
+                if (patient.linkStatus.toUpperCase() == 'ACTIVE')
+                  PopupMenuItem<String>(
+                    value: 'suspend',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.pause_circle_outline,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Suspend Relationship'),
+                      ],
+                    ),
+                  ),
+                if (patient.linkStatus.toUpperCase() == 'SUSPENDED')
+                  PopupMenuItem<String>(
+                    value: 'reactivate',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.play_circle_outline,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Reactivate Relationship'),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            onTap: () {
+              // Verify we have a valid patient ID before navigating
+              if (patient.id <= 0) {
+                print(
+                  '⚠️ Warning: Attempted to navigate to patient profile with invalid ID: ${patient.id}',
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Error: Invalid patient ID')),
+                );
+                return;
+              }
+
+              print('✅ Navigating to patient profile: ${patient.id}');
+              context.go('/patient/${patient.id}');
+            },
+          ),
+          // Status indicators removed as per design update
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                // Only showing patient link status
+                Row(
+                  children: [
+                    Icon(
+                      patient.linkStatus == 'ACTIVE'
+                          ? Icons.check_circle
+                          : Icons.pause_circle_filled,
+                      color: patient.linkStatus == 'ACTIVE'
+                          ? Theme.of(context).colorScheme.secondary
+                          : Theme.of(context).disabledColor,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      patient.linkStatus == 'ACTIVE'
+                          ? 'Active'
+                          : patient.linkStatus,
+                      style: AppTheme.bodyMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: patient.linkStatus == 'ACTIVE'
+                            ? Theme.of(context).colorScheme.secondary
+                            : Theme.of(context).disabledColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildActionButton(
+                  icon: Icons.videocam,
+                  label: 'Call',
+                  onPressed: () {
+                    // Verify we have a valid patient ID before navigating
+                    if (patient.id <= 0) {
+                      print(
+                        '⚠️ Warning: Attempted to initiate video call with invalid patient ID: ${patient.id}',
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Error: Invalid patient ID'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    print(
+                      '✅ Initiating video call with patient: ${patient.id}',
+                    );
+                    context.go(
+                      '/video-call?patientId=${patient.id}&patientName=${Uri.encodeComponent("${patient.firstName} ${patient.lastName}")}',
+                    );
+                  },
+                ),
+                _buildActionButton(
+                  icon: Icons.message,
+                  label: 'Message',
+                  onPressed: () {
+                    // To be implemented - messaging feature
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Messaging feature coming soon!'),
+                      ),
+                    );
+                  },
+                ),
+                _buildActionButton(
+                  icon: Icons.analytics,
+                  label: 'Analytics',
+                  onPressed: () {
+                    // Verify we have a valid patient ID before navigating
+                    if (patient.id <= 0) {
+                      print(
+                        '⚠️ Warning: Attempted to navigate to analytics with invalid patient ID: ${patient.id}',
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Error: Invalid patient ID'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    print(
+                      '✅ Navigating to analytics for patient: ${patient.id}',
+                    );
+                    context.go('/analytics?patientId=${patient.id}');
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // _buildStatusIndicator method removed as per design update
+  /* 
+  Widget _buildStatusIndicator({
+    required String title,
+    required String status,
+  }) {
+    // Implementation removed
+  }
+  */
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: AppTheme.bodyMedium.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

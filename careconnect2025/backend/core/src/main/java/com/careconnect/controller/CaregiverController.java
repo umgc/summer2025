@@ -71,4 +71,27 @@ public class CaregiverController {
         Patient patient = auth.registerPatient(reg);
         return ResponseEntity.ok(patient);
     }
+    
+    /**
+     * Get a specific patient under a caregiver's care
+     */
+    @GetMapping("/{caregiverId}/patients/{patientId}")
+    public ResponseEntity<?> getPatientForCaregiver(
+            @PathVariable Long caregiverId,
+            @PathVariable Long patientId) {
+        
+        // First check if the caregiver has access to this patient
+        if (!caregiverService.hasAccessToPatient(caregiverId, patientId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("Caregiver does not have access to this patient");
+        }
+        
+        // If authorized, get the patient details with link information
+        PatientWithLinkDto patientDto = caregiverService.getPatientWithLinkById(caregiverId, patientId);
+        if (patientDto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        return ResponseEntity.ok(patientDto);
+    }
 }

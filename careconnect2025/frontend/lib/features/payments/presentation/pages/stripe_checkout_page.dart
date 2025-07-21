@@ -14,13 +14,11 @@ class StripeCheckoutPage extends StatefulWidget {
   final PackageModel package;
   final String? userId;
   final String? stripeCustomerId;
-  final bool fromPortal;
   const StripeCheckoutPage({
     super.key,
     required this.package,
     this.userId,
     this.stripeCustomerId,
-    this.fromPortal = false,
   });
 
   @override
@@ -61,15 +59,10 @@ class _StripeCheckoutPageState extends State<StripeCheckoutPage> {
       final requestBody = {
         'plan': widget.package.name, // Send actual plan name from API
         'userId':
-        widget.userId ?? '0', // Use provided userId or fallback to '0'
+            widget.userId ?? '0', // Use provided userId or fallback to '0'
         'amount': widget.package.priceCents
             .toString(), // Send the actual amount
       };
-
-      // Add portal parameter if coming from subscription management
-      if (widget.fromPortal) {
-        requestBody['portal'] = 'update';
-      }
 
       // Add stripeCustomerId to request only if it's available
       if (widget.stripeCustomerId != null &&
@@ -182,15 +175,15 @@ class _StripeCheckoutPageState extends State<StripeCheckoutPage> {
                   onPressed: _isProcessing ? null : _pay,
                   child: _isProcessing
                       ? SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).colorScheme.onPrimary,
-                      ),
-                      strokeWidth: 2,
-                    ),
-                  )
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.onPrimary,
+                            ),
+                            strokeWidth: 2,
+                          ),
+                        )
                       : const Text('Pay with Stripe'),
                 ),
               ),

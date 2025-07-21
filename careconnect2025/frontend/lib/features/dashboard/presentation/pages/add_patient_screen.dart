@@ -77,7 +77,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
 
         if (_emailExists == true && _userRole != 'PATIENT') {
           _errorMessage =
-          'This email belongs to a ${_userRole?.toLowerCase() ?? 'user'}, not a patient';
+              'This email belongs to a ${_userRole?.toLowerCase() ?? 'user'}, not a patient';
           _emailExists = false;
         }
       });
@@ -211,40 +211,40 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                           TextFormField(
                             controller: emailController,
                             decoration:
-                            AppTheme.inputDecoration(
-                              'Patient Email',
-                              hint: 'Enter patient email address',
-                            ).copyWith(
-                              errorText:
-                              emailController.text.isNotEmpty &&
-                                  !RegExp(
-                                    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-                                  ).hasMatch(emailController.text)
-                                  ? 'Please enter a valid email'
-                                  : null,
-                              suffixIcon: IconButton(
-                                icon: _isCheckingEmail
-                                    ? SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Theme.of(
-                                      context,
-                                    ).primaryColor,
+                                AppTheme.inputDecoration(
+                                  'Patient Email',
+                                  hint: 'Enter patient email address',
+                                ).copyWith(
+                                  errorText:
+                                      emailController.text.isNotEmpty &&
+                                          !RegExp(
+                                            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                                          ).hasMatch(emailController.text)
+                                      ? 'Please enter a valid email'
+                                      : null,
+                                  suffixIcon: IconButton(
+                                    icon: _isCheckingEmail
+                                        ? SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Theme.of(
+                                                context,
+                                              ).primaryColor,
+                                            ),
+                                          )
+                                        : Icon(
+                                            Icons.search,
+                                            color: Theme.of(
+                                              context,
+                                            ).primaryColor,
+                                          ),
+                                    onPressed: _isCheckingEmail
+                                        ? null
+                                        : _checkEmail,
                                   ),
-                                )
-                                    : Icon(
-                                  Icons.search,
-                                  color: Theme.of(
-                                    context,
-                                  ).primaryColor,
                                 ),
-                                onPressed: _isCheckingEmail
-                                    ? null
-                                    : _checkEmail,
-                              ),
-                            ),
                             keyboardType: TextInputType.emailAddress,
                             onChanged: (_) => setState(() {}),
                             validator: (value) {
@@ -400,22 +400,22 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                               TextFormField(
                                 controller: relationshipController,
                                 decoration:
-                                AppTheme.inputDecoration(
-                                  'Relationship to Patient',
-                                  hint:
-                                  'E.g., Caregiver, Family Member, Parent',
-                                ).copyWith(
-                                  errorText:
-                                  relationshipController
-                                      .text
-                                      .isNotEmpty &&
-                                      relationshipController.text
-                                          .trim()
-                                          .length <
-                                          3
-                                      ? 'Please enter a valid relationship'
-                                      : null,
-                                ),
+                                    AppTheme.inputDecoration(
+                                      'Relationship to Patient',
+                                      hint:
+                                          'E.g., Caregiver, Family Member, Parent',
+                                    ).copyWith(
+                                      errorText:
+                                          relationshipController
+                                                  .text
+                                                  .isNotEmpty &&
+                                              relationshipController.text
+                                                      .trim()
+                                                      .length <
+                                                  3
+                                          ? 'Please enter a valid relationship'
+                                          : null,
+                                    ),
                                 onChanged: (_) => setState(() {}),
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
@@ -431,17 +431,17 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                               TextFormField(
                                 controller: messageController,
                                 decoration:
-                                AppTheme.inputDecoration(
-                                  'Message (Optional)',
-                                  hint: 'Add a personal message',
-                                ).copyWith(
-                                  errorText:
-                                  messageController.text.isNotEmpty &&
-                                      messageController.text.length >
-                                          500
-                                      ? 'Message too long (max 500 characters)'
-                                      : null,
-                                ),
+                                    AppTheme.inputDecoration(
+                                      'Message (Optional)',
+                                      hint: 'Add a personal message',
+                                    ).copyWith(
+                                      errorText:
+                                          messageController.text.isNotEmpty &&
+                                              messageController.text.length >
+                                                  500
+                                          ? 'Message too long (max 500 characters)'
+                                          : null,
+                                    ),
                                 maxLines: 3,
                                 onChanged: (_) => setState(() {}),
                                 validator: (value) {
@@ -458,29 +458,29 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                                     : _sendConnectionRequest,
                                 style: AppTheme.primaryButtonStyle.copyWith(
                                   backgroundColor:
-                                  MaterialStateProperty.resolveWith<Color>(
+                                      MaterialStateProperty.resolveWith<Color>(
                                         (states) =>
-                                    states.contains(
-                                      MaterialState.disabled,
-                                    )
-                                        ? Colors.grey.shade400
-                                        : Colors.blue.shade900,
-                                  ),
+                                            states.contains(
+                                              MaterialState.disabled,
+                                            )
+                                            ? Colors.grey.shade400
+                                            : Colors.blue.shade900,
+                                      ),
                                   minimumSize: MaterialStateProperty.all(
                                     const Size(double.infinity, 50),
                                   ),
                                 ),
                                 child: _isLoading
                                     ? const CircularProgressIndicator(
-                                  valueColor:
-                                  AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                )
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      )
                                     : const Text(
-                                  'Send Connection Request',
-                                  style: TextStyle(fontSize: 16),
-                                ),
+                                        'Send Connection Request',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
                               ),
                             ],
                           ),

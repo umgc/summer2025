@@ -108,7 +108,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     decoration: BoxDecoration(
                       border: Border.all(
                         color:
-                        Theme.of(context).dividerTheme.color ??
+                            Theme.of(context).dividerTheme.color ??
                             Colors.grey.shade300,
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -127,22 +127,22 @@ class _PatientDashboardState extends State<PatientDashboard> {
                               Text(
                                 'Medication Tracker',
                                 style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(fontWeight: FontWeight.bold),
+                                    ?.copyWith(fontWeight: FontWeight.bold),
                               ),
                               Text(
                                 '3 medications scheduled today',
                                 style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: Theme.of(context).hintColor,
-                                  ),
+                                    ?.copyWith(
+                                      color: Theme.of(context).hintColor,
+                                    ),
                               ),
                             ],
                           ),
                         ),
                         Icon(
-                            Icons.arrow_forward_ios,
-                            size: 16,
-                            color: Theme.of(context).iconTheme.color,
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: Theme.of(context).iconTheme.color,
                         ),
                       ],
                     ),
@@ -156,7 +156,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     decoration: BoxDecoration(
                       border: Border.all(
                         color:
-                        Theme.of(context).dividerTheme.color ??
+                            Theme.of(context).dividerTheme.color ??
                             Colors.grey.shade300,
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -181,8 +181,8 @@ class _PatientDashboardState extends State<PatientDashboard> {
                                 'Add today\'s meals',
                                 style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(
-                                  color: Theme.of(context).hintColor,
-                                ),
+                                      color: Theme.of(context).hintColor,
+                                    ),
                               ),
                             ],
                           ),
@@ -208,6 +208,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
 class EmojiLabel extends StatelessWidget {
   final String emoji;
   final String label;
+
   const EmojiLabel({Key? key, required this.emoji, required this.label})
     : super(key: key);
 
@@ -221,13 +222,13 @@ class EmojiLabel extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color:
-              Theme.of(context).cardTheme.color ??
+                  Theme.of(context).cardTheme.color ??
                   Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color:
-                Theme.of(context).dividerTheme.color ??
-                    Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
+                    Theme.of(context).dividerTheme.color ??
+                    Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
               ),
             ),
             child: Text(emoji, style: const TextStyle(fontSize: 24)),
@@ -243,6 +244,7 @@ class EmojiLabel extends StatelessWidget {
 class PainEmojiLabel extends StatelessWidget {
   final String emoji;
   final String label;
+
   const PainEmojiLabel({Key? key, required this.emoji, required this.label})
     : super(key: key);
 
@@ -266,6 +268,7 @@ class CaregiverCard extends StatelessWidget {
   final String name;
   final String status;
   final String lastInteraction;
+
   const CaregiverCard({
     Key? key,
     required this.name,
@@ -281,8 +284,8 @@ class CaregiverCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(
           color:
-          Theme.of(context).dividerTheme.color ??
-              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
+              Theme.of(context).dividerTheme.color ??
+              Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
         ),
       ),
       child: Padding(
@@ -291,7 +294,7 @@ class CaregiverCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 24,
-              backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
               child: Text(
                 name.substring(0, 1),
                 style: TextStyle(

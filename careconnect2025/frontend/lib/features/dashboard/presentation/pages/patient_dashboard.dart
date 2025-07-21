@@ -3,12 +3,17 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
 import 'package:care_connect_app/providers/user_provider.dart';
 import 'package:care_connect_app/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../../widgets/ai_chat.dart';
+import '../../../../widgets/ai_chat_improved.dart';
 import '../../../../widgets/family_member_card.dart';
 import '../../../../widgets/add_family_member_dialog.dart';
+import '../../../../widgets/responsive_container.dart';
+import 'package:care_connect_app/services/communication_service.dart';
 
 class PatientDashboard extends StatefulWidget {
   final int? userId;
@@ -47,7 +52,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
     });
     try {
       final user = Provider.of<UserProvider>(context, listen: false).user;
-      final int? patientId = user?.patientId ?? user?.id;
+      final int? patientId = user?.patientId;
       if (patientId == null) {
         setState(() {
           error = 'User not logged in.';
@@ -126,7 +131,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
 
     try {
       final user = Provider.of<UserProvider>(context, listen: false).user;
-      final userId = widget.userId ?? user?.patientId ?? user?.id ?? 1;
+      final userId = widget.userId ?? user?.patientId ?? 1;
 
       print('🔍 Loading family members for userId: $userId');
 
@@ -183,7 +188,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
         }
 
         final user = Provider.of<UserProvider>(context, listen: false).user;
-        final userId = widget.userId ?? user?.patientId ?? user?.id ?? 1;
+        final userId = widget.userId ?? user?.patientId ?? 1;
 
         print('🔍 Adding family member for userId: $userId');
         print('🔍 Family member data: $result');
@@ -196,10 +201,10 @@ class _PatientDashboardState extends State<PatientDashboard> {
         if (response.statusCode == 201) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Family member added successfully!'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
+              SnackBar(
+                content: const Text('Family member added successfully!'),
+                backgroundColor: AppTheme.success,
+                duration: const Duration(seconds: 2),
               ),
             );
           }
@@ -218,7 +223,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error: ${e.toString()}'),
-              backgroundColor: Colors.red,
+              backgroundColor: AppTheme.error,
               duration: const Duration(seconds: 3),
             ),
           );
@@ -236,211 +241,209 @@ class _PatientDashboardState extends State<PatientDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.blue.shade900,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Patient Dashboard',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBarHelper.createAppBar(context, title: 'Patient Dashboard'),
+      drawer: const CommonDrawer(currentRoute: '/dashboard'),
+      // Add floating action button for AI Chat
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: theme.colorScheme.primary,
+        child: const Icon(Icons.chat_bubble_outline),
+        onPressed: () {
+          final double sheetHeight = MediaQuery.of(context).size.height * 0.75;
+          showModalBottomSheet(
+            isScrollControlled: true,
+            context: context,
+            builder: (context) => Container(
+              height: sheetHeight,
+              // Use Stack as parent widget for Positioned widget in AIChat
+              child: Stack(children: [const AIChat(role: 'patient')]),
+            ),
+          );
+        },
       ),
-      drawer: _buildDrawer(context),
-      body: Stack(
-        children: [
-          loading
-              ? const Center(child: CircularProgressIndicator())
-              : error != null
-              ? Center(child: Text(error!))
-              : SafeArea(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${greeting()} ${patient?['firstName'] ?? 'Patient'}!',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : error != null
+          ? Center(child: Text(error!))
+          : SafeArea(
+              child: SingleChildScrollView(
+                child: ResponsiveContainer(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${greeting()} ${patient?['firstName'] ?? 'Patient'}!',
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 20),
+
+                      Text(
+                        'How are you feeling today?',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildMoodSelector(),
+                      const SizedBox(height: 16),
+
+                      Text(
+                        'How is your pain today?',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildPainSelector(),
+
+                      // Save button (show when both are selected)
+                      if (_showSaveButton) ...[
                         const SizedBox(height: 20),
-
-                        const Text(
-                          'How are you feeling today?',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        _buildMoodSelector(),
-                        const SizedBox(height: 16),
-
-                        const Text(
-                          'How is your pain today?',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        _buildPainSelector(),
-
-                        // Save button (show when both are selected)
-                        if (_showSaveButton) ...[
-                          const SizedBox(height: 20),
-                          Center(
-                            child: ElevatedButton.icon(
-                              onPressed: _isSavingMoodPain
-                                  ? null
-                                  : _saveMoodAndPain,
-                              icon: _isSavingMoodPain
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
-                                            ),
+                        Center(
+                          child: ElevatedButton.icon(
+                            onPressed: _isSavingMoodPain
+                                ? null
+                                : _saveMoodAndPain,
+                            icon: _isSavingMoodPain
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
                                       ),
-                                    )
-                                  : const Icon(Icons.save),
-                              label: Text(
-                                _isSavingMoodPain
-                                    ? 'Saving...'
-                                    : 'Save Today\'s Status',
+                                    ),
+                                  )
+                                : const Icon(Icons.save),
+                            label: Text(
+                              _isSavingMoodPain
+                                  ? 'Saving...'
+                                  : 'Save Today\'s Status',
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.success,
+                              foregroundColor: theme.colorScheme.onPrimary,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
                               ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green.shade600,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                           ),
+                        ),
+                      ],
+
+                      const Divider(height: 30, thickness: 2),
+
+                      // Caregivers section
+                      Text(
+                        'Your Caregivers',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 10),
+                      ...caregivers.map(
+                        (caregiver) => _buildCaregiverCard(caregiver),
+                      ),
+
+                      const SizedBox(height: 20),
+                      const Divider(height: 30, thickness: 2),
+
+                      // Family Members section
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Family Members',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              TextButton.icon(
+                                onPressed: _addFamilyMember,
+                                icon: const Icon(Icons.add),
+                                label: const Text('Add Family Member'),
+                              ),
+                            ],
+                          ),
+                          if (isLoading)
+                            const Center(child: CircularProgressIndicator())
+                          else if (error != null)
+                            Text(
+                              'Error: $error',
+                              style: const TextStyle(color: Colors.red),
+                            )
+                          else if (familyMembers.isEmpty)
+                            const Text('No family members added yet')
+                          else
+                            ...familyMembers.map(
+                              (f) => FamilyMemberCard(
+                                firstName: f['firstName'] ?? '',
+                                lastName: f['lastName'] ?? '',
+                                relationship: f['relationship'] ?? '',
+                                phone: f['phone'] ?? '',
+                                email: f['email'] ?? '',
+                                lastInteraction:
+                                    f['lastSeen'] ?? 'Not available',
+                              ),
+                            ),
                         ],
+                      ),
 
-                        const Divider(height: 30, thickness: 2),
-
-                        // Caregivers section
-                        const Text(
-                          'Your Caregivers',
+                      const SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: () => context.go('/tasks/today'),
+                        child: const Text(
+                          'View Today\'s Task',
                           style: TextStyle(
-                            fontSize: 16,
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        ...caregivers.map(
-                          (caregiver) => _buildCaregiverCard(caregiver),
-                        ),
+                      ),
 
-                        const SizedBox(height: 20),
-                        const Divider(height: 30, thickness: 2),
+                      const SizedBox(height: 30),
 
-                        // Family Members section
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Family Members',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                TextButton.icon(
-                                  onPressed: _addFamilyMember,
-                                  icon: const Icon(Icons.add),
-                                  label: const Text('Add Family Member'),
-                                ),
-                              ],
-                            ),
-                            if (isLoading)
-                              const Center(child: CircularProgressIndicator())
-                            else if (error != null)
-                              Text(
-                                'Error: $error',
-                                style: const TextStyle(color: Colors.red),
-                              )
-                            else if (familyMembers.isEmpty)
-                              const Text('No family members added yet')
-                            else
-                              ...familyMembers.map(
-                                (f) => FamilyMemberCard(
-                                  firstName: f['firstName'] ?? '',
-                                  lastName: f['lastName'] ?? '',
-                                  relationship: f['relationship'] ?? '',
-                                  phone: f['phone'] ?? '',
-                                  email: f['email'] ?? '',
-                                  lastInteraction:
-                                      f['lastSeen'] ?? 'Not available',
-                                ),
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            // Use emergency number for SOS
+                            CommunicationService.makePhoneCall('911', context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('SOS Call initiated!'),
+                                backgroundColor: Colors.red,
                               ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 20),
-                        GestureDetector(
-                          onTap: () => context.go('/tasks/today'),
-                          child: const Text(
-                            'View Today\'s Task',
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.phone_in_talk_rounded,
+                            color: Colors.red,
+                          ),
+                          label: const Text(
+                            'SOS CALL',
                             style: TextStyle(
-                              color: Colors.blue,
-                              decoration: TextDecoration.underline,
+                              color: Colors.red,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-
-                        const SizedBox(height: 30),
-
-                        Align(
-                          alignment: Alignment.bottomRight,
-                          child: TextButton.icon(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('SOS Call initiated!'),
-                                ),
-                              );
-                            },
-                            icon: const Icon(
-                              Icons.phone_in_talk_rounded,
-                              color: Colors.red,
-                            ),
-                            label: const Text(
-                              'SOS CALL',
-                              style: TextStyle(
-                                color: Colors.red,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Add some bottom padding to ensure content isn't hidden behind AI chat
-                        const SizedBox(height: 100),
-                      ],
-                    ),
+                      ),
+                      // Add some bottom padding to ensure content isn't hidden behind AI chat
+                      const SizedBox(height: 100),
+                    ],
                   ),
                 ),
-          // AI Chat Widget
-          const AIChat(role: 'patient'),
-        ],
-      ),
+              ),
+            ),
     );
   }
 
@@ -649,15 +652,18 @@ class _PatientDashboardState extends State<PatientDashboard> {
         leading: const CircleAvatar(child: Text("D")),
         title: Text(
           '${caregiver['firstName'] ?? ''} ${caregiver['lastName'] ?? ''}',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Status: Available'),
-            Text('Last Interaction: ${caregiver['lastSeen'] ?? 'Recently'}'),
+            Text('Status: Available', style: AppTheme.bodyMedium),
+            Text(
+              'Last Interaction: ${caregiver['lastSeen'] ?? 'Recently'}',
+              style: AppTheme.bodyMedium,
+            ),
             if (caregiver['phone'] != null)
-              Text('Phone: ${caregiver['phone']}'),
+              Text('Phone: ${caregiver['phone']}', style: AppTheme.bodyMedium),
           ],
         ),
         trailing: PopupMenuButton<String>(
@@ -665,11 +671,19 @@ class _PatientDashboardState extends State<PatientDashboard> {
           onSelected: (value) async {
             final phone = caregiver['phone'];
             final email = caregiver['email'];
+            final caregiverId = caregiver['id'];
+            final name = '${caregiver['firstName']} ${caregiver['lastName']}';
+
             if (value == 'call' && phone != null) {
-              final uri = Uri(scheme: 'tel', path: phone);
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri);
-              }
+              // Use CommunicationService for phone call
+              CommunicationService.makePhoneCall(phone, context);
+            } else if (value == 'videocall' && caregiverId != null) {
+              // Use CommunicationService for video call
+              CommunicationService.startVideoCall(
+                caregiverId.toString(),
+                name,
+                context,
+              );
             } else if (value == 'email' && email != null) {
               final uri = Uri(
                 scheme: 'mailto',
@@ -690,14 +704,13 @@ class _PatientDashboardState extends State<PatientDashboard> {
                 );
               }
             } else if (value == 'sms' && phone != null) {
-              final uri = Uri(scheme: 'sms', path: phone);
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri);
-              }
+              // Show message dialog
+              _showSendMessageDialog(context, caregiver);
             }
           },
           itemBuilder: (context) => [
             const PopupMenuItem(value: 'call', child: Text('Call')),
+            const PopupMenuItem(value: 'videocall', child: Text('Video Call')),
             const PopupMenuItem(value: 'email', child: Text('Email')),
             const PopupMenuItem(value: 'sms', child: Text('Send SMS')),
           ],
@@ -706,142 +719,58 @@ class _PatientDashboardState extends State<PatientDashboard> {
     );
   }
 
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(color: Colors.blue.shade700),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person, size: 30),
-                ),
-                const SizedBox(height: 8),
-                Consumer<UserProvider>(
-                  builder: (context, userProvider, child) {
-                    final user = userProvider.user;
-                    final patientName =
-                        user?.name ??
-                        (patient?['firstName'] != null &&
-                                patient?['lastName'] != null
-                            ? '${patient!['firstName']} ${patient!['lastName']}'
-                            : 'Patient');
+  // Add this method to handle sending messages
+  void _showSendMessageDialog(
+    BuildContext context,
+    Map<String, dynamic> caregiver,
+  ) {
+    final TextEditingController messageController = TextEditingController();
+    final String name = '${caregiver['firstName']} ${caregiver['lastName']}';
+    final String phone = caregiver['phone'] ?? '';
 
-                    return Text(
-                      patientName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  },
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Send message to $name'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: messageController,
+                decoration: const InputDecoration(
+                  labelText: 'Message',
+                  hintText: 'Write your message here...',
+                  border: OutlineInputBorder(),
                 ),
-                const Text('Patient', style: TextStyle(color: Colors.white70)),
-              ],
+                maxLines: 3,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
             ),
-          ),
-          ...[
-            {
-              'icon': Icons.group,
-              'title': 'Caregiver Management',
-              'route': null,
-            },
-            {
-              'icon': Icons.video_camera_front,
-              'title': 'Virtual Check-In',
-              'route': null,
-            },
-            {
-              'icon': Icons.medical_services,
-              'title': 'TeleHealth',
-              'route': null,
-            },
-            {
-              'icon': Icons.note_alt,
-              'title': 'Health Care Note',
-              'route': null,
-            },
-            {
-              'icon': Icons.analytics,
-              'title': 'Analytics',
-              'route': '/analytics',
-            },
-            {
-              'icon': Icons.emoji_events,
-              'title': 'Gamification',
-              'route': '/gamification',
-            },
-            {
-              'icon': Icons.people_alt,
-              'title': 'Social Network',
-              'route': '/social-feed',
-            },
-            {
-              'icon': Icons.watch,
-              'title': 'Wearables',
-              'route': '/wearables',
-            },
-            {
-              'icon': Icons.medication,
-              'title': 'Medication Management',
-              'route': '/medication',
-            },
-            {'icon': Icons.settings, 'title': 'Settings', 'route': '/settings'},
-            {
-              'icon': Icons.help_outline,
-              'title': 'Help & Support',
-              'route': null,
-            },
-          ].map((item) {
-            return ListTile(
-              leading: Icon(item['icon'] as IconData),
-              title: Text(item['title'] as String),
-              onTap: () {
+            ElevatedButton(
+              onPressed: () {
                 Navigator.pop(context);
-                final route = item['route'] as String?;
-                if (route != null) {
-                  if (route == '/social-feed') {
-                    context.go('/social-feed');
-                  } else if (route == '/analytics') {
-                    final user = Provider.of<UserProvider>(
-                      context,
-                      listen: false,
-                    ).user;
-                    final patientId =
-                        user?.patientId ?? user?.id ?? widget.userId ?? 1;
-                    context.go('$route?patientId=$patientId');
-                  } else if (route == '/wearables') {
-                    context.push(route);
-                  } else if (route == '/home-monitoring') {
-                    context.push(route);
-                  } else if (route == '/smart-devices') {
-                    context.push(route);
-                  } else if (route == '/medication') {
-                    context.push(route);
-                  } else {
-                    context.go(route);
-                  }
-                }
+                // Use CommunicationService for SMS
+                CommunicationService.sendSMS(
+                  phone,
+                  context,
+                  message: messageController.text,
+                );
               },
-            );
-          }),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Logout', style: TextStyle(color: Colors.red)),
-            onTap: () async {
-              Navigator.pop(context);
-              context.go('/');
-            },
-          ),
-        ],
-      ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade900,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Send'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

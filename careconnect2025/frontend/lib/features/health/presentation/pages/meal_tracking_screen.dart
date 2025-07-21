@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 
 class MealTrackingScreen extends StatefulWidget {
   const MealTrackingScreen({super.key});
@@ -67,10 +69,11 @@ class _MealTrackingScreenState extends State<MealTrackingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Meal & Nutrition Tracking'),
-        backgroundColor: Colors.blue.shade900,
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Meal & Nutrition Tracking',
       ),
+      drawer: CommonDrawer(currentRoute: '/meal_tracking'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -85,8 +88,10 @@ class _MealTrackingScreenState extends State<MealTrackingScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(question,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(
+                    question,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(height: 4),
                   TextField(
                     controller: _responses[question],
@@ -102,7 +107,8 @@ class _MealTrackingScreenState extends State<MealTrackingScreen> {
             ElevatedButton(
               onPressed: _submitMealLog,
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade900),
+                backgroundColor: Colors.blue.shade900,
+              ),
               child: const Text('Submit Meal Log'),
             ),
           ],

@@ -17,6 +17,7 @@ enum AIModel {
         return 'Claude 3';
     }
   }
+
   String get modelName {
     switch (this) {
       case AIModel.deepseek:

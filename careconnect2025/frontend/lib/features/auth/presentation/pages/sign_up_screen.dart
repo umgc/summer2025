@@ -330,7 +330,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             _zipController.text.isNotEmpty) {
           // If any address field is filled, validate all required address fields
           return (_cityController.text.isEmpty ||
-              _validateCity(_cityController.text) == null) &&
+                  _validateCity(_cityController.text) == null) &&
               (_stateController.text.isEmpty ||
                   _validateState(_stateController.text) == null) &&
               (_zipController.text.isEmpty ||
@@ -435,13 +435,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           onPressed: isLoading ? null : details.onStepContinue,
                           child: isLoading
                               ? CircularProgressIndicator(
-                            color: AppTheme.textLight,
-                          )
+                                  color: AppTheme.textLight,
+                                )
                               : Text(
-                            _currentStep == 5
-                                ? 'Continue to Payment'
-                                : 'Continue',
-                          ),
+                                  _currentStep == 5
+                                      ? 'Continue to Payment'
+                                      : 'Continue',
+                                ),
                         ),
                         if (_currentStep > 0)
                           TextButton(
@@ -462,14 +462,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         TextFormField(
                           controller: _firstNameController,
                           decoration:
-                          AppTheme.inputDecoration(
-                            'First Name*',
-                            hint: 'Enter your first name',
-                          ).copyWith(
-                            errorText: _validateName(
-                              _firstNameController.text,
-                            ),
-                          ),
+                              AppTheme.inputDecoration(
+                                'First Name*',
+                                hint: 'Enter your first name',
+                              ).copyWith(
+                                errorText: _validateName(
+                                  _firstNameController.text,
+                                ),
+                              ),
                           validator: (value) {
                             if (value!.isEmpty) return 'First name required';
                             return _validateName(value);
@@ -482,14 +482,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         TextFormField(
                           controller: _lastNameController,
                           decoration:
-                          AppTheme.inputDecoration(
-                            'Last Name*',
-                            hint: 'Enter your last name',
-                          ).copyWith(
-                            errorText: _validateName(
-                              _lastNameController.text,
-                            ),
-                          ),
+                              AppTheme.inputDecoration(
+                                'Last Name*',
+                                hint: 'Enter your last name',
+                              ).copyWith(
+                                errorText: _validateName(
+                                  _lastNameController.text,
+                                ),
+                              ),
                           validator: (value) {
                             if (value!.isEmpty) return 'Last name required';
                             return _validateName(value);
@@ -503,59 +503,59 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           controller: _dobController,
                           readOnly: true,
                           decoration:
-                          AppTheme.inputDecoration(
-                            'Date of Birth (MM/DD/YYYY)*',
-                            hint: '01/01/1990',
-                          ).copyWith(
-                            errorText:
-                            _dobController.text.isEmpty &&
-                                _dobController.text.isNotEmpty
-                                ? 'Date of birth required'
-                                : null,
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.calendar_month),
-                              onPressed: () async {
-                                final DateTime? picked =
-                                await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime(1990, 1, 1),
-                                  firstDate: DateTime(1900),
-                                  lastDate: DateTime.now(),
-                                  helpText: 'Select Date of Birth',
-                                );
-                                if (picked != null) {
-                                  // Format date as MM/DD/YYYY
-                                  final month = picked.month
-                                      .toString()
-                                      .padLeft(2, '0');
-                                  final day = picked.day.toString().padLeft(
-                                    2,
-                                    '0',
-                                  );
-                                  final year = picked.year.toString();
-                                  setState(() {
-                                    _dobController.text =
-                                    '$month/$day/$year';
-                                  });
-                                }
-                              },
-                            ),
-                          ),
+                              AppTheme.inputDecoration(
+                                'Date of Birth (MM/DD/YYYY)*',
+                                hint: '01/01/1990',
+                              ).copyWith(
+                                errorText:
+                                    _dobController.text.isEmpty &&
+                                        _dobController.text.isNotEmpty
+                                    ? 'Date of birth required'
+                                    : null,
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.calendar_month),
+                                  onPressed: () async {
+                                    final DateTime? picked =
+                                        await showDatePicker(
+                                          context: context,
+                                          initialDate: DateTime(1990, 1, 1),
+                                          firstDate: DateTime(1900),
+                                          lastDate: DateTime.now(),
+                                          helpText: 'Select Date of Birth',
+                                        );
+                                    if (picked != null) {
+                                      // Format date as MM/DD/YYYY
+                                      final month = picked.month
+                                          .toString()
+                                          .padLeft(2, '0');
+                                      final day = picked.day.toString().padLeft(
+                                        2,
+                                        '0',
+                                      );
+                                      final year = picked.year.toString();
+                                      setState(() {
+                                        _dobController.text =
+                                            '$month/$day/$year';
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
                           validator: (value) =>
-                          value!.isEmpty ? 'Date of birth required' : null,
+                              value!.isEmpty ? 'Date of birth required' : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _phoneController,
                           decoration:
-                          AppTheme.inputDecoration(
-                            'Phone Number*',
-                            hint: '240-555-5555',
-                          ).copyWith(
-                            errorText: _validatePhone(
-                              _phoneController.text,
-                            ),
-                          ),
+                              AppTheme.inputDecoration(
+                                'Phone Number*',
+                                hint: '240-555-5555',
+                              ).copyWith(
+                                errorText: _validatePhone(
+                                  _phoneController.text,
+                                ),
+                              ),
                           keyboardType: TextInputType.phone,
                           validator: (value) {
                             if (value!.isEmpty) return 'Phone number required';
@@ -574,14 +574,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         TextFormField(
                           controller: _emailController,
                           decoration:
-                          AppTheme.inputDecoration(
-                            'Email*',
-                            hint: 'name@example.com',
-                          ).copyWith(
-                            errorText: _validateEmail(
-                              _emailController.text,
-                            ),
-                          ),
+                              AppTheme.inputDecoration(
+                                'Email*',
+                                hint: 'name@example.com',
+                              ).copyWith(
+                                errorText: _validateEmail(
+                                  _emailController.text,
+                                ),
+                              ),
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) {
                             if (value!.isEmpty) return 'Email is required';
@@ -597,28 +597,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           controller: _passwordController,
                           obscureText: !_showPassword,
                           decoration:
-                          AppTheme.inputDecoration(
-                            'Password*',
-                            hint: 'Minimum 6 characters',
-                          ).copyWith(
-                            errorText: _validatePassword(
-                              _passwordController.text,
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _showPassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
+                              AppTheme.inputDecoration(
+                                'Password*',
+                                hint: 'Minimum 6 characters',
+                              ).copyWith(
+                                errorText: _validatePassword(
+                                  _passwordController.text,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _showPassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showPassword = !_showPassword;
+                                    });
+                                  },
+                                ),
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _showPassword = !_showPassword;
-                                });
-                              },
-                            ),
-                          ),
                           validator: (value) =>
-                          value!.length < 6 ? 'Minimum 6 characters' : null,
+                              value!.length < 6 ? 'Minimum 6 characters' : null,
                           onChanged: (_) => setState(() {}),
                         ),
                         const SizedBox(height: 16),
@@ -626,30 +626,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           controller: _confirmPasswordController,
                           obscureText: !_showConfirmPassword,
                           decoration:
-                          AppTheme.inputDecoration(
-                            'Confirm Password*',
-                            hint: 'Re-enter your password',
-                          ).copyWith(
-                            errorText: _validateConfirmPassword(
-                              _confirmPasswordController.text,
-                              _passwordController.text,
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _showConfirmPassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
+                              AppTheme.inputDecoration(
+                                'Confirm Password*',
+                                hint: 'Re-enter your password',
+                              ).copyWith(
+                                errorText: _validateConfirmPassword(
+                                  _confirmPasswordController.text,
+                                  _passwordController.text,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _showConfirmPassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showConfirmPassword =
+                                          !_showConfirmPassword;
+                                    });
+                                  },
+                                ),
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _showConfirmPassword =
-                                  !_showConfirmPassword;
-                                });
-                              },
-                            ),
-                          ),
                           validator: (value) =>
-                          value != _passwordController.text
+                              value != _passwordController.text
                               ? 'Passwords do not match'
                               : null,
                           onChanged: (_) => setState(() {}),
@@ -719,14 +719,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               child: TextFormField(
                                 controller: _cityController,
                                 decoration:
-                                AppTheme.inputDecoration(
-                                  'City',
-                                  hint: 'McLean',
-                                ).copyWith(
-                                  errorText: _validateCity(
-                                    _cityController.text,
-                                  ),
-                                ),
+                                    AppTheme.inputDecoration(
+                                      'City',
+                                      hint: 'McLean',
+                                    ).copyWith(
+                                      errorText: _validateCity(
+                                        _cityController.text,
+                                      ),
+                                    ),
                                 validator: (value) => _validateCity(value!),
                                 textCapitalization: TextCapitalization.words,
                               ),
@@ -736,17 +736,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               child: TextFormField(
                                 controller: _stateController,
                                 decoration:
-                                AppTheme.inputDecoration(
-                                  'State',
-                                  hint: 'VA',
-                                ).copyWith(
-                                  errorText: _validateState(
-                                    _stateController.text,
-                                  ),
-                                ),
+                                    AppTheme.inputDecoration(
+                                      'State',
+                                      hint: 'VA',
+                                    ).copyWith(
+                                      errorText: _validateState(
+                                        _stateController.text,
+                                      ),
+                                    ),
                                 validator: (value) => _validateState(value!),
                                 textCapitalization:
-                                TextCapitalization.characters,
+                                    TextCapitalization.characters,
                               ),
                             ),
                           ],
@@ -755,12 +755,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         TextFormField(
                           controller: _zipController,
                           decoration:
-                          AppTheme.inputDecoration(
-                            'ZIP Code',
-                            hint: '19053',
-                          ).copyWith(
-                            errorText: _validateZip(_zipController.text),
-                          ),
+                              AppTheme.inputDecoration(
+                                'ZIP Code',
+                                hint: '19053',
+                              ).copyWith(
+                                errorText: _validateZip(_zipController.text),
+                              ),
                           validator: (value) => _validateZip(value!),
                           keyboardType: TextInputType.number,
                         ),
@@ -923,7 +923,7 @@ class _CaregiverRegistrationFlowPageState
               ), // Use white text for contrast
             ),
             backgroundColor:
-            AppTheme.primary, // Use the centralized theme color
+                AppTheme.primary, // Use the centralized theme color
           ),
         );
 
@@ -968,42 +968,42 @@ class _CaregiverRegistrationFlowPageState
         child: _isLoading
             ? CircularProgressIndicator(color: theme.primaryColor)
             : Container(
-          constraints: const BoxConstraints(maxWidth: 600),
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Welcome to CareConnect!',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.primaryColor,
+                constraints: const BoxConstraints(maxWidth: 600),
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Welcome to CareConnect!',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.primaryColor,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Hello ${RegistrationData.firstName},\nYour account will be created first, then you\'ll select a subscription package.\nAfter successful payment, you can log in to access CareConnect.',
+                      style: theme.textTheme.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 40),
+                    ElevatedButton(
+                      style: AppTheme.primaryButtonStyle,
+                      onPressed: _registerCaregiverThenPay,
+                      child: const Text('Complete Registration & Pay'),
+                    ),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 20),
+                      Text(
+                        _errorMessage!,
+                        style: TextStyle(color: theme.colorScheme.error),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ],
                 ),
-                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 20),
-              Text(
-                'Hello ${RegistrationData.firstName},\nYour account will be created first, then you\'ll select a subscription package.\nAfter successful payment, you can log in to access CareConnect.',
-                style: theme.textTheme.bodyLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 40),
-              ElevatedButton(
-                style: AppTheme.primaryButtonStyle,
-                onPressed: _registerCaregiverThenPay,
-                child: const Text('Complete Registration & Pay'),
-              ),
-              if (_errorMessage != null) ...[
-                const SizedBox(height: 20),
-                Text(
-                  _errorMessage!,
-                  style: TextStyle(color: theme.colorScheme.error),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ],
-          ),
-        ),
       ),
     );
   }

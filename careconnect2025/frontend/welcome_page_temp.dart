@@ -5,13 +5,13 @@ class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
 
   Widget _buildUserTypeCard(
-      BuildContext context, {
-        required String title,
-        required IconData icon,
-        required String description,
-        required Color color,
-        required VoidCallback onTap,
-      }) {
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required String description,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
@@ -113,7 +113,7 @@ class WelcomePage extends StatelessWidget {
                         title: 'Patient/Care Receiver',
                         icon: Icons.person,
                         description:
-                        'Access your health data, communicate with caregivers, and track your care plan. Patients must be registered by a caregiver.',
+                            'Access your health data, communicate with caregivers, and track your care plan. Patients must be registered by a caregiver.',
                         color: Theme.of(context).primaryColor,
                         onTap: () {
                           context.go('/login', extra: {'userType': 'patient'});
@@ -127,7 +127,7 @@ class WelcomePage extends StatelessWidget {
                         title: 'Caregiver',
                         icon: Icons.health_and_safety,
                         description:
-                        'Monitor patients, manage care plans, and coordinate with other caregivers',
+                            'Monitor patients, manage care plans, and coordinate with other caregivers',
                         color: Theme.of(context).colorScheme.secondary,
                         onTap: () {
                           context.go(

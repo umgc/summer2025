@@ -61,17 +61,6 @@ class Patient {
     this.linkStatus = 'ACTIVE',
   });
 
-  // Getter for calculating the patient's age from the 'dob' field
-  int get age {
-    DateTime birthDate = DateTime.parse(dob);
-    DateTime now = DateTime.now();
-    int years = now.year - birthDate.year;
-    if (now.month < birthDate.month || (now.month == birthDate.month && now.day < birthDate.day)) {
-      years--;
-    }
-    return years;
-  }
-
   factory Patient.fromJson(Map<String, dynamic> json) {
     // Check if this is a nested structure from the API
     Map<String, dynamic> patientData = json;
@@ -154,15 +143,15 @@ class Patient {
       phone: patientData['phone']?.toString() ?? '',
       dob: patientData['dob']?.toString() ?? '',
       relationship:
-      patientData['relationship']?.toString() ??
+          patientData['relationship']?.toString() ??
           (json.containsKey('link') && json['link'] is Map<String, dynamic>
               ? json['link']['linkType']?.toString()
               : '') ??
           '',
       profileImageUrl:
-      patientData['profileImageUrl']?.toString() ??
+          patientData['profileImageUrl']?.toString() ??
           (patientData.containsKey('user') &&
-              patientData['user'] is Map<String, dynamic>
+                  patientData['user'] is Map<String, dynamic>
               ? patientData['user']['profileImageUrl']?.toString()
               : ''),
       address: patientData['address'] != null

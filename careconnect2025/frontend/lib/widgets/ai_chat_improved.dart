@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'dart:convert';
-import 'dart:math' as math;
 import '../services/ai_service.dart';
 
 /// This is a consolidated AI Chat component that serves all use cases:
@@ -55,67 +54,38 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
       curve: Curves.easeInOut,
     );
 
-    // Set default initial sizes before proper measurement
-    _chatHeight = 500.0;
-    _chatWidth = 400.0;
-
     // If this is a modal view, expand by default
     if (widget.isModal) {
       _isExpanded = true;
       _animationController.value = 1.0;
-    }
-  }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+      // Show welcome message for modal view
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_hasSeenWelcome) {
+          _hasSeenWelcome = true;
+          // Customize welcome message based on role
+          String welcomeMessage = 'Hello! I\'m your health assistant. ';
 
-    final screenSize = MediaQuery.of(context).size;
+          if (widget.role == 'analytics') {
+            welcomeMessage +=
+                'I can help analyze health data and provide insights based on the information you share. You can upload files like health reports or ask questions about the displayed analytics.';
+          } else if (widget.role == 'caregiver') {
+            welcomeMessage +=
+                'I can help with patient care questions, medical information, and treatment guidance. You can also upload patient reports or health documents for analysis.';
+          } else {
+            welcomeMessage +=
+                'I can help with health, wellness, and medical questions. You can also upload your health documents or reports for personalized advice.';
+          }
 
-    // Responsive sizing with constraints - only relevant for non-modal
-    if (!widget.isModal) {
-      // Limit the width based on screen size but with a hard cap
-      _chatWidth = screenSize.width < 768 ? 320.0 : 380.0;
-
-      // Never let the chat width exceed 35% of the screen width
-      // Ensure max value is always greater than min value to avoid clamp errors
-      double maxWidth = screenSize.width * 0.35;
-      _chatWidth = _chatWidth.clamp(280.0, math.max(281.0, maxWidth));
-
-      // Adjust height based on screen size
-      _chatHeight = screenSize.height < 600
-          ? 400.0
-          : screenSize.height > 900
-          ? 600.0
-          : screenSize.height * 0.6;
-      _chatHeight = _chatHeight.clamp(400.0, 600.0);
-    }
-
-    // Show welcome message for modal view
-    if (widget.isModal && !_hasSeenWelcome) {
-      _hasSeenWelcome = true;
-
-      // Customize welcome message based on role
-      String welcomeMessage;
-      if (widget.role == 'analytics') {
-        welcomeMessage =
-        'Welcome to the Healthcare Analytics Assistant. How can I help you analyze your data today?';
-      } else if (widget.role == 'caregiver') {
-        welcomeMessage =
-        'Welcome to the Caregiver Assistant. I can help you with patient information, care protocols, and medical references.';
-      } else {
-        welcomeMessage =
-        'Welcome to CareConnect AI Assistant. How can I help you today?';
-      }
-
-      // Add system welcome message
-      _messages.add(
-        ChatMessage(
-          text: welcomeMessage,
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
-      );
+          _messages.add(
+            ChatMessage(
+              text: welcomeMessage,
+              isUser: false,
+              timestamp: DateTime.now(),
+            ),
+          );
+        }
+      });
     }
   }
 
@@ -215,7 +185,7 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
         // For PDFs and documents, we'll store a placeholder message
         // In a real app, you'd want to use a PDF parser or document converter
         content =
-        '[This is a ${fileType.toUpperCase()} file. Content extraction not yet implemented for this file type. File name: ${file.name}]';
+            '[This is a ${fileType.toUpperCase()} file. Content extraction not yet implemented for this file type. File name: ${file.name}]';
       } else {
         // For text-based files, read the content
         if (file.bytes != null) {
@@ -242,7 +212,7 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
       // Limit content size to prevent overwhelming the AI
       if (content.length > 50000) {
         content =
-        '${content.substring(0, 50000)}\n... [Content truncated due to length]';
+            '${content.substring(0, 50000)}\n... [Content truncated due to length]';
       }
 
       return UploadedFile(
@@ -379,12 +349,10 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
   }
 
   void _toggleChat() {
-    if (!_isExpanded) {
-      // Expand the chat
-      setState(() {
-        _isExpanded = true;
-      });
-      _animationController.reset();
+    setState(() {
+      _isExpanded = !_isExpanded;
+    });
+    if (_isExpanded) {
       _animationController.forward();
       // Show welcome message on first expansion
       if (!_hasSeenWelcome) {
@@ -394,13 +362,13 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
 
         if (widget.role == 'analytics') {
           welcomeMessage +=
-          'I can help analyze health data and provide insights based on the information you share. You can upload files like health reports or ask questions about the displayed analytics.';
+              'I can help analyze health data and provide insights based on the information you share. You can upload files like health reports or ask questions about the displayed analytics.';
         } else if (widget.role == 'caregiver') {
           welcomeMessage +=
-          'I can help with patient care questions, medical information, and treatment guidance. You can also upload patient reports or health documents for analysis.';
+              'I can help with patient care questions, medical information, and treatment guidance. You can also upload patient reports or health documents for analysis.';
         } else {
           welcomeMessage +=
-          'I can help with health, wellness, and medical questions. You can also upload your health documents or reports for personalized advice.';
+              'I can help with health, wellness, and medical questions. You can also upload your health documents or reports for personalized advice.';
         }
 
         _messages.add(
@@ -414,12 +382,7 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       }
     } else {
-      // Collapse the chat
-      _animationController.reverse().then((_) {
-        setState(() {
-          _isExpanded = false;
-        });
-      });
+      _animationController.reverse();
     }
   }
 
@@ -498,8 +461,7 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
 
       // Never let the chat width exceed 35% of the screen width
       // This ensures it stays properly on the right side and doesn't take too much space
-      double maxWidth = screenSize.width * 0.35;
-      _chatWidth = _chatWidth.clamp(280.0, math.max(281.0, maxWidth));
+      _chatWidth = _chatWidth.clamp(280.0, screenSize.width * 0.35);
 
       // Adjust height based on screen size
       _chatHeight = screenSize.height < 600
@@ -521,7 +483,7 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
             : BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor.withValues(alpha:0.1),
+            color: Theme.of(context).shadowColor.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -537,9 +499,9 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
               borderRadius: widget.isModal
                   ? const BorderRadius.vertical(top: Radius.circular(16))
                   : const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-              ),
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
             ),
             child: Row(
               children: [
@@ -646,10 +608,10 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
                     margin: const EdgeInsets.all(8),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withValues(alpha:0.1),
+                      color: Theme.of(context).primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: Theme.of(context).primaryColor.withValues(alpha:0.3),
+                        color: Theme.of(context).primaryColor.withOpacity(0.3),
                       ),
                     ),
                     child: Column(
@@ -697,10 +659,10 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
                                   _formatFileSize(_uploadedFiles[i].size),
                                   style: Theme.of(context).textTheme.labelSmall
                                       ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall?.color,
-                                  ),
+                                        color: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall?.color,
+                                      ),
                                 ),
                                 const SizedBox(width: 4),
                                 InkWell(
@@ -758,13 +720,13 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha:0.9),
+              color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.9),
               borderRadius: widget.isModal
                   ? BorderRadius.zero
                   : const BorderRadius.only(
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
-              ),
+                      bottomLeft: Radius.circular(16),
+                      bottomRight: Radius.circular(16),
+                    ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -851,17 +813,17 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.end, // Align to bottom
         crossAxisAlignment: CrossAxisAlignment.end, // Align to right
         children: [
-          // Only show chat content when expanded
-          if (_isExpanded)
-            AnimatedBuilder(
-              animation: _animation,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _animation.value,
-                  child: chatContent,
-                );
-              },
-            ),
+          AnimatedBuilder(
+            animation: _animation,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _animation.value,
+                child: _animation.value > 0
+                    ? chatContent
+                    : const SizedBox.shrink(),
+              );
+            },
+          ),
           const SizedBox(height: 8),
           // Floating action button - only show when not in modal
           if (!widget.isModal)
@@ -871,19 +833,19 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
               icon: _isExpanded
                   ? const Icon(Icons.keyboard_arrow_down)
                   : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.smart_toy, size: 20),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.settings,
-                    size: 12,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onPrimary.withValues(alpha:0.7),
-                  ),
-                ],
-              ),
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.smart_toy, size: 20),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.settings,
+                          size: 12,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimary.withOpacity(0.7),
+                        ),
+                      ],
+                    ),
               label: Text(
                 'Ask AI (${_selectedModel.displayName})',
                 style: const TextStyle(fontSize: 12),
@@ -907,7 +869,7 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
           if (!message.isUser) ...[
             CircleAvatar(
               radius: 12,
-              backgroundColor: Theme.of(context).primaryColor.withValues(alpha:0.2),
+              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
               child: Icon(
                 Icons.smart_toy,
                 size: 16,
@@ -929,7 +891,7 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).shadowColor.withValues(alpha:0.1),
+                    color: Theme.of(context).shadowColor.withOpacity(0.1),
                     blurRadius: 3,
                     offset: const Offset(0, 1),
                   ),
@@ -954,8 +916,8 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
                     style: TextStyle(
                       color: message.isUser
                           ? Theme.of(
-                        context,
-                      ).colorScheme.onPrimary.withValues(alpha:0.7)
+                              context,
+                            ).colorScheme.onPrimary.withOpacity(0.7)
                           : Theme.of(context).textTheme.bodySmall?.color,
                       fontSize: 10,
                     ),
@@ -968,7 +930,7 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
             const SizedBox(width: 8),
             CircleAvatar(
               radius: 12,
-              backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
               child: Icon(
                 Icons.person,
                 size: 16,
@@ -1014,7 +976,7 @@ class AIChatModal extends StatelessWidget {
   final String? healthDataContext;
 
   const AIChatModal({Key? key, required this.role, this.healthDataContext})
-      : super(key: key);
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {

@@ -1,47 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:care_connect_app/widgets/ai_chat_improved.dart';
-import 'package:care_connect_app/services/ai_service.dart';
+import 'package:care_connect_app/widgets/ai_chat.dart';
 
 void main() {
   group('AI Chat Widget Tests', () {
-    testWidgets('Modal AI Chat should show header text', (
+    testWidgets('AI Chat should show correct button text', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: AIChat(role: 'patient', isModal: true)),
+          home: Scaffold(
+            body: Stack(children: [AIChat(role: 'patient')]),
+          ),
         ),
       );
 
-      await tester.pumpAndSettle();
+      // Should show "Ask AI" text on the button
+      expect(find.textContaining('Ask AI'), findsOneWidget);
 
-      // Since we're using isModal: true, it should show the header title
-      expect(find.text('Health Assistant'), findsOneWidget);
-
-      // Should find the model dropdown
-      expect(find.byType(DropdownButton<AIModel>), findsOneWidget);
+      // Should show model indicator
+      expect(find.textContaining('DeepSeek'), findsOneWidget);
     });
 
-    testWidgets('Modal AI Chat should show health assistant elements', (
+    testWidgets('AI Chat should show smart toy icon when collapsed', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: AIChat(role: 'caregiver', isModal: true)),
+          home: Scaffold(
+            body: Stack(children: [AIChat(role: 'caregiver')]),
+          ),
         ),
       );
 
-      await tester.pumpAndSettle();
+      // Should show smart toy icon
+      expect(find.byIcon(Icons.smart_toy), findsOneWidget);
 
-      // Should show a welcome message since this is a modal view
-      expect(
-        find.textContaining("Welcome to the Caregiver Assistant"),
-        findsOneWidget,
-      );
-
-      // Should show input field
-      expect(find.byType(TextField), findsOneWidget);
+      // Should show settings icon hint
+      expect(find.byIcon(Icons.settings), findsOneWidget);
     });
   });
 }

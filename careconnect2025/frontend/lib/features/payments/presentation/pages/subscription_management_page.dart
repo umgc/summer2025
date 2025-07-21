@@ -9,8 +9,6 @@ import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:care_connect_app/config/theme/app_theme.dart';
 import '../../models/subscription_model.dart';
-import '../../models/package_model.dart';
-import '../pages/stripe_checkout_page.dart';
 
 class SubscriptionManagementPage extends StatefulWidget {
   const SubscriptionManagementPage({Key? key}) : super(key: key);
@@ -86,14 +84,14 @@ class _SubscriptionManagementPageState
 
             return SubscriptionPlan(
               id:
-              planData['priceId'] ??
+                  planData['priceId'] ??
                   planData['id'], // Use priceId if available
               name: planData['nickname'] ?? 'Basic Plan',
               description: planData['active'] == true
                   ? 'Active Plan'
                   : 'Inactive Plan',
               amount:
-              (planData['amount'] ?? 0) / 100, // Convert cents to dollars
+                  (planData['amount'] ?? 0) / 100, // Convert cents to dollars
               interval: planData['interval'] ?? 'month',
               features: features,
             );
@@ -115,10 +113,10 @@ class _SubscriptionManagementPageState
             final activeSubscriptions = data
                 .where(
                   (sub) =>
-              sub is Map<String, dynamic> &&
-                  sub.containsKey('status') &&
-                  sub['status'].toString().toLowerCase() == 'active',
-            )
+                      sub is Map<String, dynamic> &&
+                      sub.containsKey('status') &&
+                      sub['status'] == 'active',
+                )
                 .toList();
 
             // Use the first active subscription or null if none found
@@ -157,7 +155,7 @@ class _SubscriptionManagementPageState
                   // Try to find a matching plan by ID first
                   try {
                     _selectedPlan = _plans.firstWhere(
-                          (plan) => plan.id == _currentSubscription!.planId,
+                      (plan) => plan.id == _currentSubscription!.planId,
                       orElse: () => _plans.length > 1
                           ? _plans[1]
                           : _plans[0], // Default to standard plan if available
@@ -167,7 +165,7 @@ class _SubscriptionManagementPageState
                     // Fallback to match by name if ID doesn't match
                     try {
                       _selectedPlan = _plans.firstWhere(
-                            (plan) => plan.name.toLowerCase().contains(
+                        (plan) => plan.name.toLowerCase().contains(
                           _currentSubscription!.planName.toLowerCase(),
                         ),
                         orElse: () => _plans.length > 1 ? _plans[1] : _plans[0],
@@ -197,7 +195,7 @@ class _SubscriptionManagementPageState
                   // Try to find a matching plan by ID first
                   try {
                     _selectedPlan = _plans.firstWhere(
-                          (plan) => plan.id == _currentSubscription!.planId,
+                      (plan) => plan.id == _currentSubscription!.planId,
                       orElse: () => _plans.length > 1
                           ? _plans[1]
                           : _plans[0], // Default to standard plan if available
@@ -207,7 +205,7 @@ class _SubscriptionManagementPageState
                     // Fallback to match by name if ID doesn't match
                     try {
                       _selectedPlan = _plans.firstWhere(
-                            (plan) => plan.name.toLowerCase().contains(
+                        (plan) => plan.name.toLowerCase().contains(
                           _currentSubscription!.planName.toLowerCase(),
                         ),
                         orElse: () => _plans.length > 1 ? _plans[1] : _plans[0],
@@ -248,7 +246,7 @@ class _SubscriptionManagementPageState
       } else {
         setState(() {
           _error =
-          'Failed to load subscription: ${response.statusCode}. Please try again later.';
+              'Failed to load subscription: ${response.statusCode}. Please try again later.';
         });
         print('Subscription API error: ${response.statusCode}');
         try {
@@ -260,7 +258,7 @@ class _SubscriptionManagementPageState
     } catch (e) {
       setState(() {
         _error =
-        'Error loading subscription data. Please check your connection and try again.';
+            'Error loading subscription data. Please check your connection and try again.';
       });
       print('Exception in _loadSubscriptionData: $e');
     } finally {
@@ -281,139 +279,149 @@ class _SubscriptionManagementPageState
       print('⚠️ No current subscription');
     }
 
-    // Ensure we have a customerId for new subscriptions
+    // Ensure we have a customerId for new subscriptions or continue with existing subscription update
     if (_processingAction) return;
 
-    // For existing active subscriptions that need to be changed,
-    // first cancel the existing subscription, then redirect to checkout
-    if (_currentSubscription != null && _currentSubscription!.isActive) {
-      // Show confirmation dialog before proceeding
-      final bool? confirmSwitch = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Change Subscription'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'To switch to the ${newPlan.name}, your current plan will first be cancelled, then you\'ll complete payment for the new plan.',
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'You will not be charged for the remainder of your current billing period.',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 12),
-              const Text('Do you want to continue?'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('CANCEL'),
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.primary,
-              ),
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('CONTINUE'),
-            ),
-          ],
-        ),
-      );
-
-      if (confirmSwitch != true) return;
-
-      setState(() {
-        _processingAction = true;
-      });
-
+    // Get customerId from current user if not available from subscription
+    if (_customerId == null && _currentSubscription == null) {
       try {
-        // First cancel the current subscription
-        final response = await ApiService.cancelSubscription(
-          _currentSubscription!.stripeSubscriptionId,
-        );
+        // Attempt to get customer ID from user info if missing
+        final userSession = await AuthTokenManager.getUserSession();
+        final userId = userSession != null
+            ? userSession['id']?.toString()
+            : null;
 
-        if (response.statusCode != 200) {
-          final errorData = jsonDecode(response.body);
-          throw Exception(
-            errorData['error'] ?? 'Failed to cancel current subscription',
-          );
+        if (userId != null) {
+          // Try to get user's stripe info
+          final response = await ApiService.getCurrentSubscription();
+
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            if (data is List &&
+                data.isNotEmpty &&
+                data.first is Map<String, dynamic>) {
+              if (data.first.containsKey('stripeCustomerId')) {
+                _customerId = data.first['stripeCustomerId'];
+                print(
+                  '⚠️ Retrieved stripeCustomerId from subscription: $_customerId',
+                );
+              } else if (data.first.containsKey('customer')) {
+                _customerId = data.first['customer'];
+                print(
+                  '⚠️ Retrieved customerId from subscription: $_customerId',
+                );
+              } else if (data.first.containsKey('customerId')) {
+                _customerId = data.first['customerId'];
+                print(
+                  '⚠️ Retrieved customerId from subscription: $_customerId',
+                );
+              }
+            }
+          }
         }
-
-        // Get the user's ID for checkout
-        final userSession = await AuthTokenManager.getUserSession();
-        final userId = userSession != null
-            ? userSession['id']?.toString()
-            : null;
-
-        // Extract customer ID from existing subscription
-        final customerId = _currentSubscription!.customerId;
-
-        // Now redirect to checkout flow with the new plan
-        _redirectToCheckout(newPlan, userId, customerId);
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-        setState(() {
-          _processingAction = false;
-        });
+        print('⚠️ Error getting customer ID: $e');
       }
-    } else {
-      // For new subscriptions or inactive subscriptions,
-      // get the user ID and customer ID if available, then redirect to checkout
-      try {
-        final userSession = await AuthTokenManager.getUserSession();
-        final userId = userSession != null
-            ? userSession['id']?.toString()
-            : null;
 
-        // Redirect to checkout flow for a new subscription
-        _redirectToCheckout(newPlan, userId, _customerId);
-      } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      // Still no customer ID - show error
+      if (_customerId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Unable to find customer information. Please contact support.',
+            ),
+          ),
+        );
+        return;
       }
     }
-  }
 
-  // Helper method to redirect to the checkout page
-  void _redirectToCheckout(
-      SubscriptionPlan plan,
-      String? userId,
-      String? customerId,
-      ) {
-    // Convert SubscriptionPlan to PackageModel for the checkout page
-    final package = PackageModel(
-      id: plan.id,
-      name: plan.name,
-      description: plan.description,
-      priceCents: (plan.amount * 100).toInt(), // Convert dollars to cents
-    );
+    setState(() {
+      _processingAction = true;
+    });
 
-    // Navigate to checkout page
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => StripeCheckoutPage(
-          package: package,
-          userId: userId,
-          stripeCustomerId: customerId,
-          fromPortal:
-          true, // Indicate this is coming from subscription management page
-        ),
-      ),
-    ).then((_) {
-      // Refresh data when returning from checkout
-      _loadSubscriptionData();
+    try {
+      if (_currentSubscription == null || !_currentSubscription!.isActive) {
+        // Create a new subscription if there's no subscription or if the current one is not active
+        print(
+          '⚠️ Creating new subscription with customerId: $_customerId and priceId: ${newPlan.id}' +
+              (_currentSubscription != null
+                  ? ' (current subscription is not active)'
+                  : ''),
+        );
+        // Print the exact values we're sending to the API
+        print(
+          '⚠️ Creating subscription with customerId: $_customerId, priceId: ${newPlan.id}',
+        );
+
+        final response = await ApiService.createSubscription(
+          _customerId!,
+          newPlan.id,
+        );
+        print(
+          '⚠️ Create subscription response: ${response.statusCode} - ${response.body}',
+        );
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Subscription created successfully!'),
+              backgroundColor: AppTheme.success,
+            ),
+          );
+          _loadSubscriptionData();
+        } else {
+          final errorData = jsonDecode(response.body);
+          throw Exception(
+            errorData['error'] ??
+                'Failed to create subscription: ${response.statusCode}',
+          );
+        }
+      } else {
+        // Switch plans using the upgrade-or-downgrade endpoint
+        final String oldSubscriptionId =
+            _currentSubscription!.stripeSubscriptionId;
+        final String newPriceId = newPlan.id;
+
+        print(
+          '⚠️ Switching subscription: $oldSubscriptionId to new pricing plan: $newPriceId',
+        );
+
+        // Call the API with both parameters required by the endpoint
+        final response = await ApiService.changeSubscriptionPlan(
+          oldSubscriptionId, // The old subscription ID parameter
+          newPriceId, // The new pricing plan ID parameter
+        );
+
+        print(
+          '⚠️ Subscription switch response: ${response.statusCode} - ${response.body}',
+        );
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Plan switched successfully!'),
+              backgroundColor: AppTheme.success,
+            ),
+          );
+          _loadSubscriptionData();
+        } else {
+          final errorData = jsonDecode(response.body);
+          throw Exception(
+            errorData['error'] ??
+                'Failed to switch subscription plan: ${response.statusCode}',
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
       setState(() {
         _processingAction = false;
       });
-    });
+    }
   }
 
   Future<void> _cancelSubscription() async {
@@ -651,7 +659,7 @@ class _SubscriptionManagementPageState
                 icon: Icons.attach_money,
                 label: 'Price',
                 value:
-                '${_currentSubscription!.formattedAmount} ${_currentSubscription!.formattedInterval}',
+                    '${_currentSubscription!.formattedAmount} ${_currentSubscription!.formattedInterval}',
               ),
               const SizedBox(height: 12),
 
@@ -659,7 +667,7 @@ class _SubscriptionManagementPageState
                 icon: Icons.event,
                 label: 'Billing Period',
                 value:
-                _formatDate(_currentSubscription!.currentPeriodStart) +
+                    _formatDate(_currentSubscription!.currentPeriodStart) +
                     ' - ' +
                     _formatDate(_currentSubscription!.currentPeriodEnd),
               ),
@@ -686,10 +694,10 @@ class _SubscriptionManagementPageState
                     ),
                     child: _processingAction
                         ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : const Text('Cancel Subscription'),
                   ),
                 ),
@@ -800,20 +808,9 @@ class _SubscriptionManagementPageState
           )
         else
           ..._plans.map((plan) {
-            // Check if this is the current plan using ID, name, and price as fallbacks
             final isCurrentPlan =
                 _currentSubscription != null &&
-                    (_currentSubscription!.planId == plan.id ||
-                        _currentSubscription!.planName.toLowerCase().contains(
-                          plan.name.toLowerCase(),
-                        ) ||
-                        plan.name.toLowerCase().contains(
-                          _currentSubscription!.planName.toLowerCase(),
-                        ) ||
-                        (_currentSubscription!.planAmount > 0 &&
-                            plan.amount > 0 &&
-                            _currentSubscription!.planAmount ==
-                                plan.amount)); // Price equality as last resort
+                _currentSubscription!.planId == plan.id;
             final isSelectedPlan = _selectedPlan?.id == plan.id;
 
             return Card(
@@ -852,7 +849,7 @@ class _SubscriptionManagementPageState
                                   onChanged: (value) {
                                     setState(() {
                                       _selectedPlan = _plans.firstWhere(
-                                            (p) => p.id == value,
+                                        (p) => p.id == value,
                                       );
                                     });
                                   },
@@ -863,7 +860,7 @@ class _SubscriptionManagementPageState
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         plan.name,
@@ -871,8 +868,8 @@ class _SubscriptionManagementPageState
                                             .textTheme
                                             .titleMedium
                                             ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                       Text(
                                         plan.description,
@@ -880,12 +877,12 @@ class _SubscriptionManagementPageState
                                             .textTheme
                                             .bodySmall
                                             ?.copyWith(
-                                          color: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.color
-                                              ?.withValues(alpha: 0.7),
-                                        ),
+                                              color: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.color
+                                                  ?.withOpacity(0.7),
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -902,11 +899,11 @@ class _SubscriptionManagementPageState
                                 plan.formattedAmount,
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primary,
-                                ),
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
                               ),
                               Text(
                                 plan.formattedInterval,
@@ -923,7 +920,7 @@ class _SubscriptionManagementPageState
 
                       // Features
                       ...plan.features.map(
-                            (feature) => Padding(
+                        (feature) => Padding(
                           padding: const EdgeInsets.only(bottom: 6),
                           child: Row(
                             children: [
@@ -942,72 +939,42 @@ class _SubscriptionManagementPageState
                       const SizedBox(height: 16),
 
                       // Action button
-                      if (isCurrentPlan)
-                      // For current plan, show a different styled button indicating it's the current plan
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: null, // Always disabled for current plan
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.surface,
-                              side: BorderSide(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.check_circle,
-                                  size: 18,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.secondary,
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _processingAction || isCurrentPlan
+                              ? null // Disable if current plan or processing
+                              : () => _changePlan(plan),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.onPrimary,
+                            disabledBackgroundColor: Theme.of(
+                              context,
+                            ).disabledColor,
+                          ),
+                          child: _processingAction && isSelectedPlan
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  isCurrentPlan
+                                      ? 'Current Plan'
+                                      : _currentSubscription != null &&
+                                            _currentSubscription!.isActive
+                                      ? 'Switch to This Plan'
+                                      : 'Subscribe Now',
                                 ),
-                                const SizedBox(width: 8),
-                                const Text('Current Active Plan'),
-                              ],
-                            ),
-                          ),
-                        )
-                      else
-                      // For other plans, show the regular action button
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _processingAction
-                                ? null // Disable if processing
-                                : () => _changePlan(plan),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.primary,
-                              foregroundColor: Theme.of(
-                                context,
-                              ).colorScheme.onPrimary,
-                              disabledBackgroundColor: Theme.of(
-                                context,
-                              ).disabledColor,
-                            ),
-                            child: _processingAction && isSelectedPlan
-                                ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                                : Text(
-                              _currentSubscription != null &&
-                                  _currentSubscription!.isActive
-                                  ? 'Switch to This Plan'
-                                  : 'Subscribe Now',
-                            ),
-                          ),
                         ),
+                      ),
                     ],
                   ),
                 ),

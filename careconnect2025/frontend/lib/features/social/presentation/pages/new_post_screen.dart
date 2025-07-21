@@ -1,16 +1,10 @@
-import 'dart:io';
-import 'dart:convert';
-
-import 'package:care_connect_app/config/env_constant.dart';
-import 'package:care_connect_app/services/api_service.dart';
+import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:care_connect_app/services/api_service.dart';
+import 'package:care_connect_app/services/session_manager.dart';
 import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
-
-import '../model/post_with_comment_count_dto.dart';
 
 class NewPostScreen extends StatefulWidget {
   final int userId;
@@ -21,30 +15,9 @@ class NewPostScreen extends StatefulWidget {
 }
 
 class _NewPostScreenState extends State<NewPostScreen> {
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   final TextEditingController _contentController = TextEditingController();
   File? _selectedImage;
   bool isPosting = false;
-  int? _userId;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserId();
-  }
-
-  Future<void> _loadUserId() async {
-    final userIdString = await _secureStorage.read(key: 'userId');
-    if (userIdString != null) {
-      setState(() {
-        _userId = int.tryParse(userIdString);
-      });
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('User ID not found')));
-    }
-  }
 
   Future<void> pickImage() async {
     final result = await FilePicker.platform.pickFiles(type: FileType.image);
@@ -56,7 +29,6 @@ class _NewPostScreenState extends State<NewPostScreen> {
 
   Future<void> submitPost() async {
     final content = _contentController.text.trim();
-
     if (content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Post content cannot be empty')),
@@ -64,32 +36,17 @@ class _NewPostScreenState extends State<NewPostScreen> {
       return;
     }
 
-    if (_userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot post: user not logged in')),
-      );
-      return;
-    }
+    // Call restoreSession() here to ensure the session cookie is restored
+    final session = SessionManager();
+    await session.restoreSession(); // This will restore the session cookie
 
     setState(() => isPosting = true);
     try {
-      final uri = Uri.parse('${getBackendBaseUrl()}/v1/api/feed/create');
-      final headers = await ApiService.getAuthHeaders();
-
-      final request = http.MultipartRequest('POST', uri)
-        ..headers.addAll(headers)
-        ..fields['userId'] = _userId.toString()
-        ..fields['content'] = content;
-
-      if (_selectedImage != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'image',
-          _selectedImage!.path,
-        ));
-      }
-
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
+      final response = await ApiService.createPost(
+        widget.userId,
+        content,
+        _selectedImage,
+      );
 
       // Debugging lines
       print('Create post status: ${response.statusCode}');
@@ -98,19 +55,16 @@ class _NewPostScreenState extends State<NewPostScreen> {
       setState(() => isPosting = false);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final json = jsonDecode(response.body);
-        final newPost = PostWithCommentCountDto.fromJson(json);
-
         Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(
-          context
+          context,
         ).showSnackBar(SnackBar(content: Text('Error: ${response.body}')));
       }
     } catch (e) {
       setState(() => isPosting = false);
       ScaffoldMessenger.of(
-        context
+        context,
       ).showSnackBar(SnackBar(content: Text('Exception: ${e.toString()}')));
     }
   }

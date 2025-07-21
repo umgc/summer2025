@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../services/auth_service.dart';
+import '../../../../config/theme/app_theme.dart';
 
 class PasswordResetConfirmScreen extends StatefulWidget {
   final String token;
@@ -92,104 +93,146 @@ class _PasswordResetConfirmScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.backgroundPrimary,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        backgroundColor: AppTheme.primary,
+        foregroundColor: AppTheme.textLight,
+        elevation: 2,
+        title: const Text('Reset Password'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Text(
-              'Care Connect',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF003366), // Dark blue
-                shadows: [
-                  Shadow(
-                    offset: Offset(1, 1),
-                    blurRadius: 1,
-                    color: Colors.black26,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Closer Connections. Better Care',
-              style: TextStyle(fontSize: 14, color: Colors.black54),
-            ),
-            const SizedBox(height: 40),
-            const Text(
-              'Set New Password',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'New Password',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _confirmPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Confirm New Password',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (_error != null) ...[
-              Text(
-                _error!,
-                style: const TextStyle(color: Colors.red, fontSize: 14),
-              ),
-              const SizedBox(height: 8),
-            ],
-            if (_message != null) ...[
-              Text(
-                _message!,
-                style: const TextStyle(color: Colors.green, fontSize: 14),
-              ),
-              const SizedBox(height: 8),
-            ],
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0A2D6B), // Navy/dark blue
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 500),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Care Connect',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primary,
+                    shadows: const [
+                      Shadow(
+                        offset: Offset(1, 1),
+                        blurRadius: 1,
+                        color: Colors.black26,
+                      ),
+                    ],
                   ),
                 ),
-                onPressed: _isLoading ? null : _resetPassword,
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text(
-                        'Reset Password',
-                        style: TextStyle(fontSize: 16, color: Colors.white),
+                const SizedBox(height: 4),
+                Text(
+                  'Closer Connections. Better Care',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                Text(
+                  'Set New Password',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: AppTheme.inputDecoration('New Password'),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  obscureText: true,
+                  decoration: AppTheme.inputDecoration('Confirm New Password'),
+                ),
+                const SizedBox(height: 16),
+                if (_error != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.error.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppTheme.error.withOpacity(0.3),
                       ),
-              ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: AppTheme.error,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _error!,
+                            style: TextStyle(color: AppTheme.error),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                if (_message != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.success.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppTheme.success.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          color: AppTheme.success,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _message!,
+                            style: TextStyle(color: AppTheme.success),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: AppTheme.primaryButtonStyle,
+                    onPressed: _isLoading ? null : _resetPassword,
+                    child: _isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: AppTheme.textLight,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text('Reset Password'),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

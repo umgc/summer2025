@@ -213,15 +213,15 @@ class _LoginPageState extends State<LoginPage> {
                   TextFormField(
                     controller: _email,
                     decoration:
-                    AppTheme.inputDecoration(
-                      'Email',
-                      hint: 'Enter your email',
-                    ).copyWith(
-                      prefixIcon: Icon(
-                        Icons.email,
-                        color: AppTheme.primary,
-                      ),
-                    ),
+                        AppTheme.inputDecoration(
+                          'Email',
+                          hint: 'Enter your email',
+                        ).copyWith(
+                          prefixIcon: Icon(
+                            Icons.email,
+                            color: AppTheme.primary,
+                          ),
+                        ),
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 20),
@@ -229,25 +229,25 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _pwd,
                     obscureText: !_showPassword,
                     decoration:
-                    AppTheme.inputDecoration(
-                      'Password',
-                      hint: 'Enter your password',
-                    ).copyWith(
-                      prefixIcon: Icon(Icons.lock, color: AppTheme.primary),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _showPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                          color: AppTheme.primary,
+                        AppTheme.inputDecoration(
+                          'Password',
+                          hint: 'Enter your password',
+                        ).copyWith(
+                          prefixIcon: Icon(Icons.lock, color: AppTheme.primary),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _showPassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: AppTheme.primary,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _showPassword = !_showPassword;
+                              });
+                            },
+                          ),
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _showPassword = !_showPassword;
-                          });
-                        },
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 20),
                   if (_error != null) ...[
@@ -283,46 +283,46 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       child: _googleSignInBusy
                           ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.blue,
-                          strokeWidth: 2,
-                        ),
-                      )
-                          : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Google "G" logo representation
-                          Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'G',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue[600],
-                                ),
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.blue,
+                                strokeWidth: 2,
                               ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Google "G" logo representation
+                                Container(
+                                  width: 20,
+                                  height: 20,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      'G',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue[600],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Sign in with Google',
+                                  style: AppTheme.bodyMedium.copyWith(
+                                    color: Colors.grey[700],
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Sign in with Google',
-                            style: AppTheme.bodyMedium.copyWith(
-                              color: Colors.grey[700],
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                   const SizedBox(height: 20),

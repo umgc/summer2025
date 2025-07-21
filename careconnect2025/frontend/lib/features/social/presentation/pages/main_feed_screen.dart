@@ -1,22 +1,17 @@
+import 'package:flutter/material.dart';
 import 'dart:convert';
-
-import 'package:care_connect_app/config/env_constant.dart';
 import 'package:care_connect_app/services/api_service.dart';
+import 'package:http/http.dart' as http;
 import 'package:care_connect_app/shared/widgets/user_avatar.dart';
+import 'package:care_connect_app/services/session_manager.dart';
 import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:care_connect_app/config/theme/app_theme.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
-
-import '../model/post_with_comment_count_dto.dart';
-
-import 'chat_inbox_screen.dart';
+import 'search_user_screen.dart';
 import 'comment_screen.dart';
 import 'friend_requests_screen.dart';
 import 'new_post_screen.dart';
-import 'search_user_screen.dart';
+import 'package:care_connect_app/config/env_constant.dart';
 
 class MainFeedScreen extends StatefulWidget {
   final int userId;
@@ -27,39 +22,24 @@ class MainFeedScreen extends StatefulWidget {
 }
 
 class _MainFeedScreenState extends State<MainFeedScreen> {
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-  int? _userId;
-
-  List<PostWithCommentCountDto> posts = [];
+  List<dynamic> posts = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadUserIdAndFetchFeed();
-  }
-
-  Future<void> _loadUserIdAndFetchFeed() async {
-    final userIdStr = await _secureStorage.read(key: 'userId');
-    if (userIdStr != null) {
-      setState(() => _userId = int.tryParse(userIdStr));
-      await fetchFeed();
-    } else {
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('User ID not found')));
-    }
+    fetchFeed();
   }
 
   Future<void> fetchFeed() async {
     setState(() => isLoading = true);
+    final session = SessionManager();
+    await session.restoreSession();
 
     try {
-      final headers = await ApiService.getAuthHeaders();
-      final response = await http.get(
-        Uri.parse('${ApiConstants.feed}/friends-feed'),
-        headers: headers,
+      print('Headers before request: ${session.headers}');
+      final http.Response response = await session.get(
+        '${ApiConstants.feed}/all',
       );
 
       print('Feed status: ${response.statusCode}');
@@ -68,13 +48,14 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          posts = data
-              .map((json) => PostWithCommentCountDto.fromJson(json))
-              .toList();
+          posts = data;
           isLoading = false;
         });
       } else {
-        throw Exception('Failed to load feed');
+        setState(() => isLoading = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to load feed')));
       }
     } catch (e) {
       setState(() => isLoading = false);
@@ -84,22 +65,25 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
     }
   }
 
-  Widget buildPostCard(PostWithCommentCountDto post) {
-    final String? imageUrl = post.imageUrl;
-    final String backendBaseUrl = getBackendBaseUrl();
+  Widget buildPostCard(Map<String, dynamic> post) {
+    final imageUrl = post['imageUrl'];
+    final String backendBaseUrl =
+        getBackendBaseUrl(); // Change for emulator if needed!
     final resolvedUrl = imageUrl != null && imageUrl.isNotEmpty
         ? '$backendBaseUrl$imageUrl'
         : null;
 
     return InkWell(
       onTap: () {
+        if (post['id'] != null) {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => CommentScreen(postId: post.id),
+              builder: (_) => CommentScreen(postId: post['id']),
             ),
           );
-          },
+        }
+      },
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         elevation: 2,
@@ -111,24 +95,24 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
             children: [
               Row(
                 children: [
-                  UserAvatar(imageUrl: null, radius: 20),
+                  UserAvatar(imageUrl: post['profileImageUrl'], radius: 20),
                   const SizedBox(width: 10),
                   Text(
-                    post.username,
-                    style: const TextStyle(
+                    post['username'] ?? 'Unknown',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
                   ),
                   const Spacer(),
                   Text(
-                    post.createdAt.toIso8601String().split('T').first,
+                    post['timestamp'] ?? '',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
-              Text(post.content),
+              Text(post['content'] ?? ''),
               if (resolvedUrl != null) ...[
                 const SizedBox(height: 10),
                 ClipRRect(
@@ -145,15 +129,17 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
               const Divider(height: 1),
               TextButton.icon(
                 onPressed: () {
+                  if (post['id'] != null) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => CommentScreen(postId: post.id),
+                        builder: (_) => CommentScreen(postId: post['id']),
                       ),
                     );
+                  }
                 },
                 icon: const Icon(Icons.comment, size: 18),
-                label: Text('${post.commentCount} comments'),
+                label: Text('${post['commentCount'] ?? 0} comments'),
               ),
             ],
           ),
@@ -174,17 +160,17 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-            onRefresh: fetchFeed,
-            child: posts.isEmpty
-                ? const Center(child: Text('No posts yet. Pull to refresh.'))
-                : ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: posts.length,
-              itemBuilder: (context, index) {
-                return buildPostCard(posts[index]);
-              },
+              onRefresh: fetchFeed,
+              child: posts.isEmpty
+                  ? const Center(child: Text('No posts yet. Pull to refresh.'))
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: posts.length,
+                      itemBuilder: (context, index) {
+                        return buildPostCard(posts[index]);
+                      },
+                    ),
             ),
-          ),
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         notchMargin: 8,
@@ -201,16 +187,16 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                   children: [
                     IconButton(
                       icon: const Icon(
-                          Icons.person_search,
-                          color: Colors.white
+                        Icons.person_search,
+                        color: Colors.white,
                       ),
                       tooltip: 'Add Friend',
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) =>
-                                  SearchUserScreen(userId: widget.userId)
+                            builder: (_) =>
+                                SearchUserScreen(userId: widget.userId),
                           ),
                         );
                       },
@@ -222,16 +208,16 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) =>
-                                  FriendRequestsScreen(userId: widget.userId)
+                            builder: (_) =>
+                                FriendRequestsScreen(userId: widget.userId),
                           ),
                         );
                       },
                     ),
                     IconButton(
                       icon: const Icon(
-                          Icons.calendar_today,
-                          color: Colors.white
+                        Icons.calendar_today,
+                        color: Colors.white,
                       ),
                       tooltip: 'Calendar',
                       onPressed: () {
@@ -242,10 +228,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                       icon: const Icon(Icons.chat, color: Colors.white),
                       tooltip: 'Messages',
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => ChatInboxScreen()),
-                        );
+                        // TODO
                       },
                     ),
                     IconButton(
@@ -259,8 +242,8 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                         final success = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) =>
-                                  NewPostScreen(userId: widget.userId)
+                            builder: (_) =>
+                                NewPostScreen(userId: widget.userId),
                           ),
                         );
                         if (success == true) fetchFeed();

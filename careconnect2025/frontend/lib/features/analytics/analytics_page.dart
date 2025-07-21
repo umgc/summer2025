@@ -15,8 +15,8 @@ import 'package:care_connect_app/widgets/responsive_container.dart';
 import 'models/vital_model.dart';
 import 'models/dashboard_analytics_model.dart';
 import 'web_utils.dart'
-if (dart.library.html) 'web_utils_web.dart'
-as web_utils;
+    if (dart.library.html) 'web_utils_web.dart'
+    as web_utils;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../../../widgets/ai_chat_improved.dart';
@@ -123,9 +123,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       final vitalsResp = await http
           .get(vitalsUrl, headers: authHeaders)
           .timeout(
-        const Duration(seconds: 180),
-        onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
-      );
+            const Duration(seconds: 180),
+            onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
+          );
       final dashboardUrl = Uri.parse(
         '${ApiConstants.baseUrl}analytics/dashboard?patientId=${widget.patientId}&days=$selectedDays',
       );
@@ -134,9 +134,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       final dashboardResp = await http
           .get(dashboardUrl, headers: authHeaders)
           .timeout(
-        const Duration(seconds: 180),
-        onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
-      );
+            const Duration(seconds: 180),
+            onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
+          );
 
       // Log response statuses for debugging
       print('🔍 Vitals API response status: ${vitalsResp.statusCode}');
@@ -201,7 +201,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
         setState(() {
           error =
-          'Vitals Error: $vitalsErrorMessage\nDashboard Error: $dashboardErrorMessage';
+              'Vitals Error: $vitalsErrorMessage\nDashboard Error: $dashboardErrorMessage';
           loading = false;
         });
       }
@@ -420,7 +420,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                   ),
                   // Data rows
                   ...vitals.map(
-                        (vital) => pw.TableRow(
+                    (vital) => pw.TableRow(
                       children: [
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
@@ -491,18 +491,18 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       final to = vitals.isNotEmpty ? vitals.last.timestamp : DateTime.now();
       final fromStr = Uri.encodeComponent(from.toIso8601String());
       final toStr = Uri.encodeComponent(to.toIso8601String());
-
+      
       final url = '${ApiConstants.baseUrl}analytics/export/$type?patientId=${widget.patientId}&from=$fromStr&to=$toStr';
-
+      
       final response = await http.get(
         Uri.parse(url),
         headers: authHeaders,
       );
-
+      
       if (response.statusCode == 200) {
         final bytes = response.bodyBytes;
         final fileName = 'patient_${widget.patientId}_analytics_${DateTime.now().millisecondsSinceEpoch}.$type';
-
+        
         if (kIsWeb) {
           web_utils.downloadFile(fileName, bytes);
         }
@@ -639,8 +639,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
             colors: [
-              AppTheme.success.withValues(alpha: 0.05),
-              AppTheme.success.withValues(alpha: 0.15),
+              AppTheme.success.withOpacity(0.05),
+              AppTheme.success.withOpacity(0.15),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -709,11 +709,11 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                     const SizedBox(height: 6),
                     Text(
                       '• Health trends and patterns interpretation\n'
-                          '• Whether values are within normal ranges\n'
-                          '• Potential health concerns or improvements\n'
-                          '• Medication adherence insights\n'
-                          '• Lifestyle and care recommendations\n'
-                          '• Overall health progress assessment',
+                      '• Whether values are within normal ranges\n'
+                      '• Potential health concerns or improvements\n'
+                      '• Medication adherence insights\n'
+                      '• Lifestyle and care recommendations\n'
+                      '• Overall health progress assessment',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade700,
@@ -855,13 +855,13 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }
 
   Widget buildChart(
-      String title,
-      List<FlSpot> spots, {
-        double minY = 0,
-        double maxY = 200,
-        Color? primaryColor,
-        String? unit,
-      }) {
+    String title,
+    List<FlSpot> spots, {
+    double minY = 0,
+    double maxY = 200,
+    Color? primaryColor,
+    String? unit,
+  }) {
     final displaySpots = spots.isEmpty ? [FlSpot(0, 0)] : spots;
     final bool hasData = spots.isNotEmpty;
 
@@ -921,7 +921,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                         unit,
                         style: TextStyle(
                           fontSize:
-                          14, // Increased from 12 for better readability
+                              14, // Increased from 12 for better readability
                           color: primaryColor ?? ColorUtils.primary,
                           fontWeight: FontWeight.w500,
                         ),
@@ -1116,11 +1116,11 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }
 
   Widget _buildSummaryItem(
-      String title,
-      String value,
-      IconData icon, {
-        bool hasData = true,
-      }) {
+    String title,
+    String value,
+    IconData icon, {
+    bool hasData = true,
+  }) {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Define sizes based on constraints
@@ -1446,7 +1446,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                                CrossAxisAlignment.start,
                                             children: [
                                               const Text(
                                                 'Health Summary',
@@ -1468,7 +1468,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                                                         fontSize: 13,
                                                       ),
                                                       overflow:
-                                                      TextOverflow.ellipsis,
+                                                          TextOverflow.ellipsis,
                                                       maxLines: 1,
                                                     );
                                                   } else {
@@ -1479,7 +1479,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                                                         fontSize: 14,
                                                       ),
                                                       overflow:
-                                                      TextOverflow.ellipsis,
+                                                          TextOverflow.ellipsis,
                                                       maxLines: 2,
                                                     );
                                                   }
@@ -1606,7 +1606,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             bottom: 0,
             right: 0,
             width:
-            MediaQuery.of(context).size.width *
+                MediaQuery.of(context).size.width *
                 0.4, // Constrain width to 40% of screen
             child: AIChat(
               role: 'analytics',

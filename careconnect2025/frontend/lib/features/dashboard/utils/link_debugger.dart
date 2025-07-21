@@ -8,9 +8,9 @@ import 'package:care_connect_app/services/api_service.dart';
 /// Add this helper class to debug the linkId extraction
 class LinkDebugger {
   static Future<void> debugLinkIdForPatient(
-      BuildContext context,
-      Patient patient,
-      ) async {
+    BuildContext context,
+    Patient patient,
+  ) async {
     try {
       print('');
       print('🔍 ----- LINK DEBUGGER STARTING -----');
@@ -56,18 +56,18 @@ class LinkDebugger {
     print(
       '🔍 Searching through ${items.length} items for patient ID: $patientId',
     );
-
+    
     int mapItems = 0;
     int itemsWithId = 0;
     int itemsWithPatientField = 0;
-
+    
     for (final item in items) {
       if (item is! Map<String, dynamic>) continue;
       mapItems++;
-
+      
       if (item.containsKey('id')) itemsWithId++;
       if (item.containsKey('patient')) itemsWithPatientField++;
-
+      
       // Direct patient structure
       if (item.containsKey('id') && item['id'] == patientId) {
         print('✅ Found patient with direct structure');
@@ -95,7 +95,7 @@ class LinkDebugger {
               final linkData = item['link'] as Map<String, dynamic>;
               print('🔑 Link keys: ${linkData.keys.toList()}');
               _checkForLinkIdInLink(linkData);
-
+              
               // WORKAROUND: Try using the ID directly for testing
               if (linkData.containsKey('id')) {
                 print('💡 RECOMMENDED: Use this ID for relationship operations: ${linkData['id']}');
@@ -113,7 +113,7 @@ class LinkDebugger {
         }
       }
     }
-
+    
     print('⚠️ Patient ID $patientId not found in API response');
     print('📊 Summary: Searched through ${items.length} items');
     print('📊 Found $mapItems maps, $itemsWithId with ID field, $itemsWithPatientField with patient field');
@@ -143,26 +143,26 @@ class LinkDebugger {
     }
 
     print('🔎 Examining link data for ID field...');
-
+    
     // Check for ID field - many possible formats
     int? foundId;
     String? idSource;
-
+    
     if (linkData.containsKey('id')) {
-      foundId = linkData['id'] is int
-          ? linkData['id']
+      foundId = linkData['id'] is int 
+          ? linkData['id'] 
           : int.tryParse(linkData['id'].toString());
       idSource = 'link.id';
       print('✅ linkId found in link.id: ${linkData['id']} (${linkData['id'].runtimeType})');
     } else if (linkData.containsKey('linkId')) {
-      foundId = linkData['linkId'] is int
-          ? linkData['linkId']
+      foundId = linkData['linkId'] is int 
+          ? linkData['linkId'] 
           : int.tryParse(linkData['linkId'].toString());
       idSource = 'link.linkId';
       print('✅ linkId found in link.linkId: ${linkData['linkId']} (${linkData['linkId'].runtimeType})');
     } else if (linkData.containsKey('relationshipId')) {
-      foundId = linkData['relationshipId'] is int
-          ? linkData['relationshipId']
+      foundId = linkData['relationshipId'] is int 
+          ? linkData['relationshipId'] 
           : int.tryParse(linkData['relationshipId'].toString());
       idSource = 'link.relationshipId';
       print('✅ linkId found in link.relationshipId: ${linkData['relationshipId']} (${linkData['relationshipId'].runtimeType})');
@@ -171,12 +171,12 @@ class LinkDebugger {
         '⚠️ No linkId found in link data. Available keys: ${linkData.keys.toList()}',
       );
     }
-
+    
     // Check for status field - many possible formats
     print('🔎 Examining link data for status field...');
     String? foundStatus;
     String? statusSource;
-
+    
     if (linkData.containsKey('status')) {
       foundStatus = linkData['status']?.toString();
       statusSource = 'link.status';
@@ -194,7 +194,7 @@ class LinkDebugger {
     } else {
       print('⚠️ No status found in link data');
     }
-
+    
     // Summary
     if (foundId != null && foundStatus != null) {
       print('');
@@ -205,7 +205,7 @@ class LinkDebugger {
       print('');
     }
   }
-
+  
   /// Provides actionable recommendations to fix the linkId issue
   static void suggestFixes(BuildContext context) {
     print('');

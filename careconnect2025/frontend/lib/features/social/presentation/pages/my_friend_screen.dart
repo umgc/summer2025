@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 
 import 'package:care_connect_app/config/env_constant.dart';
 import 'package:care_connect_app/services/api_service.dart';
@@ -67,7 +69,8 @@ class _MyFriendsScreenState extends State<MyFriendsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("My Friends")),
+      appBar: AppBarHelper.createAppBar(context, title: 'My Friends'),
+      drawer: CommonDrawer(currentRoute: '/my_friends'),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : friends.isEmpty

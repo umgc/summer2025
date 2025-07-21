@@ -4,6 +4,8 @@ import 'package:confetti/confetti.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'achievement_detail_screen.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
 
 class GamificationScreen extends StatefulWidget {
   const GamificationScreen({super.key});
@@ -86,15 +88,12 @@ class _GamificationScreenState extends State<GamificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue.shade900,
-        title: const Text(
-          'Care Connect',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        actions: [
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Achievements',
+        additionalActions: [
           IconButton(
-            icon: const Icon(Icons.emoji_events, color: Colors.white),
+            icon: const Icon(Icons.emoji_events),
             onPressed: () {
               Navigator.push(
                 context,
@@ -107,6 +106,7 @@ class _GamificationScreenState extends State<GamificationScreen> {
           ),
         ],
       ),
+      drawer: const CommonDrawer(currentRoute: '/gamification'),
       backgroundColor: Colors.white,
       body: Stack(
         children: [
@@ -221,9 +221,9 @@ class _GamificationScreenState extends State<GamificationScreen> {
             Expanded(
               child: Text(
                 achievement['title'] ?? 'Unnamed Achievement',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.w500,
                 ),
               ),

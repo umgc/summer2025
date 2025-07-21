@@ -1,14 +1,10 @@
-import 'dart:convert';
-
 import 'package:care_connect_app/config/env_constant.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:care_connect_app/features/social/presentation/pages/my_friend_screen.dart';
-import 'package:care_connect_app/services/api_service.dart';
 import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
-import '../model/friend_request_dto.dart';
 
 class FriendRequestsScreen extends StatefulWidget {
   final int userId;
@@ -19,67 +15,44 @@ class FriendRequestsScreen extends StatefulWidget {
 }
 
 class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-  int? _userId;
-
-  List<FriendRequestDto> requests = [];
+  List<dynamic> requests = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadUserIdAndRequests();
-  }
-
-  Future<void> _loadUserIdAndRequests() async {
-    final userIdString = await _secureStorage.read(
-      key: 'userId',
-    ); //Read from secure storage
-    if (userIdString != null) {
-      setState(
-        () => _userId = int.tryParse(userIdString),
-      ); //Parse and save to state
-      fetchRequests(); //Continue fetching now that userId is available
-    } else {
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('User ID not found')));
-    }
+    fetchRequests();
   }
 
   Future<void> fetchRequests() async {
-    if (_userId == null) return;
-
     setState(() => isLoading = true);
     final url = Uri.parse(
-      '${getBackendBaseUrl()}/v1/api/friends/requests/$_userId',
+      '${getBackendBaseUrl()}/api/friends/requests/${widget.userId}',
     );
-    final headers = await ApiService.getAuthHeaders();
-    final response = await http.get(url, headers: headers);
+    final response = await http
+        .get(url)
+        .timeout(
+          const Duration(seconds: 180),
+          onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
+        );
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
       setState(() {
-        requests = data.map((json) => FriendRequestDto.fromJson(json)).toList();
+        requests = jsonDecode(response.body);
         isLoading = false;
       });
     } else {
       setState(() => isLoading = false);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to load requests')));
+      ).showSnackBar(SnackBar(content: Text('Failed to load requests')));
     }
   }
 
   Future<void> acceptRequest(int requestId) async {
-    final url = Uri.parse('${getBackendBaseUrl()}/v1/api/friends/accept');
-    final headers = await ApiService.getAuthHeaders();
-    headers['Content-Type'] = 'application/json';
-
     final response = await http.post(
-      url,
-      headers: headers,
+      Uri.parse('${getBackendBaseUrl()}/api/friends/accept'),
+      headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'requestId': requestId}),
     );
 
@@ -96,13 +69,9 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
   }
 
   Future<void> rejectRequest(int requestId) async {
-    final url = Uri.parse('${getBackendBaseUrl()}/v1/api/friends/reject');
-    final headers = await ApiService.getAuthHeaders();
-    headers['Content-Type'] = 'application/json';
-
     final response = await http.post(
-      url,
-      headers: headers,
+      Uri.parse('${getBackendBaseUrl()}/api/friends/reject'),
+      headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'requestId': requestId}),
     );
 
@@ -131,7 +100,9 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => MyFriendsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => MyFriendsScreen(userId: widget.userId),
+                ),
               );
             },
           ),
@@ -147,13 +118,13 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
               itemBuilder: (context, index) {
                 final req = requests[index];
                 return ListTile(
-                  title: Text(req.fromUsername),
-                  subtitle: Text('Request ID: ${req.id}'),
+                  title: Text(req['from_username'] ?? 'Unknown'),
+                  subtitle: Text('Request ID: ${req['id']}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       ElevatedButton(
-                        onPressed: () => acceptRequest(req.id),
+                        onPressed: () => acceptRequest(req['id']),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                         ),
@@ -161,7 +132,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: () => rejectRequest(req.id),
+                        onPressed: () => rejectRequest(req['id']),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                         ),

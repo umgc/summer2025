@@ -37,7 +37,7 @@ class FamilyMemberCard extends StatelessWidget {
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
+          backgroundColor: colorScheme.primary.withOpacity(0.1),
           child: Text(
             firstName.isNotEmpty ? firstName[0].toUpperCase() : 'F',
             style: TextStyle(
@@ -109,10 +109,10 @@ class FamilyMemberCard extends StatelessWidget {
           children: [
             if (email.isNotEmpty)
               Text('Email: $email', style: textTheme.bodySmall),
-              Text(
-                'Last Interaction: $lastInteraction',
-                style: textTheme.bodySmall,
-              ),
+            Text(
+              'Last Interaction: $lastInteraction',
+              style: textTheme.bodySmall,
+            ),
           ],
         ),
         trailing: PopupMenuButton<String>(

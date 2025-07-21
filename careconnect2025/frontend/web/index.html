@@ -28,7 +28,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="CareConnect">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
+  
   <!-- Add to homescreen for Safari on iOS -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -36,7 +36,7 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
-
+  
   <!-- Improved web rendering -->
   <style>
     body {
@@ -48,7 +48,7 @@
       overflow: hidden;
       position: fixed;
     }
-
+    
     .loading {
       display: flex;
       justify-content: center;
@@ -61,13 +61,13 @@
       left: 0;
       z-index: 999;
     }
-
+    
     .loading img {
       width: 120px;
       height: 120px;
       animation: pulse 1.5s infinite ease-in-out;
     }
-
+    
     @keyframes pulse {
       0% { transform: scale(0.95); opacity: 0.7; }
       50% { transform: scale(1.05); opacity: 1; }
@@ -79,7 +79,7 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
-
+    
     /* Better touch handling for mobile web */
     * {
       -webkit-tap-highlight-color: transparent;
@@ -95,17 +95,17 @@
   <div class="loading" id="loading">
     <img src="icons/Icon-192.png" alt="Loading CareConnect"/>
   </div>
-
+  
   <script>
     // Add platform detection classes to the body element
     function detectPlatform() {
       var userAgent = navigator.userAgent || navigator.vendor || window.opera;
       var body = document.body;
-
+      
       // Detect iOS
       if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
         body.classList.add('ios-device');
-      }
+      } 
       // Detect Android
       else if (/android/i.test(userAgent)) {
         body.classList.add('android-device');
@@ -118,7 +118,7 @@
       else {
         body.classList.add('mobile-browser');
       }
-
+      
       // Detect touch capability
       if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
         body.classList.add('touch-device');
@@ -126,10 +126,10 @@
         body.classList.add('no-touch-device');
       }
     }
-
+    
     // Run platform detection as soon as possible
     detectPlatform();
-
+    
     // Hide loading indicator once Flutter is initialized
     window.addEventListener('flutter-first-frame', function() {
       var loading = document.getElementById('loading');
@@ -138,7 +138,7 @@
       }
     });
   </script>
-
+  
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

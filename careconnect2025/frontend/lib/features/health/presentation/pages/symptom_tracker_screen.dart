@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 
 class SymptomTrackerScreen extends StatefulWidget {
   const SymptomTrackerScreen({super.key});
@@ -18,7 +20,7 @@ class _SymptomTrackerScreenState extends State<SymptomTrackerScreen> {
     'Headache',
     'Nausea',
     'Sore throat',
-    'Shortness of breath'
+    'Shortness of breath',
   ];
 
   final List<SymptomEntry> history = [];
@@ -64,8 +66,10 @@ class _SymptomTrackerScreenState extends State<SymptomTrackerScreen> {
       // Placeholder for real alert system
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(
-                'Alert: Symptom "$symptom" is severe and caregiver has been notified.')),
+          content: Text(
+            'Alert: Symptom "$symptom" is severe and caregiver has been notified.',
+          ),
+        ),
       );
     }
   }
@@ -84,18 +88,21 @@ class _SymptomTrackerScreenState extends State<SymptomTrackerScreen> {
     );
     if (time == null) return;
     setState(() {
-      occurrenceTime =
-          DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      occurrenceTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Symptom Tracker'),
-        backgroundColor: Colors.blue.shade900,
-      ),
+      appBar: AppBarHelper.createAppBar(context, title: 'Symptom Tracker'),
+      drawer: CommonDrawer(currentRoute: '/symptom_tracker'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -107,10 +114,7 @@ class _SymptomTrackerScreenState extends State<SymptomTrackerScreen> {
               hint: const Text('Choose a symptom'),
               isExpanded: true,
               items: defaultSymptoms.map((symptom) {
-                return DropdownMenuItem(
-                  value: symptom,
-                  child: Text(symptom),
-                );
+                return DropdownMenuItem(value: symptom, child: Text(symptom));
               }).toList(),
               onChanged: (value) => setState(() => selectedSymptom = value),
             ),
@@ -118,8 +122,9 @@ class _SymptomTrackerScreenState extends State<SymptomTrackerScreen> {
             const Text('Or enter a custom symptom:'),
             TextField(
               controller: customSymptomController,
-              decoration:
-                  const InputDecoration(hintText: 'e.g. Chest tightness'),
+              decoration: const InputDecoration(
+                hintText: 'e.g. Chest tightness',
+              ),
             ),
             const SizedBox(height: 16),
             const Text('Severity (1 = mild, 10 = severe):'),
@@ -155,20 +160,25 @@ class _SymptomTrackerScreenState extends State<SymptomTrackerScreen> {
               child: const Text('Submit Symptom Log'),
             ),
             const Divider(height: 32),
-            const Text('Symptom History:',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Symptom History:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            ...history.map((entry) => Card(
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: ListTile(
-                    leading: entry.image != null
-                        ? Image.file(entry.image!, width: 50, fit: BoxFit.cover)
-                        : const Icon(Icons.local_hospital),
-                    title: Text(entry.symptom),
-                    subtitle: Text(
-                        'Severity: ${entry.severity.toInt()}\nTime: ${entry.timestamp.month}/${entry.timestamp.day}/${entry.timestamp.year} @ ${entry.timestamp.hour}:${entry.timestamp.minute.toString().padLeft(2, '0')}'),
+            ...history.map(
+              (entry) => Card(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: ListTile(
+                  leading: entry.image != null
+                      ? Image.file(entry.image!, width: 50, fit: BoxFit.cover)
+                      : const Icon(Icons.local_hospital),
+                  title: Text(entry.symptom),
+                  subtitle: Text(
+                    'Severity: ${entry.severity.toInt()}\nTime: ${entry.timestamp.month}/${entry.timestamp.day}/${entry.timestamp.year} @ ${entry.timestamp.hour}:${entry.timestamp.minute.toString().padLeft(2, '0')}',
                   ),
-                )),
+                ),
+              ),
+            ),
           ],
         ),
       ),

@@ -18,13 +18,9 @@ class CaregiverGamificationScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Patient Engagement Summary'),
-        backgroundColor: Colors.blue.shade900,
-        iconTheme: const IconThemeData(color: Colors.white),
-        titleTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        iconTheme: Theme.of(context).appBarTheme.iconTheme,
+        titleTextStyle: Theme.of(context).appBarTheme.titleTextStyle,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -32,13 +28,18 @@ class CaregiverGamificationScreen extends StatelessWidget {
           children: [
             Text(
               'Patient: ${patientGamificationData['name']}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Card(
               elevation: 2,
               child: ListTile(
-                leading: const Icon(Icons.star, color: Colors.amber),
+                leading: Icon(
+                  Icons.star,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
                 title: Text('XP: ${patientGamificationData['xp']}'),
                 subtitle: Text('Level: ${patientGamificationData['level']}'),
               ),
@@ -47,26 +48,37 @@ class CaregiverGamificationScreen extends StatelessWidget {
             Card(
               elevation: 2,
               child: ListTile(
-                leading: const Icon(Icons.local_fire_department, color: Colors.orange),
+                leading: Icon(
+                  Icons.local_fire_department,
+                  color: Theme.of(context).colorScheme.error,
+                ),
                 title: const Text('Current Streak'),
                 subtitle: Text('${patientGamificationData['streak']} days'),
               ),
             ),
             const SizedBox(height: 20),
-            const Text('Earned Badges', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const Text(
+              'Earned Badges',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 10,
-              children: (patientGamificationData['badges'] as List<String>).map((badge) {
-                return Chip(
-                  label: Text(badge),
-                  avatar: const Icon(Icons.emoji_events, color: Colors.amber),
-                  backgroundColor: Colors.blue.shade50,
-                );
-              }).toList(),
+              children: (patientGamificationData['badges'] as List<String>).map(
+                (badge) {
+                  return Chip(
+                    label: Text(badge),
+                    avatar: const Icon(Icons.emoji_events, color: Colors.amber),
+                    backgroundColor: Colors.blue.shade50,
+                  );
+                },
+              ).toList(),
             ),
             const SizedBox(height: 20),
-            const Text('Engagement Overview (Chart Placeholder)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const Text(
+              'Engagement Overview (Chart Placeholder)',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 8),
             Container(
               height: 150,

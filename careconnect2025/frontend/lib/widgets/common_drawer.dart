@@ -5,132 +5,62 @@ import '../providers/user_provider.dart';
 import '../providers/theme_provider.dart';
 import '../config/router/app_router.dart';
 import 'theme_toggle_switch.dart';
-import '../services/api_service.dart';
 
-class CommonDrawer extends StatefulWidget {
+class CommonDrawer extends StatelessWidget {
   final String currentRoute;
 
   const CommonDrawer({Key? key, required this.currentRoute}) : super(key: key);
 
   @override
-  State<CommonDrawer> createState() => _CommonDrawerState();
-}
-
-class _CommonDrawerState extends State<CommonDrawer> {
-  String? _profileImageUrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadProfilePicture();
-  }
-
-  Future<void> _loadProfilePicture() async {
-    try {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      final userId = userProvider.user?.id;
-
-      if (userId != null) {
-        final userRole = userProvider.user?.role;
-        final imageUrl = await ApiService.getUserProfilePictureUrl(
-          userId,
-          userRole,
-        );
-        if (mounted) {
-          setState(() {
-            _profileImageUrl = imageUrl;
-          });
-        }
-      }
-    } catch (e) {
-      print('Error loading profile picture: $e');
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider.user;
+    final isPatient = user?.role?.toUpperCase() == 'PATIENT';
     final isCaregiver =
-        user != null &&
-        (user.role.toUpperCase() == 'CAREGIVER' ||
-            user.role.toUpperCase() == 'FAMILY_LINK' ||
-            user.role.toUpperCase() == 'ADMIN');
+        user?.role?.toUpperCase() == 'CAREGIVER' ||
+        user?.role?.toUpperCase() == 'FAMILY_LINK' ||
+        user?.role?.toUpperCase() == 'ADMIN';
 
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/profile-settings');
-            },
-            child: DrawerHeader(
-              decoration: BoxDecoration(
-                color: Theme.of(context).appBarTheme.backgroundColor,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Theme.of(context).colorScheme.onPrimary,
-                    backgroundImage: _profileImageUrl != null
-                        ? NetworkImage(_profileImageUrl!) as ImageProvider
-                        : null,
-                    child: _profileImageUrl == null
-                        ? Icon(
-                            Icons.person,
-                            size: 30,
-                            color: Theme.of(context).primaryColor,
-                          )
-                        : null,
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Theme.of(context).appBarTheme.backgroundColor,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: Theme.of(context).colorScheme.onPrimary,
+                  child: Icon(
+                    Icons.person,
+                    size: 30,
+                    color: Theme.of(context).primaryColor,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    user?.name ?? 'User',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color:
-                          Theme.of(context).appBarTheme.foregroundColor ??
-                          Theme.of(context).colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  user?.name ?? 'User',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color:
+                        Theme.of(context).appBarTheme.foregroundColor ??
+                        Theme.of(context).colorScheme.onPrimary,
+                    fontWeight: FontWeight.bold,
                   ),
-                  Row(
-                    children: [
-                      Text(
-                        user?.role ?? '',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color:
-                              (Theme.of(context).appBarTheme.foregroundColor ??
-                                      Theme.of(context).colorScheme.onPrimary)
-                                  .withOpacity(0.7),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.edit,
-                        size: 14,
-                        color:
-                            (Theme.of(context).appBarTheme.foregroundColor ??
-                                    Theme.of(context).colorScheme.onPrimary)
-                                .withOpacity(0.7),
-                      ),
-                      Text(
-                        ' Edit Profile',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color:
-                              (Theme.of(context).appBarTheme.foregroundColor ??
-                                      Theme.of(context).colorScheme.onPrimary)
-                                  .withOpacity(0.9),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                ),
+                Text(
+                  user?.role ?? '',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color:
+                        (Theme.of(context).appBarTheme.foregroundColor ??
+                                Theme.of(context).colorScheme.onPrimary)
+                            .withOpacity(0.7),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
 
@@ -139,7 +69,7 @@ class _CommonDrawerState extends State<CommonDrawer> {
             context,
             icon: Icons.dashboard,
             title: 'Dashboard',
-            isActive: widget.currentRoute == '/dashboard',
+            isActive: currentRoute == '/dashboard',
             onTap: () {
               Navigator.pop(context);
               navigateToDashboard(context);
@@ -153,14 +83,14 @@ class _CommonDrawerState extends State<CommonDrawer> {
               icon: Icons.person_add,
               title: 'Add Patient',
               route: '/add-patient',
-              isActive: widget.currentRoute == '/add-patient',
+              isActive: currentRoute == '/add-patient',
             ),
             _buildDrawerItem(
               context,
               icon: Icons.payment,
               title: 'Subscription Management',
               route: '/select-package',
-              isActive: widget.currentRoute == '/select-package',
+              isActive: currentRoute == '/select-package',
             ),
           ],
 
@@ -170,16 +100,7 @@ class _CommonDrawerState extends State<CommonDrawer> {
             icon: Icons.emoji_events,
             title: 'Gamification',
             route: '/gamification',
-            isActive: widget.currentRoute == '/gamification',
-          ),
-
-          // Healthcare Notes
-          _buildDrawerItem(
-            context,
-            icon: Icons.notes,
-            title: 'Healthcare Notes',
-            route: '/healthcare-notes',
-            isActive: widget.currentRoute == '/healthcare-notes',
+            isActive: currentRoute == '/gamification',
           ),
 
           _buildDrawerItem(
@@ -187,7 +108,7 @@ class _CommonDrawerState extends State<CommonDrawer> {
             icon: Icons.people_alt,
             title: 'Social Feed',
             route: '/social-feed',
-            isActive: widget.currentRoute == '/social-feed',
+            isActive: currentRoute == '/social-feed',
             onTap: () {
               Navigator.pop(context);
               final userId = user?.id ?? 1;
@@ -201,7 +122,7 @@ class _CommonDrawerState extends State<CommonDrawer> {
             icon: Icons.watch,
             title: 'Wearables',
             route: '/wearables',
-            isActive: widget.currentRoute == '/wearables',
+            isActive: currentRoute == '/wearables',
           ),
 
           _buildDrawerItem(
@@ -209,7 +130,7 @@ class _CommonDrawerState extends State<CommonDrawer> {
             icon: Icons.home_outlined,
             title: 'Home Monitoring',
             route: '/home-monitoring',
-            isActive: widget.currentRoute == '/home-monitoring',
+            isActive: currentRoute == '/home-monitoring',
           ),
 
           _buildDrawerItem(
@@ -217,7 +138,7 @@ class _CommonDrawerState extends State<CommonDrawer> {
             icon: Icons.devices,
             title: 'Smart Devices',
             route: '/smart-devices',
-            isActive: widget.currentRoute == '/smart-devices',
+            isActive: currentRoute == '/smart-devices',
           ),
 
           _buildDrawerItem(
@@ -225,19 +146,10 @@ class _CommonDrawerState extends State<CommonDrawer> {
             icon: Icons.medication,
             title: 'Medication Management',
             route: '/medication',
-            isActive: widget.currentRoute == '/medication',
+            isActive: currentRoute == '/medication',
           ),
 
           const Divider(),
-
-          // Profile Settings
-          _buildDrawerItem(
-            context,
-            icon: Icons.settings,
-            title: 'Profile Settings',
-            route: '/profile-settings',
-            isActive: widget.currentRoute == '/profile-settings',
-          ),
 
           // Theme Toggle
           Padding(

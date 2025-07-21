@@ -50,8 +50,8 @@ class PatientParser {
             if (linkData.containsKey('linkType')) {
               relationship =
                   patientData['relationship'] ??
-                      linkData['linkType'] ??
-                      'Unknown';
+                  linkData['linkType'] ??
+                  'Unknown';
             }
           } else if (patientItem['link'] is String) {
             // Try to parse the string as JSON if it's a JSON string
