@@ -6,9 +6,14 @@ import '../../../payments/models/subscription_plan_model.dart';
 import 'stripe_checkout_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:care_connect_app/services/api_service.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
 
 class SelectPackagePage extends StatefulWidget {
-  const SelectPackagePage({super.key});
+  final String? userId;
+  final String? stripeCustomerId;
+  const SelectPackagePage({super.key, this.userId, this.stripeCustomerId});
 
   @override
   State<SelectPackagePage> createState() => _SelectPackagePageState();
@@ -88,15 +93,13 @@ class _SelectPackagePageState extends State<SelectPackagePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Choose Your Package',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: const Color(0xFF14366E),
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Choose Your Package',
+        additionalActions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _fetchSubscriptionPlans,
@@ -104,93 +107,7 @@ class _SelectPackagePageState extends State<SelectPackagePage> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Color(0xFF14366E)),
-              child: const Text(
-                'Menu',
-                style: TextStyle(color: Colors.white, fontSize: 24),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Dashboard'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/dashboard/patient');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.calendar_today),
-              title: const Text('Task Scheduling'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/taskscheduling');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.chat),
-              title: const Text('Chat & Calls'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/chatandcalls');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.smart_toy),
-              title: const Text('AI Assistant'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/aiassistant');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.watch),
-              title: const Text('Fitbit Integration'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/fitbit');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.warning),
-              title: const Text('Emergency SOS'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/sos');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.payment),
-              title: const Text('Subscribe'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/select-package');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.emoji_events),
-              title: const Text('Achievements'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/gamification');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
-              onTap: () {
-                // Add logout logic if needed
-                Navigator.pop(context);
-                context.go('/');
-              },
-            ),
-          ],
-        ),
-      ),
+      drawer: const CommonDrawer(currentRoute: '/select-package'),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : errorMessage != null
@@ -198,15 +115,20 @@ class _SelectPackagePageState extends State<SelectPackagePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: theme.colorScheme.error.withOpacity(0.7),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     errorMessage!,
-                    style: const TextStyle(fontSize: 16),
+                    style: theme.textTheme.bodyLarge,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
+                    style: AppTheme.primaryButtonStyle,
                     onPressed: _fetchSubscriptionPlans,
                     child: const Text('Retry'),
                   ),
@@ -214,10 +136,10 @@ class _SelectPackagePageState extends State<SelectPackagePage> {
               ),
             )
           : plans.isEmpty
-          ? const Center(
+          ? Center(
               child: Text(
                 'No subscription plans available',
-                style: TextStyle(fontSize: 16),
+                style: theme.textTheme.bodyLarge,
               ),
             )
           : ListView.builder(
@@ -226,35 +148,33 @@ class _SelectPackagePageState extends State<SelectPackagePage> {
               itemBuilder: (context, index) {
                 final plan = plans[index];
                 return Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  elevation: theme.cardTheme.elevation,
+                  shape: theme.cardTheme.shape,
+                  color: theme.cardTheme.color,
                   child: ListTile(
                     title: Text(
                       plan.nickname,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium,
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(plan.description),
+                        Text(
+                          plan.description,
+                          style: theme.textTheme.bodyMedium,
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           'Billed ${plan.interval}ly',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
+                          style: theme.textTheme.bodySmall,
                         ),
                       ],
                     ),
                     trailing: Text(
                       plan.formattedPrice,
-                      style: const TextStyle(
-                        color: Color(0xFF14366E),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
                       ),
                     ),
                     onTap: () {
@@ -263,6 +183,8 @@ class _SelectPackagePageState extends State<SelectPackagePage> {
                         MaterialPageRoute(
                           builder: (_) => StripeCheckoutPage(
                             package: _convertToPackageModel(plan),
+                            userId: widget.userId,
+                            stripeCustomerId: widget.stripeCustomerId,
                           ),
                         ),
                       );

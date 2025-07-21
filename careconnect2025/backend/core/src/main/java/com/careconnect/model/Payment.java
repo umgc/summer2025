@@ -31,4 +31,5 @@ public class Payment {
 
     private String stripeSessionId;
     private String stripePaymentIntentId;
+    private String stripeInvoiceId;
 }

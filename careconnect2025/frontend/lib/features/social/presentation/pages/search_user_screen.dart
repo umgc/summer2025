@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 // import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:care_connect_app/services/api_service.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 
 class SearchUserScreen extends StatefulWidget {
   final int userId;
@@ -12,7 +14,7 @@ class SearchUserScreen extends StatefulWidget {
 }
 
 class _SearchUserScreenState extends State<SearchUserScreen> {
-  TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
   List<dynamic> results = [];
   bool isLoading = false;
 
@@ -52,7 +54,8 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Search Users')),
+      appBar: AppBarHelper.createAppBar(context, title: 'Search Users'),
+      drawer: const CommonDrawer(currentRoute: '/search-users'),
       body: Column(
         children: [
           Padding(

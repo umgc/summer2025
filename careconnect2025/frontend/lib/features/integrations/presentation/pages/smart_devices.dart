@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
 
 class SmartDevicesScreen extends StatefulWidget {
   const SmartDevicesScreen({super.key});
@@ -14,23 +16,19 @@ class _SmartDevicesScreenState extends State<SmartDevicesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Smart Devices'),
+      drawer: const CommonDrawer(currentRoute: '/smart-devices'),
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Smart Devices',
         centerTitle: true,
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-        actions: [
+        additionalActions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              _navigateToAddDevice();
-            },
+            onPressed: _navigateToAddDevice,
           ),
         ],
       ),
-      body: connectedDevices.isEmpty
-          ? _buildEmptyState()
-          : _buildDeviceList(),
+      body: connectedDevices.isEmpty ? _buildEmptyState() : _buildDeviceList(),
     );
   }
 
@@ -45,25 +43,25 @@ class _SmartDevicesScreenState extends State<SmartDevicesScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: Colors.indigo.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.devices,
               size: 60,
-              color: Colors.indigo,
+              color: Theme.of(context).primaryColor,
             ),
           ),
 
           const SizedBox(height: 32),
 
           // Title
-          const Text(
+          Text(
             'No Smart Devices Connected',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.indigo,
+              color: Theme.of(context).primaryColor,
             ),
           ),
 
@@ -73,11 +71,7 @@ class _SmartDevicesScreenState extends State<SmartDevicesScreen> {
           const Text(
             'Connect Alexa-compatible smart devices to help monitor and assist with your patient\'s daily activities.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              height: 1.4,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.4),
           ),
 
           const SizedBox(height: 40),
@@ -89,17 +83,20 @@ class _SmartDevicesScreenState extends State<SmartDevicesScreen> {
               onPressed: () {
                 _navigateToAddDevice();
               },
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
+              icon: Icon(
+                Icons.add,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+              label: Text(
                 'Add Your First Device',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
+                backgroundColor: Theme.of(context).primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -122,10 +119,7 @@ class _SmartDevicesScreenState extends State<SmartDevicesScreen> {
                 children: [
                   const Text(
                     'Alexa-Compatible Devices',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
 
@@ -195,19 +189,12 @@ class _SmartDevicesScreenState extends State<SmartDevicesScreen> {
             color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 28,
-          ),
+          child: Icon(icon, color: color, size: 28),
         ),
         const SizedBox(height: 8),
         Text(
           name,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
           textAlign: TextAlign.center,
         ),
       ],
@@ -233,10 +220,7 @@ class _SmartDevicesScreenState extends State<SmartDevicesScreen> {
           const SizedBox(height: 8),
           Text(
             '${connectedDevices.length} devices connected',
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 20),
 
@@ -245,11 +229,7 @@ class _SmartDevicesScreenState extends State<SmartDevicesScreen> {
             child: ListView.builder(
               itemCount: connectedDevices.length,
               itemBuilder: (context, index) {
-                return const Card(
-                  child: ListTile(
-                    title: Text('Smart Device'),
-                  ),
-                );
+                return const Card(child: ListTile(title: Text('Smart Device')));
               },
             ),
           ),
@@ -266,7 +246,9 @@ class _SmartDevicesScreenState extends State<SmartDevicesScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add Smart Device'),
-          content: const Text('This will open the Alexa device setup screen.\n\n(Navigation to smart device setup will be implemented here)'),
+          content: const Text(
+            'This will open the Alexa device setup screen.\n\n(Navigation to smart device setup will be implemented here)',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -281,7 +263,9 @@ class _SmartDevicesScreenState extends State<SmartDevicesScreen> {
                   ),
                 );
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+              ),
               child: const Text('OK', style: TextStyle(color: Colors.white)),
             ),
           ],

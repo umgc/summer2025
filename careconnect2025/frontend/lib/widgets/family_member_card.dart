@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../config/theme/app_theme.dart';
 
 class FamilyMemberCard extends StatelessWidget {
   final String firstName;
@@ -23,20 +24,24 @@ class FamilyMemberCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Card(
       elevation: 1,
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(
-        side: BorderSide(color: Colors.green.shade700),
+        side: BorderSide(color: colorScheme.primary),
         borderRadius: BorderRadius.circular(6),
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Colors.green.shade100,
+          backgroundColor: colorScheme.primary.withOpacity(0.1),
           child: Text(
             firstName.isNotEmpty ? firstName[0].toUpperCase() : 'F',
             style: TextStyle(
-              color: Colors.green.shade700,
+              color: colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -44,17 +49,19 @@ class FamilyMemberCard extends StatelessWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
             Text(
-              relationship,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+              fullName,
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
+            Text(relationship, style: textTheme.bodySmall),
             const SizedBox(height: 4),
             Row(
               children: [
                 // Phone button
                 IconButton(
-                  icon: const Icon(Icons.phone, color: Colors.green, size: 20),
+                  icon: Icon(Icons.phone, color: AppTheme.success, size: 20),
                   onPressed: () async {
                     final uri = Uri(scheme: 'tel', path: phone);
                     if (await canLaunchUrl(uri)) {
@@ -65,7 +72,7 @@ class FamilyMemberCard extends StatelessWidget {
                 ),
                 // SMS button
                 IconButton(
-                  icon: const Icon(Icons.message, color: Colors.blue, size: 20),
+                  icon: Icon(Icons.message, color: AppTheme.info, size: 20),
                   onPressed: () async {
                     final uri = Uri(scheme: 'sms', path: phone);
                     if (await canLaunchUrl(uri)) {
@@ -77,11 +84,7 @@ class FamilyMemberCard extends StatelessWidget {
                 // Email button (show only if email is provided)
                 if (email.isNotEmpty)
                   IconButton(
-                    icon: const Icon(
-                      Icons.email,
-                      color: Colors.orange,
-                      size: 20,
-                    ),
+                    icon: Icon(Icons.email, color: AppTheme.warning, size: 20),
                     onPressed: () async {
                       final uri = Uri(
                         scheme: 'mailto',
@@ -105,11 +108,11 @@ class FamilyMemberCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (email.isNotEmpty)
-              Text(
-                'Email: $email',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
-              ),
-            Text('Last Interaction: $lastInteraction'),
+              Text('Email: $email', style: textTheme.bodySmall),
+            Text(
+              'Last Interaction: $lastInteraction',
+              style: textTheme.bodySmall,
+            ),
           ],
         ),
         trailing: PopupMenuButton<String>(
@@ -156,55 +159,55 @@ class FamilyMemberCard extends StatelessWidget {
             }
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'call',
               child: Row(
                 children: [
-                  Icon(Icons.phone, color: Colors.green),
-                  SizedBox(width: 8),
-                  Text('Call'),
+                  Icon(Icons.phone, color: AppTheme.success),
+                  const SizedBox(width: 8),
+                  const Text('Call'),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'sms',
               child: Row(
                 children: [
-                  Icon(Icons.message, color: Colors.blue),
-                  SizedBox(width: 8),
-                  Text('Send SMS'),
+                  Icon(Icons.message, color: AppTheme.info),
+                  const SizedBox(width: 8),
+                  const Text('Send SMS'),
                 ],
               ),
             ),
             if (email.isNotEmpty)
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'email',
                 child: Row(
                   children: [
-                    Icon(Icons.email, color: Colors.orange),
-                    SizedBox(width: 8),
-                    Text('Send Email'),
+                    Icon(Icons.email, color: AppTheme.warning),
+                    const SizedBox(width: 8),
+                    const Text('Send Email'),
                   ],
                 ),
               ),
             const PopupMenuDivider(),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'edit',
               child: Row(
                 children: [
-                  Icon(Icons.edit, color: Colors.grey),
-                  SizedBox(width: 8),
-                  Text('Edit'),
+                  Icon(Icons.edit, color: colorScheme.secondary),
+                  const SizedBox(width: 8),
+                  const Text('Edit'),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'delete',
               child: Row(
                 children: [
-                  Icon(Icons.delete, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Delete'),
+                  Icon(Icons.delete, color: AppTheme.error),
+                  const SizedBox(width: 8),
+                  const Text('Delete'),
                 ],
               ),
             ),
@@ -215,13 +218,19 @@ class FamilyMemberCard extends StatelessWidget {
   }
 
   void _showDeleteConfirmation(BuildContext context) {
+    final theme = Theme.of(context);
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete Family Member'),
+          title: Text(
+            'Delete Family Member',
+            style: theme.textTheme.titleLarge,
+          ),
           content: Text(
             'Are you sure you want to remove $fullName from your family members?',
+            style: theme.textTheme.bodyMedium,
           ),
           actions: [
             TextButton(
@@ -236,7 +245,7 @@ class FamilyMemberCard extends StatelessWidget {
                   SnackBar(content: Text('$fullName removed successfully')),
                 );
               },
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              style: TextButton.styleFrom(foregroundColor: AppTheme.error),
               child: const Text('Delete'),
             ),
           ],

@@ -94,7 +94,6 @@ public void finalizeReset(String rawToken, String newPassword) {
         
         String encodedPassword = encoder.encode(newPassword);
         user.setPassword(encodedPassword);
-        user.setPasswordHash(encodedPassword);
         users.save(user);
 
     } catch (IllegalArgumentException e) {

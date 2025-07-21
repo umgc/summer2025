@@ -3,6 +3,8 @@ import 'package:care_connect_app/services/session_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 
 class CommentScreen extends StatefulWidget {
   final int postId;
@@ -118,10 +120,8 @@ class _CommentScreenState extends State<CommentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Comments'),
-        backgroundColor: Colors.blue.shade900,
-      ),
+      appBar: AppBarHelper.createAppBar(context, title: 'Comments'),
+      drawer: CommonDrawer(currentRoute: '/comments'),
       body: Column(
         children: [
           Expanded(

@@ -7,6 +7,8 @@ class SubscriptionPlan {
   final int intervalCount;
   final String product;
   final String nickname;
+  final String? customDescription;
+  final List<String> features;
 
   SubscriptionPlan({
     required this.id,
@@ -17,6 +19,8 @@ class SubscriptionPlan {
     required this.intervalCount,
     required this.product,
     required this.nickname,
+    this.customDescription,
+    this.features = const [],
   });
 
   factory SubscriptionPlan.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,10 @@ class SubscriptionPlan {
       intervalCount: json['intervalCount'] ?? 1,
       product: json['product'] ?? '',
       nickname: json['nickname'] ?? '',
+      customDescription: json['description'],
+      features: json['features'] != null
+          ? List<String>.from(json['features'])
+          : [],
     );
   }
 
@@ -52,11 +60,18 @@ class SubscriptionPlan {
 
   // Helper method to get description based on plan type
   String get description {
+    if (customDescription != null) return customDescription!;
+
     if (nickname.toLowerCase().contains('standard')) {
       return 'Basic features for patients and caregivers.';
     } else if (nickname.toLowerCase().contains('premium')) {
       return 'All features including video calls, AI assistant, and device integration.';
     }
     return 'Subscription plan for CareConnect services.';
+  }
+
+  // Helper method to get formatted interval
+  String get formattedInterval {
+    return interval == 'year' ? 'yearly' : 'monthly';
   }
 }

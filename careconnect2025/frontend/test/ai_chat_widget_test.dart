@@ -9,7 +9,9 @@ void main() {
     ) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: AIChat(role: 'patient')),
+          home: Scaffold(
+            body: Stack(children: [AIChat(role: 'patient')]),
+          ),
         ),
       );
 
@@ -25,7 +27,9 @@ void main() {
     ) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: AIChat(role: 'caregiver')),
+          home: Scaffold(
+            body: Stack(children: [AIChat(role: 'caregiver')]),
+          ),
         ),
       );
 

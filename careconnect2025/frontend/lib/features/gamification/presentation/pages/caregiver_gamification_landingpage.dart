@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'caregiver_gamification_screen.dart'; // Your detail screen
+import 'package:care_connect_app/widgets/common_drawer.dart';
 
 class CaregiverGamificationLandingScreen extends StatelessWidget {
   final List<Map<String, dynamic>> patients = [
@@ -38,6 +39,7 @@ class CaregiverGamificationLandingScreen extends StatelessWidget {
         title: const Text('Patient Engagement'),
         backgroundColor: Colors.blue.shade900,
       ),
+      drawer: const CommonDrawer(currentRoute: '/caregiver-gamification'),
       body: ListView.builder(
         itemCount: patients.length,
         itemBuilder: (context, index) {
@@ -47,7 +49,8 @@ class CaregiverGamificationLandingScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => CaregiverGamificationScreen(patientName: patient['name']),
+                  builder: (_) =>
+                      CaregiverGamificationScreen(patientName: patient['name']),
                 ),
               );
             },
@@ -58,10 +61,18 @@ class CaregiverGamificationLandingScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(patient['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(
+                      patient['name'],
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     Text('Level: ${patient['level']}  |  XP: ${patient['xp']}'),
-                    Text('Streak: ${patient['streak']}  |  Badges: ${patient['badges']}'),
+                    Text(
+                      'Streak: ${patient['streak']}  |  Badges: ${patient['badges']}',
+                    ),
                     Text('Last Active: ${patient['lastActive']}'),
                   ],
                 ),

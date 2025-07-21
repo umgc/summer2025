@@ -4,6 +4,9 @@ import 'package:care_connect_app/services/api_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:care_connect_app/shared/widgets/user_avatar.dart';
 import 'package:care_connect_app/services/session_manager.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
 import 'search_user_screen.dart';
 import 'comment_screen.dart';
 import 'friend_requests_screen.dart';
@@ -96,7 +99,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                   const SizedBox(width: 10),
                   Text(
                     post['username'] ?? 'Unknown',
-                    style: const TextStyle(
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -148,10 +151,11 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Feed'),
+      drawer: CommonDrawer(currentRoute: '/social-feed'),
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'My Feed',
         centerTitle: true,
-        backgroundColor: Colors.blue.shade900,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -170,63 +174,83 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         notchMargin: 8,
-        color: Colors.blue.shade900,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
+        color: AppTheme.primary, // Using centralized theme color
+        child: Container(
+          height: 56.0,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              IconButton(
-                icon: const Icon(Icons.person_search, color: Colors.white),
-                tooltip: 'Add Friend',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => SearchUserScreen(userId: widget.userId),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.person_search,
+                        color: Colors.white,
+                      ),
+                      tooltip: 'Add Friend',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                SearchUserScreen(userId: widget.userId),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.person_add, color: Colors.white),
-                tooltip: 'Friend Requests',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          FriendRequestsScreen(userId: widget.userId),
+                    IconButton(
+                      icon: const Icon(Icons.person_add, color: Colors.white),
+                      tooltip: 'Friend Requests',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                FriendRequestsScreen(userId: widget.userId),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.calendar_today, color: Colors.white),
-                tooltip: 'Calendar',
-                onPressed: () {
-                  // TODO
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.chat, color: Colors.white),
-                tooltip: 'Messages',
-                onPressed: () {
-                  // TODO
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.add_circle, color: Colors.white),
-                tooltip: 'Create Post',
-                onPressed: () async {
-                  final success = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => NewPostScreen(userId: widget.userId),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.calendar_today,
+                        color: Colors.white,
+                      ),
+                      tooltip: 'Calendar',
+                      onPressed: () {
+                        // TODO
+                      },
                     ),
-                  );
-                  if (success == true) fetchFeed();
-                },
+                    IconButton(
+                      icon: const Icon(Icons.chat, color: Colors.white),
+                      tooltip: 'Messages',
+                      onPressed: () {
+                        // TODO
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.add_circle,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                      tooltip: 'Create Post',
+                      onPressed: () async {
+                        final success = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                NewPostScreen(userId: widget.userId),
+                          ),
+                        );
+                        if (success == true) fetchFeed();
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

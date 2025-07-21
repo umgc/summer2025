@@ -10,7 +10,8 @@ public class CaregiverRegistration {
     private ProfessionalInfoDto professional;
     private AddressDto address;
     private LoginRequest credentials;
-    private String caregiverType; 
+    private String caregiverType;
+    private String planId; 
 
     public String getFirstName() {
         return firstName;
@@ -82,5 +83,13 @@ public class CaregiverRegistration {
 
     public void setCaregiverType(String caregiverType) { 
         this.caregiverType = caregiverType;
+    }
+    
+    public String getPlanId() {
+        return planId;
+    }
+    
+    public void setPlanId(String planId) {
+        this.planId = planId;
     }
 }

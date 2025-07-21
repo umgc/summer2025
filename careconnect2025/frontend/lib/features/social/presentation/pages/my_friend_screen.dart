@@ -2,6 +2,8 @@ import 'package:care_connect_app/config/env_constant.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 
 class MyFriendsScreen extends StatefulWidget {
   final int userId;
@@ -42,7 +44,8 @@ class _MyFriendsScreenState extends State<MyFriendsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("My Friends")),
+      appBar: AppBarHelper.createAppBar(context, title: 'My Friends'),
+      drawer: CommonDrawer(currentRoute: '/my_friends'),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : friends.isEmpty

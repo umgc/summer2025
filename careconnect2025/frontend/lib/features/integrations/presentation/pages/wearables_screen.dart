@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'add_devices_screen.dart';
 
 class WearablesScreen extends StatefulWidget {
@@ -16,23 +17,19 @@ class _WearablesScreenState extends State<WearablesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Wearables'),
+      drawer: const CommonDrawer(currentRoute: '/wearables'),
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Wearables',
         centerTitle: true,
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-        actions: [
+        additionalActions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              _navigateToAddDevice();
-            },
+            onPressed: _navigateToAddDevice,
           ),
         ],
       ),
-      body: connectedDevices.isEmpty
-          ? _buildEmptyState()
-          : _buildDeviceList(),
+      body: connectedDevices.isEmpty ? _buildEmptyState() : _buildDeviceList(),
     );
   }
 
@@ -47,25 +44,25 @@ class _WearablesScreenState extends State<WearablesScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: Colors.indigo.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.watch,
               size: 60,
-              color: Colors.indigo,
+              color: Theme.of(context).primaryColor,
             ),
           ),
 
           const SizedBox(height: 32),
 
           // Title
-          const Text(
+          Text(
             'No Wearables Connected',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.indigo,
+              color: Theme.of(context).primaryColor,
             ),
           ),
 
@@ -75,11 +72,7 @@ class _WearablesScreenState extends State<WearablesScreen> {
           const Text(
             'Connect wearable devices to track your patient\'s health data in real-time.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              height: 1.4,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.4),
           ),
 
           const SizedBox(height: 40),
@@ -91,17 +84,20 @@ class _WearablesScreenState extends State<WearablesScreen> {
               onPressed: () {
                 _navigateToAddDevice();
               },
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
+              icon: Icon(
+                Icons.add,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+              label: Text(
                 'Add Your First Device',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
+                backgroundColor: Theme.of(context).primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -124,10 +120,7 @@ class _WearablesScreenState extends State<WearablesScreen> {
                 children: [
                   const Text(
                     'Supported Devices',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
 
@@ -174,19 +167,12 @@ class _WearablesScreenState extends State<WearablesScreen> {
             color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 28,
-          ),
+          child: Icon(icon, color: color, size: 28),
         ),
         const SizedBox(height: 8),
         Text(
           name,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
       ],
     );
@@ -200,21 +186,18 @@ class _WearablesScreenState extends State<WearablesScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Section
-          const Text(
+          Text(
             'Connected Devices',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.indigo,
+              color: Theme.of(context).primaryColor,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             '${connectedDevices.length} devices connected',
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 20),
 
@@ -223,11 +206,7 @@ class _WearablesScreenState extends State<WearablesScreen> {
             child: ListView.builder(
               itemCount: connectedDevices.length,
               itemBuilder: (context, index) {
-                return const Card(
-                  child: ListTile(
-                    title: Text('Device'),
-                  ),
-                );
+                return const Card(child: ListTile(title: Text('Device')));
               },
             ),
           ),
@@ -239,9 +218,7 @@ class _WearablesScreenState extends State<WearablesScreen> {
   void _navigateToAddDevice() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const AddDeviceScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const AddDeviceScreen()),
     );
   }
 }

@@ -15,4 +15,5 @@ public class Plan {
     private String name;
     private Integer priceCents;
     private String billingPeriod;
+    private Boolean isActive = true;
 }

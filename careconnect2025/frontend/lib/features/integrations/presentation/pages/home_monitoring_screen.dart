@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
 
 class HomeMonitoringScreen extends StatefulWidget {
   const HomeMonitoringScreen({super.key});
@@ -14,23 +16,19 @@ class _HomeMonitoringScreenState extends State<HomeMonitoringScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home Monitoring'),
+      drawer: const CommonDrawer(currentRoute: '/home-monitoring'),
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Home Monitoring',
         centerTitle: true,
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-        actions: [
+        additionalActions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              _navigateToAddCamera();
-            },
+            onPressed: _navigateToAddCamera,
           ),
         ],
       ),
-      body: connectedCameras.isEmpty
-          ? _buildEmptyState()
-          : _buildCameraList(),
+      body: connectedCameras.isEmpty ? _buildEmptyState() : _buildCameraList(),
     );
   }
 
@@ -45,25 +43,25 @@ class _HomeMonitoringScreenState extends State<HomeMonitoringScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: Colors.indigo.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.videocam,
               size: 60,
-              color: Colors.indigo,
+              color: Theme.of(context).primaryColor,
             ),
           ),
 
           const SizedBox(height: 32),
 
           // Title
-          const Text(
+          Text(
             'No Cameras Connected',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.indigo,
+              color: Theme.of(context).primaryColor,
             ),
           ),
 
@@ -73,11 +71,7 @@ class _HomeMonitoringScreenState extends State<HomeMonitoringScreen> {
           const Text(
             'Connect Nest cameras to monitor your patient\'s home environment and ensure their safety.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              height: 1.4,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.4),
           ),
 
           const SizedBox(height: 40),
@@ -89,17 +83,20 @@ class _HomeMonitoringScreenState extends State<HomeMonitoringScreen> {
               onPressed: () {
                 _navigateToAddCamera();
               },
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
+              icon: Icon(
+                Icons.add,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+              label: Text(
                 'Add Your First Camera',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
+                backgroundColor: Theme.of(context).primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -122,10 +119,7 @@ class _HomeMonitoringScreenState extends State<HomeMonitoringScreen> {
                 children: [
                   const Text(
                     'Supported Cameras',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
 
@@ -158,8 +152,6 @@ class _HomeMonitoringScreenState extends State<HomeMonitoringScreen> {
     );
   }
 
-
-
   Widget _buildSupportedCamera({
     required IconData icon,
     required String name,
@@ -174,19 +166,12 @@ class _HomeMonitoringScreenState extends State<HomeMonitoringScreen> {
             color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 28,
-          ),
+          child: Icon(icon, color: color, size: 28),
         ),
         const SizedBox(height: 8),
         Text(
           name,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
           textAlign: TextAlign.center,
         ),
       ],
@@ -212,10 +197,7 @@ class _HomeMonitoringScreenState extends State<HomeMonitoringScreen> {
           const SizedBox(height: 8),
           Text(
             '${connectedCameras.length} cameras monitoring',
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 20),
 
@@ -224,11 +206,7 @@ class _HomeMonitoringScreenState extends State<HomeMonitoringScreen> {
             child: ListView.builder(
               itemCount: connectedCameras.length,
               itemBuilder: (context, index) {
-                return const Card(
-                  child: ListTile(
-                    title: Text('Camera'),
-                  ),
-                );
+                return const Card(child: ListTile(title: Text('Camera')));
               },
             ),
           ),
@@ -245,7 +223,9 @@ class _HomeMonitoringScreenState extends State<HomeMonitoringScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add Camera'),
-          content: const Text('This will open the Nest camera setup screen.\n\n(Navigation to camera setup will be implemented here)'),
+          content: const Text(
+            'This will open the Nest camera setup screen.\n\n(Navigation to camera setup will be implemented here)',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -260,8 +240,15 @@ class _HomeMonitoringScreenState extends State<HomeMonitoringScreen> {
                   ),
                 );
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
-              child: const Text('OK', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+              ),
+              child: Text(
+                'OK',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
             ),
           ],
         );

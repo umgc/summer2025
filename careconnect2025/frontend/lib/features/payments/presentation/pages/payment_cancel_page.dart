@@ -1,6 +1,11 @@
 // filepath: lib/features/payments/presentation/pages/payment_cancel_page.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../../../config/router/app_router.dart';
+import '../../../../providers/user_provider.dart';
+import '../../../../widgets/app_bar_helper.dart';
+import '../../../../widgets/common_drawer.dart';
 
 class PaymentCancelPage extends StatelessWidget {
   final bool? isRegistration;
@@ -10,12 +15,9 @@ class PaymentCancelPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Payment Cancelled'),
-        backgroundColor: const Color(0xFF14366E),
-        foregroundColor: Colors.white,
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBarHelper.createAppBar(context, title: 'Payment Cancelled'),
+      drawer: const CommonDrawer(currentRoute: '/payment-cancel'),
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -27,22 +29,22 @@ class PaymentCancelPage extends StatelessWidget {
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
-                    color: Colors.orange.shade100,
+                    color: Theme.of(context).colorScheme.error.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.cancel_outlined,
                     size: 80,
-                    color: Colors.orange.shade600,
+                    color: Theme.of(context).colorScheme.error,
                   ),
                 ),
                 const SizedBox(height: 32),
-                const Text(
+                Text(
                   'Payment Cancelled',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF14366E),
+                    color: Theme.of(context).primaryColor,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -51,7 +53,12 @@ class PaymentCancelPage extends StatelessWidget {
                   isRegistration == true
                       ? 'Your registration is not complete without payment. You can try again or contact support if you need assistance.'
                       : 'Your payment was cancelled. No charges were made to your account.',
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
@@ -59,8 +66,8 @@ class PaymentCancelPage extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF14366E),
-                      foregroundColor: Colors.white,
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -71,8 +78,8 @@ class PaymentCancelPage extends StatelessWidget {
                         // Go back to package selection
                         context.go('/select-package');
                       } else {
-                        // Go to dashboard
-                        context.go('/dashboard/patient');
+                        // Go to dashboard based on user role
+                        navigateToDashboard(context);
                       }
                     },
                     child: Text(
@@ -90,7 +97,15 @@ class PaymentCancelPage extends StatelessWidget {
                 TextButton(
                   onPressed: () {
                     if (isRegistration == true) {
-                      context.go('/login');
+                      // Get user type from provider if possible
+                      final userProvider = Provider.of<UserProvider>(
+                        context,
+                        listen: false,
+                      );
+                      final userType = userProvider.user != null
+                          ? userProvider.user!.role.toLowerCase()
+                          : 'caregiver'; // Default for registration
+                      context.go('/login', extra: {'userType': userType});
                     } else {
                       context.go('/');
                     }
@@ -99,7 +114,11 @@ class PaymentCancelPage extends StatelessWidget {
                     isRegistration == true
                         ? 'Skip for Now (Go to Login)'
                         : 'Go to Home',
-                    style: TextStyle(color: Colors.grey.shade600),
+                    style: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.5),
+                    ),
                   ),
                 ),
               ],
