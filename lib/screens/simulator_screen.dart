@@ -15,6 +15,16 @@ class SimulatorScreen extends ConsumerStatefulWidget {
 }
 
 class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
+  String? _selectedDomain;
+  final Map<String, String> domainImages = {
+    'Oil & Gas': 'assets/images/oil-pumps.jpg',
+    'IT Project Management': 'assets/images/it_management_background.jpg',
+    'Healthcare': 'assets/images/healthcare_background.jpg',
+    'Military': 'assets/images/military_background.jpg',
+    'Government': 'assets/images/government_background.jpg',
+    'Finance': 'assets/images/finance_background.jpg',
+  };
+
   double _scale = 1.0;
   NodeBlock? currentNode;
   bool simulating = false;
@@ -139,10 +149,17 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
         final nodes = (parsedJson is List)
             ? parsedJson
             : (parsedJson is Map && parsedJson['nodes'] is List)
-                ? parsedJson['nodes']
-                : throw Exception("Invalid JSON format");
+            ? parsedJson['nodes']
+            : throw Exception("Invalid JSON format");
 
-        final loadedBlocks = nodes.map<NodeBlock>((e) => NodeBlock.fromJson(e as Map<String, dynamic>)).toList();
+        String? domain;
+        if (parsedJson is Map && parsedJson['domain'] is String) {
+          domain = parsedJson['domain'] as String;
+        }
+
+        final loadedBlocks = nodes
+            .map<NodeBlock>((e) => NodeBlock.fromJson(e as Map<String, dynamic>))
+            .toList();
         // final loadedBlocks = nodes.map<NodeBlock>((e) => NodeBlock(
         //       id: e['id'],
         //       offset: Offset(
@@ -168,6 +185,10 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
         //           ?.map((q) => (q as Map).cast<String, String>())
         //           .toList(),
         //     )).toList();
+
+        setState(() {
+          _selectedDomain = domain;
+        });
 
         ref.read(scenarioProvider.notifier).replace(loadedBlocks);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -253,6 +274,18 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
             ),
           ),
           const Divider(),
+
+          if (_selectedDomain != null && domainImages[_selectedDomain] != null) ...[
+            Container(
+              width: double.infinity,
+              height: 200,
+              child: Image.asset(
+                domainImages[_selectedDomain]!,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ],
+
           Expanded(
             child: Stack(
               children: [
