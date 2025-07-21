@@ -1,30 +1,49 @@
-import 'package:flutter/material.dart';
 import 'dart:convert';
+
+import 'package:care_connect_app/config/env_constant.dart';
 import 'package:care_connect_app/services/api_service.dart';
-import 'package:http/http.dart' as http;
 import 'package:care_connect_app/shared/widgets/user_avatar.dart';
-import 'search_user_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+
+import 'chat_inbox_screen.dart';
 import 'comment_screen.dart';
 import 'friend_requests_screen.dart';
 import 'new_post_screen.dart';
-import 'package:care_connect_app/config/env_constant.dart';
+import 'search_user_screen.dart';
 
 class MainFeedScreen extends StatefulWidget {
-  final int userId;
-  const MainFeedScreen({super.key, required this.userId});
+  const MainFeedScreen({super.key});
 
   @override
   State<MainFeedScreen> createState() => _MainFeedScreenState();
 }
 
 class _MainFeedScreenState extends State<MainFeedScreen> {
+  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  int? _userId;
+
   List<dynamic> posts = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchFeed();
+    _loadUserIdAndFetchFeed();
+  }
+
+  Future<void> _loadUserIdAndFetchFeed() async {
+    final userIdStr = await _secureStorage.read(key: 'userId');
+    if (userIdStr != null) {
+      setState(() => _userId = int.tryParse(userIdStr));
+      await fetchFeed();
+    } else {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('User ID not found')));
+    }
   }
 
   Future<void> fetchFeed() async {
@@ -43,14 +62,11 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          posts = data;
+          posts = data.where((post) => post['userId'] == _userId).toList();
           isLoading = false;
         });
       } else {
-        setState(() => isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to load feed')));
+        throw Exception('Failed to load feed');
       }
     } catch (e) {
       setState(() => isLoading = false);
@@ -62,8 +78,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
 
   Widget buildPostCard(Map<String, dynamic> post) {
     final imageUrl = post['imageUrl'];
-    final String backendBaseUrl =
-        getBackendBaseUrl(); // Change for emulator if needed!
+    final String backendBaseUrl = getBackendBaseUrl();
     final resolvedUrl = imageUrl != null && imageUrl.isNotEmpty
         ? '$backendBaseUrl$imageUrl'
         : null;
@@ -180,9 +195,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => SearchUserScreen(userId: widget.userId),
-                    ),
+                    MaterialPageRoute(builder: (_) => SearchUserScreen()),
                   );
                 },
               ),
@@ -192,10 +205,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          FriendRequestsScreen(userId: widget.userId),
-                    ),
+                    MaterialPageRoute(builder: (_) => FriendRequestsScreen()),
                   );
                 },
               ),
@@ -210,7 +220,10 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                 icon: const Icon(Icons.chat, color: Colors.white),
                 tooltip: 'Messages',
                 onPressed: () {
-                  // TODO
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ChatInboxScreen()),
+                  );
                 },
               ),
               IconButton(
@@ -219,9 +232,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                 onPressed: () async {
                   final success = await Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => NewPostScreen(userId: widget.userId),
-                    ),
+                    MaterialPageRoute(builder: (_) => NewPostScreen()),
                   );
                   if (success == true) fetchFeed();
                 },

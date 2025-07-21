@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../../../services/auth_service.dart';
+
 import '../../../../providers/user_provider.dart';
+import '../../../../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,6 +19,8 @@ class _LoginPageState extends State<LoginPage> {
   bool _busy = false;
   bool _googleSignInBusy = false;
   String? _error;
+
+  final FlutterSecureStorage secureStorage = FlutterSecureStorage();
 
   @override
   void dispose() {
@@ -38,22 +42,34 @@ class _LoginPageState extends State<LoginPage> {
         role: 'patient', // Default to patient, could be made dynamic
       );
 
+      print('✅ Parsed user: id=${user.id}, name=${user.name}, role=${user.role}');
+
       // Save user info to Provider
       Provider.of<UserProvider>(context, listen: false).setUser(user);
+
+      // Save user info Persistently
+      await secureStorage.write(key: 'userId', value: user.id.toString());
+      await secureStorage.write(key: 'name', value: user.name);
+      await secureStorage.write(key: 'email', value: user.email);
+      await secureStorage.write(key: 'role', value: user.role);
 
       // Add a small delay to ensure JWT token is fully saved before navigation
       await Future.delayed(const Duration(milliseconds: 100));
 
-      if (user.role.toUpperCase() == 'CAREGIVER') {
-        context.go('/dashboard?role=CAREGIVER');
-      } else if (user.role.toUpperCase() == 'PATIENT') {
-        context.go('/dashboard/patient');
-      } else if (user.role.toUpperCase() == 'FAMILY_MEMBER') {
-        context.go('/dashboard?role=FAMILY_MEMBER');
-      } else {
-        setState(() {
-          _error = 'Unknown user role: ${user.role}';
-        });
+      switch (user.role.toUpperCase()) {
+        case 'CAREGIVER':
+          context.go('/dashboard?role=CAREGIVER');
+          break;
+        case 'PATIENT':
+          context.go('/dashboard/patient');
+          break;
+        case 'FAMILY_MEMBER':
+          context.go('/dashboard?role=FAMILY_MEMBER');
+          break;
+        default:
+          setState(() {
+            _error = 'Unknown user role: ${user.role}';
+          });
       }
     } catch (e) {
       setState(() {
@@ -76,17 +92,26 @@ class _LoginPageState extends State<LoginPage> {
       // Save user info to Provider
       Provider.of<UserProvider>(context, listen: false).setUser(user);
 
+      // Save user info Persistently
+      await secureStorage.write(key: 'userId', value: user.id.toString());
+      await secureStorage.write(key: 'name', value: user.name);
+      await secureStorage.write(key: 'email', value: user.email);
+      await secureStorage.write(key: 'role', value: user.role);
+
       // Add a small delay to ensure JWT token is fully saved before navigation
       await Future.delayed(const Duration(milliseconds: 100));
 
-      if (user.role.toUpperCase() == 'CAREGIVER') {
-        context.go('/dashboard/caregiver');
-      } else if (user.role.toUpperCase() == 'PATIENT') {
-        context.go('/dashboard/patient');
-      } else {
-        setState(() {
-          _error = 'Unknown user role: ${user.role}';
-        });
+      switch (user.role.toUpperCase()) {
+        case 'CAREGIVER':
+          context.go('/dashboard/caregiver');
+          break;
+        case 'PATIENT':
+          context.go('/dashboard/patient');
+          break;
+        default:
+          setState(() {
+            _error = 'Unknown user role: ${user.role}';
+          });
       }
     } catch (e) {
       setState(() {
