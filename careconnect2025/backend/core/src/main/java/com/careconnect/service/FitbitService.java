@@ -8,13 +8,13 @@ import com.careconnect.dto.Metrics;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+//import org.springframework.web.reactive.function.client.WebClient;
+//import reactor.core.publisher.Mono;
 
 @Service
 public class FitbitService {
 
-    private final WebClient fitbitWebClient;
+    /*private final WebClient fitbitWebClient;
     
     public FitbitService(WebClient fitbitWebClient) {
         this.fitbitWebClient = fitbitWebClient;
@@ -43,5 +43,5 @@ public class FitbitService {
 
     private Mono<JsonNode> call(String path) {
         return fitbitWebClient.get().uri(path).retrieve().bodyToMono(JsonNode.class);
-    }
+    }*/
 }
