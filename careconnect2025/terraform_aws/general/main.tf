@@ -116,6 +116,13 @@ module "amplify" {
   cc_app_role_arn = module.iam.cc_app_role_arn
 }
 
+module "ses" {
+  source = "./modules/ses"
+  default_tags    = var.default_tags
+  primary_region = var.primary_region
+  domain_name    = var.domain_name
+}
+
 
 # module "cognito" {
 #   source       = "./modules/cognito"
