@@ -817,7 +817,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                 final route = item['route'] as String?;
                 if (route != null) {
                   if (route == '/social-feed') {
-                    context.go('$route?userId=${widget.userId ?? 1}');
+                    context.go('/social-feed');
                   } else if (route == '/analytics') {
                     final user = Provider.of<UserProvider>(
                       context,

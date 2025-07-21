@@ -275,6 +275,11 @@ public LoginResponse loginV2(LoginRequest req,
             name = user.getName();
         }
     }
+    // Auto-fix and persist user name if missing
+    if ((user.getName() == null || user.getName().isBlank()) && name != null) {
+        user.setName(name);
+        userRepository.save(user);
+    }
 
     /* ---------------- Build short-lived access token -------------------- */
     String token = jwt.createToken(user.getEmail(), user.getRole());  // 15-min exp
@@ -340,6 +345,12 @@ public LoginResponse loginV2(LoginRequest req,
                 name = user.getName();
             }
         }
+        // Fix and persist name if missing
+        if ((user.getName() == null || user.getName().isBlank()) && name != null) {
+            user.setName(name);
+            userRepository.save(user);
+        }
+
 
         /* ---------------- Build short-lived access token -------------------- */
         String token = jwt.createToken(user.getEmail(), user.getRole());  // 15-min exp

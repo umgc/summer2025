@@ -1,21 +1,42 @@
-import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import 'dart:io';
-import 'package:care_connect_app/services/api_service.dart';
 
+import 'package:care_connect_app/services/api_service.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class NewPostScreen extends StatefulWidget {
-  final int userId;
-  const NewPostScreen({super.key, required this.userId});
+  const NewPostScreen({super.key});
 
   @override
   State<NewPostScreen> createState() => _NewPostScreenState();
 }
 
 class _NewPostScreenState extends State<NewPostScreen> {
+  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   final TextEditingController _contentController = TextEditingController();
   File? _selectedImage;
   bool isPosting = false;
+  int? _userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserId(); // ✅ NEW
+  }
+
+  Future<void> _loadUserId() async {
+    final userIdString = await _secureStorage.read(key: 'userId');
+    if (userIdString != null) {
+      setState(() {
+        _userId = int.tryParse(userIdString);
+      });
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('User ID not found')));
+    }
+  }
 
   Future<void> pickImage() async {
     final result = await FilePicker.platform.pickFiles(type: FileType.image);
@@ -34,12 +55,17 @@ class _NewPostScreenState extends State<NewPostScreen> {
       return;
     }
 
-
+    if (_userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot post: user not logged in')),
+      );
+      return;
+    }
 
     setState(() => isPosting = true);
     try {
       final response = await ApiService.createPost(
-        widget.userId,
+        _userId!,
         content,
         _selectedImage,
       );

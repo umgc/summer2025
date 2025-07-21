@@ -12,6 +12,6 @@ public class CareconnectBackendApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(CareconnectBackendApplication.class, args);
-
+		System.out.println("✅ App started");
 	}
 }

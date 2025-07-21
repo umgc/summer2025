@@ -155,9 +155,19 @@ class AuthService {
     required String role,
   }) async {
     final response = await ApiService.login(email, password, role: role);
-    final data = jsonDecode(response.body);
 
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Login failed: ${response.statusCode} ${response.reasonPhrase}',
+      );
+    }
     if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      if (data['id'] == null || data['token'] == null) {
+        throw Exception('Login failed: Missing user or token in response');
+      }
+
       final userSession = UserSession.fromJson(data);
 
       // ✅ Store userId and username in SharedPreferences
@@ -179,7 +189,8 @@ class AuthService {
 
       return userSession;
     } else {
-      throw Exception(data['error'] ?? 'Login failed');
+      final error = jsonDecode(response.body);
+      throw Exception(error['error'] ?? 'Login failed');
     }
   }
 
@@ -244,6 +255,7 @@ class AuthService {
       'dob': dob ?? "01/01/1990",
       'email': email,
       'phone': phone ?? "000-000-0000",
+      'name': '$firstName $lastName',
     };
 
     print('🔍 Debug: Basic data added successfully');
