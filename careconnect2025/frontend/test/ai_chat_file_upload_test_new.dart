@@ -1,4 +1,3 @@
-import 'package:care_connect_app/widgets/ai_chat.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:care_connect_app/widgets/ai_chat_test.dart';
@@ -23,8 +22,8 @@ void main() {
     });
 
     testWidgets('shows analytics role chat correctly', (
-        WidgetTester tester,
-        ) async {
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(body: AIChat(role: 'analytics', isModal: true)),
@@ -49,8 +48,8 @@ void main() {
     });
 
     testWidgets('caregiver role shows correct welcome message', (
-        WidgetTester tester,
-        ) async {
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(body: AIChat(role: 'caregiver', isModal: true)),

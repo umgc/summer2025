@@ -196,9 +196,17 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           'state': rawData['address']?['state'] ?? '',
           'zipCode': rawData['address']?['zip'] ?? '',
           'country': '', // Default to empty as it's not in the response
-          'specialization': rawData['professional'] ?? '',
-          'organization': '', // Default to empty as it's not in the response
-          'license': '', // Default to empty as it's not in the response
+          // Extract specialization from the professional object - use yearsExperience as a string
+          'specialization': rawData['professional'] != null
+              ? rawData['professional']['yearsExperience']?.toString() ?? ''
+              : '',
+          // Use caregiverType for organization if available
+          'organization': rawData['caregiverType'] ?? '',
+          // Use license number from the professional object if available
+          'license': rawData['professional'] != null
+              ? rawData['professional']['licenseNumber'] ?? ''
+              : '',
+          'dateOfBirth': rawData['dob'] ?? '', // Added date of birth handling
           'profilePictureUrl': profilePictureUrl,
         };
       } else if (_isPatient) {
@@ -255,6 +263,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     _specializationController.text = profile.specialization ?? '';
     _organizationController.text = profile.organization ?? '';
     _licenseController.text = profile.license ?? '';
+    _dateOfBirthController.text =
+        profile.dateOfBirth ?? ''; // Added date of birth handling
   }
 
   void _populatePatientFields() {
