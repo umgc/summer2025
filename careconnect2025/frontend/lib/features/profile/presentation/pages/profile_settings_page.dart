@@ -372,30 +372,54 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     });
 
     try {
-      Map<String, dynamic> profileData = {
-        'name': _nameController.text,
-        'email': _emailController.text,
-        'phoneNumber': _phoneController.text,
-        'address': _addressController.text,
-        'city': _cityController.text,
-        'state': _stateController.text,
-        'zipCode': _zipCodeController.text,
-        'country': _countryController.text,
-      };
-
       // Get the user session to retrieve the correct ID based on role
       final userSession = await AuthTokenManager.getUserSession();
 
       // Add role-specific fields
       if (_isCaregiver) {
-        profileData['specialization'] = _specializationController.text;
-        profileData['organization'] = _organizationController.text;
-        profileData['license'] = _licenseController.text;
+        // Build caregiver profile data based on the expected backend structure
+        final Map<String, dynamic> profileData = {
+          'firstName': _nameController.text.split(' ').first,
+          'lastName': _nameController.text.contains(' ')
+              ? _nameController.text.split(' ').last
+              : '',
+          'dob': _dateOfBirthController.text,
+          'email': _emailController.text,
+          'phone': _phoneController.text,
+          // Professional info
+          'professional': {
+            'licenseNumber': _licenseController.text,
+            'issuingState':
+                _stateController.text, // Using state as issuing state
+            'yearsExperience':
+                int.tryParse(_specializationController.text) ??
+                1, // Using specialization field for years of experience
+          },
+          // Address info
+          'address': {
+            'line1': _addressController.text,
+            'line2': '', // No separate field for line2 in the form
+            'city': _cityController.text,
+            'state': _stateController.text,
+            'zip': _zipCodeController.text,
+            'phone': _phoneController.text,
+          },
+          // Organization can be included as caregiverType
+          'caregiverType': _organizationController.text,
+          // Add credentials for update operation
+          'credentials': {
+            'email': _emailController.text,
+            // No password needed for update
+          },
+        };
 
         final caregiverId = userSession?['caregiverId'] as int?;
         if (caregiverId == null) {
           throw Exception('Caregiver ID not found in user session');
         }
+
+        // Debug the request payload
+        print('🔍 Caregiver update payload: ${jsonEncode(profileData)}');
 
         final response = await ApiService.updateCaregiverProfile(
           caregiverId,
@@ -419,24 +443,57 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           );
           userProvider.updateUserName(_nameController.text);
         } else {
-          throw Exception('Failed to update profile: ${response.statusCode}');
+          print('❌ Caregiver profile update failed: ${response.statusCode}');
+          print('❌ Error response: ${response.body}');
+          throw Exception(
+            'Failed to update caregiver profile: ${response.statusCode} - ${response.body}',
+          );
         }
       } else if (_isPatient) {
-        profileData['dateOfBirth'] = _dateOfBirthController.text;
-        profileData['gender'] = _genderController.text;
-        profileData['emergencyContact'] = _emergencyContactController.text;
-        profileData['medicalConditions'] = _medicalConditionsController.text;
-        profileData['allergies'] = _allergiesController.text;
-        profileData['medications'] = _medicationsController.text;
+        // Build patient profile data based on the expected backend structure
+        final Map<String, dynamic> patientData = {
+          'firstName': _nameController.text.split(' ').first,
+          'lastName': _nameController.text.contains(' ')
+              ? _nameController.text.split(' ').last
+              : '',
+          'dob': _dateOfBirthController.text,
+          'email': _emailController.text,
+          'phone': _phoneController.text,
+          'gender': _genderController.text,
+          'emergencyContact': _emergencyContactController.text,
+          // Medical information
+          'medicalInfo': {
+            'conditions': _medicalConditionsController.text,
+            'allergies': _allergiesController.text,
+            'medications': _medicationsController.text,
+          },
+          // Address info
+          'address': {
+            'line1': _addressController.text,
+            'line2': '', // No separate field for line2 in the form
+            'city': _cityController.text,
+            'state': _stateController.text,
+            'zip': _zipCodeController.text,
+            'phone': _phoneController.text,
+          },
+          // Add credentials for update operation
+          'credentials': {
+            'email': _emailController.text,
+            // No password needed for update
+          },
+        };
 
         final patientId = userSession?['patientId'] as int?;
         if (patientId == null) {
           throw Exception('Patient ID not found in user session');
         }
 
+        // Debug the request payload
+        print('🔍 Patient update payload: ${jsonEncode(patientData)}');
+
         final response = await ApiService.updatePatientProfile(
           patientId,
-          profileData,
+          patientData,
         );
 
         if (response.statusCode == 200) {
@@ -456,7 +513,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           );
           userProvider.updateUserName(_nameController.text);
         } else {
-          throw Exception('Failed to update profile: ${response.statusCode}');
+          print('❌ Patient profile update failed: ${response.statusCode}');
+          print('❌ Error response: ${response.body}');
+          throw Exception(
+            'Failed to update patient profile: ${response.statusCode} - ${response.body}',
+          );
         }
       }
     } catch (e) {

@@ -26,6 +26,8 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
+  bool _isRedirecting = false;
+  double _progressValue = 0.0;
 
   @override
   void initState() {
@@ -40,9 +42,24 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
 
     _animationController.forward();
 
-    // Auto-redirect after 4 seconds
-    Future.delayed(const Duration(seconds: 4), () {
+    // Start the progress animation over 4 seconds
+    const redirectDelay = 4;
+    for (int i = 1; i <= redirectDelay; i++) {
+      Future.delayed(Duration(seconds: i), () {
+        if (mounted) {
+          setState(() {
+            _progressValue = i / redirectDelay;
+          });
+        }
+      });
+    }
+
+    // Auto-redirect after delay
+    Future.delayed(Duration(seconds: redirectDelay), () {
       if (mounted) {
+        setState(() {
+          _isRedirecting = true;
+        });
         _navigateToNext();
       }
     });
@@ -102,7 +119,36 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
+                // Progress indicator showing redirect countdown
+                Container(
+                  width: 200,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
+                    children: [
+                      LinearProgressIndicator(
+                        value: _progressValue,
+                        backgroundColor: Theme.of(context).colorScheme.surface,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).primaryColor,
+                        ),
+                        minHeight: 6.0,
+                        borderRadius: BorderRadius.circular(3.0),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Redirecting in ${((1.0 - _progressValue) * 4).ceil()} seconds...',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Text(
                   widget.isRegistration == true
                       ? 'Registration Complete!'

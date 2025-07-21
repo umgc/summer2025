@@ -54,6 +54,14 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
       curve: Curves.easeInOut,
     );
 
+    // Set reasonable default sizes for the chat window
+    _chatHeight =
+        MediaQuery.of(context).size.height * 0.6; // 60% of screen height
+    _chatWidth = MediaQuery.of(context).size.width < 600
+        ? MediaQuery.of(context).size.width *
+              0.9 // 90% width on mobile
+        : 400.0; // Fixed width on larger screens
+
     // If this is a modal view, expand by default
     if (widget.isModal) {
       _isExpanded = true;
