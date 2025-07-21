@@ -42,3 +42,7 @@ variable "rds_password" {
   type        = string
   sensitive   = true
 }
+variable "domain_name" {
+  description = "Your domain (e.g., example.com)"
+  type        = string
+}
