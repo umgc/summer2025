@@ -256,10 +256,16 @@ class _PatientDashboardState extends State<PatientDashboard> {
           showModalBottomSheet(
             isScrollControlled: true,
             context: context,
-            builder: (context) => Container(
+            backgroundColor: Colors.white,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width,
+            ),
+            builder: (context) => SizedBox(
               height: sheetHeight,
-              // Use Stack as parent widget for Positioned widget in AIChat
-              child: Stack(children: [const AIChat(role: 'patient')]),
+              child: const AIChat(role: 'patient', isModal: true),
             ),
           );
         },
