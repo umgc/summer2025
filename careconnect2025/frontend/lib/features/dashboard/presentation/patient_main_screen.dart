@@ -1,5 +1,6 @@
-import '../../dashboard/presentation/mainscreen.dart';
 import 'package:flutter/material.dart';
+
+import '../../dashboard/presentation/mainscreen.dart';
 import '../../social/presentation/pages/main_feed_screen.dart';
 
 class PatientDashboard extends StatefulWidget {
@@ -12,9 +13,17 @@ class PatientDashboard extends StatefulWidget {
 
 class _PatientDashboardState extends State<PatientDashboard> {
   final caregivers = [
-    {'name': 'Arnold Simpson', 'status': 'Available', 'lastSeen': '15 mins ago'},
+    {
+      'name': 'Arnold Simpson',
+      'status': 'Available',
+      'lastSeen': '15 mins ago',
+    },
     {'name': 'Ryan Simpson', 'status': 'Available', 'lastSeen': '25 mins ago'},
-    {'name': 'Jackie Simpson', 'status': 'Available', 'lastSeen': '20 mins ago'},
+    {
+      'name': 'Jackie Simpson',
+      'status': 'Available',
+      'lastSeen': '20 mins ago',
+    },
   ];
 
   @override
@@ -38,9 +47,20 @@ class _PatientDashboardState extends State<PatientDashboard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
-                  CircleAvatar(radius: 28, backgroundColor: Colors.white, child: Icon(Icons.person, size: 30)),
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.person, size: 30),
+                  ),
                   SizedBox(height: 8),
-                  Text('Patient Name', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Patient Name',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   Text('Patient', style: TextStyle(color: Colors.white70)),
                 ],
               ),
@@ -57,9 +77,10 @@ class _PatientDashboardState extends State<PatientDashboard> {
                 'title': 'Social Network',
                 'route': (BuildContext context) {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => MainFeedScreen(userId: widget.userId),
-                  ));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => MainFeedScreen()),
+                  );
                 },
               },
               {'icon': Icons.settings, 'title': 'Settings'},
@@ -92,9 +113,15 @@ class _PatientDashboardState extends State<PatientDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Good Morning !!!  Homer Simpson', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                const Text(
+                  'Good Morning !!!  Homer Simpson',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 20),
-                const Text('How are you feeling today?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Text(
+                  'How are you feeling today?',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 10),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -110,7 +137,10 @@ class _PatientDashboardState extends State<PatientDashboard> {
                   ),
                 ),
                 const Divider(height: 30, thickness: 2),
-                const Text('How is your pain today?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Text(
+                  'How is your pain today?',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -123,20 +153,23 @@ class _PatientDashboardState extends State<PatientDashboard> {
                   ],
                 ),
                 const Divider(height: 30, thickness: 2),
-                ...caregivers.map((c) => CaregiverCard(
-                  name: c['name']!,
-                  status: c['status']!,
-                  lastInteraction: c['lastSeen']!,
-                )),
+                ...caregivers.map(
+                  (c) => CaregiverCard(
+                    name: c['name']!,
+                    status: c['status']!,
+                    lastInteraction: c['lastSeen']!,
+                  ),
+                ),
                 const SizedBox(height: 20),
                 GestureDetector(
                   onTap: () {},
                   child: const Text(
                     'View Today’s Task',
                     style: TextStyle(
-                        color: Colors.blue,
-                        decoration: TextDecoration.underline,
-                        fontWeight: FontWeight.bold),
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -144,13 +177,24 @@ class _PatientDashboardState extends State<PatientDashboard> {
                   alignment: Alignment.bottomRight,
                   child: TextButton.icon(
                     onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => EmergencyScreen()),
-                        );
-                      },
-                    icon: const Icon(Icons.phone_in_talk_rounded, color: Colors.red),
-                    label: const Text('SOS CALL', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EmergencyScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.phone_in_talk_rounded,
+                      color: Colors.red,
+                    ),
+                    label: const Text(
+                      'SOS CALL',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -193,7 +237,11 @@ class PainEmojiLabel extends StatelessWidget {
     return Column(
       children: [
         Text(emoji, style: const TextStyle(fontSize: 28)),
-        Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 12),
+        ),
       ],
     );
   }
@@ -203,7 +251,12 @@ class CaregiverCard extends StatelessWidget {
   final String name;
   final String status;
   final String lastInteraction;
-  const CaregiverCard({super.key, required this.name, required this.status, required this.lastInteraction});
+  const CaregiverCard({
+    super.key,
+    required this.name,
+    required this.status,
+    required this.lastInteraction,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -228,9 +281,9 @@ class CaregiverCard extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.phone, color: Colors.green, size: 20),
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Calling $name...')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Calling $name...')));
                   },
                 ),
                 IconButton(
@@ -251,6 +304,3 @@ class CaregiverCard extends StatelessWidget {
     );
   }
 }
-
-
-

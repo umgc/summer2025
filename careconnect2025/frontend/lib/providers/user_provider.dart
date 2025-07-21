@@ -22,14 +22,16 @@ class UserSession {
   });
 
   factory UserSession.fromJson(Map<String, dynamic> json) {
+    final user = json['user'] ?? json; // Support both wrapped and flat
+
     return UserSession(
-      id: json['id'],
-      email: json['email'],
-      role: json['role'],
+      id: user['id'],
+      email: user['email'],
+      role: user['role'],
+      name: user['name'],
       token: json['token'] ?? '',
       patientId: json['patientId'],
       caregiverId: json['caregiverId'],
-      name: json['name'],
     );
   }
 
