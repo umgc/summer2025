@@ -37,25 +37,3 @@ variable "rds_password" {
   type        = string
   sensitive   = true
 }
-variable "iac_cc_s3_bucket_name" {
-  description = "S3 bucket name where application packages are stored"
-  type        = string
-}
-variable "cc_main_backend_package_zip_s3key" {
-  description = "Full S3 key for the main backend package zip file"
-  type        = string
-}
-variable "cc_main_compute_env_vars" {
-  type    = map(string)
-  default = {}
-}
-variable "cors_allowed_list" {
-  description = "List of allowed CORS origins"
-  type        = string
-  default     = "http://localhost:8080,http://localhost:*,http://127.0.0.1:*"
-}
-variable "cc_main_lambda_name" {
-  description = "Name of the main backend Lambda function"
-  type        = string
-  default     = "cc_main_lambda_name"
-}
