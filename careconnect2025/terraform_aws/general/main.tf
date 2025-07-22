@@ -22,10 +22,7 @@ provider "aws" {
   region = var.primary_region
 }
 
-provider "aws" {
-  alias  = "secondary"
-  region = var.secondary_region
-}
+data "aws_caller_identity" "current" {}
 
 module "vpc" {
   source         = "./modules/vpc"
@@ -50,12 +47,15 @@ module "ssm" {
   rds_pass_param_name = var.rds_pass_param_name
 }
 module "iam" {
-  source                  = "./modules/iam"
-  default_tags            = var.default_tags
-  primary_region          = var.primary_region
-  cc_internal_bucket_arn  = module.s3_internal.internal_s3_bucket.arn
-  main_rds_user_param_arn = module.ssm.rds_username_param.arn
-  main_rds_pass_param_arn = module.ssm.rds_password_param.arn
+  source                     = "./modules/iam"
+  default_tags               = var.default_tags
+  primary_region             = var.primary_region
+  cc_internal_bucket_arn     = module.s3_internal.internal_s3_bucket.arn
+  cc_main_backend_lambda_arn = "arn:aws:lambda:${var.primary_region}:${data.aws_caller_identity.current.account_id}:function:${var.cc_main_lambda_name}"
+  only_compute_required_ssm_parameters = [
+    module.ssm.rds_username_param.arn,
+    module.ssm.rds_password_param.arn
+  ]
 }
 
 module "cloudmap" {
@@ -83,7 +83,7 @@ module "ecs" {
   source                    = "./modules/ecs"
   cc_ecr_repo_url           = module.ecr.core_repository_url
   subnet_ids                = module.vpc.cc_subnet_ids
-  cc_ecs_sg_id              = module.vpc.cc_ecs_sg_id
+  cc_ecs_sg_id              = module.vpc.cc_compute_sg_id
   vpc_id                    = module.vpc.vpc_id
   cc_ecs_exe_role_arn       = module.iam.cc_ecs_exe_role_arn
   cc_app_role_arn           = module.iam.cc_app_role_arn
@@ -110,17 +110,12 @@ module "sfn_sm" {
 }
 
 module "amplify" {
-  source  = "./modules/amplify"
+  source          = "./modules/amplify"
   default_tags    = var.default_tags
-  primary_region = var.primary_region
+  primary_region  = var.primary_region
   cc_app_role_arn = module.iam.cc_app_role_arn
 }
 
-
-# module "cognito" {
-#   source       = "./modules/cognito"
-#   default_tags = var.default_tags
-# }
 
 module "main_api" {
   source                 = "./modules/api"
@@ -130,6 +125,5 @@ module "main_api" {
   cc_main_api_sg_id      = module.vpc.cc_main_api_sg_id
   cc_main_sbn_ids        = module.vpc.cc_subnet_ids
   default_tags           = var.default_tags
-  # cc_cognito_user_pool_arn = module.cognito.cc_cognito_user_pool
 }
 
