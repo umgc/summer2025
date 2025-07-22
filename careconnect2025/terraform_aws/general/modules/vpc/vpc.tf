@@ -45,7 +45,7 @@ resource "aws_security_group" "cc_api_sg" {
   tags = merge(var.default_tags, { Name : "cc-apigw-sg" })
 }
 
-resource "aws_security_group" "cc_ecs_sg" {
+resource "aws_security_group" "cc_compute_sg" {
   vpc_id = aws_vpc.vpc.id
   name   = "cc-ecs-sg"
 
@@ -73,7 +73,7 @@ resource "aws_security_group" "cc_rds_sg" {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    security_groups = [aws_security_group.cc_ecs_sg.id]
+    security_groups = [aws_security_group.cc_compute_sg.id]
   }
 
   egress {
