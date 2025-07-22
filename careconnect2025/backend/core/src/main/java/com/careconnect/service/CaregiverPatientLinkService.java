@@ -85,16 +85,38 @@ public class CaregiverPatientLinkService {
     /**
      * Temporarily suspend a link
      */
-    public CaregiverPatientLinkResponse suspendLink(Long linkId, Long suspendedByUserId) {
+//    public CaregiverPatientLinkResponse suspendLink(Long linkId, Long suspendedByUserId) {
+//        CaregiverPatientLink link = caregiverPatientLinkRepository.findById(linkId)
+//                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Link not found"));
+//
+//        link.setStatus(CaregiverPatientLink.LinkStatus.SUSPENDED);
+//        caregiverPatientLinkRepository.save(link);
+//
+//        return toCaregiverPatientLinkResponse(link);
+//    }
+
+    public CaregiverPatientLinkResponse suspendLink(Long linkId, String suspendedByIdentifier) {
         CaregiverPatientLink link = caregiverPatientLinkRepository.findById(linkId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Link not found"));
 
+        User suspendedBy;
+        try {
+            // Try to parse as Long (user ID)
+            Long userId = Long.parseLong(suspendedByIdentifier);
+            suspendedBy = userRepository.findById(userId)
+                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
+        } catch (NumberFormatException e) {
+            // Fallback to email
+            suspendedBy = userRepository.findByEmail(suspendedByIdentifier)
+                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
+        }
+
+        // Optionally check role here if needed
         link.setStatus(CaregiverPatientLink.LinkStatus.SUSPENDED);
         caregiverPatientLinkRepository.save(link);
 
         return toCaregiverPatientLinkResponse(link);
     }
-
     /**
      * Reactivate a suspended link
      */

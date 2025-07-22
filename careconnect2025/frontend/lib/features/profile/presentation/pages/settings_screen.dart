@@ -4,8 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 // import 'dart:io';
 import 'package:care_connect_app/widgets/user_avatar.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'upload_avatar_screen.dart';
 import 'package:care_connect_app/config/env_constant.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -34,15 +36,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedUrl = profileImageUrl != null && profileImageUrl!.isNotEmpty
-        ? '${getBackendBaseUrl()}$profileImageUrl'
-        : null;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Colors.blue.shade900,
-      ),
+      appBar: AppBarHelper.createAppBar(context, title: 'Settings'),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -50,14 +47,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 20),
             UserAvatar(imageUrl: profileImageUrl, radius: 40),
             const SizedBox(height: 10),
-            Text(
-              name ?? '',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            Text(name ?? '', style: theme.textTheme.titleLarge),
             const SizedBox(height: 30),
             ElevatedButton.icon(
               icon: const Icon(Icons.camera_alt),
               label: const Text('Upload Avatar'),
+              style: AppTheme.primaryButtonStyle,
               onPressed: () async {
                 await Navigator.push(
                   context,
@@ -69,15 +64,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 30),
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.lock),
-              title: const Text('Change Password'),
+              leading: Icon(Icons.lock, color: theme.colorScheme.primary),
+              title: Text('Change Password', style: theme.textTheme.bodyLarge),
               onTap: () {
                 // TODO: Implement password change screen
               },
             ),
             ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Logout', style: TextStyle(color: Colors.red)),
+              leading: Icon(Icons.logout, color: theme.colorScheme.error),
+              title: Text(
+                'Logout',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
               onTap: () async {
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.clear();

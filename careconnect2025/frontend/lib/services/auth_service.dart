@@ -13,9 +13,9 @@ import 'oauth_service.dart';
 
 class ApiConstants {
   static final String _host = getBackendBaseUrl();
-  static final String auth = '${_host}/v1/api/auth';
-  static final String caregivers = '${_host}/v1/api/caregivers';
-  static final String users = '${_host}/v1/api/users';
+  static final String auth = '$_host/v1/api/auth';
+  static final String caregivers = '$_host/v1/api/caregivers';
+  static final String users = '$_host/v1/api/users';
   static final String webBaseUrl = getWebBaseUrl();
   static String get baseUrl => _host;
 }
@@ -230,7 +230,7 @@ class AuthService {
     }
   }
 
-  static Future<String> registerCaregiver({
+  static Future<Map<String, dynamic>> registerCaregiver({
     required String firstName,
     required String lastName,
     required String email,
@@ -319,7 +319,30 @@ class AuthService {
       if (response.statusCode == 201 || response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print("✅ Caregiver Registration: $data");
-        return 'Caregiver registration successful!';
+
+        // Extract user ID and stripeCustomerId from the nested user object
+        String userId = '0';
+        String stripeCustomerId = '';
+        if (data.containsKey('user') && data['user'] is Map<String, dynamic>) {
+          final userObj = data['user'] as Map<String, dynamic>;
+          userId = userObj['id']?.toString() ?? '0';
+          stripeCustomerId = userObj['stripeCustomerId'] ?? '';
+          print("✅ Extracted User ID: $userId from nested user object");
+          print(
+            "✅ Extracted Stripe Customer ID: $stripeCustomerId from nested user object",
+          );
+        } else {
+          print("⚠️ Warning: User object not found in registration response");
+        }
+
+        // Return both the success message and the user info
+        return {
+          'message': 'Caregiver registration successful!',
+          'userId': userId, // Use the user ID from the nested user object
+          'caregiverId':
+              data['id']?.toString() ?? '0', // Also store the caregiver ID
+          'stripeCustomerId': stripeCustomerId, // Include Stripe customer ID
+        };
       } else {
         final data = jsonDecode(response.body);
         print(

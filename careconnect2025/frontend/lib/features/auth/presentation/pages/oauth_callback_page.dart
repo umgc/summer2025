@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../services/api_service.dart';
 import '../../../../providers/user_provider.dart';
+import '../../../../config/router/app_router.dart';
 
 class OAuthCallbackPage extends StatefulWidget {
   final String? token;
@@ -80,11 +81,13 @@ class _OAuthCallbackPageState extends State<OAuthCallbackPage> {
         await Future.delayed(const Duration(milliseconds: 300));
 
         // Navigate to appropriate dashboard based on role
-        if (userSession.role.toUpperCase() == 'CAREGIVER') {
-          if (mounted) context.go('/dashboard/caregiver');
-        } else if (userSession.role.toUpperCase() == 'PATIENT') {
-          if (mounted) context.go('/dashboard/patient');
-        } else {
+        if (mounted) {
+          navigateToDashboard(context);
+        }
+
+        // Check for invalid role
+        if (userSession.role.toUpperCase() != 'CAREGIVER' &&
+            userSession.role.toUpperCase() != 'PATIENT') {
           setState(() {
             _status = 'Unknown user role: ${userSession.role}';
             _isError = true;

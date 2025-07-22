@@ -18,6 +18,11 @@ class ApiConstants {
   static final String baseUrl = '$_host/v1/api/';
   static final String familyMembers = '$_host/v1/api/family-members';
   static final String patient = '$_host/v1/api/patient';
+  static final String patients = '$_host/v1/api/patients';
+  static final String caregivers = '$_host/v1/api/caregivers';
+  static final String files = '$_host/v1/api/files';
+  static final String connectionRequests = '$_host/v1/api/connection-requests';
+  static final String subscriptions = '$_host/v1/api/subscriptions';
 }
 
 class ApiService {
@@ -282,6 +287,137 @@ class ApiService {
         .timeout(const Duration(seconds: 30));
   }
 
+  /// Check if a user with the given email exists
+  static Future<Map<String, dynamic>> checkEmailExists(String email) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+
+    try {
+      final response = await _httpClient
+          .get(
+            Uri.parse(
+              '${ApiConstants.users}/check-email?email=${Uri.encodeComponent(email)}',
+            ),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 15));
+
+      print(
+        '🔍 Check email response: ${response.statusCode} - ${response.body}',
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'exists': false,
+          'error': 'Failed to check email: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('❌ Error checking email: $e');
+      return {'exists': false, 'error': e.toString()};
+    }
+  }
+
+  /// Send a connection request from a caregiver to a patient
+  static Future<http.Response> sendConnectionRequest({
+    required int caregiverId,
+    required String patientEmail,
+    required String relationshipType,
+    String? message,
+  }) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
+
+    print('🔍 Sending connection request to $patientEmail');
+
+    return await _httpClient
+        .post(
+          Uri.parse('${ApiConstants.connectionRequests}/create'),
+          headers: headers,
+          body: jsonEncode({
+            'caregiverId': caregiverId,
+            'patientEmail': patientEmail,
+            'relationshipType': relationshipType,
+            'message':
+                message ?? 'I would like to connect with you on CareConnect',
+          }),
+        )
+        .timeout(const Duration(seconds: 20));
+  }
+
+  /// Get pending connection requests for a caregiver
+  static Future<http.Response> getPendingRequestsByCaregiver(
+    int caregiverId,
+  ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+
+    return await _httpClient
+        .get(
+          Uri.parse(
+            '${ApiConstants.connectionRequests}/pending/caregiver/$caregiverId',
+          ),
+          headers: headers,
+        )
+        .timeout(const Duration(seconds: 20));
+  }
+
+  static Future<http.Response> suspendCaregiverPatientLink(int linkId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/json'; // Add content type header
+
+    print('🔍 Calling suspendCaregiverPatientLink for linkId: $linkId');
+
+    // Try both formats to determine which one works with the backend
+    final url1 =
+        '${ApiConstants.baseUrl}caregiver-patient-links/$linkId/suspend';
+    final url2 = '${ApiConstants.baseUrl}caregivers/links/$linkId/suspend';
+
+    print('🔍 URL Option 1: $url1');
+    print('🔍 URL Option 2: $url2');
+    print('🔍 Headers: $headers');
+
+    // Use the first URL format by default
+    final String finalUrl = url1;
+
+    return await _httpClient
+        .post(
+          Uri.parse(finalUrl),
+          headers: headers,
+          body: jsonEncode({}), // Send empty JSON body
+        )
+        .timeout(const Duration(seconds: 30));
+  }
+
+  static Future<http.Response> reactivateCaregiverPatientLink(
+    int linkId,
+  ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/json'; // Add content type header
+
+    print('🔍 Calling reactivateCaregiverPatientLink for linkId: $linkId');
+
+    // Try both formats to determine which one works with the backend
+    final url1 =
+        '${ApiConstants.baseUrl}caregiver-patient-links/$linkId/reactivate';
+    final url2 = '${ApiConstants.baseUrl}caregivers/links/$linkId/reactivate';
+
+    print('🔍 URL Option 1: $url1');
+    print('🔍 URL Option 2: $url2');
+    print('🔍 Headers: $headers');
+
+    // Use the first URL format by default
+    final String finalUrl = url1;
+
+    return await _httpClient
+        .post(
+          Uri.parse(finalUrl),
+          headers: headers,
+          body: jsonEncode({}), // Send empty JSON body
+        )
+        .timeout(const Duration(seconds: 30));
+  }
+
   // ========================
   // UTILITY METHODS
   // ========================
@@ -302,6 +438,133 @@ class ApiService {
   // Clear auth cookie/token
   static Future<void> clearAuthCookie() async {
     await AuthTokenManager.clearAuthData();
+  }
+
+  // ========================
+  // SUBSCRIPTION METHODS
+  // ========================
+
+  // Get the current subscription for a user
+  static Future<http.Response> getCurrentSubscription() async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+
+    // Get the user session to extract the user ID
+    final userSession = await AuthTokenManager.getUserSession();
+    final userId = userSession != null ? userSession['id']?.toString() : null;
+
+    if (userId == null) {
+      throw Exception('User ID not found. Please ensure you are logged in.');
+    }
+
+    return await _httpClient
+        .get(
+          Uri.parse('${ApiConstants.subscriptions}/user/$userId'),
+          headers: headers,
+        )
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Get all available subscription plans
+  static Future<http.Response> getAvailablePlans() async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+
+    return await _httpClient
+        .get(Uri.parse('${ApiConstants.subscriptions}/plans'), headers: headers)
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Create a subscription for an existing customer
+  static Future<http.Response> createSubscription(
+    String customerId,
+    String priceId,
+  ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+
+    final uri = Uri.parse('${ApiConstants.subscriptions}/create-direct');
+
+    // Create form data as required by the API
+    final formData = {'customerId': customerId, 'priceId': priceId};
+
+    return await _httpClient
+        .post(uri, headers: headers, body: formData)
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Cancel a subscription
+  static Future<http.Response> cancelSubscription(String subscriptionId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
+
+    return await _httpClient
+        .post(
+          Uri.parse('${ApiConstants.subscriptions}/$subscriptionId/cancel'),
+          headers: headers,
+        )
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Change subscription plan
+  static Future<http.Response> changeSubscriptionPlan(
+    String oldSubscriptionId,
+    String newPriceId,
+  ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+
+    // Create form data as required by the API
+    final formData = {
+      'oldSubscriptionId': oldSubscriptionId,
+      'newPriceId': newPriceId,
+    };
+
+    final uri = Uri.parse('${ApiConstants.subscriptions}/upgrade-or-downgrade');
+
+    // Send form data as required by the API
+    return await _httpClient
+        .post(uri, headers: headers, body: formData)
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Upgrade or downgrade a subscription
+  static Future<http.Response> upgradeOrDowngradeSubscription(
+    String oldSubscriptionId,
+    String newPriceId,
+  ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+
+    final uri = Uri.parse('${ApiConstants.subscriptions}/upgrade-or-downgrade');
+
+    // Create form data
+    final formData = {
+      'oldSubscriptionId': oldSubscriptionId,
+      'newPriceId': newPriceId,
+    };
+
+    return await _httpClient
+        .post(uri, headers: headers, body: formData)
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Get subscription information for the current user
+  static Future<http.Response> getUserSubscriptions() async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+
+    // Get the user session to extract the user ID
+    final userSession = await AuthTokenManager.getUserSession();
+    final userId = userSession != null ? userSession['id']?.toString() : null;
+
+    if (userId == null) {
+      throw Exception('User ID not found. Please ensure you are logged in.');
+    }
+
+    return await _httpClient
+        .get(
+          Uri.parse('${ApiConstants.subscriptions}/user/$userId'),
+          headers: headers,
+        )
+        .timeout(const Duration(seconds: 30));
   }
 
   // FAMILY
@@ -404,7 +667,7 @@ class ApiService {
       return await _httpClient
           .get(
             Uri.parse(
-              '${ApiConstants.baseUrl}analytics/vitals?patientId=${patientId}&days=$days',
+              '${ApiConstants.baseUrl}analytics/vitals?patientId=$patientId&days=$days',
             ),
             headers: headers,
           )
@@ -576,6 +839,136 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to load inbox');
+    }
+  }
+
+  // ========================
+  // PROFILE MANAGEMENT METHODS
+  // ========================
+
+  /// Get caregiver profile data
+  static Future<http.Response> getCaregiverProfile(int caregiverId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .get(
+          Uri.parse('${ApiConstants.caregivers}/$caregiverId'),
+          headers: headers,
+        )
+        .timeout(const Duration(seconds: 15));
+  }
+
+  /// Update caregiver profile
+  static Future<http.Response> updateCaregiverProfile(
+    int caregiverId,
+    Map<String, dynamic> updatedProfile,
+  ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .put(
+          Uri.parse('${ApiConstants.caregivers}/$caregiverId'),
+          headers: headers,
+          body: jsonEncode(updatedProfile),
+        )
+        .timeout(const Duration(seconds: 15));
+  }
+
+  /// Get patient profile data
+  static Future<http.Response> getPatientProfile(int patientId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .get(Uri.parse('${ApiConstants.patients}/$patientId'), headers: headers)
+        .timeout(const Duration(seconds: 15));
+  }
+
+  /// Update patient profile
+  static Future<http.Response> updatePatientProfile(
+    int patientId,
+    Map<String, dynamic> updatedProfile,
+  ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .put(
+          Uri.parse('${ApiConstants.patients}/$patientId'),
+          headers: headers,
+          body: jsonEncode(updatedProfile),
+        )
+        .timeout(const Duration(seconds: 15));
+  }
+
+  /// Upload profile picture or other files
+  static Future<http.Response> uploadUserFile({
+    required int userId,
+    required File file,
+    required String category,
+    String? role,
+  }) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    // Remove Content-Type as it will be set by multipart request
+    headers.remove('Content-Type');
+
+    // Use users endpoint for file uploads
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ApiConstants.files}/users/$userId/upload'),
+    );
+
+    // Add headers
+    request.headers.addAll(headers);
+
+    // Add file
+    var fileStream = http.ByteStream(file.openRead());
+    var fileLength = await file.length();
+    var multipartFile = http.MultipartFile(
+      'file',
+      fileStream,
+      fileLength,
+      filename: path.basename(file.path),
+    );
+
+    // Add form fields
+    request.files.add(multipartFile);
+    request.fields['category'] = category;
+
+    // Send the request
+    var streamedResponse = await request.send().timeout(
+      const Duration(seconds: 30),
+    );
+    var response = await http.Response.fromStream(streamedResponse);
+
+    return response;
+  }
+
+  /// Get user profile picture URL based on role
+  static Future<String?> getUserProfilePictureUrl(
+    int userId, [
+    String? role,
+  ]) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    // Use the users endpoint to get files consistently
+    final endpoint = 'users';
+
+    try {
+      final response = await _httpClient
+          .get(
+            Uri.parse(
+              '${ApiConstants.files}/$endpoint/$userId?category=profilePicture',
+            ),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is List && data.isNotEmpty) {
+          return data.first['fileUrl'];
+        } else if (data is Map && data.containsKey('fileUrl')) {
+          return data['fileUrl'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error getting profile picture URL: $e');
+      return null;
     }
   }
 }

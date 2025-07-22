@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:care_connect_app/services/auth_service.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/responsive_container.dart';
 
 // Utility class to store registration data temporarily
 class RegistrationData {
@@ -96,7 +99,8 @@ class RegistrationData {
 }
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  final String userType;
+  const SignUpScreen({super.key, this.userType = 'caregiver'});
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -124,6 +128,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
   final _zipController = TextEditingController();
+
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
 
   void _continue() async {
     if (_currentStep < 5) {
@@ -190,20 +197,146 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  // Validation methods
+  String? _validateEmail(String email) {
+    if (email.isEmpty)
+      return null; // Don't show error for empty field initially
+
+    // More comprehensive email validation
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) return 'Enter a valid email';
+    return null;
+  }
+
+  String? _validatePassword(String password) {
+    if (password.isEmpty)
+      return null; // Don't show error for empty field initially
+
+    if (password.length < 6) return 'Minimum 6 characters required';
+
+    // Additional password strength checks
+    bool hasUppercase = password.contains(RegExp(r'[A-Z]'));
+    bool hasDigits = password.contains(RegExp(r'[0-9]'));
+    bool hasSpecialCharacters = password.contains(
+      RegExp(r'[!@#$%^&*(),.?":{}|<>]'),
+    );
+
+    if (!hasUppercase || !hasDigits || !hasSpecialCharacters) {
+      return 'Password should contain uppercase, digits, and special characters';
+    }
+
+    return null;
+  }
+
+  String? _validateConfirmPassword(String confirmPassword, String password) {
+    if (confirmPassword.isEmpty)
+      return null; // Don't show error for empty field initially
+    if (confirmPassword != password) return 'Passwords do not match';
+    return null;
+  }
+
+  String? _validateName(String name) {
+    if (name.isEmpty) return null; // Don't show error for empty field initially
+
+    // Check if the name contains any digits
+    if (RegExp(r'\d').hasMatch(name)) {
+      return 'Name cannot contain numbers';
+    }
+
+    // Check if the name is too short
+    if (name.length < 2) {
+      return 'Name must be at least 2 characters';
+    }
+
+    return null;
+  }
+
+  String? _validateCity(String city) {
+    if (city.isEmpty) return null; // Don't show error for empty field initially
+
+    // Check if city contains numbers
+    if (RegExp(r'\d').hasMatch(city)) {
+      return 'City name cannot contain numbers';
+    }
+
+    // Check for special characters (allowing spaces, hyphens, periods)
+    final cityRegex = RegExp(r'^[a-zA-Z\s\.\-]+$');
+    if (!cityRegex.hasMatch(city)) {
+      return 'City name contains invalid characters';
+    }
+
+    return null;
+  }
+
+  String? _validateState(String state) {
+    if (state.isEmpty)
+      return null; // Don't show error for empty field initially
+
+    // Check if state contains numbers
+    if (RegExp(r'\d').hasMatch(state)) {
+      return 'State name cannot contain numbers';
+    }
+
+    // Check for special characters (allowing spaces and hyphens)
+    final stateRegex = RegExp(r'^[a-zA-Z\s\-]+$');
+    if (!stateRegex.hasMatch(state)) {
+      return 'State name contains invalid characters';
+    }
+
+    return null;
+  }
+
+  String? _validatePhone(String phone) {
+    if (phone.isEmpty)
+      return null; // Don't show error for empty field initially
+
+    // Basic phone number validation - ensure it has the right length and only contains digits, dashes, spaces, and parentheses
+    final phoneRegex = RegExp(r'^[\d\-\(\)\s]{10,15}$');
+    if (!phoneRegex.hasMatch(phone)) return 'Enter a valid phone number';
+    return null;
+  }
+
+  String? _validateZip(String zip) {
+    if (zip.isEmpty) return null; // Don't show error for empty field initially
+
+    // US zip code validation
+    final zipRegex = RegExp(r'^\d{5}(-\d{4})?$');
+    if (!zipRegex.hasMatch(zip)) return 'Enter a valid ZIP code';
+    return null;
+  }
+
   bool _validateCurrentStep() {
     switch (_currentStep) {
       case 0: // Personal Info
         return _firstNameController.text.isNotEmpty &&
+            _validateName(_firstNameController.text) == null &&
             _lastNameController.text.isNotEmpty &&
+            _validateName(_lastNameController.text) == null &&
             _dobController.text.isNotEmpty &&
+            _validatePhone(_phoneController.text) == null &&
             _phoneController.text.isNotEmpty;
       case 1: // Account Info
         return _emailController.text.isNotEmpty &&
-            _passwordController.text.length >= 6;
+            _validateEmail(_emailController.text) == null &&
+            _passwordController.text.length >= 6 &&
+            _validatePassword(_passwordController.text) == null &&
+            _confirmPasswordController.text == _passwordController.text;
       case 2: // Professional Info (Optional)
         return true; // Let backend handle validation
-      case 3: // Address Info (Optional)
-        return true; // Let backend handle validation
+      case 3: // Address Info
+        if (_addressLine1Controller.text.isNotEmpty ||
+            _cityController.text.isNotEmpty ||
+            _stateController.text.isNotEmpty ||
+            _zipController.text.isNotEmpty) {
+          // If any address field is filled, validate all required address fields
+          return (_cityController.text.isEmpty ||
+                  _validateCity(_cityController.text) == null) &&
+              (_stateController.text.isEmpty ||
+                  _validateState(_stateController.text) == null) &&
+              (_zipController.text.isEmpty ||
+                  _validateZip(_zipController.text) == null);
+        }
+        return true; // Address is optional
       default:
         return true;
     }
@@ -235,324 +368,481 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    // Set up listeners for real-time validation
+    _firstNameController.addListener(() => setState(() {}));
+    _lastNameController.addListener(() => setState(() {}));
+    _emailController.addListener(() => setState(() {}));
+    _passwordController.addListener(() => setState(() {}));
+    _confirmPasswordController.addListener(() => setState(() {}));
+    _dobController.addListener(() => setState(() {}));
+    _phoneController.addListener(() => setState(() {}));
+    _addressLine1Controller.addListener(() => setState(() {}));
+    _cityController.addListener(() => setState(() {}));
+    _stateController.addListener(() => setState(() {}));
+    _zipController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    // Clean up controllers
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _dobController.dispose();
+    _phoneController.dispose();
+    _licenseNumberController.dispose();
+    _issuingStateController.dispose();
+    _yearsExperienceController.dispose();
+    _addressLine1Controller.dispose();
+    _addressLine2Controller.dispose();
+    _cityController.dispose();
+    _stateController.dispose();
+    _zipController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final darkBlue = Colors.blue.shade900;
+    // Use the centralized theme system for consistent colors
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text('Sign Up'), backgroundColor: darkBlue),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBarHelper.createAppBar(context, title: 'Sign Up'),
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Stepper(
-              type: StepperType.vertical,
-              currentStep: _currentStep,
-              onStepContinue: _continue,
-              onStepCancel: _goBack,
-              controlsBuilder: (context, details) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20.0),
-                  child: Row(
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: darkBlue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
+          child: ResponsiveContainer(
+            maxWidth: 800, // Set appropriate max width for the sign-up form
+            centerContent: true,
+            child: Form(
+              key: _formKey,
+              child: Stepper(
+                type: StepperType.vertical,
+                currentStep: _currentStep,
+                onStepContinue: _continue,
+                onStepCancel: _goBack,
+                controlsBuilder: (context, details) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20.0),
+                    child: Row(
+                      children: [
+                        ElevatedButton(
+                          style: AppTheme.primaryButtonStyle,
+                          onPressed: isLoading ? null : details.onStepContinue,
+                          child: isLoading
+                              ? CircularProgressIndicator(
+                                  color: AppTheme.textLight,
+                                )
+                              : Text(
+                                  _currentStep == 5
+                                      ? 'Continue to Payment'
+                                      : 'Continue',
+                                ),
                         ),
-                        onPressed: isLoading ? null : details.onStepContinue,
-                        child: isLoading
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : Text(
-                                _currentStep == 5
-                                    ? 'Continue to Payment'
-                                    : 'Continue',
+                        if (_currentStep > 0)
+                          TextButton(
+                            style: AppTheme.textButtonStyle,
+                            onPressed: details.onStepCancel,
+                            child: const Text('Back'),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+                steps: [
+                  Step(
+                    title: const Text("Step 1 of 6: Personal Information"),
+                    isActive: _currentStep >= 0,
+                    content: Column(
+                      children: [
+                        TextFormField(
+                          controller: _firstNameController,
+                          decoration:
+                              AppTheme.inputDecoration(
+                                'First Name*',
+                                hint: 'Enter your first name',
+                              ).copyWith(
+                                errorText: _validateName(
+                                  _firstNameController.text,
+                                ),
                               ),
-                      ),
-                      if (_currentStep > 0)
-                        TextButton(
-                          onPressed: details.onStepCancel,
-                          child: const Text('Back'),
+                          validator: (value) {
+                            if (value!.isEmpty) return 'First name required';
+                            return _validateName(value);
+                          },
+                          onChanged: (_) => setState(() {}),
+                          textCapitalization: TextCapitalization
+                              .words, // Auto-capitalize each word
                         ),
-                    ],
-                  ),
-                );
-              },
-              steps: [
-                Step(
-                  title: const Text("Step 1 of 6: Personal Information"),
-                  isActive: _currentStep >= 0,
-                  content: Column(
-                    children: [
-                      TextFormField(
-                        controller: _firstNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'First Name*',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            value!.isEmpty ? 'First name required' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _lastNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Last Name*',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            value!.isEmpty ? 'Last name required' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _dobController,
-                        decoration: const InputDecoration(
-                          labelText: 'Date of Birth (MM/DD/YYYY)*',
-                          border: OutlineInputBorder(),
-                          hintText: '01/01/1990',
-                        ),
-                        validator: (value) =>
-                            value!.isEmpty ? 'Date of birth required' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _phoneController,
-                        decoration: const InputDecoration(
-                          labelText: 'Phone Number*',
-                          border: OutlineInputBorder(),
-                          hintText: '240-555-5555',
-                        ),
-                        validator: (value) =>
-                            value!.isEmpty ? 'Phone number required' : null,
-                      ),
-                    ],
-                  ),
-                ),
-                Step(
-                  title: const Text("Step 2 of 6: Account Credentials"),
-                  isActive: _currentStep >= 1,
-                  content: Column(
-                    children: [
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: 'Email*',
-                          border: OutlineInputBorder(),
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value!.isEmpty) return 'Email is required';
-                          if (!value.contains('@')) {
-                            return 'Enter a valid email';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Password*',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            value!.length < 6 ? 'Minimum 6 characters' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _confirmPasswordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Confirm Password*',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) => value != _passwordController.text
-                            ? 'Passwords do not match'
-                            : null,
-                      ),
-                    ],
-                  ),
-                ),
-                Step(
-                  title: const Text(
-                    "Step 3 of 6: Professional Information (Optional)",
-                  ),
-                  isActive: _currentStep >= 2,
-                  content: Column(
-                    children: [
-                      TextFormField(
-                        controller: _licenseNumberController,
-                        decoration: const InputDecoration(
-                          labelText: 'License Number',
-                          border: OutlineInputBorder(),
-                          hintText: 'AA123456 (Optional)',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _issuingStateController,
-                        decoration: const InputDecoration(
-                          labelText: 'Issuing State',
-                          border: OutlineInputBorder(),
-                          hintText: 'VA (Optional)',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _yearsExperienceController,
-                        decoration: const InputDecoration(
-                          labelText: 'Years of Experience',
-                          border: OutlineInputBorder(),
-                          hintText: '5 (Optional)',
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ],
-                  ),
-                ),
-                Step(
-                  title: const Text(
-                    "Step 4 of 6: Address Information (Optional)",
-                  ),
-                  isActive: _currentStep >= 3,
-                  content: Column(
-                    children: [
-                      TextFormField(
-                        controller: _addressLine1Controller,
-                        decoration: const InputDecoration(
-                          labelText: 'Address Line 1',
-                          border: OutlineInputBorder(),
-                          hintText: '112 SE Ave (Optional)',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _addressLine2Controller,
-                        decoration: const InputDecoration(
-                          labelText: 'Address Line 2 (Optional)',
-                          border: OutlineInputBorder(),
-                          hintText: 'Apt 103',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: TextFormField(
-                              controller: _cityController,
-                              decoration: const InputDecoration(
-                                labelText: 'City',
-                                border: OutlineInputBorder(),
-                                hintText: 'McLean (Optional)',
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _lastNameController,
+                          decoration:
+                              AppTheme.inputDecoration(
+                                'Last Name*',
+                                hint: 'Enter your last name',
+                              ).copyWith(
+                                errorText: _validateName(
+                                  _lastNameController.text,
+                                ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _stateController,
-                              decoration: const InputDecoration(
-                                labelText: 'State',
-                                border: OutlineInputBorder(),
-                                hintText: 'VA (Optional)',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _zipController,
-                        decoration: const InputDecoration(
-                          labelText: 'ZIP Code',
-                          border: OutlineInputBorder(),
-                          hintText: '19053 (Optional)',
+                          validator: (value) {
+                            if (value!.isEmpty) return 'Last name required';
+                            return _validateName(value);
+                          },
+                          onChanged: (_) => setState(() {}),
+                          textCapitalization: TextCapitalization
+                              .words, // Auto-capitalize each word
                         ),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ],
-                  ),
-                ),
-                Step(
-                  title: const Text("Step 5 of 6: Review Information"),
-                  isActive: _currentStep >= 4,
-                  content: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Please review your information:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildReviewRow(
-                        'Name',
-                        '${_firstNameController.text} ${_lastNameController.text}',
-                      ),
-                      _buildReviewRow('Email', _emailController.text),
-                      _buildReviewRow('Phone', _phoneController.text),
-                      _buildReviewRow('Date of Birth', _dobController.text),
-                      _buildReviewRow(
-                        'License Number',
-                        _licenseNumberController.text,
-                      ),
-                      _buildReviewRow(
-                        'Issuing State',
-                        _issuingStateController.text,
-                      ),
-                      _buildReviewRow(
-                        'Years Experience',
-                        _yearsExperienceController.text,
-                      ),
-                      _buildReviewRow(
-                        'Address',
-                        '${_addressLine1Controller.text}${_addressLine2Controller.text.isNotEmpty ? ', ${_addressLine2Controller.text}' : ''}',
-                      ),
-                      _buildReviewRow(
-                        'City, State ZIP',
-                        '${_cityController.text}, ${_stateController.text} ${_zipController.text}',
-                      ),
-                    ],
-                  ),
-                ),
-                Step(
-                  title: const Text("Step 6 of 6: Terms & Conditions"),
-                  isActive: _currentStep >= 5,
-                  content: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Checkbox(value: true, onChanged: (_) {}),
-                          const Expanded(
-                            child: Text(
-                              "I agree to the Terms & Conditions and Privacy Policy.",
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'By proceeding, you will be directed to select a subscription package and complete payment. Your caregiver account will be created after successful payment.',
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                      if (errorMessage != null) ...[
-                        const SizedBox(height: 10),
-                        Text(
-                          errorMessage!,
-                          style: const TextStyle(color: Colors.red),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _dobController,
+                          readOnly: true,
+                          decoration:
+                              AppTheme.inputDecoration(
+                                'Date of Birth (MM/DD/YYYY)*',
+                                hint: '01/01/1990',
+                              ).copyWith(
+                                errorText:
+                                    _dobController.text.isEmpty &&
+                                        _dobController.text.isNotEmpty
+                                    ? 'Date of birth required'
+                                    : null,
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.calendar_month),
+                                  onPressed: () async {
+                                    final DateTime? picked =
+                                        await showDatePicker(
+                                          context: context,
+                                          initialDate: DateTime(1990, 1, 1),
+                                          firstDate: DateTime(1900),
+                                          lastDate: DateTime.now(),
+                                          helpText: 'Select Date of Birth',
+                                        );
+                                    if (picked != null) {
+                                      // Format date as MM/DD/YYYY
+                                      final month = picked.month
+                                          .toString()
+                                          .padLeft(2, '0');
+                                      final day = picked.day.toString().padLeft(
+                                        2,
+                                        '0',
+                                      );
+                                      final year = picked.year.toString();
+                                      setState(() {
+                                        _dobController.text =
+                                            '$month/$day/$year';
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                          validator: (value) =>
+                              value!.isEmpty ? 'Date of birth required' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _phoneController,
+                          decoration:
+                              AppTheme.inputDecoration(
+                                'Phone Number*',
+                                hint: '240-555-5555',
+                              ).copyWith(
+                                errorText: _validatePhone(
+                                  _phoneController.text,
+                                ),
+                              ),
+                          keyboardType: TextInputType.phone,
+                          validator: (value) {
+                            if (value!.isEmpty) return 'Phone number required';
+                            return _validatePhone(value);
+                          },
+                          onChanged: (_) => setState(() {}),
                         ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                  Step(
+                    title: const Text("Step 2 of 6: Account Credentials"),
+                    isActive: _currentStep >= 1,
+                    content: Column(
+                      children: [
+                        TextFormField(
+                          controller: _emailController,
+                          decoration:
+                              AppTheme.inputDecoration(
+                                'Email*',
+                                hint: 'name@example.com',
+                              ).copyWith(
+                                errorText: _validateEmail(
+                                  _emailController.text,
+                                ),
+                              ),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) {
+                            if (value!.isEmpty) return 'Email is required';
+                            if (!value.contains('@')) {
+                              return 'Enter a valid email';
+                            }
+                            return null;
+                          },
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: !_showPassword,
+                          decoration:
+                              AppTheme.inputDecoration(
+                                'Password*',
+                                hint: 'Minimum 6 characters',
+                              ).copyWith(
+                                errorText: _validatePassword(
+                                  _passwordController.text,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _showPassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showPassword = !_showPassword;
+                                    });
+                                  },
+                                ),
+                              ),
+                          validator: (value) =>
+                              value!.length < 6 ? 'Minimum 6 characters' : null,
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _confirmPasswordController,
+                          obscureText: !_showConfirmPassword,
+                          decoration:
+                              AppTheme.inputDecoration(
+                                'Confirm Password*',
+                                hint: 'Re-enter your password',
+                              ).copyWith(
+                                errorText: _validateConfirmPassword(
+                                  _confirmPasswordController.text,
+                                  _passwordController.text,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _showConfirmPassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showConfirmPassword =
+                                          !_showConfirmPassword;
+                                    });
+                                  },
+                                ),
+                              ),
+                          validator: (value) =>
+                              value != _passwordController.text
+                              ? 'Passwords do not match'
+                              : null,
+                          onChanged: (_) => setState(() {}),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Step(
+                    title: const Text(
+                      "Step 3 of 6: Professional Information (Optional)",
+                    ),
+                    isActive: _currentStep >= 2,
+                    content: Column(
+                      children: [
+                        TextFormField(
+                          controller: _licenseNumberController,
+                          decoration: AppTheme.inputDecoration(
+                            'License Number',
+                            hint: 'AA123456',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _issuingStateController,
+                          decoration: AppTheme.inputDecoration(
+                            'Issuing State',
+                            hint: 'VA',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _yearsExperienceController,
+                          decoration: AppTheme.inputDecoration(
+                            'Years of Experience',
+                            hint: '5',
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Step(
+                    title: const Text("Step 4 of 6: Address Information"),
+                    isActive: _currentStep >= 3,
+                    content: Column(
+                      children: [
+                        TextFormField(
+                          controller: _addressLine1Controller,
+                          decoration: AppTheme.inputDecoration(
+                            'Address Line 1',
+                            hint: '112 SE Ave',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _addressLine2Controller,
+                          decoration: AppTheme.inputDecoration(
+                            'Address Line 2',
+                            hint: 'Apt 103',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: TextFormField(
+                                controller: _cityController,
+                                decoration:
+                                    AppTheme.inputDecoration(
+                                      'City',
+                                      hint: 'McLean',
+                                    ).copyWith(
+                                      errorText: _validateCity(
+                                        _cityController.text,
+                                      ),
+                                    ),
+                                validator: (value) => _validateCity(value!),
+                                textCapitalization: TextCapitalization.words,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _stateController,
+                                decoration:
+                                    AppTheme.inputDecoration(
+                                      'State',
+                                      hint: 'VA',
+                                    ).copyWith(
+                                      errorText: _validateState(
+                                        _stateController.text,
+                                      ),
+                                    ),
+                                validator: (value) => _validateState(value!),
+                                textCapitalization:
+                                    TextCapitalization.characters,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _zipController,
+                          decoration:
+                              AppTheme.inputDecoration(
+                                'ZIP Code',
+                                hint: '19053',
+                              ).copyWith(
+                                errorText: _validateZip(_zipController.text),
+                              ),
+                          validator: (value) => _validateZip(value!),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Step(
+                    title: const Text("Step 5 of 6: Review Information"),
+                    isActive: _currentStep >= 4,
+                    content: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Please review your information:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildReviewRow(
+                          'Name',
+                          '${_firstNameController.text} ${_lastNameController.text}',
+                        ),
+                        _buildReviewRow('Email', _emailController.text),
+                        _buildReviewRow('Phone', _phoneController.text),
+                        _buildReviewRow('Date of Birth', _dobController.text),
+                        _buildReviewRow(
+                          'License Number',
+                          _licenseNumberController.text,
+                        ),
+                        _buildReviewRow(
+                          'Issuing State',
+                          _issuingStateController.text,
+                        ),
+                        _buildReviewRow(
+                          'Years Experience',
+                          _yearsExperienceController.text,
+                        ),
+                        _buildReviewRow(
+                          'Address',
+                          '${_addressLine1Controller.text}${_addressLine2Controller.text.isNotEmpty ? ', ${_addressLine2Controller.text}' : ''}',
+                        ),
+                        _buildReviewRow(
+                          'City, State ZIP',
+                          '${_cityController.text}, ${_stateController.text} ${_zipController.text}',
+                        ),
+                      ],
+                    ),
+                  ),
+                  Step(
+                    title: const Text("Step 6 of 6: Terms & Conditions"),
+                    isActive: _currentStep >= 5,
+                    content: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Checkbox(value: true, onChanged: (_) {}),
+                            const Expanded(
+                              child: Text(
+                                "I agree to the Terms & Conditions and Privacy Policy.",
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'By proceeding, you will be directed to select a subscription package and complete payment. Your caregiver account will be created after successful payment.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                        if (errorMessage != null) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            errorMessage!,
+                            style: TextStyle(color: AppTheme.error),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -573,6 +863,8 @@ class _CaregiverRegistrationFlowPageState
     extends State<CaregiverRegistrationFlowPage> {
   bool _isLoading = false;
   String? _errorMessage;
+  String? _userId;
+  String? _stripeCustomerId;
 
   // Step 1: Register the caregiver first, then navigate to package selection
   Future<void> _registerCaregiverThenPay() async {
@@ -596,7 +888,7 @@ class _CaregiverRegistrationFlowPageState
       print('   - ZIP: ${RegistrationData.zip}');
 
       // Register the caregiver using the proper API endpoint with form data
-      await AuthService.registerCaregiver(
+      final registrationResult = await AuthService.registerCaregiver(
         firstName: RegistrationData.firstName!,
         lastName: RegistrationData.lastName!,
         email: RegistrationData.email!,
@@ -613,15 +905,25 @@ class _CaregiverRegistrationFlowPageState
         zip: RegistrationData.zip,
       );
 
-      print('Caregiver account created successfully');
+      // Store the user ID and stripeCustomerId from the registration response
+      _userId = registrationResult['userId'];
+      _stripeCustomerId = registrationResult['stripeCustomerId'];
+      print(
+        'Caregiver account created successfully with userId: $_userId, stripeCustomerId: $_stripeCustomerId',
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
+            // Removed 'const' here because backgroundColor is not a compile-time constant
             content: Text(
               'Account created successfully! Now select your subscription package.',
+              style: TextStyle(
+                color: AppTheme.textLight,
+              ), // Use white text for contrast
             ),
-            backgroundColor: Colors.green,
+            backgroundColor:
+                AppTheme.primary, // Use the centralized theme color
           ),
         );
 
@@ -642,59 +944,67 @@ class _CaregiverRegistrationFlowPageState
 
   // Step 2: Navigate to package selection (after account is created)
   void _navigateToPackageSelection() {
-    print('Navigating to package selection...');
-    context.go('/select-package');
+    print(
+      'Navigating to package selection with userId: $_userId, stripeCustomerId: $_stripeCustomerId',
+    );
+    // Pass userId and stripeCustomerId in the query parameters to the package selection page
+    context.go(
+      '/select-package?userId=$_userId&stripeCustomerId=${_stripeCustomerId ?? ""}',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Complete Registration'),
-        backgroundColor: Colors.blue.shade900,
+        backgroundColor: theme.primaryColor,
+        foregroundColor: theme.colorScheme.onPrimary,
+        elevation: 2,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Welcome to CareConnect!',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Hello ${RegistrationData.firstName},\nYour account will be created first, then you\'ll select a subscription package.\nAfter successful payment, you can log in to access CareConnect.',
-                    style: const TextStyle(fontSize: 16),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 40),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade900,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                    ),
-                    onPressed: _registerCaregiverThenPay,
-                    child: const Text('Complete Registration & Pay'),
-                  ),
-                  if (_errorMessage != null) ...[
-                    const SizedBox(height: 20),
+      body: Center(
+        child: _isLoading
+            ? CircularProgressIndicator(color: theme.primaryColor)
+            : Container(
+                constraints: const BoxConstraints(maxWidth: 600),
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                     Text(
-                      _errorMessage!,
-                      style: const TextStyle(color: Colors.red),
+                      'Welcome to CareConnect!',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.primaryColor,
+                      ),
                       textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Hello ${RegistrationData.firstName},\nYour account will be created first, then you\'ll select a subscription package.\nAfter successful payment, you can log in to access CareConnect.',
+                      style: theme.textTheme.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 40),
+                    ElevatedButton(
+                      style: AppTheme.primaryButtonStyle,
+                      onPressed: _registerCaregiverThenPay,
+                      child: const Text('Complete Registration & Pay'),
+                    ),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 20),
+                      Text(
+                        _errorMessage!,
+                        style: TextStyle(color: theme.colorScheme.error),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
+      ),
     );
   }
 }

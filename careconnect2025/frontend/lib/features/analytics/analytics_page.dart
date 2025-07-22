@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:care_connect_app/services/api_service.dart';
+import 'package:care_connect_app/config/theme/color_utils.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
+import 'package:care_connect_app/widgets/responsive_container.dart';
 import 'models/vital_model.dart';
 import 'models/dashboard_analytics_model.dart';
 import 'web_utils.dart'
@@ -11,7 +19,7 @@ import 'web_utils.dart'
     as web_utils;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import '../../../widgets/ai_chat.dart';
+import '../../../widgets/ai_chat_improved.dart';
 
 class AnalyticsPage extends StatefulWidget {
   final int patientId;
@@ -91,50 +99,91 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       loading = true;
       error = null;
     });
+
+    // Validate patient ID before making API call
+    if (widget.patientId <= 0) {
+      setState(() {
+        error = 'Invalid patient ID: ${widget.patientId}';
+        loading = false;
+      });
+      print('⚠️ Analytics Error: Invalid patient ID: ${widget.patientId}');
+      return;
+    }
+
     try {
+      print(
+        '🔍 Fetching analytics for patientId: ${widget.patientId}, days: $selectedDays',
+      );
       final authHeaders = await ApiService.getAuthHeaders();
+      final vitalsUrl = Uri.parse(
+        '${ApiConstants.baseUrl}analytics/vitals?patientId=${widget.patientId}&days=$selectedDays',
+      );
+
+      print('🔍 Making API call to: $vitalsUrl');
       final vitalsResp = await http
-          .get(
-            Uri.parse(
-              '${ApiConstants.baseUrl}analytics/vitals?patientId=${widget.patientId}&days=$selectedDays',
-            ),
-            headers: authHeaders,
-          )
+          .get(vitalsUrl, headers: authHeaders)
           .timeout(
             const Duration(seconds: 180),
             onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
           );
+      final dashboardUrl = Uri.parse(
+        '${ApiConstants.baseUrl}analytics/dashboard?patientId=${widget.patientId}&days=$selectedDays',
+      );
+
+      print('🔍 Making API call to: $dashboardUrl');
       final dashboardResp = await http
-          .get(
-            Uri.parse(
-              '${ApiConstants.baseUrl}analytics/dashboard?patientId=${widget.patientId}&days=$selectedDays',
-            ),
-            headers: authHeaders,
-          )
+          .get(dashboardUrl, headers: authHeaders)
           .timeout(
             const Duration(seconds: 180),
             onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
           );
+
+      // Log response statuses for debugging
+      print('🔍 Vitals API response status: ${vitalsResp.statusCode}');
+      print('🔍 Dashboard API response status: ${dashboardResp.statusCode}');
 
       if (vitalsResp.statusCode == 200 && dashboardResp.statusCode == 200) {
-        final Map<String, dynamic> vitalsJsonMap = json.decode(vitalsResp.body);
-        final List<dynamic> vitalsDataList =
-            vitalsJsonMap['data'] as List; // Access the 'data' key
+        try {
+          final Map<String, dynamic> vitalsJsonMap = json.decode(
+            vitalsResp.body,
+          );
+          print(
+            '🔍 Vitals API response body: ${vitalsResp.body.substring(0, min(100, vitalsResp.body.length))}...',
+          );
 
-        final dashboardJson = json.decode(dashboardResp.body);
+          if (!vitalsJsonMap.containsKey('data')) {
+            throw FormatException('Vitals response missing "data" key');
+          }
 
-        setState(() {
-          vitals = vitalsDataList.map((e) => Vital.fromJson(e)).toList();
-          dashboard = DashboardAnalytics.fromJson(dashboardJson);
-          loading = false;
-        });
+          final List<dynamic> vitalsDataList = vitalsJsonMap['data'] as List;
+          final dashboardJson = json.decode(dashboardResp.body);
+
+          setState(() {
+            vitals = vitalsDataList.map((e) => Vital.fromJson(e)).toList();
+            dashboard = DashboardAnalytics.fromJson(dashboardJson);
+            loading = false;
+          });
+
+          print(
+            '✅ Successfully loaded ${vitals.length} vitals and dashboard data',
+          );
+        } catch (e) {
+          print('❌ Error parsing API response: $e');
+          setState(() {
+            error = 'Error parsing data: $e';
+            loading = false;
+          });
+        }
       } else {
         String vitalsErrorMessage = 'Failed to fetch vitals data';
         if (vitalsResp.body.isNotEmpty) {
           try {
             final Map<String, dynamic> errorBody = json.decode(vitalsResp.body);
             vitalsErrorMessage = errorBody['error'] ?? vitalsErrorMessage;
-          } catch (e) {}
+            print('❌ Vitals API error: $vitalsErrorMessage');
+          } catch (e) {
+            print('❌ Could not parse vitals error response: $e');
+          }
         }
         // Handle non-200 status codes for dashboardResp
         String dashboardErrorMessage = 'Failed to fetch dashboard data';
@@ -175,7 +224,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('$type export completed successfully!'),
-          backgroundColor: Colors.green.shade600,
+          backgroundColor: AppTheme.success,
           action: SnackBarAction(
             label: 'OK',
             textColor: Colors.white,
@@ -370,54 +419,52 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                     ],
                   ),
                   // Data rows
-                  ...vitals
-                      .map(
-                        (vital) => pw.TableRow(
-                          children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(8),
-                              child: pw.Text(
-                                vital.timestamp.toString().substring(0, 10),
-                              ),
-                            ),
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(8),
-                              child: pw.Text('${vital.heartRate} bpm'),
-                            ),
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(8),
-                              child: pw.Text('${vital.spo2}%'),
-                            ),
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(8),
-                              child: pw.Text(
-                                '${vital.systolic}/${vital.diastolic}',
-                              ),
-                            ),
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(8),
-                              child: pw.Text('${vital.weight} lbs'),
-                            ),
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(8),
-                              child: pw.Text(
-                                vital.moodValue != null
-                                    ? '${vital.moodValue}/10'
-                                    : 'N/A',
-                              ),
-                            ),
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.all(8),
-                              child: pw.Text(
-                                vital.painValue != null
-                                    ? '${vital.painValue}/10'
-                                    : 'N/A',
-                              ),
-                            ),
-                          ],
+                  ...vitals.map(
+                    (vital) => pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text(
+                            vital.timestamp.toString().substring(0, 10),
+                          ),
                         ),
-                      )
-                      .toList(),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text('${vital.heartRate} bpm'),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text('${vital.spo2}%'),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text(
+                            '${vital.systolic}/${vital.diastolic}',
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text('${vital.weight} lbs'),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text(
+                            vital.moodValue != null
+                                ? '${vital.moodValue}/10'
+                                : 'N/A',
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text(
+                            vital.painValue != null
+                                ? '${vital.painValue}/10'
+                                : 'N/A',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -591,7 +638,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
-            colors: [Colors.green.shade50, Colors.green.shade100],
+            colors: [
+              AppTheme.success.withOpacity(0.05),
+              AppTheme.success.withOpacity(0.15),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -606,12 +656,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade600,
+                      color: ColorUtils.primary,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.psychology,
-                      color: Colors.white,
+                      color: ColorUtils.textLight,
                       size: 20,
                     ),
                   ),
@@ -641,9 +691,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
+                  color: ColorUtils.getInfoLight(),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.shade200),
+                  border: Border.all(color: ColorUtils.getPrimaryLighter()),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -653,7 +703,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: Colors.green.shade700,
+                        color: ColorUtils.primary,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -755,17 +805,17 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
   Widget _buildSuggestionChip(String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.green.shade200,
+        color: ColorUtils.getInfoLight(),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.shade300),
+        border: Border.all(color: ColorUtils.getInfoLighter()),
       ),
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 11,
-          color: Colors.green.shade700,
+          fontSize: 14,
+          color: ColorUtils.primary,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -823,7 +873,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
-            colors: [Colors.white, Colors.blue.shade50],
+            colors: [
+              ColorUtils.backgroundPrimary,
+              ColorUtils.getPrimaryLighter(),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -839,7 +892,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                     width: 4,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: primaryColor ?? Colors.blue.shade600,
+                      color: primaryColor ?? ColorUtils.primary,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -861,15 +914,15 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: (primaryColor ?? Colors.blue.shade600)
-                            .withValues(alpha: 0.1),
+                        color: ColorUtils.getPrimaryWithOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         unit,
                         style: TextStyle(
-                          fontSize: 12,
-                          color: primaryColor ?? Colors.blue.shade600,
+                          fontSize:
+                              14, // Increased from 12 for better readability
+                          color: primaryColor ?? ColorUtils.primary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1153,30 +1206,18 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   Widget build(BuildContext context) {
     if (loading) {
       return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.blue.shade900,
-          iconTheme: const IconThemeData(color: Colors.white),
-          title: const Text(
-            'Patient Analytics',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-        ),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBarHelper.createAppBar(context, title: 'Patient Analytics'),
+        drawer: const CommonDrawer(currentRoute: '/analytics'),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (error != null) {
       return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.blue.shade900,
-          iconTheme: const IconThemeData(color: Colors.white),
-          title: const Text(
-            'Patient Analytics',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-        ),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBarHelper.createAppBar(context, title: 'Patient Analytics'),
+        drawer: const CommonDrawer(currentRoute: '/analytics'),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1241,6 +1282,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      drawer: const CommonDrawer(currentRoute: '/analytics'),
       appBar: AppBar(
         backgroundColor: Colors.blue.shade900,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -1288,7 +1330,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               icon: const Icon(Icons.table_chart, size: 18),
               label: const Text('CSV'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade600,
+                backgroundColor: AppTheme.success,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -1312,222 +1354,224 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             child: Stack(
               children: [
                 SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Welcome header
-                      Text(
-                        'Analytics Overview',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade800,
+                  child: ResponsiveContainer(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Welcome header
+                        Text(
+                          'Analytics Overview',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade800,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Patient health metrics and trends',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey.shade600,
+                        const SizedBox(height: 8),
+                        Text(
+                          'Patient health metrics and trends',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                      // Filter chips
-                      Row(
-                        children: [
-                          Text(
-                            'Time Range:',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade700,
+                        // Filter chips
+                        Row(
+                          children: [
+                            Text(
+                              'Time Range:',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade700,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(child: _buildFilterChips()),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
+                            const SizedBox(width: 12),
+                            Expanded(child: _buildFilterChips()),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
 
-                      // AI Assistant Card
-                      _buildAIAssistantCard(),
+                        // AI Assistant Card
+                        _buildAIAssistantCard(),
 
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                      // Summary Card
-                      if (dashboard != null)
-                        Card(
-                          elevation: 6,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Container(
-                            decoration: BoxDecoration(
+                        // Summary Card
+                        if (dashboard != null)
+                          Card(
+                            elevation: 6,
+                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.blue.shade700,
-                                  Colors.blue.shade500,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.2,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.blue.shade700,
+                                    Colors.blue.shade500,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.2,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                           ),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
+                                          child: const Icon(
+                                            Icons.analytics,
+                                            color: Colors.white,
+                                            size: 24,
                                           ),
                                         ),
-                                        child: const Icon(
-                                          Icons.analytics,
-                                          color: Colors.white,
-                                          size: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Health Summary',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Health Summary',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
-                                            ),
-                                            LayoutBuilder(
-                                              builder: (context, constraints) {
-                                                // Use shorter format for narrow screens
-                                                if (constraints.maxWidth <
-                                                    200) {
-                                                  return Text(
-                                                    'Last $selectedDays days',
-                                                    style: const TextStyle(
-                                                      color: Colors.white70,
-                                                      fontSize: 13,
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    maxLines: 1,
-                                                  );
-                                                } else {
-                                                  return Text(
-                                                    'Period: Last $selectedDays days (${dashboard!.periodStart?.month ?? '?'}/${dashboard!.periodStart?.day ?? '?'} - ${dashboard!.periodEnd?.month ?? '?'}/${dashboard!.periodEnd?.day ?? '?'})',
-                                                    style: const TextStyle(
-                                                      color: Colors.white70,
-                                                      fontSize: 14,
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    maxLines: 2,
-                                                  );
-                                                }
-                                              },
-                                            ),
-                                          ],
+                                              LayoutBuilder(
+                                                builder: (context, constraints) {
+                                                  // Use shorter format for narrow screens
+                                                  if (constraints.maxWidth <
+                                                      200) {
+                                                    return Text(
+                                                      'Last $selectedDays days',
+                                                      style: const TextStyle(
+                                                        color: Colors.white70,
+                                                        fontSize: 13,
+                                                      ),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      maxLines: 1,
+                                                    );
+                                                  } else {
+                                                    return Text(
+                                                      'Period: Last $selectedDays days (${dashboard!.periodStart?.month ?? '?'}/${dashboard!.periodStart?.day ?? '?'} - ${dashboard!.periodEnd?.month ?? '?'}/${dashboard!.periodEnd?.day ?? '?'})',
+                                                      style: const TextStyle(
+                                                        color: Colors.white70,
+                                                        fontSize: 14,
+                                                      ),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      maxLines: 2,
+                                                    );
+                                                  }
+                                                },
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 20),
-                                  _buildSummaryGrid(),
-                                ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                    _buildSummaryGrid(),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
 
-                      const SizedBox(height: 32),
+                        const SizedBox(height: 32),
 
-                      // Charts Section
-                      Text(
-                        'Detailed Charts',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade800,
+                        // Charts Section
+                        Text(
+                          'Detailed Charts',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade800,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      if (moodSpots.isNotEmpty)
+                        const SizedBox(height: 16),
+                        if (moodSpots.isNotEmpty)
+                          buildChart(
+                            'Mood Level',
+                            moodSpots,
+                            minY: 1,
+                            maxY: 10,
+                            primaryColor: Colors.amber.shade600,
+                            unit: '/10',
+                          ),
+
+                        if (painSpots.isNotEmpty)
+                          buildChart(
+                            'Pain Level',
+                            painSpots,
+                            minY: 1,
+                            maxY: 10,
+                            primaryColor: Colors.red.shade800,
+                            unit: '/10',
+                          ),
                         buildChart(
-                          'Mood Level',
-                          moodSpots,
-                          minY: 1,
-                          maxY: 10,
-                          primaryColor: Colors.amber.shade600,
-                          unit: '/10',
+                          'Heart Rate',
+                          heartRateSpots,
+                          minY: 50,
+                          maxY: 120,
+                          primaryColor: Colors.red.shade600,
+                          unit: 'bpm',
                         ),
-
-                      if (painSpots.isNotEmpty)
                         buildChart(
-                          'Pain Level',
-                          painSpots,
-                          minY: 1,
-                          maxY: 10,
-                          primaryColor: Colors.red.shade800,
-                          unit: '/10',
+                          'SpO₂',
+                          spo2Spots,
+                          minY: 90,
+                          maxY: 100,
+                          primaryColor: Colors.blue.shade600,
+                          unit: '%',
                         ),
-                      buildChart(
-                        'Heart Rate',
-                        heartRateSpots,
-                        minY: 50,
-                        maxY: 120,
-                        primaryColor: Colors.red.shade600,
-                        unit: 'bpm',
-                      ),
-                      buildChart(
-                        'SpO₂',
-                        spo2Spots,
-                        minY: 90,
-                        maxY: 100,
-                        primaryColor: Colors.blue.shade600,
-                        unit: '%',
-                      ),
-                      buildChart(
-                        'Systolic Blood Pressure',
-                        systolicSpots,
-                        minY: 100,
-                        maxY: 140,
-                        primaryColor: Colors.orange.shade600,
-                        unit: 'mmHg',
-                      ),
-                      buildChart(
-                        'Diastolic Blood Pressure',
-                        diastolicSpots,
-                        minY: 60,
-                        maxY: 100,
-                        primaryColor: Colors.purple.shade600,
-                        unit: 'mmHg',
-                      ),
-                      buildChart(
-                        'Weight',
-                        weightSpots,
-                        minY: 100,
-                        maxY: 250,
-                        primaryColor: Colors.green.shade600,
-                        unit: 'lbs',
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+                        buildChart(
+                          'Systolic Blood Pressure',
+                          systolicSpots,
+                          minY: 100,
+                          maxY: 140,
+                          primaryColor: Colors.orange.shade600,
+                          unit: 'mmHg',
+                        ),
+                        buildChart(
+                          'Diastolic Blood Pressure',
+                          diastolicSpots,
+                          minY: 60,
+                          maxY: 100,
+                          primaryColor: Colors.purple.shade600,
+                          unit: 'mmHg',
+                        ),
+                        buildChart(
+                          'Weight',
+                          weightSpots,
+                          minY: 100,
+                          maxY: 250,
+                          primaryColor: AppTheme.success,
+                          unit: 'lbs',
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
                   ),
                 ),
 
@@ -1557,8 +1601,18 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               ],
             ),
           ),
-          // AI Chat Widget for analytics context
-          AIChat(role: 'analytics', healthDataContext: _getHealthDataContext()),
+          // AI Chat Widget for analytics context - properly positioned at bottom right
+          Positioned(
+            bottom: 0,
+            right: 0,
+            width:
+                MediaQuery.of(context).size.width *
+                0.4, // Constrain width to 40% of screen
+            child: AIChat(
+              role: 'analytics',
+              healthDataContext: _getHealthDataContext(),
+            ),
+          ),
         ],
       ),
     );

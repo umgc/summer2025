@@ -3,12 +3,31 @@ import 'package:http/http.dart' as http;
 import '../config/env_constant.dart';
 
 enum AIModel {
-  deepseek('DeepSeek', 'deepseek-chat'),
-  openai('OpenAI GPT-4', 'gpt-4o-mini');
+  deepseek,
+  gpt4,
+  claude;
 
-  const AIModel(this.displayName, this.modelName);
-  final String displayName;
-  final String modelName;
+  String get displayName {
+    switch (this) {
+      case AIModel.deepseek:
+        return 'DeepSeek Coder';
+      case AIModel.gpt4:
+        return 'GPT-4 Turbo';
+      case AIModel.claude:
+        return 'Claude 3';
+    }
+  }
+
+  String get modelName {
+    switch (this) {
+      case AIModel.deepseek:
+        return 'deepseek-chat';
+      case AIModel.gpt4:
+        return 'gpt-4o-mini';
+      case AIModel.claude:
+        return 'claude-3-haiku';
+    }
+  }
 }
 
 class AIService {
@@ -126,7 +145,7 @@ class AIService {
       };
 
       // Add model-specific parameters
-      if (model == AIModel.openai) {
+      if (model == AIModel.gpt4) {
         requestBody['max_tokens'] = 1000; // Increased for file analysis
         requestBody['temperature'] = 0.7;
       } else {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fitbitter/fitbitter.dart';
-import 'package:health/health.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
 
 class AddDeviceScreen extends StatefulWidget {
   const AddDeviceScreen({super.key});
@@ -16,7 +16,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   bool isConnected = false;
   String? errorMessage;
 
-  // Fitbit configuration - you'll need to get these from Fitbit Dev Console
+  // Fitbit configuration - these are now just placeholders for simulation
   static const String fitbitClientId = '23QG9C';
   static const String fitbitClientSecret = 'c77f0a7a3839a9307674b893fae14934';
   static const String redirectUri = 'care-connect://fitbit-auth';
@@ -25,7 +25,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     {
       'id': 'fitbit',
       'name': 'Fitbit',
-      'description': 'Connect your Fitbit device to track steps, heart rate, sleep, and more',
+      'description':
+          'Connect your Fitbit device to track steps, heart rate, sleep, and more',
       'icon': Icons.fitness_center,
       'color': Colors.green,
       'features': ['Steps', 'Heart Rate', 'Sleep', 'Calories', 'Distance'],
@@ -36,7 +37,12 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
       'description': 'Sync data from Apple Health app and connected devices',
       'icon': Icons.favorite,
       'color': Colors.red,
-      'features': ['All Health Metrics', 'Medical Records', 'Medications', 'Workouts'],
+      'features': [
+        'All Health Metrics',
+        'Medical Records',
+        'Medications',
+        'Workouts',
+      ],
     },
     {
       'id': 'google_fit',
@@ -51,11 +57,10 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Health Platform'),
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Add Health Platform',
         centerTitle: true,
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -78,9 +83,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
           ),
 
           // Content Area
-          Expanded(
-            child: _buildStepContent(),
-          ),
+          Expanded(child: _buildStepContent()),
 
           // Bottom Action Button
           if (currentStep < 2) _buildBottomButton(),
@@ -97,9 +100,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
           height: 40,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isActive ? Colors.indigo : Colors.grey[300],
+            color: isActive ? AppTheme.primary : Colors.grey[300],
             border: Border.all(
-              color: isActive ? Colors.indigo : Colors.grey[400]!,
+              color: isActive ? AppTheme.primary : Colors.grey[400]!,
               width: 2,
             ),
           ),
@@ -119,7 +122,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: isActive ? Colors.indigo : Colors.grey[600],
+            color: isActive ? AppTheme.primary : Colors.grey[600],
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -132,7 +135,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
       child: Container(
         height: 2,
         margin: const EdgeInsets.only(bottom: 30),
-        color: isActive ? Colors.indigo : Colors.grey[300],
+        color: isActive ? AppTheme.primary : Colors.grey[300],
       ),
     );
   }
@@ -161,7 +164,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.indigo,
+              color: AppTheme.primary,
             ),
           ),
           const SizedBox(height: 8),
@@ -183,7 +186,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                       side: BorderSide(
-                        color: isSelected ? Colors.indigo : Colors.transparent,
+                        color: isSelected
+                            ? AppTheme.primary
+                            : Colors.transparent,
                         width: 2,
                       ),
                     ),
@@ -202,12 +207,14 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: platform['color'].withOpacity(0.1),
+                                color: (platform['color'] as Color).withOpacity(
+                                  0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
-                                platform['icon'],
-                                color: platform['color'],
+                                platform['icon'] as IconData,
+                                color: platform['color'] as Color,
                                 size: 24,
                               ),
                             ),
@@ -217,7 +224,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    platform['name'],
+                                    platform['name'] as String,
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -225,7 +232,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    platform['description'],
+                                    platform['description'] as String,
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: Colors.grey[600],
@@ -242,8 +249,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                               Container(
                                 width: 24,
                                 height: 24,
-                                decoration: const BoxDecoration(
-                                  color: Colors.indigo,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary,
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -268,7 +275,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
 
   Widget _buildConnectStep() {
     final selectedPlatformData = healthPlatforms.firstWhere(
-          (platform) => platform['id'] == selectedPlatform,
+      (platform) => platform['id'] == selectedPlatform,
     );
 
     return Padding(
@@ -280,7 +287,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.indigo,
+              color: AppTheme.primary,
             ),
           ),
           const SizedBox(height: 24),
@@ -299,18 +306,19 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: selectedPlatformData['color'].withOpacity(0.1),
+                      color: (selectedPlatformData['color'] as Color)
+                          .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Icon(
-                      selectedPlatformData['icon'],
-                      color: selectedPlatformData['color'],
+                      selectedPlatformData['icon'] as IconData,
+                      color: selectedPlatformData['color'] as Color,
                       size: 40,
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    selectedPlatformData['name'],
+                    selectedPlatformData['name'] as String,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -318,7 +326,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    selectedPlatformData['description'],
+                    selectedPlatformData['description'] as String,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
@@ -383,90 +391,86 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
               ],
             )
           else if (errorMessage != null)
-              Column(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.error,
-                      color: Colors.red,
-                      size: 30,
-                    ),
+            Column(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Connection Failed',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ),
+                  child: const Icon(Icons.error, color: Colors.red, size: 30),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Connection Failed',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    errorMessage!,
-                    style: const TextStyle(color: Colors.grey),
-                    textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  errorMessage!,
+                  style: const TextStyle(color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      errorMessage = null;
+                    });
+                  },
+                  style: AppTheme.primaryButtonStyle,
+                  child: const Text(
+                    'Try Again',
+                    style: TextStyle(color: Colors.white),
                   ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        errorMessage = null;
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
-                    child: const Text('Try Again', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            )
+          else
+            Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
-              )
-            else
-              Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: Colors.blue[700],
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Ready to Connect',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue[700],
-                                ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.blue[700]),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Ready to Connect',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[700],
                               ),
-                              Text(
-                                'You\'ll be redirected to ${selectedPlatformData['name']} to authorize access.',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.blue[600],
-                                ),
+                            ),
+                            Text(
+                              'You\'ll be redirected to ${selectedPlatformData['name']} to authorize access.',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.blue[600],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
 
           const Spacer(),
         ],
@@ -476,7 +480,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
 
   Widget _buildCompleteStep() {
     final selectedPlatformData = healthPlatforms.firstWhere(
-          (platform) => platform['id'] == selectedPlatform,
+      (platform) => platform['id'] == selectedPlatform,
     );
 
     return Padding(
@@ -544,10 +548,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                           color: Colors.indigo.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(
-                          Icons.sync,
-                          color: Colors.indigo,
-                        ),
+                        child: const Icon(Icons.sync, color: Colors.indigo),
                       ),
                       const SizedBox(width: 16),
                       const Expanded(
@@ -589,12 +590,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  style: AppTheme.primaryButtonStyle.copyWith(
+                    padding: MaterialStateProperty.all(
+                      const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
                   child: const Text(
@@ -614,14 +612,13 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                       selectedPlatform = null;
                       isConnecting = false;
                       isConnected = false;
+                      errorMessage = null; // Reset error message as well
                     });
                   },
-                  child: const Text(
+                  style: AppTheme.textButtonStyle,
+                  child: Text(
                     'Add Another Platform',
-                    style: TextStyle(
-                      color: Colors.indigo,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(color: AppTheme.primary, fontSize: 16),
                   ),
                 ),
               ),
@@ -639,12 +636,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         width: double.infinity,
         child: ElevatedButton(
           onPressed: _getButtonAction(),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.indigo,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+          style: AppTheme.primaryButtonStyle.copyWith(
+            padding: MaterialStateProperty.all(
+              const EdgeInsets.symmetric(vertical: 16),
             ),
           ),
           child: Text(
@@ -674,10 +668,10 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
       case 0:
         return selectedPlatform != null
             ? () {
-          setState(() {
-            currentStep = 1;
-          });
-        }
+                setState(() {
+                  currentStep = 1;
+                });
+              }
             : null;
       case 1:
         if (isConnecting) return null;
@@ -694,13 +688,13 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
             errorMessage = null;
           });
 
-          // Handle different platforms
+          // Handle different platforms with simulated connections
           if (selectedPlatform == 'fitbit') {
-            _connectToFitbit();
+            _simulateConnection('Fitbit');
           } else if (selectedPlatform == 'apple_health') {
-            _connectToAppleHealth();
+            _simulateConnection('Apple Health');
           } else if (selectedPlatform == 'google_fit') {
-            _connectToGoogleFit();
+            _simulateConnection('Google Fit');
           }
         };
       default:
@@ -708,254 +702,41 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     }
   }
 
-  // Fitbit Connection Methods
-  Future<void> _connectToFitbit() async {
-    try {
-      print('Starting Fitbit connection...');
+  /// Simulates a connection attempt for any platform.
+  /// Randomly succeeds or fails after a delay.
+  Future<void> _simulateConnection(String platformName) async {
+    print('Starting simulated $platformName connection...');
+    await Future.delayed(const Duration(seconds: 3)); // Simulate network delay
 
-      // For now, simulate the Fitbit OAuth flow
-      // TODO: Replace with actual fitbitter implementation
-      await _connectToFitbitReal();
+    // Simulate success or failure
+    final bool success =
+        DateTime.now().second % 2 == 0; // 50% chance of success
 
-    } catch (e) {
-      print('Fitbit connection error: $e');
-      setState(() {
-        isConnecting = false;
-        errorMessage = 'Failed to connect to Fitbit. Please try again.';
-      });
-    }
-  }
-
-  Future<void> _simulateFitbitAuth() async {
-    // Simulate OAuth flow
-    await Future.delayed(const Duration(seconds: 2));
-
-    // Simulate successful authorization
-    setState(() {
-      isConnecting = false;
-      isConnected = true;
-    });
-
-    print('Fitbit connection successful (simulated)');
-  }
-
-  // Real Fitbit implementation (uncomment when you add fitbitter package)
-
-  Future<void> _connectToFitbitReal() async {
-    try {
-      // Initialize Fitbitter
-
-      FitbitCredentials? fitbitCredentials =
-      await FitbitConnector.authorize(
-          clientID: fitbitClientId,
-          clientSecret: fitbitClientSecret,
-          redirectUri: redirectUri,
-          callbackUrlScheme: 'care-connect',
-      );
-
-      if (fitbitCredentials != null) {
-        // Get access token
-        String accessToken = fitbitCredentials.fitbitAccessToken;
-
-        if (accessToken != null) {
-          // Store the access token securely
-          await _storeAccessToken('fitbit', accessToken);
-
-          setState(() {
-            isConnecting = false;
-            isConnected = true;
-          });
-
-          print('Fitbit connected successfully');
-        } else {
-          throw Exception('Failed to get access token');
-        }
-      } else {
-        throw Exception('Authorization was cancelled');
-      }
-    } catch (e) {
-      print('Fitbit connection error: $e');
-      setState(() {
-        isConnecting = false;
-        errorMessage = 'Failed to connect to Fitbit: ${e.toString()}';
-      });
-    }
-  }
-
-
-  Future<void> _connectToAppleHealth() async {
-    try {
-      print('Starting Apple Health connection...');
-
-      // Simulate Apple Health connection
-      await Future.delayed(const Duration(seconds: 3));
-
+    if (success) {
       setState(() {
         isConnecting = false;
         isConnected = true;
-      });
-
-      print('Apple Health connection successful (simulated)');
-
-    } catch (e) {
-      setState(() {
-        isConnecting = false;
-        errorMessage = 'Failed to connect to Apple Health. Please try again.';
-      });
-    }
-  }
-
-  Future<void> _connectToAppleHealthReal() async {
-    try {
-      print('Starting Apple Health connection...');
-
-      setState(() {
-        isConnecting = true;
         errorMessage = null;
       });
-
-      // Define the types of health data we want to access
-      List<HealthDataType> types = [
-        HealthDataType.STEPS,
-        HealthDataType.HEART_RATE,
-        HealthDataType.SLEEP_IN_BED,
-        HealthDataType.ACTIVE_ENERGY_BURNED,
-        HealthDataType.DISTANCE_WALKING_RUNNING,
-        HealthDataType.BODY_MASS_INDEX,
-        HealthDataType.WEIGHT,
-      ];
-
-      // Request authorization for the specified data types
-      bool requested = await Health().requestAuthorization(
-        types,
-        permissions: [
-          HealthDataAccess.READ,
-          HealthDataAccess.READ,
-          HealthDataAccess.READ,
-          HealthDataAccess.READ,
-          HealthDataAccess.READ,
-          HealthDataAccess.READ,
-          HealthDataAccess.READ,
-        ],
+      await _storeAccessToken(
+        selectedPlatform!,
+        'simulated_token_for_$selectedPlatform',
       );
-
-      if (requested) {
-        // Check if we actually have permissions
-        bool hasPermissions = await Health().hasPermissions(types) ?? false;
-
-        if (hasPermissions) {
-          // Store successful connection info
-          await _storeAccessToken('apple_health', 'apple_health_authorized');
-
-          setState(() {
-            isConnecting = false;
-            isConnected = true;
-          });
-
-          print('Apple Health connected successfully');
-        } else {
-          throw Exception('Apple Health permissions were denied');
-        }
-      } else {
-        throw Exception('Failed to request Apple Health permissions');
-      }
-
-    } catch (e) {
-      print('Apple Health connection error: $e');
+      print('$platformName connection successful (simulated)');
+    } else {
       setState(() {
         isConnecting = false;
-        // errorMessage = _getHealthErrorMessage(e, 'Apple Health');
+        isConnected = false;
+        errorMessage =
+            'Failed to connect to $platformName. Please try again or check your credentials.';
       });
-    }
-  }
-
-  Future<void> _connectToGoogleFit() async {
-    try {
-      print('Starting Google Fit connection...');
-
-      // Simulate Google Fit connection
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() {
-        isConnecting = false;
-        isConnected = true;
-      });
-
-      print('Google Fit connection successful (simulated)');
-
-    } catch (e) {
-      setState(() {
-        isConnecting = false;
-        errorMessage = 'Failed to connect to Google Fit. Please try again.';
-      });
-    }
-  }
-
-  Future<void> _connectToGoogleFitReal() async {
-    try {
-      print('Starting Google Fit connection...');
-
-      setState(() {
-        isConnecting = true;
-        errorMessage = null;
-      });
-
-      // Define the types of health data we want to access
-      List<HealthDataType> types = [
-        HealthDataType.STEPS,
-        HealthDataType.HEART_RATE,
-        HealthDataType.SLEEP_IN_BED,
-        HealthDataType.ACTIVE_ENERGY_BURNED,
-        HealthDataType.DISTANCE_WALKING_RUNNING,
-        HealthDataType.WEIGHT,
-      ];
-
-      // Request authorization for the specified data types
-      bool requested = await Health().requestAuthorization(
-        types,
-        permissions: [
-          HealthDataAccess.READ,
-          HealthDataAccess.READ,
-          HealthDataAccess.READ,
-          HealthDataAccess.READ,
-          HealthDataAccess.READ,
-          HealthDataAccess.READ,
-        ],
-      );
-
-      if (requested) {
-        // Check if we actually have permissions
-        bool hasPermissions = await Health().hasPermissions(types) ?? false;
-
-        if (hasPermissions) {
-          // Store successful connection info
-          await _storeAccessToken('google_fit', 'google_fit_authorized');
-
-          setState(() {
-            isConnecting = false;
-            isConnected = true;
-          });
-
-          print('Google Fit connected successfully');
-        } else {
-          throw Exception('Google Fit permissions were denied');
-        }
-      } else {
-        throw Exception('Failed to request Google Fit permissions');
-      }
-
-    } catch (e) {
-      print('Google Fit connection error: $e');
-      setState(() {
-        isConnecting = false;
-        // errorMessage = _getHealthErrorMessage(e, 'Google Fit');
-      });
+      print('$platformName connection failed (simulated)');
     }
   }
 
   Future<void> _storeAccessToken(String platform, String token) async {
-    // TODO: Store the access token securely using flutter_secure_storage
-    print('Storing $platform access token: ${token.substring(0, 10)}...');
+    // TODO: In a real application, you would store this token securely.
+    // For now, it just prints to the console.
+    print('Storing $platform access token: $token');
   }
 }
-

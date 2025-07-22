@@ -6,10 +6,22 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:care_connect_app/services/api_service.dart';
 import '../../models/package_model.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/responsive_container.dart';
 
 class StripeCheckoutPage extends StatefulWidget {
   final PackageModel package;
-  const StripeCheckoutPage({super.key, required this.package});
+  final String? userId;
+  final String? stripeCustomerId;
+  final bool fromPortal;
+  const StripeCheckoutPage({
+    super.key,
+    required this.package,
+    this.userId,
+    this.stripeCustomerId,
+    this.fromPortal = false,
+  });
 
   @override
   State<StripeCheckoutPage> createState() => _StripeCheckoutPageState();
@@ -36,22 +48,39 @@ class _StripeCheckoutPageState extends State<StripeCheckoutPage> {
       _isProcessing = true;
       _status = null;
     });
-
     try {
       // For registration flow, we don't need user authentication
       // We can create checkout session with just the package information
       print('🔍 Sending plan: ${widget.package.name}');
       print('🔍 Sending amount: ${widget.package.priceCents}');
+      print('🔍 Using userId: ${widget.userId ?? '0'}');
+      print(
+        '🔍 Using stripeCustomerId: ${widget.stripeCustomerId ?? 'not provided'}',
+      );
+
+      final requestBody = {
+        'plan': widget.package.name, // Send actual plan name from API
+        'userId':
+            widget.userId ?? '0', // Use provided userId or fallback to '0'
+        'amount': widget.package.priceCents
+            .toString(), // Send the actual amount
+      };
+
+      // Add portal parameter if coming from subscription management
+      if (widget.fromPortal) {
+        requestBody['portal'] = 'update';
+      }
+
+      // Add stripeCustomerId to request only if it's available
+      if (widget.stripeCustomerId != null &&
+          widget.stripeCustomerId!.isNotEmpty) {
+        requestBody['stripeCustomerId'] = widget.stripeCustomerId!;
+      }
 
       final response = await http.post(
         Uri.parse('${ApiConstants.baseUrl}subscriptions/create'),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: {
-          'plan': widget.package.name, // Send actual plan name from API
-          'userId': '0', // Temporary userId for registration flow
-          'amount': widget.package.priceCents
-              .toString(), // Send the actual amount
-        },
+        body: requestBody,
       );
 
       print('🔍 Stripe checkout response: ${response.statusCode}');
@@ -98,11 +127,7 @@ class _StripeCheckoutPageState extends State<StripeCheckoutPage> {
   Widget build(BuildContext context) {
     if (isIOS13OrLower) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Checkout', style: TextStyle(color: Colors.white)),
-          backgroundColor: const Color(0xFF14366E),
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
+        appBar: AppBarHelper.createAppBar(context, title: 'Checkout'),
         body: const Center(
           child: Text(
             'Stripe payments require iOS 14 or higher.',
@@ -117,80 +142,73 @@ class _StripeCheckoutPageState extends State<StripeCheckoutPage> {
       appBar: AppBar(
         title: Text(
           '${widget.package.name} Checkout',
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
         ),
-        backgroundColor: const Color(0xFF14366E),
-        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: Theme.of(context).primaryColor,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              widget.package.name,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF14366E),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(widget.package.description),
-            const SizedBox(height: 24),
-            Text(
-              '\$${(widget.package.priceCents / 100).toStringAsFixed(2)} / mo',
-              style: const TextStyle(
-                fontSize: 24,
-                color: Color(0xFF14366E),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF14366E),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  textStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+      body: SingleChildScrollView(
+        child: ResponsiveContainer(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                widget.package.name,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
                 ),
-                onPressed: _isProcessing ? null : _pay,
-                child: _isProcessing
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text('Pay with Stripe'),
               ),
-            ),
-            if (_status != null) ...[
+              const SizedBox(height: 12),
+              Text(widget.package.description),
               const SizedBox(height: 24),
               Text(
-                _status!,
+                '\$${(widget.package.priceCents / 100).toStringAsFixed(2)} / mo',
                 style: TextStyle(
-                  color: _status!.contains('successful')
-                      ? Colors.green
-                      : Colors.red,
+                  fontSize: 24,
+                  color: Theme.of(context).primaryColor,
                   fontWeight: FontWeight.bold,
                 ),
-                textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: AppTheme.primaryButtonStyle,
+                  onPressed: _isProcessing ? null : _pay,
+                  child: _isProcessing
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.onPrimary,
+                            ),
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Pay with Stripe'),
+                ),
+              ),
+              if (_status != null) ...[
+                const SizedBox(height: 24),
+                Text(
+                  _status!,
+                  style: TextStyle(
+                    color: _status!.contains('successful')
+                        ? Colors.green
+                        : Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

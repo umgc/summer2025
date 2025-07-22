@@ -6,9 +6,15 @@ import '../../../payments/models/subscription_plan_model.dart';
 import 'stripe_checkout_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:care_connect_app/services/api_service.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
+import 'package:care_connect_app/widgets/responsive_container.dart';
 
 class SelectPackagePage extends StatefulWidget {
-  const SelectPackagePage({super.key});
+  final String? userId;
+  final String? stripeCustomerId;
+  const SelectPackagePage({super.key, this.userId, this.stripeCustomerId});
 
   @override
   State<SelectPackagePage> createState() => _SelectPackagePageState();
@@ -86,17 +92,112 @@ class _SelectPackagePageState extends State<SelectPackagePage> {
     );
   }
 
+  // Build plan information section (title, description, features)
+  Widget _buildPlanInfo(SubscriptionPlan plan, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          plan.nickname,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          plan.description,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withOpacity(0.7),
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...plan.features.map(
+          (feature) => Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: theme.colorScheme.secondary,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(feature, style: theme.textTheme.bodyMedium),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Build plan price section with select button
+  Widget _buildPlanPrice(
+    SubscriptionPlan plan,
+    ThemeData theme,
+    BuildContext context,
+  ) {
+    final String formattedPrice = '\$${(plan.amount / 100).toStringAsFixed(2)}';
+    final String interval = plan.interval == 'month' ? '/month' : '/year';
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          formattedPrice,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.secondary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        Text(
+          interval,
+          style: theme.textTheme.bodyMedium,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => StripeCheckoutPage(
+                  package: _convertToPackageModel(plan),
+                  userId: widget.userId,
+                  stripeCustomerId: widget.stripeCustomerId,
+                ),
+              ),
+            );
+          },
+          child: const Text('SELECT'),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Choose Your Package',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: const Color(0xFF14366E),
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Choose Your Package',
+        additionalActions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _fetchSubscriptionPlans,
@@ -104,173 +205,166 @@ class _SelectPackagePageState extends State<SelectPackagePage> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+      drawer: const CommonDrawer(currentRoute: '/select-package'),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : errorMessage != null
+          ? _buildErrorView(theme)
+          : plans.isEmpty
+          ? _buildEmptyView(theme)
+          : _buildPackageListView(theme),
+    );
+  }
+
+  Widget _buildErrorView(ThemeData theme) {
+    return Center(
+      child: ResponsiveContainer(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Color(0xFF14366E)),
-              child: const Text(
-                'Menu',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: theme.colorScheme.error.withOpacity(0.7),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              errorMessage!,
+              style: theme.textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Dashboard'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/dashboard/patient');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.calendar_today),
-              title: const Text('Task Scheduling'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/taskscheduling');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.chat),
-              title: const Text('Chat & Calls'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/chatandcalls');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.smart_toy),
-              title: const Text('AI Assistant'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/aiassistant');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.watch),
-              title: const Text('Fitbit Integration'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/fitbit');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.warning),
-              title: const Text('Emergency SOS'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/sos');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.payment),
-              title: const Text('Subscribe'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/select-package');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.emoji_events),
-              title: const Text('Achievements'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/gamification');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
-              onTap: () {
-                // Add logout logic if needed
-                Navigator.pop(context);
-                context.go('/');
-              },
+              onPressed: _fetchSubscriptionPlans,
+              child: const Text('Retry'),
             ),
           ],
         ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : errorMessage != null
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    errorMessage!,
-                    style: const TextStyle(fontSize: 16),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _fetchSubscriptionPlans,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            )
-          : plans.isEmpty
-          ? const Center(
-              child: Text(
-                'No subscription plans available',
-                style: TextStyle(fontSize: 16),
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(24),
-              itemCount: plans.length,
-              itemBuilder: (context, index) {
-                final plan = plans[index];
-                return Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    title: Text(
-                      plan.nickname,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(plan.description),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Billed ${plan.interval}ly',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                    trailing: Text(
-                      plan.formattedPrice,
-                      style: const TextStyle(
-                        color: Color(0xFF14366E),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => StripeCheckoutPage(
-                            package: _convertToPackageModel(plan),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
+    );
+  }
+
+  Widget _buildEmptyView(ThemeData theme) {
+    return Center(
+      child: ResponsiveContainer(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.info_outline,
+              size: 64,
+              color: theme.colorScheme.primary.withOpacity(0.7),
             ),
+            const SizedBox(height: 16),
+            Text(
+              'No subscription plans available',
+              style: theme.textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Please check back later or contact support',
+              style: theme.textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPackageListView(ThemeData theme) {
+    return ResponsiveContainer(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // For larger screens, display plans in a grid layout
+          if (constraints.maxWidth > 900) {
+            return GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 0.8,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: plans.length,
+              itemBuilder: (context, index) =>
+                  _buildPlanCard(plans[index], theme),
+            );
+          }
+          // For medium screens, 2 columns
+          else if (constraints.maxWidth > 600) {
+            return GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.9,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: plans.length,
+              itemBuilder: (context, index) =>
+                  _buildPlanCard(plans[index], theme),
+            );
+          }
+          // For mobile screens, use list view
+          else {
+            return ListView.builder(
+              itemCount: plans.length,
+              itemBuilder: (context, index) =>
+                  _buildPlanCard(plans[index], theme),
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildPlanCard(SubscriptionPlan plan, ThemeData theme) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.primary.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWideScreen = constraints.maxWidth > 500;
+
+            return isWideScreen
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 3, child: _buildPlanInfo(plan, theme)),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 1,
+                        child: _buildPlanPrice(plan, theme, context),
+                      ),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildPlanInfo(plan, theme),
+                      const SizedBox(height: 16),
+                      _buildPlanPrice(plan, theme, context),
+                    ],
+                  );
+          },
+        ),
+      ),
     );
   }
 }

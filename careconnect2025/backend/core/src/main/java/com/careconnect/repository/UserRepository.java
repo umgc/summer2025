@@ -14,5 +14,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmailAndRole(String email, String role);
     Optional<User> findByVerificationToken(String token);
     List<User> findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(String name, String email);
-
+    Optional<User> findByStripeCustomerId(String stripeCustomerId);
 }

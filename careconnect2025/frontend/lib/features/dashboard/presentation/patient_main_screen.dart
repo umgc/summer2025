@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-
-import '../../dashboard/presentation/mainscreen.dart';
+import 'package:provider/provider.dart';
 import '../../social/presentation/pages/main_feed_screen.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:care_connect_app/config/router/app_router.dart';
+import 'package:care_connect_app/providers/user_provider.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
 
 class PatientDashboard extends StatefulWidget {
   final int userId;
@@ -29,82 +32,9 @@ class _PatientDashboardState extends State<PatientDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.blue.shade900,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Patient Dashboard',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue.shade700),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, size: 30),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Patient Name',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text('Patient', style: TextStyle(color: Colors.white70)),
-                ],
-              ),
-            ),
-            ...[
-              {'icon': Icons.group, 'title': 'Caregiver Management'},
-              {'icon': Icons.video_camera_front, 'title': 'Virtual Check-In'},
-              {'icon': Icons.medical_services, 'title': 'TeleHealth'},
-              {'icon': Icons.note_alt, 'title': 'Health Care Note'},
-              {'icon': Icons.emoji_events, 'title': 'Gamification'},
-              {'icon': Icons.people_alt, 'title': 'Social Network'},
-              {
-                'icon': Icons.people_alt,
-                'title': 'Social Network',
-                'route': (BuildContext context) {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => MainFeedScreen()),
-                  );
-                },
-              },
-              {'icon': Icons.settings, 'title': 'Settings'},
-              {'icon': Icons.help_outline, 'title': 'Help & Support'},
-            ].map((item) {
-              return ListTile(
-                leading: Icon(item['icon'] as IconData),
-                title: Text(item['title'] as String),
-                onTap: () {}, // Placeholder
-              );
-            }),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Logout', style: TextStyle(color: Colors.red)),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Logged out (placeholder)')),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBarHelper.createAppBar(context, title: 'Patient Dashboard'),
+      drawer: const CommonDrawer(currentRoute: '/dashboard'),
       body: SafeArea(
         child: Scrollbar(
           thumbVisibility: true,
@@ -113,14 +43,22 @@ class _PatientDashboardState extends State<PatientDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Good Morning !!!  Homer Simpson',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                Consumer<UserProvider>(
+                  builder: (context, userProvider, child) {
+                    final userName = userProvider.user?.name ?? 'Patient';
+                    return Text(
+                      'Good Morning !!!  $userName',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   'How are you feeling today?',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 SingleChildScrollView(
@@ -137,20 +75,16 @@ class _PatientDashboardState extends State<PatientDashboard> {
                   ),
                 ),
                 const Divider(height: 30, thickness: 2),
-                const Text(
+                Text(
                   'How is your pain today?',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: const [
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                     PainEmojiLabel(emoji: '😀', label: '1\nNo Pain'),
                     PainEmojiLabel(emoji: '🙂', label: '2\nMild'),
                     PainEmojiLabel(emoji: '😐', label: '3\nModerate'),
                     PainEmojiLabel(emoji: '😣', label: '4\nSevere'),
                     PainEmojiLabel(emoji: '😭', label: '5\nWorst Pain'),
-                  ],
                 ),
                 const Divider(height: 30, thickness: 2),
                 ...caregivers.map(
@@ -163,37 +97,96 @@ class _PatientDashboardState extends State<PatientDashboard> {
                 const SizedBox(height: 20),
                 GestureDetector(
                   onTap: () {},
-                  child: const Text(
-                    'View Today’s Task',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
-                      fontWeight: FontWeight.bold,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color:
+                            Theme.of(context).dividerTheme.color ??
+                            Colors.grey.shade300,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.medication,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Medication Tracker',
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                '3 medications scheduled today',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context).hintColor,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: Theme.of(context).iconTheme.color,
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: TextButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EmergencyScreen(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.phone_in_talk_rounded,
-                      color: Colors.red,
-                    ),
-                    label: const Text(
-                      'SOS CALL',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color:
+                            Theme.of(context).dividerTheme.color ??
+                            Colors.grey.shade300,
                       ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.restaurant_menu,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Diet Tracking',
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                'Add today\'s meals',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context).hintColor,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: Theme.of(context).iconTheme.color,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -206,21 +199,36 @@ class _PatientDashboardState extends State<PatientDashboard> {
   }
 }
 
-// Supporting Widgets
-
 class EmojiLabel extends StatelessWidget {
   final String emoji;
   final String label;
-  const EmojiLabel({super.key, required this.emoji, required this.label});
+
+  const EmojiLabel({Key? key, required this.emoji, required this.label})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+    return Container(
+      margin: const EdgeInsets.only(right: 12),
       child: Column(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 28)),
-          Text(label, style: const TextStyle(fontSize: 12)),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color:
+                  Theme.of(context).cardTheme.color ??
+                  Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color:
+                    Theme.of(context).dividerTheme.color ??
+                    Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+              ),
+            ),
+            child: Text(emoji, style: const TextStyle(fontSize: 24)),
+          ),
+          const SizedBox(height: 4),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
@@ -230,17 +238,20 @@ class EmojiLabel extends StatelessWidget {
 class PainEmojiLabel extends StatelessWidget {
   final String emoji;
   final String label;
-  const PainEmojiLabel({super.key, required this.emoji, required this.label});
+
+  const PainEmojiLabel({Key? key, required this.emoji, required this.label})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(emoji, style: const TextStyle(fontSize: 28)),
+        Text(emoji, style: const TextStyle(fontSize: 24)),
+        const SizedBox(height: 4),
         Text(
           label,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 12),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
         ),
       ],
     );
@@ -251,55 +262,89 @@ class CaregiverCard extends StatelessWidget {
   final String name;
   final String status;
   final String lastInteraction;
+
   const CaregiverCard({
-    super.key,
+    Key? key,
     required this.name,
     required this.status,
     required this.lastInteraction,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: Colors.blue.shade900),
-        borderRadius: BorderRadius.circular(6),
+  }) : super(key: key);
+        side: BorderSide(
+          color:
+              Theme.of(context).dividerTheme.color ??
+              Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+        ),
       ),
-      child: ListTile(
-        leading: const CircleAvatar(child: Icon(Icons.person)),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(12),
+        child: Row(
           children: [
-            Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-
-            //Adding phone and message icon
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.phone, color: Colors.green, size: 20),
-                  onPressed: () {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Calling $name...')));
-                  },
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+              child: Text(
+                name.substring(0, 1),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.message, color: Colors.blue, size: 20),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Messaging $name...')),
-                    );
-                  },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: status == 'Available'
+                              ? Theme.of(context).colorScheme.secondary
+                              : Theme.of(context).disabledColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        status,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                ElevatedButton.icon(
+                  style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
+                    padding: MaterialStateProperty.all(
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                  ),
+                  onPressed: () {},
+                  icon: const Icon(Icons.videocam, size: 16),
+                  label: const Text('Call'),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  lastInteraction,
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),
           ],
         ),
-        subtitle: Text('Status: $status\nLast Interaction: $lastInteraction'),
-        trailing: const Icon(Icons.more_vert),
       ),
     );
   }

@@ -1,27 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
 
 class MedicationManagementScreen extends StatefulWidget {
   const MedicationManagementScreen({super.key});
 
   @override
-  State<MedicationManagementScreen> createState() => _MedicationManagementScreenState();
+  State<MedicationManagementScreen> createState() =>
+      _MedicationManagementScreenState();
 }
 
-class _MedicationManagementScreenState extends State<MedicationManagementScreen> {
+class _MedicationManagementScreenState
+    extends State<MedicationManagementScreen> {
   // Empty list - no medications added yet
   List<Map<String, dynamic>> medications = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Medication Management'),
+      drawer: const CommonDrawer(currentRoute: '/medication'),
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Medication Management',
         centerTitle: true,
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-        actions: [
+        additionalActions: [
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
@@ -30,9 +35,7 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
           ),
         ],
       ),
-      body: medications.isEmpty
-          ? _buildEmptyState()
-          : _buildMedicationList(),
+      body: medications.isEmpty ? _buildEmptyState() : _buildMedicationList(),
     );
   }
 
@@ -47,25 +50,25 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: Colors.indigo.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.medication,
               size: 60,
-              color: Colors.indigo,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
 
           const SizedBox(height: 32),
 
           // Title
-          const Text(
+          Text(
             'No Medications Added',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.indigo,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
 
@@ -75,11 +78,7 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
           const Text(
             'Scan or enter medication codes to automatically retrieve drug information and set up dosage schedules for your patient.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              height: 1.4,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.4),
           ),
 
           const SizedBox(height: 40),
@@ -94,7 +93,10 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
                   onPressed: () {
                     _scanMedicationCode();
                   },
-                  icon: const Icon(Icons.qr_code_scanner, color: Colors.white),
+                  icon: Icon(
+                    Icons.qr_code_scanner,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
                   label: const Text(
                     'Scan Medication Barcode',
                     style: TextStyle(
@@ -103,11 +105,9 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  style: AppTheme.primaryButtonStyle.copyWith(
+                    padding: MaterialStateProperty.all(
+                      const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
                 ),
@@ -122,20 +122,18 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
                   onPressed: () {
                     _enterMedicationCode();
                   },
-                  icon: const Icon(Icons.keyboard, color: Colors.indigo),
-                  label: const Text(
+                  icon: Icon(Icons.keyboard, color: AppTheme.primary),
+                  label: Text(
                     'Enter Drug Code Manually',
                     style: TextStyle(
-                      color: Colors.indigo,
+                      color: AppTheme.primary,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.indigo, width: 2),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  style: AppTheme.secondaryButtonStyle.copyWith(
+                    padding: MaterialStateProperty.all(
+                      const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
                 ),
@@ -157,10 +155,7 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
                 children: [
                   const Text(
                     'Medication Management Features',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
 
@@ -207,19 +202,12 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
             color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 28,
-          ),
+          child: Icon(icon, color: color, size: 28),
         ),
         const SizedBox(height: 8),
         Text(
           name,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
           textAlign: TextAlign.center,
         ),
       ],
@@ -245,10 +233,7 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
           const SizedBox(height: 8),
           Text(
             '${medications.length} medications being managed',
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 20),
 
@@ -265,16 +250,22 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: Colors.indigo.withOpacity(0.1),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.medication,
-                        color: Colors.indigo,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                    title: Text(medication['brandName'] ?? 'Unknown Medication'),
-                    subtitle: Text(medication['genericName'] ?? 'Unknown Generic'),
+                    title: Text(
+                      medication['brandName'] ?? 'Unknown Medication',
+                    ),
+                    subtitle: Text(
+                      medication['genericName'] ?? 'Unknown Generic',
+                    ),
                     trailing: Text(
                       medication['strength'] ?? '',
                       style: const TextStyle(fontWeight: FontWeight.bold),
@@ -297,7 +288,9 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Scan Medication'),
-          content: const Text('This will open the camera to scan medication barcodes.\n\n(Camera scanner integration will be implemented here)'),
+          content: const Text(
+            'This will open the camera to scan medication barcodes.\n\n(Camera scanner integration will be implemented here)',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -307,13 +300,18 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
               onPressed: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Barcode scanner coming soon!'),
-                  ),
+                  const SnackBar(content: Text('Barcode scanner coming soon!')),
                 );
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
-              child: const Text('OK', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
+              child: Text(
+                'OK',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
             ),
           ],
         );
@@ -335,7 +333,9 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Enter the NDC (National Drug Code) in product format:'),
+                  const Text(
+                    'Enter the NDC (National Drug Code) in product format:',
+                  ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: codeController,
@@ -376,46 +376,56 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
                   onPressed: isLoading
                       ? null
                       : () async {
-                    if (codeController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please enter an NDC code')),
-                      );
-                      return;
-                    }
+                          if (codeController.text.trim().isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter an NDC code'),
+                              ),
+                            );
+                            return;
+                          }
 
-                    setDialogState(() {
-                      isLoading = true;
-                    });
+                          setDialogState(() {
+                            isLoading = true;
+                          });
 
-                    try {
-                      final medicationData = await _lookupMedication(codeController.text.trim());
+                          try {
+                            final medicationData = await _lookupMedication(
+                              codeController.text.trim(),
+                            );
 
-                      Navigator.pop(context);
+                            Navigator.pop(context);
 
-                      if (medicationData != null) {
-                        _showMedicationDetails(medicationData);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('NDC code not found. Please check the code and try again.'),
-                            backgroundColor: Colors.orange,
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      setDialogState(() {
-                        isLoading = false;
-                      });
+                            if (medicationData != null) {
+                              _showMedicationDetails(medicationData);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'NDC code not found. Please check the code and try again.',
+                                  ),
+                                  backgroundColor: Colors.orange,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            setDialogState(() {
+                              isLoading = false;
+                            });
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error looking up medication: ${e.toString()}'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Error looking up medication: ${e.toString()}',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo,
+                  ),
                   child: Text(
                     isLoading ? 'Looking up...' : 'Lookup',
                     style: const TextStyle(color: Colors.white),
@@ -436,7 +446,7 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
     try {
       // Search by product NDC in the correct format
       final uri = Uri.parse(
-          'https://api.fda.gov/drug/ndc.json?search=product_ndc:"$cleanCode"&limit=1'
+        'https://api.fda.gov/drug/ndc.json?search=product_ndc:"$cleanCode"&limit=1',
       );
 
       print('Looking up medication with NDC: $cleanCode');
@@ -468,12 +478,21 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
     return null;
   }
 
-  Map<String, dynamic>? _parseNDCResult(Map<String, dynamic> result, String code) {
+  Map<String, dynamic>? _parseNDCResult(
+    Map<String, dynamic> result,
+    String code,
+  ) {
     try {
       return {
         'ndc': code,
-        'brandName': result['brand_name'] ?? result['proprietary_name'] ?? 'Unknown Brand',
-        'genericName': result['generic_name'] ?? result['nonproprietary_name'] ?? 'Unknown Generic',
+        'brandName':
+            result['brand_name'] ??
+            result['proprietary_name'] ??
+            'Unknown Brand',
+        'genericName':
+            result['generic_name'] ??
+            result['nonproprietary_name'] ??
+            'Unknown Generic',
         'dosageForm': result['dosage_form_name'] ?? 'Unknown Form',
         'strength': result['active_ingredients']?.isNotEmpty == true
             ? '${result['active_ingredients'][0]['strength']} ${result['active_ingredients'][0]['unit']}'
@@ -504,7 +523,10 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
                 _buildDetailRow('Generic Name:', medicationData['genericName']),
                 _buildDetailRow('Dosage Form:', medicationData['dosageForm']),
                 _buildDetailRow('Strength:', medicationData['strength']),
-                _buildDetailRow('Manufacturer:', medicationData['manufacturer']),
+                _buildDetailRow(
+                  'Manufacturer:',
+                  medicationData['manufacturer'],
+                ),
                 _buildDetailRow('NDC Code:', medicationData['ndc']),
               ],
             ),
@@ -519,8 +541,15 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
                 Navigator.pop(context);
                 _addMedicationToList(medicationData);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
-              child: const Text('Add Medication', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
+              child: Text(
+                'Add Medication',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
             ),
           ],
         );
@@ -541,9 +570,7 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(
-            child: Text(value),
-          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );
@@ -583,15 +610,15 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
             children: [
               const Text(
                 'Add Medication',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
 
               ListTile(
-                leading: const Icon(Icons.qr_code_scanner, color: Colors.indigo),
+                leading: const Icon(
+                  Icons.qr_code_scanner,
+                  color: Colors.indigo,
+                ),
                 title: const Text('Scan Barcode'),
                 subtitle: const Text('Use camera to scan medication barcode'),
                 onTap: () {

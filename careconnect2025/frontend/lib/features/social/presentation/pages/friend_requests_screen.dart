@@ -6,6 +6,8 @@ import 'package:care_connect_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 
 class FriendRequestsScreen extends StatefulWidget {
   const FriendRequestsScreen({super.key});
@@ -116,10 +118,10 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Friend Requests'),
-        backgroundColor: Colors.blue.shade900,
-        actions: [
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Friend Requests',
+        additionalActions: [
           IconButton(
             icon: const Icon(Icons.group),
             tooltip: 'My Friends',
@@ -132,6 +134,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
           ),
         ],
       ),
+      drawer: CommonDrawer(currentRoute: '/friend_requests'),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : requests.isEmpty

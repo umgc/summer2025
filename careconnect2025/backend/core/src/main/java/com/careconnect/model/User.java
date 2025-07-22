@@ -39,6 +39,9 @@ public class User {
     private Boolean isVerified = false;
 
     private String verificationToken;
+    
+    @Column(name = "stripe_customer_id")
+    private String stripeCustomerId;
 
     private Timestamp createdAt;
 
@@ -68,6 +71,7 @@ public class User {
     public Boolean getIsVerified() { return isVerified; }
     public String getStatus() { return status; }
     public String getProfileImageUrl() { return profileImageUrl; }
+    public String getStripeCustomerId() { return stripeCustomerId; }
     
     // Additional setters for compatibility
     public void setId(Long id) { this.id = id; }
@@ -77,4 +81,5 @@ public class User {
     public void setIsVerified(Boolean isVerified) { this.isVerified = isVerified; }
     public void setStatus(String status) { this.status = status; }
     public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
+    public void setStripeCustomerId(String stripeCustomerId) { this.stripeCustomerId = stripeCustomerId; }
 }

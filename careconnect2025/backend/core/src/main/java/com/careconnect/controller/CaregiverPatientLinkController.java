@@ -28,8 +28,9 @@ public class CaregiverPatientLinkController {
     // Helper method to get current user
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long currentUserId = Long.parseLong(authentication.getName());
-        return userRepository.findById(currentUserId)
+        String email = authentication.getName();
+        // Find user by email instead of parsing name as an ID
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(HttpStatus.UNAUTHORIZED, "User not authenticated"));
     }
 
@@ -77,7 +78,8 @@ public class CaregiverPatientLinkController {
             throw new AppException(HttpStatus.FORBIDDEN, "Access denied");
         }
 
-        CaregiverPatientLinkResponse response = linkService.suspendLink(linkId, currentUser.getId());
+        // Pass the user's email as the identifier
+        CaregiverPatientLinkResponse response = linkService.suspendLink(linkId, currentUser.getEmail());
         return ResponseEntity.ok(response);
     }
 

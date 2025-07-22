@@ -8,6 +8,7 @@ import com.careconnect.dto.PatientRegistration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import com.careconnect.dto.PatientWithLinkDto;
 // import com.careconnect.util.SecurityUtil;
 import org.springframework.web.bind.annotation.*;
 // import com.careconnect.security.Role;
@@ -29,20 +30,11 @@ public class CaregiverController {
 
     // 1. List patients under a caregiver, with optional filtering
     @GetMapping("/{caregiverId}/patients")
-    public ResponseEntity<List<Patient>> getPatientsByCaregiver(
-            @PathVariable Long caregiverId,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) String name,
-            HttpServletRequest request) {
-
-        // SecurityUtil.UserInfo user = securityUtil.getCurrentUser(request);
-        // Caregiver caregiver = caregiverService.getCaregiverById(caregiverId);
-
-        // if (user.role != Role.CAREGIVER || !caregiver.getEmail().equals(user.email)) {
-        //     return ResponseEntity.status(403).build();
-        // }
-
-        List<Patient> patients = caregiverService.getPatientsByCaregiver(caregiverId, email, name);
+    public ResponseEntity<List<PatientWithLinkDto>> getPatientsByCaregiver(
+        @PathVariable("caregiverId") Long caregiverId,
+        @RequestParam(required = false) String email,
+        @RequestParam(required = false) String name) {
+        List<PatientWithLinkDto> patients = caregiverService.getPatientsByCaregiver(caregiverId, email, name);
         return ResponseEntity.ok(patients);
     }
 
@@ -78,5 +70,28 @@ public class CaregiverController {
         reg.setCaregiverId(caregiverId); 
         Patient patient = auth.registerPatient(reg);
         return ResponseEntity.ok(patient);
+    }
+    
+    /**
+     * Get a specific patient under a caregiver's care
+     */
+    @GetMapping("/{caregiverId}/patients/{patientId}")
+    public ResponseEntity<?> getPatientForCaregiver(
+            @PathVariable Long caregiverId,
+            @PathVariable Long patientId) {
+        
+        // First check if the caregiver has access to this patient
+        if (!caregiverService.hasAccessToPatient(caregiverId, patientId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("Caregiver does not have access to this patient");
+        }
+        
+        // If authorized, get the patient details with link information
+        PatientWithLinkDto patientDto = caregiverService.getPatientWithLinkById(caregiverId, patientId);
+        if (patientDto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        return ResponseEntity.ok(patientDto);
     }
 }
