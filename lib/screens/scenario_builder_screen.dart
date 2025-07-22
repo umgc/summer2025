@@ -18,7 +18,8 @@ class ScenarioBuilderScreen extends ConsumerStatefulWidget {
 }
 
 class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
-  late String selectedDomain;
+  // the chosen Subject (domain) from the dropdown
+  String? selectedDomain;
 
   final List<String> nodeTypes = [
     'Start',
@@ -178,7 +179,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
     }
 
     if (type == 'Event') {
-      final randomEvent = getRandomEventForDomain(selectedDomain);
+      final randomEvent = getRandomEventForDomain(selectedDomain ?? '');
       ref.read(scenarioProvider.notifier).addNode(
             NodeBlock(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -788,7 +789,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                   ).textTheme.headlineSmall?.copyWith(color: Colors.white),
                 ),
                 const SizedBox(height: 8),
-                if (domainImages[selectedDomain] != null)
+                if (selectedDomain != null && domainImages[selectedDomain] != null)
                   Expanded(
                     child: Image.asset(
                       domainImages[selectedDomain]!,
@@ -804,12 +805,17 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
             padding: const EdgeInsets.all(16),
             child: DropdownButton<String>(
               value: selectedDomain,
+              hint: const Text('Select Subject'),
               isExpanded: true,
               items: domains
                   .map((d) => DropdownMenuItem(value: d, child: Text(d)))
                   .toList(),
               onChanged: (value) {
-                if (value != null) setState(() => selectedDomain = value);
+                if (value != null) {
+                  setState(() {
+                    selectedDomain = value;
+                  });
+                }
               },
             ),
           ),
@@ -902,22 +908,26 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
             tooltip: 'Export Scenario to JSON',
             onPressed: () async {
               try {
-                // Convert the current list of NodeBlock objects to a list of JSON maps
                 final List<Map<String, dynamic>> scenarioJsonList = blocks
                     .map((block) => block.toJson())
                     .toList();
-
-                // Encode the list of JSON maps into a JSON string with indentation for readability
-                final String jsonString = const JsonEncoder.withIndent(
-                  '  ',
-                ).convert(scenarioJsonList);
+                // === Export scenario with domain metadata ===
+                // Wrap the selected domain and node list into a single map
+                // so the simulator can display the correct banner image.
+                final Map<String, dynamic> exportMap = {
+                  'domain': selectedDomain,
+                  'nodes' : scenarioJsonList,
+                };
+                // Pretty-print the JSON for readability and download
+                final String jsonString = const JsonEncoder.withIndent('  ')
+                    .convert(exportMap);
 
                 // Suggest a default filename
                 String defaultFileName = 'scenario_export.json';
                 // You might want to derive a more meaningful name here, e.g., from the scenario's first node's title or the selected domain.
-                if (selectedDomain.isNotEmpty) {
-                  defaultFileName =
-                      '${selectedDomain.replaceAll(' ', '_').toLowerCase()}_scenario.json';
+                if (selectedDomain?.isNotEmpty ?? false) {
+                  final safe = selectedDomain!.replaceAll(' ', '_').toLowerCase();
+                  defaultFileName = '${safe}_scenario.json';
                 } else if (blocks.isNotEmpty && blocks.first.title.isNotEmpty) {
                   defaultFileName = '${blocks.first.title.replaceAll(' ', '_').toLowerCase()}_scenario.json';
                 }
@@ -972,7 +982,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                   }
 
                   // CORRECTED: Use NodeBlock.fromJson to properly deserialize
-                  final loadedBlocks = (parsedJson as List)
+                  final loadedBlocks = (parsedJson)
                       .map((e) => NodeBlock.fromJson(e as Map<String, dynamic>))
                       .toList()
                       .cast<NodeBlock>(); // Explicit cast for safety
