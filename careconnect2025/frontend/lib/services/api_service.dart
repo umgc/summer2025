@@ -18,6 +18,11 @@ class ApiConstants {
   static final String baseUrl = '$_host/v1/api/';
   static final String familyMembers = '$_host/v1/api/family-members';
   static final String patient = '$_host/v1/api/patient';
+  static final String patients = '$_host/v1/api/patients';
+  static final String caregivers = '$_host/v1/api/caregivers';
+  static final String files = '$_host/v1/api/files';
+  static final String connectionRequests = '$_host/v1/api/connection-requests';
+  static final String subscriptions = '$_host/v1/api/subscriptions';
 }
 
 class ApiService {
@@ -576,6 +581,40 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to load inbox');
+    }
+  }
+
+  /// Get user profile picture URL based on role
+  static Future<String?> getUserProfilePictureUrl(
+    int userId, [
+    String? role,
+  ]) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    // Use the users endpoint to get files consistently
+    final endpoint = 'users';
+
+    try {
+      final response = await _httpClient
+          .get(
+            Uri.parse(
+              '${ApiConstants.files}/$endpoint/$userId?category=profilePicture',
+            ),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is List && data.isNotEmpty) {
+          return data.first['fileUrl'];
+        } else if (data is Map && data.containsKey('fileUrl')) {
+          return data['fileUrl'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error getting profile picture URL: $e');
+      return null;
     }
   }
 }
