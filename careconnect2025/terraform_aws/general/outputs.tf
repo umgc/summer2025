@@ -23,9 +23,9 @@ output "cc_sbn_ids" {
 output "amplify_url" {
   value = replace(module.amplify.amplify_branch_url, "/", ".")
 }
-output "rds_pass_param_arn" {
-  value = module.ssm.rds_password_param.arn
+output "rds_pass_param_name" {
+  value = module.ssm.rds_password_param.name
 }
-output "rds_user_param_arn" {
-  value = module.ssm.rds_username_param.arn
+output "rds_user_param_name" {
+  value = module.ssm.rds_username_param.name
 }

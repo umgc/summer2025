@@ -60,11 +60,11 @@ resource "aws_lambda_function" "cc_main_backend_lambda" {
         APP_FRONTEND_BASE_URL = "https://${data.terraform_remote_state.cc_common_state.outputs.amplify_url}"
         BASE_URL              = "${data.terraform_remote_state.cc_common_state.outputs.main_api_endpoint}"
         CORS_ALLOWED_LIST     = "${var.cors_allowed_list},https://${data.terraform_remote_state.cc_common_state.outputs.amplify_url}"
-        CC_DB_USER_SSM_PARAM  = "${data.terraform_remote_state.cc_common_state.outputs.rds_user_param_arn}"
-        CC_DB_PASS_SSM_PARAM  = "${data.terraform_remote_state.cc_common_state.outputs.rds_pass_param_arn}"
+        CC_DB_USER_SSM_PARAM  = "${data.terraform_remote_state.cc_common_state.outputs.rds_user_param_name}"
+        CC_DB_PASS_SSM_PARAM  = "${data.terraform_remote_state.cc_common_state.outputs.rds_pass_param_name}"
         JDBC_URI              = "jdbc:mysql://${data.terraform_remote_state.cc_common_state.outputs.db_endpoint}/${data.terraform_remote_state.cc_common_state.outputs.db_name}"
-        DB_USER               = "${data.terraform_remote_state.cc_common_state.outputs.rds_user_param_arn}"
-        DB_PASSWORD           = "${data.terraform_remote_state.cc_common_state.outputs.rds_pass_param_arn}"
+        DB_USER               = "${data.terraform_remote_state.cc_common_state.outputs.rds_user_param_name}"
+        DB_PASSWORD           = "${data.terraform_remote_state.cc_common_state.outputs.rds_pass_param_name}"
       }
     )
   }
