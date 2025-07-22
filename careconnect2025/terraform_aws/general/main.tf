@@ -51,7 +51,6 @@ module "iam" {
   default_tags               = var.default_tags
   primary_region             = var.primary_region
   cc_internal_bucket_arn     = module.s3_internal.internal_s3_bucket.arn
-  cc_main_backend_lambda_arn = "arn:aws:lambda:${var.primary_region}:${data.aws_caller_identity.current.account_id}:function:${var.cc_main_lambda_name}"
   only_compute_required_ssm_parameters = [
     module.ssm.rds_username_param.arn,
     module.ssm.rds_password_param.arn
