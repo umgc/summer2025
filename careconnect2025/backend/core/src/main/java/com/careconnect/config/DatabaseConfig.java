@@ -30,7 +30,6 @@ public class DatabaseConfig {
 
     /**
      * Will get the sensitive value/properties for database connection from SSM Parameter Store
-     * With the {@link ConditionalOnBean} if that can be created, Spring will try to auto-configure
      * @return DataSourceProperties
      */
     @Bean
