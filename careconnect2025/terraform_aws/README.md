@@ -19,7 +19,7 @@ _Unless you already have your own s3 bucket ready for the state.<br/>In that cas
 ## Pre-requisites
 1. You need an AWS user account with the **Access Credentials** for it.
 1. Install AWS CLI. Follow this [Install or Update AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-1. [Configure your AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) - to make it simple we suggestion you to use environment variables [here is the sub link](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html).
+1. [Configure your AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) - to make it simple we suggest you to use environment variables [here is the sub link](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html).
 1. Install & Configure Terraform [Link](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
 
