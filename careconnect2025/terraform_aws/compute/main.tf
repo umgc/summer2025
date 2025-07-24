@@ -101,7 +101,7 @@ resource "aws_iam_role_policy_attachment" "cc_app_role_policy_attach" {
 }
 
 resource "aws_apigatewayv2_integration" "main" {
-  depends_on = [ aws_iam_role_policy_attachment.cc_app_role_policy_attach ]
+  depends_on           = [aws_iam_role_policy_attachment.cc_app_role_policy_attach]
   api_id               = data.terraform_remote_state.cc_common_state.outputs.main_api_id
   integration_type     = "AWS_PROXY"
   integration_method   = "ANY"
