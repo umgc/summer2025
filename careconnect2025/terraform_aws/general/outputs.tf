@@ -2,6 +2,12 @@
 output "main_api_endpoint" {
   value = module.main_api.cc_man_api_endpoint
 }
+output "main_api_id" {
+  value = module.main_api.cc_man_api_id
+}
+output "cc_api_gw_role" {
+  value = module.iam.cc_api_gw_role
+}
 output "db_endpoint" {
   value = module.rds.cc_db_endpoint
 }
