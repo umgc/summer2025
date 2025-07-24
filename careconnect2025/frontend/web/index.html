@@ -1,38 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
+  <meta charset="UTF-8" />
+  <title>Emotion Detection App</title>
 
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
+  <!-- Load face-api.js from CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
 
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+  <!-- Load your emotion detection logic -->
+  <script defer src="emotion.js"></script>
 
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+      font-family: sans-serif;
+    }
 
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+    video {
+      margin-top: 16px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
 
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="care_connect_app">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>care_connect_app</title>
-  <link rel="manifest" href="manifest.json">
+    #video-container {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      height: 100vh;
+      align-items: center;
+    }
+  </style>
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+<div id="video-container">
+  <video id="emotion-video" width="640" height="480" autoplay muted playsinline></video>
+</div>
+
+<!-- Flutter compiled app -->
+<script src="main.dart.js" type="application/javascript"></script>
+
+<script>
+  // Logging video initialization and stream setup
+  window.addEventListener('load', async () => {
+    const video = document.getElementById('emotion-video');
+    if (!video) {
+      console.error("Video element not found!");
+      return;
+    }
+
+    try {
+      console.log("Starting webcam stream...");
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+      video.onloadedmetadata = () => {
+        console.log("Video feed started.");
+        video.play();
+        startEmotionLoop(video);
+      };
+    } catch (err) {
+      console.error("Failed to access webcam:", err);
+      alert("Please grant permission to access the camera.");
+    }
+  });
+</script>
 </body>
 </html>

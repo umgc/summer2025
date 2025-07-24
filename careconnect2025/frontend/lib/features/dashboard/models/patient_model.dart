@@ -44,6 +44,7 @@ class Patient {
   final String relationship;
   final String? profileImageUrl;
   final Address? address;
+  final String? linkId;  // Added this line
 
   Patient({
     required this.id,
@@ -55,6 +56,7 @@ class Patient {
     required this.relationship,
     this.profileImageUrl,
     this.address,
+    this.linkId,  // Included this in the constructor
   });
 
   factory Patient.fromJson(Map<String, dynamic> json) => Patient(
@@ -67,5 +69,6 @@ class Patient {
     relationship: json['relationship'] ?? '',
     profileImageUrl: json['profileImageUrl'] ?? '',
     address: json['address'] != null ? Address.fromJson(json['address']) : null,
+    linkId: json['linkId'],  // Added this line to parse the linkId from JSON
   );
 }

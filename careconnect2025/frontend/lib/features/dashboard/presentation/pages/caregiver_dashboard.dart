@@ -79,6 +79,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     }
   }
 
+
   Future<List<Map<String, dynamic>>> fetchPatientVitals(int patientId) async {
     try {
       final response = await ApiService.getPatientVitals(
@@ -224,6 +225,14 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                   onTap: () {
                     Navigator.pop(context);
                     context.go('/gamification');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.emoji_events),
+                  title: const Text('Subscription Management'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/subscription-management');
                   },
                 ),
                 ListTile(
@@ -456,9 +465,31 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                               ],
                                             ),
                                           ),
-                                          const Icon(Icons.more_vert),
+
+                                          //Adding the PopupMenuButton
+                                          PopupMenuButton<String>(
+                                            onSelected: (value) {
+                                              if (value == 'edit') {
+                                                  context.go('/edit?patientId=${patient.linkId}');
+                                              } else if (value == 'archive') {
+                                                  context.go('/archive/${patient.linkId}');
+                                              } else if (value == 'inviteFamilyMember') {
+                                                  context.go('/invite_Family_Member');
+                                              } else if (value == 'MediaScreen') {
+                                                   context.go('/MediaScreen');
+                                              }
+                                              },
+
+                                            itemBuilder: (BuildContext context) => const [
+                                              PopupMenuItem(value: 'edit', child: Text('Edit')),
+                                              PopupMenuItem(value: 'archive', child: Text('Archive')),
+                                              PopupMenuItem(value: 'inviteFamilyMember', child: Text('Invite Family Member')),
+                                              PopupMenuItem(value: 'MediaScreen', child: Text('Media Upload')),
+                                            ],
+                                          ),
                                         ],
                                       ),
+
                                       const SizedBox(height: 12),
 
                                       // Vitals summary for this patient
@@ -532,25 +563,26 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                                 const SizedBox(height: 8),
                                                 Row(
                                                   children: [
-                                                    Expanded(
+                                                    /*Expanded(
                                                       child: _dashboardButton(
                                                         context,
                                                         Icons.call,
                                                         'Call',
-                                                        () =>
-                                                            ScaffoldMessenger.of(
-                                                              context,
-                                                            ).showSnackBar(
-                                                              SnackBar(
-                                                                content: Text(
-                                                                  'Calling ${patient.phone} (simulated)',
-                                                                ),
-                                                              ),
-                                                            ),
+                                                            () {
+                                                          final String patientName = '${patient.firstName} ${patient.lastName}';
+                                                          final String roomId = 'room-${patient.id}'; // or any room ID logic you use
+
+                                                          // Navigate to the '/mobile-web-call' route with query parameters
+                                                          context.go(
+                                                            '/mobile_web_call?patientName=${Uri.encodeComponent(patientName)}&roomId=${Uri.encodeComponent(roomId)}',
+                                                          );
+                                                        },
                                                       ),
-                                                    ),
+                                                    ), */
+
                                                     const SizedBox(width: 8),
-                                                    Expanded(
+
+                                                Expanded(
                                                       child: _dashboardButton(
                                                         context,
                                                         Icons.message,
@@ -610,18 +642,17 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                                     context,
                                                     Icons.call,
                                                     'Call',
-                                                    () =>
-                                                        ScaffoldMessenger.of(
-                                                          context,
-                                                        ).showSnackBar(
-                                                          SnackBar(
-                                                            content: Text(
-                                                              'Calling ${patient.phone} (simulated)',
-                                                            ),
-                                                          ),
-                                                        ),
+                                                        () {
+                                                      final String patientName = '${patient.firstName} ${patient.lastName}';
+                                                      final String roomId = 'room-${patient.id}';
+
+                                                      context.go(
+                                                        '/mobile_web_call?patientName=${Uri.encodeComponent(patientName)}&roomId=${Uri.encodeComponent(roomId)}',
+                                                      );
+                                                    },
                                                   ),
                                                 ),
+
                                                 const SizedBox(width: 6),
                                                 Expanded(
                                                   child: _dashboardButton(
@@ -694,3 +725,5 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     );
   }
 }
+
+

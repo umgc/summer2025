@@ -8,7 +8,7 @@
    final String userName;
    final String roomCode;
 
-   const CallScreen({super.key, required this.userName, required this.roomCode});
+   const CallScreen({super.key, required this.userName, required this.roomCode, required String name, required bool isCaller});
 
    @override
    State<CallScreen> createState() => _CallScreenState();

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CareConnect RTC</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="rtc.js" defer></script>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<h2>CareConnect RTC</h2>
+
+<video id="localVideo" autoplay muted></video>
+<video id="remoteVideo" autoplay></video>
+
+<div>
+    <button id="startCall">Start Call</button>
+    <input id="roomIdInput" placeholder="Room ID" />
+    <button id="joinCall">Join Call</button>
+</div>
+</body>
+</html>

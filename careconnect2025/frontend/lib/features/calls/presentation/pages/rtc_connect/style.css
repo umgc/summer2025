@@ -1,0 +1,37 @@
+body {
+  font-family: sans-serif;
+  text-align: center;
+  background: #f7f9fc;
+  margin: 0;
+  padding: 20px;
+}
+
+video {
+  width: 320px;
+  height: 240px;
+  margin: 10px;
+  border-radius: 10px;
+  background: black;
+}
+
+input {
+  padding: 8px;
+  font-size: 16px;
+  margin: 10px;
+  width: 200px;
+}
+
+button {
+  padding: 8px 16px;
+  font-size: 16px;
+  margin: 10px;
+  background-color: #0077cc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #005fa3;
+}

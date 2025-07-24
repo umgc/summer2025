@@ -8,9 +8,22 @@ import 'dart:async';
 import 'providers/user_provider.dart';
 import 'config/router/app_router.dart';
 import 'services/auth_migration_helper.dart';
+import 'package:flutter/foundation.dart';
+import 'features/calls/presentation/pages/platform_view_registry.dart'
+if (dart.library.html) 'features/calls/presentation/pages/platform_view_registry.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:camera/camera.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:uuid/uuid.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  //Register teh emotion video vidw on web
+  if (kIsWeb) {
+    registerEmotionView();
+  }
 
   // Performance optimization: Set preferred orientations
   await SystemChrome.setPreferredOrientations([
@@ -83,7 +96,7 @@ class _CareConnectAppState extends State<CareConnectApp> {
 
     // Listen for deep links while app is running
     _linkSubscription = _appLinks.uriLinkStream.listen(
-      (Uri uri) {
+          (Uri uri) {
         _handleDeepLink(uri.toString());
       },
       onError: (err) {
