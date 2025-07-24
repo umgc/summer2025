@@ -55,6 +55,7 @@ resource "aws_lambda_function" "cc_main_backend_lambda" {
     variables = merge(
       var.cc_main_compute_env_vars,
       data.terraform_remote_state.cc_common_state.outputs.cc_sensitive_env_variables_name,
+      data.terraform_remote_state.cc_common_state.outputs.cc_sensitive_env_variables_name,
       {
         CC_APP_ROLE           = "${data.terraform_remote_state.cc_common_state.outputs.cc_app_role_arn}"
         APP_FRONTEND_BASE_URL = "https://${data.terraform_remote_state.cc_common_state.outputs.amplify_url}"
@@ -101,7 +102,7 @@ resource "aws_iam_role_policy_attachment" "cc_app_role_policy_attach" {
 }
 
 resource "aws_apigatewayv2_integration" "main" {
-  depends_on = [ aws_iam_role_policy_attachment.cc_app_role_policy_attach ]
+  depends_on           = [aws_iam_role_policy_attachment.cc_app_role_policy_attach]
   api_id               = data.terraform_remote_state.cc_common_state.outputs.main_api_id
   integration_type     = "AWS_PROXY"
   integration_method   = "ANY"
