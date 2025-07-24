@@ -1,7 +1,15 @@
 resource "aws_apigatewayv2_api" "cc_main_api" {
   name          = "cc-main-api"
   protocol_type = "HTTP"
-  tags          = var.default_tags
+  cors_configuration {
+    allow_credentials = true
+    allow_headers     = ["*"]
+    allow_methods     = ["*"]
+    allow_origins     = ["http://*", "https://*"]
+    max_age           = 360
+    expose_headers    = ["*"]
+  }
+  tags = var.default_tags
 }
 
 resource "aws_apigatewayv2_stage" "cc_main_api_stage" {
@@ -19,11 +27,13 @@ resource "aws_apigatewayv2_stage" "cc_main_api_stage" {
       requestTime             = "$context.requestTime"
       protocol                = "$context.protocol"
       httpMethod              = "$context.httpMethod"
-      resourcePath            = "$context.resourcePath"
+      contextPath             = "$context.path"
       routeKey                = "$context.routeKey"
       status                  = "$context.status"
       responseLength          = "$context.responseLength"
+      dataProcessedBytes      = "$context.dataProcessed"
       integrationErrorMessage = "$context.integrationErrorMessage"
+      errorMessage            = "$context.error.message"
       }
     )
   }
@@ -60,7 +70,7 @@ resource "aws_apigatewayv2_integration" "main" {
   connection_id        = aws_apigatewayv2_vpc_link.cc_api_vpc_link.id
   integration_uri      = var.cc_core_service_cm_arn
   credentials_arn      = var.cc_main_api_role_arn
-  timeout_milliseconds = 5000
+  timeout_milliseconds = 15000
 }
 
 resource "aws_apigatewayv2_route" "cc_api_main_proxy" {
@@ -78,15 +88,7 @@ resource "aws_apigatewayv2_route" "cc_api_main_proxy" {
 #   uri                     = var.cc_main_lb_dns
 # }
 
-# resource "aws_api_gateway_stage "main" {
 
-
-# }
-
-# resource "aws_api_gateway_deployment" "main" {
-#   rest_api_id = aws_api_gateway_rest_api.main.id
-#   stage_name  = "prod"
-# }
 
 # resource "aws_api_gateway_authorizer" "cc_main_api_auth" {
 #   name            = "main-authorizer"
