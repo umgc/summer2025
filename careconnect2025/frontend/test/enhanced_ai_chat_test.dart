@@ -17,7 +17,7 @@ void main() {
       expect(AIModel.values.contains(AIModel.openai), true);
     });
 
-    test('Model switching should be supported', () {
+    test('model switching should be supported', () {
       // Test that both models are available for switching
       final availableModels = AIModel.values;
       expect(availableModels.length, greaterThanOrEqualTo(2));
