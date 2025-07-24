@@ -1,11 +1,14 @@
 import 'dart:convert';
 
 import 'package:care_connect_app/services/api_service.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SearchUserScreen extends StatefulWidget {
-  const SearchUserScreen({super.key});
+  final int userId;
+  const SearchUserScreen({super.key, required this.userId});
 
   @override
   State<SearchUserScreen> createState() => _SearchUserScreenState();
@@ -85,7 +88,8 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Search Users')),
+      appBar: AppBarHelper.createAppBar(context, title: 'Search Users'),
+      drawer: const CommonDrawer(currentRoute: '/search-users'),
       body: Column(
         children: [
           Padding(
