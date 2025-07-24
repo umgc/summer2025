@@ -2,11 +2,14 @@ import 'dart:io';
 
 import 'package:care_connect_app/services/api_service.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class NewPostScreen extends StatefulWidget {
-  const NewPostScreen({super.key});
+  final int userId;
+  const NewPostScreen({super.key, required this.userId});
 
   @override
   State<NewPostScreen> createState() => _NewPostScreenState();
@@ -94,10 +97,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create New Post'),
-        backgroundColor: Colors.blue.shade900,
-      ),
+      appBar: AppBarHelper.createAppBar(context, title: 'Create New Post'),
+      drawer: CommonDrawer(currentRoute: '/new_post'),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
