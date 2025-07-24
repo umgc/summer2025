@@ -56,9 +56,13 @@ resource "aws_iam_role" "cc_app_role" {
     Statement = [{
       Effect = "Allow"
       Principal = {
-        Service = ["ecs-tasks.amazonaws.com",
+        Service = [
+          "ecs-tasks.amazonaws.com",
           "events.amazonaws.com",
-        "states.amazonaws.com"]
+          "states.amazonaws.com",
+          "lambda.amazonaws.com",
+          "apigateway.amazonaws.com",
+        ]
       }
       Action = "sts:AssumeRole"
     }]
@@ -87,6 +91,17 @@ resource "aws_iam_policy" "cc_app_role_policy" {
         ]
       },
       {
+        Sid    = "AccessECR",
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
+        ]
+        Resource = "*"
+      },
+      {
         Sid    = "AccessRDS",
         Effect = "Allow"
         Action = [
@@ -103,8 +118,7 @@ resource "aws_iam_policy" "cc_app_role_policy" {
           "ssm:GetParam*",
           "ssm:PutParameter",
         ]
-        Resource = ["${var.main_rds_user_param_arn}",
-        "${var.main_rds_pass_param_arn}"]
+        Resource = var.only_compute_required_ssm_parameters
       },
       {
         Sid    = "AccessCloudWatchLogs",
@@ -145,6 +159,27 @@ resource "aws_iam_policy" "cc_app_role_policy" {
           "${aws_iam_role.cc_app_role.arn}",
           "${aws_iam_role.ecs_exe_task_execution.arn}"
         ]
+      },
+      {
+        Sid    = "LambdaGeneralAccess"
+        Effect = "Allow"
+        Action = [
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:CreateNetworkInterface",
+          "ec2:DeleteNetworkInterface",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeVpcs",
+          "xray:GetTrace*",
+          "xray:BatchGetTraces",
+          "iam:GetPolicy",
+          "iam:ListPolicies",
+          "iam:GetPolicyVersion",
+          "iam:ListAttachedRolePolicies",
+          "iam:ListRoles",
+          "iam:GetRole"
+        ]
+        Resource = "*"
       }
     ]
   })

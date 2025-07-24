@@ -10,12 +10,9 @@ output "cc_db_main_sbn_group" {
 output "cc_subnet_ids" {
   value = [aws_subnet.private_subneta.id, aws_subnet.private_subnetb.id]
 }
-output "cc_ecs_sg_id" {
-  value = aws_security_group.cc_ecs_sg.id
+output "cc_compute_sg_id" {
+  value = aws_security_group.cc_compute_sg.id
 }
-# output "cc_ecs_lb_sg_id" {
-#   value = aws_security_group.cc_ecs_lb_sg.id
-# }
 output "cc_main_api_sg_id" {
   value = aws_security_group.cc_api_sg.id
 }

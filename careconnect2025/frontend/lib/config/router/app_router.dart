@@ -32,6 +32,24 @@ import '../../features/social/presentation/pages/main_feed_screen.dart';
 import '../../features/welcome/presentation/pages/welcome_page.dart';
 import '../../providers/user_provider.dart';
 
+/// Helper function to navigate to the appropriate dashboard based on user role
+void navigateToDashboard(BuildContext context, {String? role}) {
+  final userProvider = Provider.of<UserProvider>(context, listen: false);
+  final userRole = role ?? userProvider.user?.role;
+
+  if (userRole == null) {
+    // If no role is found, redirect to login with the last known userType if available
+    final lastUserType =
+        userProvider.user != null && userProvider.user!.role != null
+        ? userProvider.user!.role.toLowerCase()
+        : 'patient';
+    context.go('/login', extra: {'userType': lastUserType});
+    return;
+  }
+
+  context.go('/dashboard?role=$userRole');
+}
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   routes: [
@@ -232,7 +250,10 @@ final GoRouter appRouter = GoRouter(
         return OAuthCallbackPage(token: token, user: user, error: error);
       },
     ),
-    GoRoute(path: '/wearables', builder: (_, __) => const WearablesScreen()),
+    GoRoute(
+      path: '/wearables',
+      builder: (_, __) => const WearablesScreen(),
+    ),
     GoRoute(
       path: '/home-monitoring',
       builder: (_, __) => const HomeMonitoringScreen(),

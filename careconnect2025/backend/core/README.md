@@ -33,15 +33,22 @@ Although, the following would be similar to most platforms an IDEs you want to u
 
         3. Add your variables in the `Environment Variables` field, like so. The values in the example should match what you can use.
         ```
-        ADMIN_EMAIL=bomplar@gmail.com;ADMIN_EMAIL_PASSWORD=<SENSITIVE>;DB_PASSWORD=<ADD YOUR USER DB PASSWORD HERE>;DB_USER=root;JDBC_URI=jdbc:mysql://localhost:3306/careconnect;MAIL_HOSTNAME=smtp.gmail.com;MAIL_PORT=587
+        DB_PASSWORD=<ADD YOUR USER DB PASSWORD HERE>;DB_USER=root;JDBC_URI=jdbc:mysql://localhost:3306/careconnect;MAIL_HOSTNAME=smtp.gmail.com;MAIL_PORT=587
         ```
         
         The format is simple `KEY=value;NEW_KEY=value` <br/>You can also use a file if you prefer or add the variable with the GUI. 
         
         - Click on the last button of the `Envirionment Variables` field. You should see a screen like below, fill it out like by line.
                 ![Add Environment Variables with GUI](_readme/Add_Variable_w_GUI.png)
+3. Add AWS Secret and Region (Configure AWS CLI)
 
+    There are multiples way you can do that.<br/>
+    You need to have `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` setup in your environment variables. You do that in the IDE or make it global in your System Environment variable.
+    Go to for more details [Configure your AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) - to make it simple we suggest you to use environment variables [here is the sub link](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html).
 
+4. Retrieving properties from SSM Parameter Store
+    Add the full name of your properties in your environment variable file.<br/>
+You can add value of the prop from your local because if the `ParameterStoreService` cannot retrieve the parameter it would return a `null` with could be a fallback for your configuration, if you set it up accordingly.
 
 ## Run the Spring Boot Backend App
 On your terminal

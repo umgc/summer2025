@@ -10,17 +10,23 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import com.careconnect.dto.S3Props;
 
+/***
+ * @deprecated
+ * "Use and define new AWS service Clients In the AwsAccessConfig class."
+ * Will be deleted soon
+ */
+@Deprecated
 @Configuration
 public class S3Config {
 
     @Autowired
     private S3Props s3Props;
 
-    @Bean
+    /*@Bean
     public S3Client s3Client() {
         return S3Client.builder()
                 .region(Region.of(s3Props.getRegion()))
                 .credentialsProvider(DefaultCredentialsProvider.builder().asyncCredentialUpdateEnabled(true).build())
                 .build();
-    }
+    }*/
 }
