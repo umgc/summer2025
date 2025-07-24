@@ -104,6 +104,24 @@ public class FeedController {
         return ResponseEntity.ok(posts);
     }
 
+    @GetMapping("/friends-feed")
+    public ResponseEntity<?> getFriendsFeed() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
+        }
+
+        String email = auth.getName();
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
+        }
+
+        List<PostWithCommentCountDto> posts = feedService.getPostsByUserAndFriends(user.getId());
+        return ResponseEntity.ok(posts);
+    }
+
+
     @PostMapping(value = "/create", consumes = "multipart/form-data")
     public ResponseEntity<?> createPost(
             @RequestParam("userId") Long userId,
@@ -155,7 +173,21 @@ public class FeedController {
             }
 
             Post post = feedService.createPost(userId, content, imageUrl);
-            return ResponseEntity.status(HttpStatus.CREATED).body(post);
+
+            String username = user.getName() != null && !user.getName().isEmpty() ? user.getName() : user.getEmail();
+            int commentCount = 0; // New post, so always 0
+
+            PostWithCommentCountDto dto = new PostWithCommentCountDto(
+                    post.getId(),
+                    post.getUserId(),
+                    post.getContent(),
+                    post.getImageUrl(),
+                    post.getCreatedAt(),
+                    commentCount,
+                    username
+            );
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
 
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -165,5 +197,7 @@ public class FeedController {
                     .body("Error creating post: " + e.getMessage());
         }
     }
+
+
 }
 

@@ -61,7 +61,14 @@ public class SecurityConfig {
                         "/v1/api/subscriptions/**",
                         "/v1/api/email-test/**",  // Allow email testing endpoints
                         "/v1/api/test/**",  // Allow test endpoints (health check, swagger info)
-                        "/v1/api/patients/*/family-members"  // Temporarily allow family member creation for testing
+                        "/v1/api/patients/*/family-members",  // Temporarily allow family member creation for testing
+                        "/v1/api/feed/**", //for post and feed
+                        "/v1/api/comments/**", //for comments
+                        "/v1/api/friends/**", //for friends and requests
+                        "/v1/api/messages/**", //for inbox and chat
+                        "/v1/api/users/search", //for user search
+                        "/api/gamification/**",
+                        "/uploads/**"
                 ).permitAll()
 
                 /* ---------- public static assets ------------------------ */
