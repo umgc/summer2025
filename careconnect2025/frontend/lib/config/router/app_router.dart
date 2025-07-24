@@ -5,8 +5,12 @@ import 'package:care_connect_app/features/integrations/presentation/pages/home_m
 import 'package:care_connect_app/features/integrations/presentation/pages/medication_management.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/smart_devices.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/wearables_screen.dart';
+import 'package:care_connect_app/features/calls/presentation/pages/jitsi_meeting_screen.dart';
+import 'package:care_connect_app/features/profile/presentation/pages/profile_settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'package:provider/provider.dart';
 
 import '../../features/analytics/analytics_page.dart';
@@ -26,10 +30,13 @@ import '../../features/payments/models/package_model.dart';
 import '../../features/payments/presentation/pages/payment_cancel_page.dart';
 import '../../features/payments/presentation/pages/payment_success_page.dart';
 import '../../features/payments/presentation/pages/select_package_page.dart';
+import '../../features/payments/presentation/pages/subscription_management_page.dart';
+import '../../features/dashboard/presentation/pages/add_patient_screen.dart';
 import '../../features/payments/presentation/pages/stripe_checkout_page.dart';
 import '../../features/payments/presentation/pages/subscription_management_page.dart';
 import '../../features/social/presentation/pages/main_feed_screen.dart';
 import '../../features/welcome/presentation/pages/welcome_page.dart';
+import '../../features/dashboard/presentation/pages/patient_status_page.dart';
 import '../../providers/user_provider.dart';
 
 /// Helper function to navigate to the appropriate dashboard based on user role
@@ -54,8 +61,30 @@ final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(path: '/', builder: (_, __) => const WelcomePage()),
-    GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
-    GoRoute(path: '/signup', builder: (_, __) => const SignUpScreen()),
+    // GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
+    // GoRoute(path: '/signup', builder: (_, __) => const SignUpScreen()),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) {
+        final extra = state.extra;
+        String? userType;
+
+        if (extra != null &&
+            extra is Map<String, dynamic> &&
+            extra.containsKey('userType')) {
+          userType = extra['userType'];
+        }
+
+        return LoginPage(userType: userType);
+      },
+    ),
+    GoRoute(
+      path: '/signup',
+      builder: (context, state) {
+        // We're now using a single caregiver sign up screen
+        return const SignUpScreen(userType: 'caregiver');
+      },
+    ),
     GoRoute(
       path: '/dashboard',
       builder: (context, state) {
@@ -141,7 +170,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/register/caregiver',
-      builder: (_, __) => const SignUpScreen(),
+      builder: (_, __) => const SignUpScreen(userType: 'caregiver'),
     ),
     GoRoute(
       path: '/register/caregiver/payment',
@@ -151,6 +180,7 @@ final GoRouter appRouter = GoRouter(
       path: '/register/patient',
       builder: (_, __) => const PatientRegistrationPage(),
     ),
+    GoRoute(path: '/add-patient', builder: (_, __) => const AddPatientScreen()),
     GoRoute(
       path: '/social-feed',
       builder: (context, state) {
@@ -160,11 +190,34 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/select-package',
-      builder: (_, __) => const SelectPackagePage(),
+      // builder: (_, __) => const SelectPackagePage(),
+      builder: (context, state) {
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        final user = userProvider.user;
+        final userId = state.uri.queryParameters['userId'];
+        final stripeCustomerId = state.uri.queryParameters['stripeCustomerId'];
+
+        // If we have userId and stripeCustomerId, this is part of the registration flow
+        // Or if user is a patient, show the original select package page
+        // Otherwise show the subscription management page for existing caregivers
+        if ((userId != null && stripeCustomerId != null) ||
+            (user != null && user.role.toUpperCase() == 'PATIENT')) {
+          return SelectPackagePage(
+            userId: userId,
+            stripeCustomerId: stripeCustomerId,
+          );
+        } else {
+          return const SubscriptionManagementPage();
+        }
+      },
     ),
     GoRoute(
       path: '/reset-password',
       builder: (_, __) => const ResetPasswordScreen(),
+    ),
+    GoRoute(
+      path: '/subscription',
+      builder: (_, __) => const SubscriptionManagementPage(),
     ),
     GoRoute(
       path: '/setup-password',
@@ -201,7 +254,15 @@ final GoRouter appRouter = GoRouter(
       path: '/stripe-checkout',
       builder: (context, state) {
         final pkg = state.extra as PackageModel;
-        return StripeCheckoutPage(package: pkg);
+        // return StripeCheckoutPage(package: pkg);
+        // Get userId and stripeCustomerId from query parameters if available
+        final userId = state.uri.queryParameters['userId'];
+        final stripeCustomerId = state.uri.queryParameters['stripeCustomerId'];
+        return StripeCheckoutPage(
+          package: pkg,
+          userId: userId,
+          stripeCustomerId: stripeCustomerId,
+        );
       },
     ),
     GoRoute(
@@ -210,9 +271,11 @@ final GoRouter appRouter = GoRouter(
         final sessionId = state.uri.queryParameters['session_id'];
         final isRegistration =
             state.uri.queryParameters['registration'] == 'complete';
+        final fromPortal = state.uri.queryParameters['portal'] == 'update';
         return PaymentSuccessPage(
           sessionId: sessionId,
           isRegistration: isRegistration,
+          fromPortal: fromPortal,
         );
       },
     ),
@@ -225,19 +288,90 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
+      path: '/patient/:id',
+      builder: (context, state) {
+        final idStr = state.pathParameters['id'];
+        final patientId = int.tryParse(idStr ?? '');
+
+        if (patientId == null) {
+          // Instead of showing an error screen, redirect back to dashboard
+          final userProvider = Provider.of<UserProvider>(
+            context,
+            listen: false,
+          );
+          final userRole = userProvider.user?.role;
+
+          // Show error message but stay logged in
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Invalid patient ID')));
+
+            // Redirect to appropriate dashboard based on role
+            if (userRole != null) {
+              Future.delayed(const Duration(milliseconds: 500), () {
+                context.go('/dashboard?role=$userRole');
+              });
+            }
+          });
+
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Redirecting...'),
+              backgroundColor: const Color(0xFF14366E),
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return PatientStatusPage(patientId: patientId);
+      },
+    ),
+    GoRoute(
       path: '/analytics',
       builder: (context, state) {
         final patientIdStr = state.uri.queryParameters['patientId'];
-        if (patientIdStr == null) {
-          return const Scaffold(
-            body: Center(child: Text('No patientId provided in the URL.')),
+        // if (patientIdStr == null) {
+        //   return const Scaffold(
+        //     body: Center(child: Text('No patientId provided in the URL.')),
+        //   );
+        // }
+        if (patientIdStr == null || int.tryParse(patientIdStr) == null) {
+          // Instead of showing an error screen, redirect back to dashboard
+          final userProvider = Provider.of<UserProvider>(
+            context,
+            listen: false,
+          );
+          final userRole = userProvider.user?.role;
+
+          // Show error message but stay logged in
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Invalid or missing patient ID')),
+            );
+
+            // Redirect to appropriate dashboard based on role
+            if (userRole != null) {
+              Future.delayed(const Duration(milliseconds: 500), () {
+                context.go('/dashboard?role=$userRole');
+              });
+            }
+          });
+
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Redirecting...'),
+              backgroundColor: const Color(0xFF14366E),
+            ),
+            body: const Center(child: CircularProgressIndicator()),
           );
         }
         final patientId = int.tryParse(patientIdStr);
         if (patientId == null) {
-          return const Scaffold(
-            body: Center(child: Text('Invalid patientId.')),
-          );
+          // return const Scaffold(
+          //   body: Center(child: Text('Invalid patientId.')),
+          // );
+          return Scaffold(body: Center(child: Text('Invalid patientId.')));
         }
         return AnalyticsPage(patientId: patientId);
       },
@@ -249,6 +383,85 @@ final GoRouter appRouter = GoRouter(
         final user = state.uri.queryParameters['user'];
         final error = state.uri.queryParameters['error'];
         return OAuthCallbackPage(token: token, user: user, error: error);
+      },
+    ),
+    GoRoute(
+      path: '/video-call',
+      builder: (context, state) {
+        final patientIdStr = state.uri.queryParameters['patientId'];
+        final patientName = state.uri.queryParameters['patientName'];
+
+        if (patientIdStr == null || patientName == null) {
+          // Instead of showing an error screen, redirect back to dashboard
+          final userProvider = Provider.of<UserProvider>(
+            context,
+            listen: false,
+          );
+          final userRole = userProvider.user?.role;
+
+          // Show error message but stay logged in
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Missing patient information for video call'),
+              ),
+            );
+
+            // Redirect to appropriate dashboard based on role
+            if (userRole != null) {
+              Future.delayed(const Duration(milliseconds: 500), () {
+                context.go('/dashboard?role=$userRole');
+              });
+            }
+          });
+
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Redirecting...'),
+              backgroundColor: const Color(0xFF14366E),
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final patientId = int.tryParse(patientIdStr);
+        if (patientId == null) {
+          // Handle invalid patient ID
+          final userProvider = Provider.of<UserProvider>(
+            context,
+            listen: false,
+          );
+          final userRole = userProvider.user?.role;
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Invalid patient ID for video call'),
+              ),
+            );
+
+            if (userRole != null) {
+              Future.delayed(const Duration(milliseconds: 500), () {
+                context.go('/dashboard?role=$userRole');
+              });
+            }
+          });
+
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Redirecting...'),
+              backgroundColor: const Color(0xFF14366E),
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // Import and use JitsiMeetingScreen here
+        // Create a unique room name based on patientId and current timestamp
+        final roomName =
+            "patient_${patientId}_${DateTime.now().millisecondsSinceEpoch}";
+
+        return JitsiMeetingScreen(roomName: roomName);
       },
     ),
     GoRoute(path: '/wearables', builder: (_, __) => const WearablesScreen()),
@@ -263,6 +476,44 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/medication',
       builder: (_, __) => const MedicationManagementScreen(),
+    ),
+    GoRoute(
+      path: '/profile-settings',
+      builder: (_, __) => const ProfileSettingsPage(),
+    ),
+
+    // Handle routes from legacy menus
+    GoRoute(
+      path: '/taskscheduling',
+      redirect: (context, state) {
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        final userRole = userProvider.user?.role;
+        return '/dashboard?role=$userRole';
+      },
+    ),
+    GoRoute(
+      path: '/chatandcalls',
+      redirect: (context, state) {
+        return '/dashboard?tab=calls';
+      },
+    ),
+    GoRoute(
+      path: '/aiassistant',
+      redirect: (context, state) {
+        return '/dashboard?tab=ai';
+      },
+    ),
+    GoRoute(
+      path: '/fitbit',
+      redirect: (context, state) {
+        return '/wearables';
+      },
+    ),
+    GoRoute(
+      path: '/sos',
+      redirect: (context, state) {
+        return '/dashboard?tab=emergency';
+      },
     ),
 
     /*GoRoute(

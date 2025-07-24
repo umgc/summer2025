@@ -1,11 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as path;
-
 import '../config/env_constant.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:path/path.dart' as path;
 import 'auth_token_manager.dart';
 
 class ApiConstants {
@@ -41,33 +39,33 @@ class ApiService {
   // ========================
 
   static Future<http.Response> register(
-    String name,
-    String email,
-    String password,
-  ) async {
+      String name,
+      String email,
+      String password,
+      ) async {
     return await _httpClient
         .post(
-          Uri.parse('${ApiConstants.auth}/register'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'name': name,
-            'email': email,
-            'password': password,
-          }),
-        )
+      Uri.parse('${ApiConstants.auth}/register'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': name,
+        'email': email,
+        'password': password,
+      }),
+    )
         .timeout(const Duration(seconds: 30));
   }
 
   static Future<http.Response> registerPatient(
-    String firstName,
-    String lastName,
-    String email,
-    String phone,
-    String dob,
-    String address,
-    String relationship,
-    int caregiverId,
-  ) async {
+      String firstName,
+      String lastName,
+      String email,
+      String phone,
+      String dob,
+      String address,
+      String relationship,
+      int caregiverId,
+      ) async {
     final headers = await AuthTokenManager.getAuthHeaders();
 
     // Debug: Check if JWT token is included
@@ -80,37 +78,37 @@ class ApiService {
 
     return await _httpClient
         .post(
-          Uri.parse('${ApiConstants.baseUrl}caregivers/$caregiverId/patients'),
-          headers: headers,
-          body: jsonEncode({
-            'firstName': firstName,
-            'lastName': lastName,
-            'email': email,
-            'phone': phone,
-            'dob': dob,
-            'address': address,
-            'relationship': relationship,
-            'caregiverId': caregiverId,
-          }),
-        )
+      Uri.parse('${ApiConstants.baseUrl}caregivers/$caregiverId/patients'),
+      headers: headers,
+      body: jsonEncode({
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'phone': phone,
+        'dob': dob,
+        'address': address,
+        'relationship': relationship,
+        'caregiverId': caregiverId,
+      }),
+    )
         .timeout(const Duration(seconds: 30));
   }
 
   static Future<http.Response> login(
-    String email,
-    String password, {
-    String role = 'patient',
-  }) async {
+      String email,
+      String password, {
+        String role = 'patient',
+      }) async {
     return await _httpClient
         .post(
-          Uri.parse('${ApiConstants.auth}/login'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'email': email,
-            'password': password,
-            'role': role,
-          }),
-        )
+      Uri.parse('${ApiConstants.auth}/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+        'role': role,
+      }),
+    )
         .timeout(const Duration(seconds: 30));
   }
 
@@ -128,10 +126,10 @@ class ApiService {
   static Future<http.Response> requestPasswordReset(String email) async {
     return await _httpClient
         .post(
-          Uri.parse('${ApiConstants.auth}/password/forgot'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'email': email}),
-        )
+      Uri.parse('${ApiConstants.auth}/password/forgot'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    )
         .timeout(const Duration(seconds: 30));
   }
 
@@ -141,10 +139,10 @@ class ApiService {
   }) async {
     return await _httpClient
         .post(
-          Uri.parse('${ApiConstants.auth}/password/reset'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'token': token, 'password': newPassword}),
-        )
+      Uri.parse('${ApiConstants.auth}/password/reset'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'token': token, 'password': newPassword}),
+    )
         .timeout(const Duration(seconds: 30));
   }
 
@@ -178,10 +176,10 @@ class ApiService {
   }
 
   static Future<http.Response> createPost(
-    int userId,
-    String content, [
-    File? image,
-  ]) async {
+      int userId,
+      String content, [
+        File? image,
+      ]) async {
     final uri = Uri.parse('${ApiConstants.feed}/create');
     final headers = await AuthTokenManager.getAuthHeaders();
 
@@ -213,9 +211,9 @@ class ApiService {
   // ========================
 
   static Future<http.Response> searchUsers(
-    String query,
-    int currentUserId,
-  ) async {
+      String query,
+      int currentUserId,
+      ) async {
     final headers = await AuthTokenManager.getAuthHeaders();
     final url = Uri.parse(
       '${ApiConstants.users}/search?query=$query&currentUserId=$currentUserId',
@@ -227,17 +225,17 @@ class ApiService {
   }
 
   static Future<http.Response> sendFriendRequest(
-    int fromUserId,
-    int toUserId,
-  ) async {
+      int fromUserId,
+      int toUserId,
+      ) async {
     final headers = await AuthTokenManager.getAuthHeaders();
     final url = Uri.parse('${ApiConstants.friends}/request');
     return await _httpClient
         .post(
-          url,
-          headers: headers,
-          body: jsonEncode({'fromUserId': fromUserId, 'toUserId': toUserId}),
-        )
+      url,
+      headers: headers,
+      body: jsonEncode({'fromUserId': fromUserId, 'toUserId': toUserId}),
+    )
         .timeout(const Duration(seconds: 30));
   }
 
@@ -281,9 +279,140 @@ class ApiService {
     final headers = await AuthTokenManager.getAuthHeaders();
     return await _httpClient
         .get(
-          Uri.parse('${ApiConstants.baseUrl}caregivers/$caregiverId/patients'),
-          headers: headers,
-        )
+      Uri.parse('${ApiConstants.baseUrl}caregivers/$caregiverId/patients'),
+      headers: headers,
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+
+  /// Check if a user with the given email exists
+  static Future<Map<String, dynamic>> checkEmailExists(String email) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+
+    try {
+      final response = await _httpClient
+          .get(
+        Uri.parse(
+          '${ApiConstants.users}/check-email?email=${Uri.encodeComponent(email)}',
+        ),
+        headers: headers,
+      )
+          .timeout(const Duration(seconds: 15));
+
+      print(
+        '🔍 Check email response: ${response.statusCode} - ${response.body}',
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'exists': false,
+          'error': 'Failed to check email: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('❌ Error checking email: $e');
+      return {'exists': false, 'error': e.toString()};
+    }
+  }
+
+  /// Send a connection request from a caregiver to a patient
+  static Future<http.Response> sendConnectionRequest({
+    required int caregiverId,
+    required String patientEmail,
+    required String relationshipType,
+    String? message,
+  }) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
+
+    print('🔍 Sending connection request to $patientEmail');
+
+    return await _httpClient
+        .post(
+      Uri.parse('${ApiConstants.connectionRequests}/create'),
+      headers: headers,
+      body: jsonEncode({
+        'caregiverId': caregiverId,
+        'patientEmail': patientEmail,
+        'relationshipType': relationshipType,
+        'message':
+        message ?? 'I would like to connect with you on CareConnect',
+      }),
+    )
+        .timeout(const Duration(seconds: 20));
+  }
+
+  /// Get pending connection requests for a caregiver
+  static Future<http.Response> getPendingRequestsByCaregiver(
+      int caregiverId,
+      ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+
+    return await _httpClient
+        .get(
+      Uri.parse(
+        '${ApiConstants.connectionRequests}/pending/caregiver/$caregiverId',
+      ),
+      headers: headers,
+    )
+        .timeout(const Duration(seconds: 20));
+  }
+
+  static Future<http.Response> suspendCaregiverPatientLink(int linkId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/json'; // Add content type header
+
+    print('🔍 Calling suspendCaregiverPatientLink for linkId: $linkId');
+
+    // Try both formats to determine which one works with the backend
+    final url1 =
+        '${ApiConstants.baseUrl}caregiver-patient-links/$linkId/suspend';
+    final url2 = '${ApiConstants.baseUrl}caregivers/links/$linkId/suspend';
+
+    print('🔍 URL Option 1: $url1');
+    print('🔍 URL Option 2: $url2');
+    print('🔍 Headers: $headers');
+
+    // Use the first URL format by default
+    final String finalUrl = url1;
+
+    return await _httpClient
+        .post(
+      Uri.parse(finalUrl),
+      headers: headers,
+      body: jsonEncode({}), // Send empty JSON body
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+
+  static Future<http.Response> reactivateCaregiverPatientLink(
+      int linkId,
+      ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/json'; // Add content type header
+
+    print('🔍 Calling reactivateCaregiverPatientLink for linkId: $linkId');
+
+    // Try both formats to determine which one works with the backend
+    final url1 =
+        '${ApiConstants.baseUrl}caregiver-patient-links/$linkId/reactivate';
+    final url2 = '${ApiConstants.baseUrl}caregivers/links/$linkId/reactivate';
+
+    print('🔍 URL Option 1: $url1');
+    print('🔍 URL Option 2: $url2');
+    print('🔍 Headers: $headers');
+
+    // Use the first URL format by default
+    final String finalUrl = url1;
+
+    return await _httpClient
+        .post(
+      Uri.parse(finalUrl),
+      headers: headers,
+      body: jsonEncode({}), // Send empty JSON body
+    )
         .timeout(const Duration(seconds: 30));
   }
 
@@ -309,6 +438,133 @@ class ApiService {
     await AuthTokenManager.clearAuthData();
   }
 
+  // ========================
+  // SUBSCRIPTION METHODS
+  // ========================
+
+  // Get the current subscription for a user
+  static Future<http.Response> getCurrentSubscription() async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+
+    // Get the user session to extract the user ID
+    final userSession = await AuthTokenManager.getUserSession();
+    final userId = userSession != null ? userSession['id']?.toString() : null;
+
+    if (userId == null) {
+      throw Exception('User ID not found. Please ensure you are logged in.');
+    }
+
+    return await _httpClient
+        .get(
+      Uri.parse('${ApiConstants.subscriptions}/user/$userId'),
+      headers: headers,
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Get all available subscription plans
+  static Future<http.Response> getAvailablePlans() async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+
+    return await _httpClient
+        .get(Uri.parse('${ApiConstants.subscriptions}/plans'), headers: headers)
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Create a subscription for an existing customer
+  static Future<http.Response> createSubscription(
+      String customerId,
+      String priceId,
+      ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+
+    final uri = Uri.parse('${ApiConstants.subscriptions}/create-direct');
+
+    // Create form data as required by the API
+    final formData = {'customerId': customerId, 'priceId': priceId};
+
+    return await _httpClient
+        .post(uri, headers: headers, body: formData)
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Cancel a subscription
+  static Future<http.Response> cancelSubscription(String subscriptionId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
+
+    return await _httpClient
+        .post(
+      Uri.parse('${ApiConstants.subscriptions}/$subscriptionId/cancel'),
+      headers: headers,
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Change subscription plan
+  static Future<http.Response> changeSubscriptionPlan(
+      String oldSubscriptionId,
+      String newPriceId,
+      ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+
+    // Create form data as required by the API
+    final formData = {
+      'oldSubscriptionId': oldSubscriptionId,
+      'newPriceId': newPriceId,
+    };
+
+    final uri = Uri.parse('${ApiConstants.subscriptions}/upgrade-or-downgrade');
+
+    // Send form data as required by the API
+    return await _httpClient
+        .post(uri, headers: headers, body: formData)
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Upgrade or downgrade a subscription
+  static Future<http.Response> upgradeOrDowngradeSubscription(
+      String oldSubscriptionId,
+      String newPriceId,
+      ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+
+    final uri = Uri.parse('${ApiConstants.subscriptions}/upgrade-or-downgrade');
+
+    // Create form data
+    final formData = {
+      'oldSubscriptionId': oldSubscriptionId,
+      'newPriceId': newPriceId,
+    };
+
+    return await _httpClient
+        .post(uri, headers: headers, body: formData)
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Get subscription information for the current user
+  static Future<http.Response> getUserSubscriptions() async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+
+    // Get the user session to extract the user ID
+    final userSession = await AuthTokenManager.getUserSession();
+    final userId = userSession != null ? userSession['id']?.toString() : null;
+
+    if (userId == null) {
+      throw Exception('User ID not found. Please ensure you are logged in.');
+    }
+
+    return await _httpClient
+        .get(
+      Uri.parse('${ApiConstants.subscriptions}/user/$userId'),
+      headers: headers,
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+
   // FAMILY
   // FAMILY
   static Future<List<Map<String, dynamic>>> getAccessiblePatients() async {
@@ -316,15 +572,15 @@ class ApiService {
       final headers = await AuthTokenManager.getAuthHeaders();
       final response = await http
           .get(
-            Uri.parse(
-              '${ApiConstants.familyMembers}/patients',
-            ), // Use ApiConstants.familyMembers
-            headers: headers,
-          )
+        Uri.parse(
+          '${ApiConstants.familyMembers}/patients',
+        ), // Use ApiConstants.familyMembers
+        headers: headers,
+      )
           .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
-          );
+        const Duration(seconds: 10),
+        onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -379,9 +635,9 @@ class ApiService {
 
   // Get patient dashboard (read-only)
   static Future<Map<String, dynamic>> getPatientDashboard(
-    int patientId, {
-    int days = 30,
-  }) async {
+      int patientId, {
+        int days = 30,
+      }) async {
     final headers = await AuthTokenManager.getAuthHeaders();
     final response = await http.get(
       Uri.parse(
@@ -401,22 +657,22 @@ class ApiService {
 
   // Get patient vitals (read-only)
   static Future<http.Response> getPatientVitals(
-    int patientId, {
-    int days = 7,
-  }) async {
+      int patientId, {
+        int days = 7,
+      }) async {
     try {
       final headers = await AuthTokenManager.getAuthHeaders();
       return await _httpClient
           .get(
-            Uri.parse(
-              '${ApiConstants.baseUrl}analytics/vitals?patientId=${patientId}&days=$days',
-            ),
-            headers: headers,
-          )
+        Uri.parse(
+          '${ApiConstants.baseUrl}analytics/vitals?patientId=$patientId&days=$days',
+        ),
+        headers: headers,
+      )
           .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
-          );
+        const Duration(seconds: 10),
+        onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
+      );
     } catch (e) {
       // Convert any errors to an error response
       return http.Response(jsonEncode({'error': e.toString()}), 500);
@@ -427,15 +683,15 @@ class ApiService {
     final headers = await AuthTokenManager.getAuthHeaders();
     final response = await http
         .get(
-          Uri.parse(
-            '${ApiConstants._host}/v1/api/family-members/patients/$patientId/status',
-          ),
-          headers: headers,
-        )
+      Uri.parse(
+        '${ApiConstants._host}/v1/api/family-members/patients/$patientId/status',
+      ),
+      headers: headers,
+    )
         .timeout(
-          const Duration(seconds: 10),
-          onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
-        );
+      const Duration(seconds: 10),
+      onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
+    );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -476,9 +732,9 @@ class ApiService {
   }
 
   static Future<http.Response> addFamilyMember(
-    int patientId,
-    Map<String, dynamic> familyMemberData,
-  ) async {
+      int patientId,
+      Map<String, dynamic> familyMemberData,
+      ) async {
     final headers = await AuthTokenManager.getAuthHeaders();
     return await http.post(
       Uri.parse(
@@ -523,72 +779,114 @@ class ApiService {
 
     return await _httpClient
         .post(
-          Uri.parse('${ApiConstants.baseUrl}caregivers/$caregiverId/patients'),
-          headers: headers,
-          body: jsonEncode(patientData),
-        )
+      Uri.parse('${ApiConstants.baseUrl}caregivers/$caregiverId/patients'),
+      headers: headers,
+      body: jsonEncode(patientData),
+    )
         .timeout(const Duration(seconds: 30));
   }
 
   // ========================
-  // MESSAGING METHODS
+  // PROFILE MANAGEMENT METHODS
   // ========================
 
-  static Future<http.Response> sendMessage({
-    required int senderId,
-    required int receiverId,
-    required String content,
-  }) async {
+  /// Get caregiver profile data
+  static Future<http.Response> getCaregiverProfile(int caregiverId) async {
     final headers = await AuthTokenManager.getAuthHeaders();
-    final body = jsonEncode({
-      'senderId': senderId,
-      'receiverId': receiverId,
-      'content': content,
-    });
-
     return await _httpClient
-        .post(
-          Uri.parse('${ApiConstants.baseUrl}messages/send'),
-          headers: headers,
-          body: body,
-        )
+        .get(
+      Uri.parse('${ApiConstants.caregivers}/$caregiverId'),
+      headers: headers,
+    )
         .timeout(const Duration(seconds: 15));
   }
 
-  static Future<List<dynamic>> getConversation({
-    required int user1,
-    required int user2,
-  }) async {
+  /// Update caregiver profile
+  static Future<http.Response> updateCaregiverProfile(
+      int caregiverId,
+      Map<String, dynamic> updatedProfile,
+      ) async {
     final headers = await AuthTokenManager.getAuthHeaders();
-    final url = Uri.parse(
-      '${ApiConstants.baseUrl}messages/conversation?user1=$user1&user2=$user2',
-    );
-
-    final response = await _httpClient.get(url, headers: headers);
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to load conversation');
-    }
+    return await _httpClient
+        .put(
+      Uri.parse('${ApiConstants.caregivers}/$caregiverId'),
+      headers: headers,
+      body: jsonEncode(updatedProfile),
+    )
+        .timeout(const Duration(seconds: 15));
   }
 
-  static Future<List<dynamic>> getInbox(int userId) async {
+  /// Get patient profile data
+  static Future<http.Response> getPatientProfile(int patientId) async {
     final headers = await AuthTokenManager.getAuthHeaders();
-    final url = Uri.parse('${ApiConstants.baseUrl}messages/inbox/$userId');
+    return await _httpClient
+        .get(Uri.parse('${ApiConstants.patients}/$patientId'), headers: headers)
+        .timeout(const Duration(seconds: 15));
+  }
 
-    final response = await _httpClient.get(url, headers: headers);
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to load inbox');
-    }
+  /// Update patient profile
+  static Future<http.Response> updatePatientProfile(
+      int patientId,
+      Map<String, dynamic> updatedProfile,
+      ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .put(
+      Uri.parse('${ApiConstants.patients}/$patientId'),
+      headers: headers,
+      body: jsonEncode(updatedProfile),
+    )
+        .timeout(const Duration(seconds: 15));
+  }
+
+  /// Upload profile picture or other files
+  static Future<http.Response> uploadUserFile({
+    required int userId,
+    required File file,
+    required String category,
+    String? role,
+  }) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    // Remove Content-Type as it will be set by multipart request
+    headers.remove('Content-Type');
+
+    // Use users endpoint for file uploads
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ApiConstants.files}/users/$userId/upload'),
+    );
+
+    // Add headers
+    request.headers.addAll(headers);
+
+    // Add file
+    var fileStream = http.ByteStream(file.openRead());
+    var fileLength = await file.length();
+    var multipartFile = http.MultipartFile(
+      'file',
+      fileStream,
+      fileLength,
+      filename: path.basename(file.path),
+    );
+
+    // Add form fields
+    request.files.add(multipartFile);
+    request.fields['category'] = category;
+
+    // Send the request
+    var streamedResponse = await request.send().timeout(
+      const Duration(seconds: 30),
+    );
+    var response = await http.Response.fromStream(streamedResponse);
+
+    return response;
   }
 
   /// Get user profile picture URL based on role
   static Future<String?> getUserProfilePictureUrl(
-    int userId, [
-    String? role,
-  ]) async {
+      int userId, [
+        String? role,
+      ]) async {
     final headers = await AuthTokenManager.getAuthHeaders();
     // Use the users endpoint to get files consistently
     final endpoint = 'users';
@@ -596,11 +894,11 @@ class ApiService {
     try {
       final response = await _httpClient
           .get(
-            Uri.parse(
-              '${ApiConstants.files}/$endpoint/$userId?category=profilePicture',
-            ),
-            headers: headers,
-          )
+        Uri.parse(
+          '${ApiConstants.files}/$endpoint/$userId?category=profilePicture',
+        ),
+        headers: headers,
+      )
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
