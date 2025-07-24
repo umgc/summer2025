@@ -465,7 +465,10 @@ final GoRouter appRouter = GoRouter(
         return JitsiMeetingScreen(roomName: roomName);
       },
     ),
-    GoRoute(path: '/wearables', builder: (_, __) => const WearablesScreen()),
+    GoRoute(
+      path: '/wearables',
+      builder: (_, __) => const WearablesScreen(),
+    ),
     GoRoute(
       path: '/home-monitoring',
       builder: (_, __) => const HomeMonitoringScreen(),
