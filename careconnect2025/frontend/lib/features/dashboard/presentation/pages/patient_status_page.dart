@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -7,9 +8,13 @@ import 'package:care_connect_app/services/api_service.dart';
 import 'package:care_connect_app/providers/user_provider.dart';
 import 'package:care_connect_app/features/dashboard/models/patient_model.dart';
 import 'package:care_connect_app/features/analytics/models/dashboard_analytics_model.dart';
+import 'package:care_connect_app/config/router/app_router.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
+import 'package:care_connect_app/widgets/responsive_container.dart';
 
 class PatientStatusPage extends StatefulWidget {
-  const PatientStatusPage({super.key});
+  final int? patientId;
+  const PatientStatusPage({super.key, this.patientId});
 
   @override
   State<PatientStatusPage> createState() => _PatientStatusPageState();
@@ -34,7 +39,11 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
     });
 
     try {
+      // Use the patientId passed to the widget if available,
+      // otherwise get it from the current user
+      int? patientId;
       final user = Provider.of<UserProvider>(context, listen: false).user;
+
       if (user == null) {
         setState(() {
           error = 'User not logged in.';
@@ -42,38 +51,101 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
         });
         return;
       }
-      final patientId = user.id;
+
+      if (widget.patientId != null) {
+        patientId = widget.patientId;
+        print('🔍 Using patientId from route parameter: $patientId');
+      } else {
+        patientId = user.patientId;
+        print('🔍 Using patientId from user object: $patientId');
+      }
+
+      if (patientId == null) {
+        setState(() {
+          error = 'No patient ID available';
+          loading = false;
+        });
+        return;
+      }
+
+      // Determine the appropriate API URL based on user role
+      final authHeaders = await ApiService.getAuthHeaders();
+      final String apiUrl;
+
+      // If the user is a caregiver, use the caregivers endpoint
+      if (user.role.toUpperCase() == 'CAREGIVER' ||
+          user.role.toUpperCase() == 'FAMILY_LINK') {
+        final caregiverId = user.caregiverId;
+        apiUrl =
+        '${ApiConstants.baseUrl}caregivers/$caregiverId/patients/$patientId';
+        print('🔍 Using caregiver-specific endpoint: $apiUrl');
+      } else {
+        // If the user is a patient, use the users endpoint
+        apiUrl = '${ApiConstants.users}/$patientId';
+        print('🔍 Using standard users endpoint: $apiUrl');
+      }
 
       // Fetch patient profile
-      final authHeaders = await ApiService.getAuthHeaders();
       final profileRes = await http.get(
-        Uri.parse('${ApiConstants.users}/$patientId'),
+        Uri.parse(apiUrl),
         headers: authHeaders,
       );
       if (profileRes.statusCode != 200) {
         setState(() {
-          error = 'Failed to load patient profile';
+          error =
+          'Failed to load patient profile. Status: ${profileRes.statusCode}';
           loading = false;
         });
+        print('🔍 API Error: ${profileRes.statusCode} - ${profileRes.body}');
         return;
       }
-      final patientData = json.decode(profileRes.body);
+
+      // Decode the response
+      final responseData = json.decode(profileRes.body);
+      print('🔍 API Response: $responseData');
+
+      // Extract patient data - handle different response structures
+      final Map<String, dynamic> patientData;
+
+      if (user.role.toUpperCase() == 'CAREGIVER' ||
+          user.role.toUpperCase() == 'FAMILY_LINK') {
+        // For caregiver endpoint, the patient data may be nested
+        if (responseData is Map<String, dynamic> &&
+            responseData.containsKey('patient')) {
+          patientData = responseData['patient'] as Map<String, dynamic>;
+        } else {
+          // If not nested, use the response as is
+          patientData = responseData as Map<String, dynamic>;
+        }
+      } else {
+        // For patient/user endpoint, use response directly
+        patientData = responseData as Map<String, dynamic>;
+      }
+
       patient = Patient.fromJson(patientData);
 
-      // Fetch vitals summary
+      // Fetch vitals summary - always use analytics endpoint
+      final vitalsUrl =
+          '${ApiConstants.analytics}/dashboard?patientId=$patientId&days=7';
+      print('🔍 Fetching vitals from: $vitalsUrl');
+
       final vitalsRes = await http.get(
-        Uri.parse(
-          '${ApiConstants.analytics}/dashboard?patientId=$patientId&days=7',
-        ),
+        Uri.parse(vitalsUrl),
         headers: authHeaders,
       );
+
       if (vitalsRes.statusCode != 200) {
         setState(() {
-          error = 'Failed to load vitals summary';
+          error =
+          'Failed to load vitals summary. Status: ${vitalsRes.statusCode}';
           loading = false;
         });
+        print(
+          '🔍 Vitals API Error: ${vitalsRes.statusCode} - ${vitalsRes.body}',
+        );
         return;
       }
+
       final vitalsData = json.decode(vitalsRes.body);
       vitals = DashboardAnalytics.fromJson(vitalsData);
 
@@ -81,6 +153,7 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
         loading = false;
       });
     } catch (e) {
+      print('🔍 Error fetching patient data: $e');
       setState(() {
         error = 'Error: $e';
         loading = false;
@@ -92,108 +165,88 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Patient Status',
-          style: TextStyle(color: Colors.white),
+          style: Theme.of(context).appBarTheme.titleTextStyle,
         ),
-        backgroundColor: const Color(0xFF14366E),
-        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        iconTheme: Theme.of(context).appBarTheme.iconTheme,
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Color(0xFF14366E)),
-              child: const Text(
-                'Patient Menu',
-                style: TextStyle(color: Colors.white, fontSize: 24),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Dashboard'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/dashboard/patient');
-              },
-            ),
-            // ... other menu items ...
-          ],
-        ),
-      ),
+      drawer: const CommonDrawer(currentRoute: '/patient-status'),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : error != null
           ? Center(child: Text(error!))
           : patient == null
           ? const Center(child: Text('No patient data found.'))
-          : Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          : SingleChildScrollView(
+        child: ResponsiveContainer(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Row(
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundImage: NetworkImage(
+                      (patient!.profileImageUrl ??
+                          'https://randomuser.me/api/portraits/men/32.jpg'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CircleAvatar(
-                        radius: 32,
-                        backgroundImage: NetworkImage(
-                          (patient!.profileImageUrl ??
-                              'https://randomuser.me/api/portraits/men/32.jpg'),
+                      Text(
+                        '${patient!.firstName} ${patient!.lastName}',
+                        style: Theme.of(context).textTheme.titleLarge
+                            ?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${patient!.firstName} ${patient!.lastName}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                              color: Color(0xFF14366E),
-                            ),
-                          ),
-                          Text('Age: ${_calculateAge(patient!.dob)}'),
-                          Text('Phone: ${patient!.phone}'),
-                        ],
-                      ),
+                      Text('Age: ${_calculateAge(patient!.dob)}'),
+                      Text('Phone: ${patient!.phone}'),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Current Condition',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Color(0xFF14366E),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    patient!.relationship,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Address',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Color(0xFF14366E),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${patient!.address?.line1 ?? ''} ${patient!.address?.line2 ?? ''}\n'
-                    '${patient!.address?.city ?? ''}, ${patient!.address?.state ?? ''} ${patient!.address?.zip ?? ''}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 24),
-                  buildVitalsSummary(vitals),
                 ],
               ),
-            ),
+              const SizedBox(height: 24),
+              Text(
+                'Current Condition',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                patient!.relationship,
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Address',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${patient!.address?.line1 ?? ''} ${patient!.address?.line2 ?? ''}\n'
+                    '${patient!.address?.city ?? ''}, ${patient!.address?.state ?? ''} ${patient!.address?.zip ?? ''}',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 24),
+              buildVitalsSummary(vitals),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
