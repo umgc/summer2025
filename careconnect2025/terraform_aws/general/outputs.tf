@@ -23,9 +23,10 @@ output "cc_sbn_ids" {
 output "amplify_url" {
   value = replace(module.amplify.amplify_branch_url, "/", ".")
 }
-output "rds_pass_param_name" {
-  value = module.ssm.rds_password_param.name
+output "cc_sensitive_env_variables_name" {
+  value = {
+    for key in local.params_keys : key => module.ssm.sensitive_params[key].name
+  }
+  sensitive = true
 }
-output "rds_user_param_name" {
-  value = module.ssm.rds_username_param.name
-}
+
