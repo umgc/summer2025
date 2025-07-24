@@ -143,6 +143,7 @@ public class VitalSampleService {
      */
     private VitalSampleDTO mapToDTO(VitalSample vitalSample) {
         return VitalSampleDTO.builder()
+            .id(vitalSample.getId())
             .patientId(vitalSample.getPatient().getId())
             .timestamp(vitalSample.getTimestamp())
             .heartRate(vitalSample.getHeartRate())

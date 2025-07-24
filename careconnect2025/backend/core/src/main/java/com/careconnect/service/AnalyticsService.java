@@ -192,6 +192,7 @@ public class AnalyticsService {
         }
 
         return VitalSampleDTO.builder()
+                .id(null) // This is aggregated data, not a specific entity
                 .patientId(pid)
                 .timestamp(ts)
                 .heartRate(wearableMap.get(WearableMetric.MetricType.HEART_RATE))
@@ -290,6 +291,7 @@ public byte[] exportVitalsPdf(Long patientId, Period period) {
 
   private VitalSampleDTO createEmptyVitalSample(Long patientId, Instant timestamp) {
         return VitalSampleDTO.builder()
+                .id(null) // This is an empty template, not a persisted entity
                 .patientId(patientId)
                 .timestamp(timestamp)
                 .heartRate(0.0)
