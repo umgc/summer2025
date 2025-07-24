@@ -882,6 +882,60 @@ class ApiService {
     return response;
   }
 
+  // ========================
+  // MESSAGING METHODS
+  // ========================
+
+  static Future<http.Response> sendMessage({
+    required int senderId,
+    required int receiverId,
+    required String content,
+  }) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    final body = jsonEncode({
+      'senderId': senderId,
+      'receiverId': receiverId,
+      'content': content,
+    });
+
+    return await _httpClient
+        .post(
+      Uri.parse('${ApiConstants.baseUrl}messages/send'),
+      headers: headers,
+      body: body,
+    )
+        .timeout(const Duration(seconds: 15));
+  }
+
+  static Future<List<dynamic>> getConversation({
+    required int user1,
+    required int user2,
+  }) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    final url = Uri.parse(
+      '${ApiConstants.baseUrl}messages/conversation?user1=$user1&user2=$user2',
+    );
+
+    final response = await _httpClient.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load conversation');
+    }
+  }
+
+  static Future<List<dynamic>> getInbox(int userId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    final url = Uri.parse('${ApiConstants.baseUrl}messages/inbox/$userId');
+
+    final response = await _httpClient.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load inbox');
+    }
+  }
+
   /// Get user profile picture URL based on role
   static Future<String?> getUserProfilePictureUrl(
       int userId, [
