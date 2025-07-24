@@ -3,10 +3,10 @@ package com.careconnect.dto;
 import lombok.Builder;
 
 import java.time.Instant;
-import java.util.List;
 
 @Builder
 public record VitalSampleDTO(
+        Long id,                   // Primary key for updates
         Long patientId,
         Instant timestamp,
         Double heartRate,
