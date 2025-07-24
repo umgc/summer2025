@@ -37,9 +37,15 @@ import org.springframework.http.HttpStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.time.Instant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class CaregiverService {
+    
+    private static final Logger log = LoggerFactory.getLogger(CaregiverService.class);
 
     @Autowired
     private CaregiverRepository caregiverRepository;
@@ -71,10 +77,11 @@ public class CaregiverService {
     @Autowired
     private PlanRepository planRepository;
     
-@Autowired
+    @Autowired
     private SubscriptionRepository subscriptionRepository;
-
-    // 1. List patients under a caregiver, with optional filtering (ACTIVE links only)
+    
+    @Autowired
+    private FirebaseNotificationService notificationService;    // 1. List patients under a caregiver, with optional filtering (ACTIVE links only)
     // public List<Patient> getPatientsByCaregiver(Long caregiverId, String email, String name) {
     //     // Get caregiver user
     //     Caregiver caregiver = getCaregiverById(caregiverId);
@@ -234,6 +241,32 @@ public Patient registerPatient(PatientRegistration reg) {
             reg.getEmail(),
             password
         );
+        
+        // Send Firebase notification to patient about registration
+        try {
+            String caregiverName = reg.getCaregiverId() != null ? 
+                caregiverRepository.findById(reg.getCaregiverId())
+                    .map(c -> c.getFirstName() + " " + c.getLastName())
+                    .orElse("Your caregiver") : "CareConnect";
+            
+            notificationService.sendNotificationToUser(
+                savedUser.getId(),
+                "🎉 Welcome to CareConnect!",
+                String.format("You've been registered by %s. Please check your email to set up your password.", caregiverName),
+                "PATIENT_REGISTRATION",
+                Map.of(
+                    "type", "PATIENT_REGISTRATION",
+                    "caregiverName", caregiverName,
+                    "registeredAt", Instant.now().toString(),
+                    "patientId", savedPatient.getId().toString()
+                )
+            );
+            
+            log.info("Patient registration notification sent to user ID: {}", savedUser.getId());
+        } catch (Exception e) {
+            log.warn("Failed to send patient registration notification: {}", e.getMessage());
+            // Don't fail the registration if notification fails
+        }
         
         return savedPatient;
     } catch (Exception e) {

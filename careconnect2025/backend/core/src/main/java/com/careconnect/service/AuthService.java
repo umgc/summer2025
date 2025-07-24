@@ -241,8 +241,18 @@ public class AuthService {
 public LoginResponse loginV2(LoginRequest req,
                              HttpServletResponse res) {
 
-    User user = users.findByEmail(req.getEmail())
-                     .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+    // Fix: Use findByEmailAndRole to prevent authentication issues when multiple users 
+    // have the same email with different roles
+    User user;
+    if (req.getRole() != null && !req.getRole().trim().isEmpty()) {
+        user = users.findByEmailAndRole(req.getEmail(), req.getRole())
+                   .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+    } else {
+        // Fallback to findByEmail for backward compatibility, but this may cause issues
+        // if multiple users have the same email with different roles
+        user = users.findByEmail(req.getEmail())
+                   .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+    }
 
     if (!passwordEncoder.matches(req.getPassword(), user.getPasswordHash()))
         throw new AuthenticationException("Invalid credentials");

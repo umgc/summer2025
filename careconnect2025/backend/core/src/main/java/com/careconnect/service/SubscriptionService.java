@@ -30,7 +30,6 @@ import com.stripe.model.SubscriptionCollection;
 import com.stripe.param.SubscriptionListParams;
 import com.stripe.exception.StripeException;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -364,6 +363,7 @@ public class SubscriptionService {
         String stripeSubscriptionId = sub.getStripeSubscriptionId();
         if (stripeSubscriptionId != null && !stripeSubscriptionId.isEmpty()) {
             try {
+                Stripe.apiKey = stripeSecretKey;
                 com.stripe.model.Subscription stripeSub = com.stripe.model.Subscription.retrieve(stripeSubscriptionId);
                 stripeSub.cancel();
             } catch (Exception e) {
@@ -371,8 +371,45 @@ public class SubscriptionService {
             }
         }
 
+        // Clear the subscription details and set status to CANCELLED
         sub.setStatus("CANCELLED");
+        sub.setStripeSubscriptionId(null);
+        sub.setStripeCustomerId(null);
+        sub.setPriceId(null);
+        sub.setPlan(null);
+        sub.setCurrentPeriodEnd(null);
+        
         subscriptionRepository.save(sub);
+    }
+
+    /**
+     * Cancel subscription by Stripe subscription ID and clear subscription details
+     */
+    @Transactional
+    public void cancelSubscriptionByStripeId(String stripeSubscriptionId) {
+        Optional<Subscription> subscriptionOpt = subscriptionRepository.findByStripeSubscriptionId(stripeSubscriptionId);
+        if (subscriptionOpt.isPresent()) {
+            Subscription sub = subscriptionOpt.get();
+            
+            // Cancel on Stripe side
+            try {
+                Stripe.apiKey = stripeSecretKey;
+                com.stripe.model.Subscription stripeSub = com.stripe.model.Subscription.retrieve(stripeSubscriptionId);
+                stripeSub.cancel();
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to cancel subscription on Stripe: " + e.getMessage(), e);
+            }
+
+            // Clear the subscription details and set status to CANCELLED
+            sub.setStatus("CANCELLED");
+            sub.setStripeSubscriptionId(null);
+            sub.setStripeCustomerId(null);
+            sub.setPriceId(null);
+            sub.setPlan(null);
+            sub.setCurrentPeriodEnd(null);
+            
+            subscriptionRepository.save(sub);
+        }
     }
 
     public void saveCheckoutSession(Long userId, String plan, long amount, Session session) {
@@ -443,6 +480,7 @@ public class SubscriptionService {
                 case "checkout.session.expired" -> handleSessionExpired(event);
                 case "customer.subscription.created" -> handleSubscriptionCreated(event);
                 case "customer.subscription.updated" -> handleSubscriptionUpdated(event);
+                case "customer.subscription.deleted" -> handleSubscriptionDeleted(event);
                 case "invoice.paid" -> handleInvoicePaid(event);
                 case "invoice.payment_failed" -> handleInvoicePaymentFailed(event);
                 default -> {
@@ -744,6 +782,30 @@ public class SubscriptionService {
                     // Update subscription status to payment failed
                     subscription.setStatus("PAYMENT_FAILED");
                     subscriptionRepository.save(subscription);
+                });
+        }
+
+        private void handleSubscriptionDeleted(Event event) {
+            com.stripe.model.Subscription stripeSub = (com.stripe.model.Subscription) event.getDataObjectDeserializer().getObject().orElse(null);
+            if (stripeSub == null) return;
+            
+            String subscriptionId = stripeSub.getId();
+            System.out.println("Processing subscription deletion for: " + subscriptionId);
+            
+            subscriptionRepository.findByStripeSubscriptionId(subscriptionId)
+                .ifPresent(subscription -> {
+                    System.out.println("Found subscription record, clearing subscription details");
+                    
+                    // Clear the subscription details and set status to CANCELLED
+                    subscription.setStatus("CANCELLED");
+                    subscription.setStripeSubscriptionId(null);
+                    subscription.setStripeCustomerId(null);
+                    subscription.setPriceId(null);
+                    subscription.setPlan(null);
+                    subscription.setCurrentPeriodEnd(null);
+                    
+                    subscriptionRepository.save(subscription);
+                    System.out.println("Subscription cleared and marked as cancelled");
                 });
         }
         

@@ -69,15 +69,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.debug("Token is valid, processing authentication");
             Claims claims = jwt.getClaims(token);
             String email  = claims.getSubject();
-            log.debug("Token email subject: {}", email);
+            String role   = claims.get("role", String.class);
+            log.debug("Token email subject: {}, role: {}", email, role);
 
-            UserDetails userDetails = uds.loadUserByUsername(email);
+            // Use role-specific user loading for more precise authentication  
+            UserDetails userDetails;
+            if (role != null && uds instanceof UserDetailsServiceImpl) {
+                userDetails = ((UserDetailsServiceImpl) uds).loadUserByEmailAndRole(email, role);
+            } else {
+                // Fallback to email-only lookup (may have ambiguity issues)
+                userDetails = uds.loadUserByUsername(email);
+            }
+            
             UsernamePasswordAuthenticationToken auth =
                 new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
             SecurityContextHolder.getContext().setAuthentication(auth);
-            log.debug("Authentication set for user: {}", email);
+            log.debug("Authentication set for user: {} with role: {}", email, role);
 
             /* ---------- 3. Silent renew (<5 min left) -------------------- */
             if (jwt.needsRenewal(claims)) {

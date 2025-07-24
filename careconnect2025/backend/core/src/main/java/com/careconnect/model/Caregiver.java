@@ -13,6 +13,10 @@ public class Caregiver {
     private String firstName;
     private String lastName;
     private String dob;
+    
+    @Column(name = "gender")
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 
     private String email;
     private String phone;
