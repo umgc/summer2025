@@ -44,7 +44,7 @@ module "ssm" {
   source                = "./modules/ssm"
   default_tags          = var.default_tags
   params_keys           = local.params_keys
-  cc_sensitive_params   = var.cc_ssm_params
+  cc_sensitive_params   = merge(var.cc_ssm_params, {JDBC_URI="jdbc:mysql://${module.rds.cc_db_endpoint}/${module.rds.cc_db_name}"})
 }
 
 module "iam" {
