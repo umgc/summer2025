@@ -55,6 +55,7 @@ resource "aws_lambda_function" "cc_main_backend_lambda" {
     variables = merge(
       var.cc_main_compute_env_vars,
       data.terraform_remote_state.cc_common_state.outputs.cc_sensitive_env_variables_name,
+      data.terraform_remote_state.cc_common_state.outputs.cc_sensitive_env_variables_name,
       {
         CC_APP_ROLE           = "${data.terraform_remote_state.cc_common_state.outputs.cc_app_role_arn}"
         APP_FRONTEND_BASE_URL = "https://${data.terraform_remote_state.cc_common_state.outputs.amplify_url}"
