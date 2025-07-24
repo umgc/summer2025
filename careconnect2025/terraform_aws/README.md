@@ -14,6 +14,8 @@ _Unless you already have your own s3 bucket ready for the state.<br/>In that cas
 1. Change the bucket name if needed in the main.tf of the ***`s3_tfstate`***, because bucket names are unique in S3 accross all AWS accounts.
 1. Execute the scripts under the ***`s3_tfstate`*** folder
 1. Execute the scripts under the ***`general`*** folder 
+1. Package and upload your backend zip file to AWS S3
+1. Execute the scripts under the ***`compute`*** folder to create the Lambda for compute
 
 
 ## Pre-requisites

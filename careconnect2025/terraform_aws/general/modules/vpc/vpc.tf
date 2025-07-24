@@ -115,15 +115,6 @@ resource "aws_security_group" "https_endpoints_sg" {
   tags = merge(var.default_tags, { Name : "internal-https-endpoints-sg" })
 }
 
-resource "aws_apigatewayv2_vpc_link" "cc_api_vpc_link" {
-  name               = "cc-main-api-vpc-link"
-  security_group_ids = [aws_security_group.cc_api_sg.id]
-  subnet_ids         = [aws_subnet.private_subneta.id, aws_subnet.private_subnetb.id]
-
-  tags = var.default_tags
-}
-
-
 resource "aws_route_table_association" "cc_main_rt_association_sbnb" {
   route_table_id = aws_vpc.vpc.main_route_table_id
   subnet_id      = aws_subnet.private_subnetb.id

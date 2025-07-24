@@ -57,6 +57,11 @@ terraform apply -var-file=general.tfvars
     ```
 3. **DO NOT USE** `terraform destroy` command or else the AWS resources will be **deleted**. Unless you really what to tear down the resources you created.
 
+4. **Useful comands**
+  ```sh
+  terraform state rm module.main_api.aws_apigatewayv2_vpc_link.cc_api_vpc_link # To remove a resource from a state. It would still exists in AWS. Be mindfull of cost.
+  ```
+
 
 
 ### Variable file sample
