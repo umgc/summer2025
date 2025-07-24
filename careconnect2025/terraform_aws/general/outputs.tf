@@ -2,6 +2,12 @@
 output "main_api_endpoint" {
   value = module.main_api.cc_man_api_endpoint
 }
+output "main_api_id" {
+  value = module.main_api.cc_man_api_id
+}
+output "cc_api_gw_role" {
+  value = module.iam.cc_api_gw_role
+}
 output "db_endpoint" {
   value = module.rds.cc_db_endpoint
 }
@@ -23,9 +29,10 @@ output "cc_sbn_ids" {
 output "amplify_url" {
   value = replace(module.amplify.amplify_branch_url, "/", ".")
 }
-output "rds_pass_param_name" {
-  value = module.ssm.rds_password_param.name
+output "cc_sensitive_env_variables_name" {
+  value = {
+    for key in local.params_keys : key => module.ssm.sensitive_params[key].name
+  }
+  sensitive = true
 }
-output "rds_user_param_name" {
-  value = module.ssm.rds_username_param.name
-}
+

@@ -1,17 +1,9 @@
-resource "aws_ssm_parameter" "rds_username_param" {
-  name        = var.rds_user_param_name
-  description = "RDS database username"
-  type        = "SecureString"
-  value       = var.rds_username
-  overwrite   = true
-  tags        = var.default_tags
-}
 
-resource "aws_ssm_parameter" "rds_password_param" {
-  name        = var.rds_pass_param_name
-  description = "RDS database password"
+resource "aws_ssm_parameter" "cc_sensitive_env_variables" {
+  for_each    = var.params_keys
+  name        = each.key
+  description = "Sensitive parameter for ${each.key}"
   type        = "SecureString"
-  value       = var.rds_password
-  overwrite   = true
+  value       = var.cc_sensitive_params[each.key]
   tags        = var.default_tags
 }
