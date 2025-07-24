@@ -2,7 +2,6 @@
 This is the first backend app after the prototype of CareConnect that is ready for testing. 
 This README will help you set it up on your local computer.
 
-
 ## Context of those instructions
 
 - They are generate based on a Linux (Ubuntu) VM.
@@ -15,8 +14,50 @@ Although, the following would be similar to most platforms an IDEs you want to u
 - Install MySQL Server and needed Driver.
 - Clone the code (your branch if you are planning on make changes to the code).
 
+## Quick Setup (Recommended)
 
-## Environment Configuration
+### 1. Environment Configuration
+Set up your environment variables using the new simplified approach:
+
+```bash
+# Copy the environment template
+cp .env.example .env
+
+# Edit with your actual credentials
+nano .env  # or use your preferred editor
+```
+
+**Required variables** (minimum to start the application):
+- `JDBC_URI` - Your MySQL connection string
+- `DB_USER` - Your database username  
+- `DB_PASSWORD` - Your database password
+- `SECURITY_JWT_SECRET` - JWT secret key (256+ bits)
+
+**Firebase variables** (required for notifications):
+- `FIREBASE_PROJECT_ID=careconnectcapstone`
+- `FIREBASE_SENDER_ID=663999888931`
+- Download `firebase-service-account.json` to `src/main/resources/`
+
+📖 **For detailed setup instructions, see [README-ENV.md](README-ENV.md)**
+
+### 2. Start the Application
+
+#### Linux/macOS
+```bash
+chmod +x load-env.sh
+./load-env.sh mvn spring-boot:run
+```
+
+#### Windows
+```cmd
+load-env.bat mvn spring-boot:run
+```
+
+## Alternative Setup (IDE Configuration)
+## Alternative Setup (IDE Configuration)
+
+If you prefer to use your IDE's run configuration instead of the `.env` approach:
+
 1. Open your IDE and open the ***`core`*** project/folder with your IDE
 
 2. Add your env variables
@@ -31,19 +72,28 @@ Although, the following would be similar to most platforms an IDEs you want to u
             - If you do not see `Environment Variables`<br/>Click on the `Modify options` dropdown and check `Environment Variables`. See below
             ![Modify options](_readme/Modify_options.png)
 
-        3. Add your variables in the `Environment Variables` field, like so. The values in the example should match what you can use.
+        3. Add your variables in the `Environment Variables` field. The minimum required variables:
         ```
-        ADMIN_EMAIL=bomplar@gmail.com;ADMIN_EMAIL_PASSWORD=<SENSITIVE>;DB_PASSWORD=<ADD YOUR USER DB PASSWORD HERE>;DB_USER=root;JDBC_URI=jdbc:mysql://localhost:3306/careconnect;MAIL_HOSTNAME=smtp.gmail.com;MAIL_PORT=587
+        JDBC_URI=jdbc:mysql://localhost:3306/careconnect;DB_USER=root;DB_PASSWORD=<YOUR_PASSWORD>;SECURITY_JWT_SECRET=<YOUR_JWT_SECRET>;FIREBASE_PROJECT_ID=careconnectcapstone;FIREBASE_SENDER_ID=663999888931
         ```
         
         The format is simple `KEY=value;NEW_KEY=value` <br/>You can also use a file if you prefer or add the variable with the GUI. 
         
-        - Click on the last button of the `Envirionment Variables` field. You should see a screen like below, fill it out like by line.
+        - Click on the last button of the `Environment Variables` field. You should see a screen like below, fill it out line by line.
                 ![Add Environment Variables with GUI](_readme/Add_Variable_w_GUI.png)
 
-
-
 ## Run the Spring Boot Backend App
+
+### Using Environment Scripts (Recommended)
+```bash
+# Linux/macOS
+./load-env.sh mvn spring-boot:run
+
+# Windows  
+load-env.bat mvn spring-boot:run
+```
+
+### Traditional Method
 On your terminal
 ```bash
 cd careconnect2025/backend/core     # Navigate into the backend folder
@@ -54,7 +104,50 @@ mvnw spring-boot:run                # For Windows
 # OR use IntelliJ "Run" button
 ```
 
+## Features Included
+
+### 🔔 Firebase Push Notifications
+- Real-time notifications for patient-caregiver interactions
+- Medical alerts and vital sign monitoring
+- Multi-platform support (Android, iOS, Web)
+- **Setup**: Place `firebase-service-account.json` in `src/main/resources/`
+
+### 🔐 Authentication & Security
+- JWT-based authentication with role-based access
+- Google OAuth integration
+- Password reset functionality
+- Account verification via email
+
+### 🏥 Healthcare Features
+- Patient and caregiver management
+- Vital signs tracking with automated alerts
+- Medication reminders
+- Family member connections
+
+### 📧 Multi-Provider Email Support
+- Resend, SendGrid, or Mailgun integration
+- Email verification and notifications
+- Password reset emails
+
+### 💳 Payment Integration
+- Stripe payment processing
+- Subscription management
+- Webhook handling
+
+### 🤖 AI Integration
+- OpenAI API integration for intelligent features
+
+### ☁️ Cloud Storage
+- AWS S3 integration for file storage
+- Local file storage option
+
 ---
+
+## API Documentation
+
+Once the application is running, you can access:
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **API Docs**: http://localhost:8080/v3/api-docs
 
 ## Optional Tools
 
@@ -67,9 +160,10 @@ mvnw spring-boot:run                # For Windows
 
 For credentials, setup help, or onboarding, contact your team lead or project maintainer.
 
----
+📖 **For detailed environment setup, see [README-ENV.md](README-ENV.md)**  
+🔥 **For Firebase notifications, see [FIREBASE_NOTIFICATIONS.md](FIREBASE_NOTIFICATIONS.md)**
 
-***Note: `application.properties` setup will be improved soon to follow current best practices for secrets and environment management.***
+---
 
 
 ## Deployment on AWS

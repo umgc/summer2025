@@ -37,10 +37,17 @@ build/
 .env.local
 .env.*.local
 *.env
+# Keep .env.example for developers
+!.env.example
+
+### Firebase Security ###
+firebase-service-account.json
+**/firebase-service-account*.json
 
 ### Local Development Scripts ###
-load-env.sh
-load-env.bat
+# Environment scripts are now part of the project
+# load-env.sh
+# load-env.bat
 set-env.sh
 set-env.bat
 test-env.sh

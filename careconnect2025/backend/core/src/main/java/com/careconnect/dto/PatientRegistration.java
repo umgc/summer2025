@@ -1,5 +1,6 @@
 package com.careconnect.dto;
 
+import com.careconnect.model.Gender;
 
 public class PatientRegistration {
 
@@ -10,6 +11,7 @@ public class PatientRegistration {
     private String phone;
     private AddressDto address;
     private String dob;
+    private Gender gender;
     private Long caregiverId;     
     private Long familyMemberId;
     private String relationship;   
@@ -92,5 +94,13 @@ public class PatientRegistration {
 
     public void setRelationship(String relationship) {
         this.relationship = relationship;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
     }
 }

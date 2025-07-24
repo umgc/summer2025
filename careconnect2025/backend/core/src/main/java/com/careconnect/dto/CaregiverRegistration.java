@@ -1,10 +1,13 @@
 package com.careconnect.dto;
 
+import com.careconnect.model.Gender;
+
 public class CaregiverRegistration {
 
     private String firstName;
     private String lastName;
     private String dob;
+    private Gender gender;
     private String email;
     private String phone;
     private ProfessionalInfoDto professional;
@@ -91,5 +94,13 @@ public class CaregiverRegistration {
     
     public void setPlanId(String planId) {
         this.planId = planId;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
     }
 }

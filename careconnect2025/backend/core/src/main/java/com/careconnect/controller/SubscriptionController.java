@@ -176,8 +176,60 @@ public class SubscriptionController {
     // public ResponseEntity<String> updatePayment(@PathVariable String id) { return ResponseEntity.ok("Payment updated: " + id); }
     @PostMapping("/{id}/cancel")
     public ResponseEntity<?> cancelSubscription(@PathVariable String id) {
-        Map<String, Object> result = stripeService.cancelSubscription(id);
-        return ResponseEntity.ok().body(result);
+        try {
+            // Check if the id is a Stripe subscription ID or a database subscription ID
+            if (id.startsWith("sub_")) {
+                // It's a Stripe subscription ID
+                subscriptionService.cancelSubscriptionByStripeId(id);
+            } else {
+                // It's a database subscription ID
+                try {
+                    Long subscriptionId = Long.parseLong(id);
+                    subscriptionService.cancelSubscription(subscriptionId);
+                } catch (NumberFormatException e) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Invalid subscription ID format"));
+                }
+            }
+            
+            return ResponseEntity.ok().body(Map.of(
+                "message", "Subscription cancelled and cleared successfully",
+                "subscriptionId", id
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to cancel subscription: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Cancel subscription by database subscription ID
+     */
+    @PostMapping("/database/{subscriptionId}/cancel")
+    public ResponseEntity<?> cancelSubscriptionById(@PathVariable Long subscriptionId) {
+        try {
+            subscriptionService.cancelSubscription(subscriptionId);
+            return ResponseEntity.ok().body(Map.of(
+                "message", "Subscription cancelled and cleared successfully",
+                "subscriptionId", subscriptionId
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to cancel subscription: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Cancel subscription by Stripe subscription ID
+     */
+    @PostMapping("/stripe/{stripeSubscriptionId}/cancel")
+    public ResponseEntity<?> cancelSubscriptionByStripeId(@PathVariable String stripeSubscriptionId) {
+        try {
+            subscriptionService.cancelSubscriptionByStripeId(stripeSubscriptionId);
+            return ResponseEntity.ok().body(Map.of(
+                "message", "Subscription cancelled and cleared successfully",
+                "stripeSubscriptionId", stripeSubscriptionId
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to cancel subscription: " + e.getMessage()));
+        }
     }
     
     /**

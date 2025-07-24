@@ -5,6 +5,9 @@ import com.careconnect.dto.FamilyMemberRegistration;
 import com.careconnect.dto.MoodPainAnalyticsDTO;
 import com.careconnect.dto.MoodPainLogRequest;
 import com.careconnect.dto.MoodPainLogResponse;
+import com.careconnect.dto.PatientProfileDTO;
+import com.careconnect.dto.PatientProfileUpdateDTO;
+import com.careconnect.dto.EnhancedPatientProfileDTO;
 import com.careconnect.exception.AppException;
 import com.careconnect.model.Caregiver;
 import com.careconnect.model.Patient;
@@ -37,6 +40,8 @@ import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/v1/api/patients")
@@ -465,5 +470,165 @@ public class PatientController {
         
         MoodPainAnalyticsDTO analytics = moodPainLogService.getMoodPainAnalytics(currentUser, startDate, endDate);
         return ResponseEntity.ok(analytics);
+    }
+
+    /**
+     * Get complete patient profile including allergies
+     */
+    @GetMapping("/{patientId}/profile")
+    @Operation(summary = "Get patient profile", description = "Get complete patient profile including allergies")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
+        @ApiResponse(responseCode = "403", description = "Access denied"),
+        @ApiResponse(responseCode = "404", description = "Patient not found")
+    })
+    public ResponseEntity<?> getPatientProfile(@PathVariable Long patientId) {
+        try {
+            // Check authorization
+            if (!hasAccessToPatient(patientId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Not authorized to view this patient's profile"));
+            }
+
+            Optional<PatientProfileDTO> profile = patientService.getPatientProfile(patientId);
+            if (profile.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Patient not found"));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                "data", profile.get(),
+                "message", "Profile retrieved successfully"
+            ));
+
+        } catch (Exception e) {
+            log.error("Error getting patient profile for patientId: {}", patientId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to retrieve patient profile"));
+        }
+    }
+
+    /**
+     * Update patient profile information
+     */
+    @PutMapping("/{patientId}/profile")
+    @Operation(summary = "Update patient profile", description = "Update patient profile information (allergies managed separately)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Profile updated successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "403", description = "Access denied"),
+        @ApiResponse(responseCode = "404", description = "Patient not found")
+    })
+    public ResponseEntity<?> updatePatientProfile(
+            @PathVariable Long patientId, 
+            @RequestBody PatientProfileUpdateDTO updateDTO) {
+        try {
+            // Check authorization
+            if (!hasAccessToPatient(patientId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Not authorized to update this patient's profile"));
+            }
+
+            PatientProfileDTO updatedProfile = patientService.updatePatientProfile(patientId, updateDTO);
+
+            return ResponseEntity.ok(Map.of(
+                "data", updatedProfile,
+                "message", "Profile updated successfully"
+            ));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error updating patient profile for patientId: {}", patientId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to update patient profile"));
+        }
+    }
+
+    /**
+     * Check if current user has access to manage the given patient's data
+     */
+    private boolean hasAccessToPatient(Long patientId) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = auth.getName();
+            
+            User currentUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+            
+            Optional<Patient> patientOpt = Optional.ofNullable(patientService.getPatientById(patientId));
+            if (patientOpt.isEmpty()) {
+                return false;
+            }
+            
+            Patient patient = patientOpt.get();
+            User patientUser = patient.getUser();
+            
+            // Check access based on role
+            if (currentUser.getRole() == Role.PATIENT) {
+                // Patient can only access their own data
+                return currentUser.getId().equals(patientUser.getId());
+            } 
+            else if (currentUser.getRole() == Role.CAREGIVER) {
+                // Check if user is a caregiver for this patient
+                List<Caregiver> caregivers = patientService.getCaregiversByPatient(patientId);
+                return caregivers.stream()
+                    .anyMatch(caregiver -> caregiver.getUser().getId().equals(currentUser.getId()));
+            }
+            else if (currentUser.getRole() == Role.FAMILY_MEMBER) {
+                // Check if user is a family member for this patient
+                List<FamilyMemberLinkResponse> familyMembers = familyMemberService.getFamilyMembersByPatient(patientId);
+                return familyMembers.stream()
+                    .anyMatch(fm -> fm.familyUserId().equals(currentUser.getId()));
+            }
+            else if (currentUser.getRole() == Role.ADMIN) {
+                // Admins can access any patient's data
+                return true;
+            }
+            
+            return false;
+        } catch (Exception e) {
+            log.error("Error checking patient access", e);
+            return false;
+        }
+    }
+
+    /**
+     * Get enhanced patient profile with comprehensive medical information
+     * This includes medications, latest vitals, mood/pain data, and medical summary
+     */
+    @GetMapping("/{patientId}/profile/enhanced")
+    @Operation(summary = "Get enhanced patient profile", 
+               description = "Get comprehensive patient profile including medications, latest vitals, mood/pain data, and medical summary")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Enhanced profile retrieved successfully"),
+        @ApiResponse(responseCode = "403", description = "Access denied"),
+        @ApiResponse(responseCode = "404", description = "Patient not found")
+    })
+    public ResponseEntity<?> getEnhancedPatientProfile(@PathVariable Long patientId) {
+        try {
+            // Check authorization
+            if (!hasAccessToPatient(patientId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Not authorized to view this patient's enhanced profile"));
+            }
+
+            Optional<EnhancedPatientProfileDTO> profile = patientService.getEnhancedPatientProfile(patientId);
+            if (profile.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Patient not found"));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                "data", profile.get(),
+                "message", "Enhanced profile retrieved successfully"
+            ));
+
+        } catch (Exception e) {
+            log.error("Error getting enhanced patient profile for patientId: {}", patientId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to retrieve enhanced patient profile"));
+        }
     }
 }

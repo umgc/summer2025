@@ -18,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import com.careconnect.dto.ExportLinkDTO;
 import com.careconnect.dto.VitalSampleDTO;
 import com.careconnect.service.AnalyticsService;
+import com.careconnect.service.VitalSampleService;
 import com.careconnect.exception.AppException;
 import com.careconnect.model.Patient;
 import com.careconnect.repository.PatientRepository;
@@ -68,6 +69,9 @@ private final FamilyMemberLinkRepository familyMemberPatientLinkRepository;
 
 	@Autowired
     private AnalyticsService analyticsService;
+    
+    @Autowired
+    private VitalSampleService vitalSampleService;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @GetMapping("/dashboard")
@@ -194,5 +198,148 @@ public ResponseEntity<?> vitals(@RequestParam Long patientId, @RequestParam int 
             "message", "No vitals data available"
         ));
     }
+    }
+
+    /**
+     * Create a new vital sample
+     */
+    @PostMapping("/vitals")
+    public ResponseEntity<?> createVitalSample(@RequestBody VitalSampleDTO vitalSampleDTO) {
+        try {
+            // Get user details from JWT token
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = auth.getName();
+            
+            // Find user
+            User currentUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+            
+            // Find patient
+            Optional<Patient> patientOpt = patientRepository.findById(vitalSampleDTO.patientId());
+            if (patientOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Patient not found"));
+            }
+            
+            Patient patient = patientOpt.get();
+            User patientUser = patient.getUser();
+            
+            // Check access - only allow patients to create their own vitals or authorized caregivers/family
+            boolean hasAccess = false;
+            
+            if (currentUser.getRole() == Role.PATIENT) {
+                // Patient can only create their own data
+                hasAccess = currentUser.getId().equals(patientUser.getId());
+            } 
+            else if (currentUser.getRole() == Role.CAREGIVER) {
+                // Check if user is a caregiver for this patient
+                hasAccess = caregiverService.hasAccessToPatient(currentUser.getId(), vitalSampleDTO.patientId());
+            }
+            else if (currentUser.getRole() == Role.FAMILY_MEMBER) {
+                // Check if user is a family member for this patient
+                hasAccess = caregiverService.hasAccessToPatient(currentUser.getId(), vitalSampleDTO.patientId());
+            }
+            else if (currentUser.getRole() == Role.ADMIN) {
+                // Admins can create vitals for any patient
+                hasAccess = true;
+            }
+            
+            if (!hasAccess) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Not authorized to create vitals for this patient"));
+            }
+
+            // Create the vital sample
+            VitalSampleDTO created = vitalSampleService.createVitalSample(vitalSampleDTO);
+            
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of(
+                    "data", created,
+                    "message", "Vital sample created successfully"
+                ));
+            
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to create vital sample"));
+        }
+    }
+
+    /**
+     * Update an existing vital sample
+     */
+    @PutMapping("/vitals/{id}")
+    public ResponseEntity<?> updateVitalSample(@PathVariable Long id, @RequestBody VitalSampleDTO vitalSampleDTO) {
+        try {
+            // Get user details from JWT token
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = auth.getName();
+            
+            // Find user
+            User currentUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+            
+            // Check if vital sample exists and get patient info
+            Optional<VitalSampleDTO> existingVitalOpt = vitalSampleService.getVitalSample(id);
+            if (existingVitalOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Vital sample not found"));
+            }
+            
+            VitalSampleDTO existingVital = existingVitalOpt.get();
+            Long patientId = existingVital.patientId();
+            
+            // Find patient
+            Optional<Patient> patientOpt = patientRepository.findById(patientId);
+            if (patientOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Patient not found"));
+            }
+            
+            Patient patient = patientOpt.get();
+            User patientUser = patient.getUser();
+            
+            // Check access - only allow patients to update their own vitals or authorized caregivers/family
+            boolean hasAccess = false;
+            
+            if (currentUser.getRole() == Role.PATIENT) {
+                // Patient can only update their own data
+                hasAccess = currentUser.getId().equals(patientUser.getId());
+            } 
+            else if (currentUser.getRole() == Role.CAREGIVER) {
+                // Check if user is a caregiver for this patient
+                hasAccess = caregiverService.hasAccessToPatient(currentUser.getId(), patientId);
+            }
+            else if (currentUser.getRole() == Role.FAMILY_MEMBER) {
+                // Check if user is a family member for this patient
+                hasAccess = caregiverService.hasAccessToPatient(currentUser.getId(), patientId);
+            }
+            else if (currentUser.getRole() == Role.ADMIN) {
+                // Admins can update vitals for any patient
+                hasAccess = true;
+            }
+            
+            if (!hasAccess) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Not authorized to update vitals for this patient"));
+            }
+
+            // Update the vital sample
+            VitalSampleDTO updated = vitalSampleService.updateVitalSample(id, vitalSampleDTO);
+            
+            return ResponseEntity.ok(Map.of(
+                "data", updated,
+                "message", "Vital sample updated successfully"
+            ));
+            
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to update vital sample"));
+        }
     }
 }
