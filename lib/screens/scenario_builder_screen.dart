@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,6 +21,7 @@ class ScenarioBuilderScreen extends ConsumerStatefulWidget {
 class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
   // the chosen Subject (domain) from the dropdown
   String? selectedDomain;
+  List<NodeBlock> _generatedBlocks = [];
 
   final List<String> nodeTypes = [
     'Start',
@@ -888,20 +890,48 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
               ).showSnackBar(const SnackBar(content: Text('Canvas cleared')));
             },
           ),
-          IconButton(
+
+          // Save changed by Beth
+         IconButton(
             icon: const Icon(Icons.save),
             tooltip: 'Save',
-            onPressed: () {
-              // Serialize the 'blocks' list to JSON and save it.
-              // This uses the toJson method we added to NodeBlock.
-              final jsonString = jsonEncode(blocks.map((block) => block.toJson()).toList());
-              // In a real app, you'd save jsonString to a file.
-              print('Scenario JSON: $jsonString'); // For demonstration
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Scenario data printed to console (save feature needs file system access)')),
-              );
+            onPressed: () async {
+              final blocks = ref.read(
+                scenarioProvider,
+              ); // 👈 Get current scenario blocks
+              final dio = Dio();
+
+              try {
+                final response = await dio.post(
+                  'http://localhost:8080/api/v1/scenario/save', // ✅ Change to your actual endpoint
+                  data: blocks.map((block) => block.toJson()).toList(),
+                  options: Options(
+                    headers: {'Content-Type': 'application/json'},
+                  ),
+                );
+
+                if (response.statusCode == 200) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Scenario saved successfully'),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to save: ${response.statusCode}'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Save error: $e')));
+              }
             },
           ),
+
+          //end Save change by Beth
           // --- NEW/MODIFIED: Export to JSON functionality ---
           IconButton(
             icon: const Icon(Icons.download),
@@ -960,7 +990,88 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
             },
           ),
           // --- END NEW/MODIFIED: Export to JSON functionality ---
+          //Beth
+         IconButton(
+            icon: const Icon(Icons.flash_on),
+            tooltip: 'Generate Scenario',
+            onPressed: () async {
+              final prompt = await showDialog<String>(
+                context: context,
+                builder: (context) {
+                  String userInput = '';
+                  return AlertDialog(
+                    title: const Text('AI Generate Prompt'),
+                    content: TextFormField(
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Enter prompt',
+                        hintText: 'e.g., Wound cleaning scenario',
+                      ),
+                      onChanged: (value) => userInput = value,
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context, userInput),
+                        child: const Text('Generate'),
+                      ),
+                    ],
+                  );
+                },
+              );
 
+              if (prompt != null && prompt.trim().isNotEmpty) {
+                try {
+                  final dio = Dio();
+                  final response = await dio.post(
+                    'http://localhost:8080/api/v1/scenario/generate',
+                    data: {'prompt': prompt},
+                    options: Options(
+                      headers: {'Content-Type': 'application/json'},
+                    ),
+                  );
+
+                  if (response.statusCode == 200) {
+                    print('🔵 Raw DeepSeek response: ${response.data}');
+                    final List<dynamic> data = response.data;
+                    setState(() {
+                      _generatedBlocks = data
+                          .map((json) => NodeBlock.fromJson(json))
+                          .toList();
+                    });
+                    final blocks = data
+                        .map((json) => NodeBlock.fromJson(json))
+                        .toList();
+
+                    print('🟢 Parsed NodeBlocks: $blocks');
+
+                    ref.read(scenarioProvider.notifier).replace(blocks);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Scenario generated from prompt!'),
+                      ),
+                    );
+                  } else {
+                    print('🔴 Server error: ${response.statusCode}');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: ${response.statusCode}')),
+                    );
+                  }
+                } catch (e) {
+                  print('❌ Exception: $e');
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Request failed: $e')));
+                }
+              }
+            },
+          ),
+
+          //Beth end
           // --- MODIFIED: Load Scenario functionality ---
           IconButton(
             icon: const Icon(Icons.folder_open),
