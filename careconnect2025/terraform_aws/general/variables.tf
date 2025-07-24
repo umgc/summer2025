@@ -3,11 +3,6 @@ variable "primary_region" {
   default     = "us-east-1"
 }
 
-variable "secondary_region" {
-  description = "The secondary AWS region"
-  default     = "us-west-2"
-}
-
 variable "core_task_env_vars" {
   type    = list(map(string))
   default = []
@@ -41,4 +36,8 @@ variable "rds_password" {
   description = "RDS database password"
   type        = string
   sensitive   = true
+}
+variable "domain_name" {
+  description = "Your domain (e.g., example.com)"
+  type        = string
 }
