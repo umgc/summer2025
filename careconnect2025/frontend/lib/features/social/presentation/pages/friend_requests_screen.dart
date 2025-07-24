@@ -3,12 +3,15 @@ import 'dart:convert';
 import 'package:care_connect_app/config/env_constant.dart';
 import 'package:care_connect_app/features/social/presentation/pages/my_friend_screen.dart';
 import 'package:care_connect_app/services/api_service.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class FriendRequestsScreen extends StatefulWidget {
-  const FriendRequestsScreen({super.key});
+  final int userId;
+  const FriendRequestsScreen({super.key, required this.userId});
 
   @override
   State<FriendRequestsScreen> createState() => _FriendRequestsScreenState();
@@ -116,10 +119,10 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Friend Requests'),
-        backgroundColor: Colors.blue.shade900,
-        actions: [
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Friend Requests',
+        additionalActions: [
           IconButton(
             icon: const Icon(Icons.group),
             tooltip: 'My Friends',
@@ -132,6 +135,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
           ),
         ],
       ),
+      drawer: CommonDrawer(currentRoute: '/friend_requests'),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : requests.isEmpty
