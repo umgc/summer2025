@@ -34,15 +34,12 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
           medications = decodedList.map((item) => Map<String, dynamic>.from(item)).toList();
           isLoading = false;
         });
-        print('Loaded ${medications.length} medications from storage');
       } else {
         setState(() {
           isLoading = false;
         });
-        print('No saved medications found');
       }
     } catch (e) {
-      print('Error loading medications: $e');
       setState(() {
         isLoading = false;
       });
@@ -55,9 +52,8 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
       final prefs = await SharedPreferences.getInstance();
       final medicationsJson = jsonEncode(medications);
       await prefs.setString('medications', medicationsJson);
-      print('Saved ${medications.length} medications to storage');
     } catch (e) {
-      print('Error saving medications: $e');
+      // Handle error silently in production
     }
   }
 
@@ -245,39 +241,6 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
     );
   }
 
-  Widget _buildFeature({
-    required IconData icon,
-    required String name,
-    required Color color,
-  }) {
-    return Column(
-      children: [
-        Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 28,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          name,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
   Widget _buildMedicationList() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -366,6 +329,11 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
                             'Dosage: ${medication['dosage']} - ${medication['frequency'] ?? 'As needed'}',
                             style: const TextStyle(fontSize: 12, color: Colors.blue),
                           ),
+                        if (medication['startDate'] != null || medication['endDate'] != null)
+                          Text(
+                            'Duration: ${_formatDateRange(medication['startDate'], medication['endDate'])}',
+                            style: const TextStyle(fontSize: 12, color: Colors.green),
+                          ),
                       ],
                     ),
                     trailing: PopupMenuButton<String>(
@@ -410,6 +378,30 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
         ],
       ),
     );
+  }
+
+  String _formatDateRange(String? startDate, String? endDate) {
+    if (startDate == null && endDate == null) return 'Not specified';
+
+    final start = startDate != null ? _formatDate(startDate) : 'Start not set';
+    final end = endDate != null ? _formatDate(endDate) : 'Ongoing';
+
+    if (startDate != null && endDate != null) {
+      return '$start to $end';
+    } else if (startDate != null) {
+      return 'From $start';
+    } else {
+      return 'Until $end';
+    }
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return dateString;
+    }
   }
 
   Future<void> _scanMedicationCode() async {
@@ -481,8 +473,8 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
     } catch (e) {
       Navigator.pop(context); // Close loading dialog
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error looking up medication: ${e.toString()}'),
+        const SnackBar(
+          content: Text('Error looking up medication. Please try again.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -576,8 +568,8 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
                       });
 
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error looking up medication: ${e.toString()}'),
+                        const SnackBar(
+                          content: Text('Error looking up medication. Please try again.'),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -609,127 +601,218 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
       'frequency': TextEditingController(),
     };
 
+    DateTime? startDate;
+    DateTime? endDate;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add Medication Manually'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: controllers['brandName']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Brand Name *',
-                    border: OutlineInputBorder(),
-                  ),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Add Medication Manually'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: controllers['brandName']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Brand Name *',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['genericName']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Generic Name',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['strength']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Strength (e.g., 10mg)',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['dosageForm']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Dosage Form (e.g., Tablet)',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['manufacturer']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Manufacturer',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['ndc']!,
+                      decoration: const InputDecoration(
+                        labelText: 'NDC Code (optional)',
+                        hintText: 'e.g., 50580-937',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['dosage']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Dosage (e.g., 1 tablet)',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['frequency']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Frequency (e.g., Twice daily)',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Start Date Field
+                    InkWell(
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: startDate ?? DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          setDialogState(() {
+                            startDate = picked;
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today, color: Colors.grey),
+                            const SizedBox(width: 12),
+                            Text(
+                              startDate != null
+                                  ? 'Start Date: ${_formatDate(startDate!.toIso8601String())}'
+                                  : 'Select Start Date (optional)',
+                              style: TextStyle(
+                                color: startDate != null ? Colors.black : Colors.grey,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // End Date Field
+                    InkWell(
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: endDate ?? (startDate ?? DateTime.now()),
+                          firstDate: startDate ?? DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          setDialogState(() {
+                            endDate = picked;
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today, color: Colors.grey),
+                            const SizedBox(width: 12),
+                            Text(
+                              endDate != null
+                                  ? 'End Date: ${_formatDate(endDate!.toIso8601String())}'
+                                  : 'Select End Date (optional)',
+                              style: TextStyle(
+                                color: endDate != null ? Colors.black : Colors.grey,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controllers['genericName']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Generic Name',
-                    border: OutlineInputBorder(),
-                  ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controllers['strength']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Strength (e.g., 10mg)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controllers['dosageForm']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Dosage Form (e.g., Tablet)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controllers['manufacturer']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Manufacturer',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controllers['ndc']!,
-                  decoration: const InputDecoration(
-                    labelText: 'NDC Code (optional)',
-                    hintText: 'e.g., 50580-937',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controllers['dosage']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Dosage (e.g., 1 tablet)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controllers['frequency']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Frequency (e.g., Twice daily)',
-                    border: OutlineInputBorder(),
-                  ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (controllers['brandName']!.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Brand name is required')),
+                      );
+                      return;
+                    }
+
+                    final medicationData = {
+                      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                      'brandName': controllers['brandName']!.text.trim(),
+                      'genericName': controllers['genericName']!.text.trim().isEmpty
+                          ? 'Not specified'
+                          : controllers['genericName']!.text.trim(),
+                      'strength': controllers['strength']!.text.trim().isEmpty
+                          ? 'Not specified'
+                          : controllers['strength']!.text.trim(),
+                      'dosageForm': controllers['dosageForm']!.text.trim().isEmpty
+                          ? 'Not specified'
+                          : controllers['dosageForm']!.text.trim(),
+                      'manufacturer': controllers['manufacturer']!.text.trim().isEmpty
+                          ? 'Not specified'
+                          : controllers['manufacturer']!.text.trim(),
+                      'ndc': controllers['ndc']!.text.trim().isEmpty
+                          ? 'Manual Entry'
+                          : controllers['ndc']!.text.trim(),
+                      'dosage': controllers['dosage']!.text.trim(),
+                      'frequency': controllers['frequency']!.text.trim(),
+                      'startDate': startDate?.toIso8601String(),
+                      'endDate': endDate?.toIso8601String(),
+                      'addedAt': DateTime.now().toIso8601String(),
+                      'isManualEntry': true,
+                    };
+
+                    Navigator.pop(context);
+                    _addMedicationToList(medicationData);
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
+                  child: const Text('Add Medication', style: TextStyle(color: Colors.white)),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (controllers['brandName']!.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Brand name is required')),
-                  );
-                  return;
-                }
-
-                final medicationData = {
-                  'id': DateTime.now().millisecondsSinceEpoch.toString(), // Add unique ID
-                  'brandName': controllers['brandName']!.text.trim(),
-                  'genericName': controllers['genericName']!.text.trim().isEmpty
-                      ? 'Not specified'
-                      : controllers['genericName']!.text.trim(),
-                  'strength': controllers['strength']!.text.trim().isEmpty
-                      ? 'Not specified'
-                      : controllers['strength']!.text.trim(),
-                  'dosageForm': controllers['dosageForm']!.text.trim().isEmpty
-                      ? 'Not specified'
-                      : controllers['dosageForm']!.text.trim(),
-                  'manufacturer': controllers['manufacturer']!.text.trim().isEmpty
-                      ? 'Not specified'
-                      : controllers['manufacturer']!.text.trim(),
-                  'ndc': controllers['ndc']!.text.trim().isEmpty
-                      ? 'Manual Entry'
-                      : controllers['ndc']!.text.trim(),
-                  'dosage': controllers['dosage']!.text.trim(),
-                  'frequency': controllers['frequency']!.text.trim(),
-                  'addedAt': DateTime.now().toIso8601String(),
-                  'isManualEntry': true,
-                };
-
-                Navigator.pop(context);
-                _addMedicationToList(medicationData);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
-              child: const Text('Add Medication', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -747,116 +830,233 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
       'frequency': TextEditingController(text: medication['frequency'] ?? ''),
     };
 
+    DateTime? startDate = medication['startDate'] != null
+        ? DateTime.tryParse(medication['startDate'])
+        : null;
+    DateTime? endDate = medication['endDate'] != null
+        ? DateTime.tryParse(medication['endDate'])
+        : null;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Edit Medication'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: controllers['brandName']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Brand Name *',
-                    border: OutlineInputBorder(),
-                  ),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Edit Medication'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: controllers['brandName']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Brand Name *',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['genericName']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Generic Name',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['strength']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Strength',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['dosageForm']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Dosage Form',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['manufacturer']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Manufacturer',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['dosage']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Dosage',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['frequency']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Frequency',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Start Date Field
+                    InkWell(
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: startDate ?? DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          setDialogState(() {
+                            startDate = picked;
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today, color: Colors.grey),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                startDate != null
+                                    ? 'Start Date: ${_formatDate(startDate!.toIso8601String())}'
+                                    : 'Select Start Date (optional)',
+                                style: TextStyle(
+                                  color: startDate != null ? Colors.black : Colors.grey,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            if (startDate != null)
+                              IconButton(
+                                icon: const Icon(Icons.clear, size: 20),
+                                onPressed: () {
+                                  setDialogState(() {
+                                    startDate = null;
+                                  });
+                                },
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // End Date Field
+                    InkWell(
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: endDate ?? (startDate ?? DateTime.now()),
+                          firstDate: startDate ?? DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          setDialogState(() {
+                            endDate = picked;
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today, color: Colors.grey),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                endDate != null
+                                    ? 'End Date: ${_formatDate(endDate!.toIso8601String())}'
+                                    : 'Select End Date (optional)',
+                                style: TextStyle(
+                                  color: endDate != null ? Colors.black : Colors.grey,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            if (endDate != null)
+                              IconButton(
+                                icon: const Icon(Icons.clear, size: 20),
+                                onPressed: () {
+                                  setDialogState(() {
+                                    endDate = null;
+                                  });
+                                },
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controllers['genericName']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Generic Name',
-                    border: OutlineInputBorder(),
-                  ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controllers['strength']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Strength',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controllers['dosageForm']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Dosage Form',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controllers['manufacturer']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Manufacturer',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controllers['dosage']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Dosage',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controllers['frequency']!,
-                  decoration: const InputDecoration(
-                    labelText: 'Frequency',
-                    border: OutlineInputBorder(),
-                  ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (controllers['brandName']!.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Brand name is required')),
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      medications[index] = {
+                        ...medication,
+                        'brandName': controllers['brandName']!.text.trim(),
+                        'genericName': controllers['genericName']!.text.trim(),
+                        'strength': controllers['strength']!.text.trim(),
+                        'dosageForm': controllers['dosageForm']!.text.trim(),
+                        'manufacturer': controllers['manufacturer']!.text.trim(),
+                        'dosage': controllers['dosage']!.text.trim(),
+                        'frequency': controllers['frequency']!.text.trim(),
+                        'startDate': startDate?.toIso8601String(),
+                        'endDate': endDate?.toIso8601String(),
+                        'lastModified': DateTime.now().toIso8601String(),
+                      };
+                    });
+
+                    // Save to persistent storage
+                    _saveMedications();
+
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Medication updated successfully!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
+                  child: const Text('Save Changes', style: TextStyle(color: Colors.white)),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (controllers['brandName']!.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Brand name is required')),
-                  );
-                  return;
-                }
-
-                setState(() {
-                  medications[index] = {
-                    ...medication,
-                    'brandName': controllers['brandName']!.text.trim(),
-                    'genericName': controllers['genericName']!.text.trim(),
-                    'strength': controllers['strength']!.text.trim(),
-                    'dosageForm': controllers['dosageForm']!.text.trim(),
-                    'manufacturer': controllers['manufacturer']!.text.trim(),
-                    'dosage': controllers['dosage']!.text.trim(),
-                    'frequency': controllers['frequency']!.text.trim(),
-                    'lastModified': DateTime.now().toIso8601String(),
-                  };
-                });
-
-                // Save to persistent storage
-                _saveMedications();
-
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Medication updated successfully!'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
-              child: const Text('Save Changes', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -908,13 +1108,7 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
           'https://api.fda.gov/drug/ndc.json?search=product_ndc:"$cleanCode"&limit=1'
       );
 
-      print('Looking up medication with NDC: $cleanCode');
-      print('API URL: $uri');
-
       final response = await http.get(uri);
-
-      print('API Response Status: ${response.statusCode}');
-      print('API Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -924,13 +1118,11 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
           return _parseNDCResult(result, cleanCode);
         }
       } else if (response.statusCode == 404) {
-        print('Medication not found in FDA database');
         return null;
       } else {
         throw Exception('API Error: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error in _lookupMedication: $e');
       rethrow;
     }
 
@@ -940,7 +1132,7 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
   Map<String, dynamic>? _parseNDCResult(Map<String, dynamic> result, String code) {
     try {
       return {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(), // Add unique ID
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
         'ndc': code,
         'brandName': result['brand_name'] ?? result['proprietary_name'] ?? 'Unknown Brand',
         'genericName': result['generic_name'] ?? result['nonproprietary_name'] ?? 'Unknown Generic',
@@ -955,48 +1147,172 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
         'activeIngredients': result['active_ingredients'] ?? [],
         'dosage': '',
         'frequency': '',
+        'startDate': null,
+        'endDate': null,
         'addedAt': DateTime.now().toIso8601String(),
         'isManualEntry': false,
       };
     } catch (e) {
-      print('Error parsing NDC result: $e');
       return null;
     }
   }
 
   void _showMedicationDetails(Map<String, dynamic> medicationData) {
+    DateTime? startDate;
+    DateTime? endDate;
+    final dosageController = TextEditingController();
+    final frequencyController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(medicationData['brandName']),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildDetailRow('Generic Name:', medicationData['genericName']),
-                _buildDetailRow('Dosage Form:', medicationData['dosageForm']),
-                _buildDetailRow('Strength:', medicationData['strength']),
-                _buildDetailRow('Manufacturer:', medicationData['manufacturer']),
-                _buildDetailRow('NDC Code:', medicationData['ndc']),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(medicationData['brandName']),
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildDetailRow('Generic Name:', medicationData['genericName']),
+                    _buildDetailRow('Dosage Form:', medicationData['dosageForm']),
+                    _buildDetailRow('Strength:', medicationData['strength']),
+                    _buildDetailRow('Manufacturer:', medicationData['manufacturer']),
+                    _buildDetailRow('NDC Code:', medicationData['ndc']),
+
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Treatment Information:',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(height: 12),
+
+                    TextField(
+                      controller: dosageController,
+                      decoration: const InputDecoration(
+                        labelText: 'Dosage (e.g., 1 tablet)',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    TextField(
+                      controller: frequencyController,
+                      decoration: const InputDecoration(
+                        labelText: 'Frequency (e.g., Twice daily)',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Start Date Field
+                    InkWell(
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: startDate ?? DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          setDialogState(() {
+                            startDate = picked;
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today, color: Colors.grey),
+                            const SizedBox(width: 12),
+                            Text(
+                              startDate != null
+                                  ? 'Start Date: ${_formatDate(startDate!.toIso8601String())}'
+                                  : 'Select Start Date (optional)',
+                              style: TextStyle(
+                                color: startDate != null ? Colors.black : Colors.grey,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // End Date Field
+                    InkWell(
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: endDate ?? (startDate ?? DateTime.now()),
+                          firstDate: startDate ?? DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          setDialogState(() {
+                            endDate = picked;
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today, color: Colors.grey),
+                            const SizedBox(width: 12),
+                            Text(
+                              endDate != null
+                                  ? 'End Date: ${_formatDate(endDate!.toIso8601String())}'
+                                  : 'Select End Date (optional)',
+                              style: TextStyle(
+                                color: endDate != null ? Colors.black : Colors.grey,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final updatedMedicationData = {
+                      ...medicationData,
+                      'dosage': dosageController.text.trim(),
+                      'frequency': frequencyController.text.trim(),
+                      'startDate': startDate?.toIso8601String(),
+                      'endDate': endDate?.toIso8601String(),
+                    };
+
+                    Navigator.pop(context);
+                    _addMedicationToList(updatedMedicationData);
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
+                  child: const Text('Add Medication', style: TextStyle(color: Colors.white)),
+                ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _addMedicationToList(medicationData);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
-              child: const Text('Add Medication', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+            );
+          },
         );
       },
     );
