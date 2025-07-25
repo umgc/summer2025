@@ -5,9 +5,14 @@ import 'package:provider/provider.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:app_links/app_links.dart';
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'providers/user_provider.dart';
+import 'providers/theme_provider.dart';
 import 'config/router/app_router.dart';
 import 'services/auth_migration_helper.dart';
+import 'config/theme/app_theme.dart';
+import 'config/utils/responsive_utils.dart';
+import 'config/utils/web_utils.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,13 +39,18 @@ Future<void> main() async {
     debugPrint('Auth migration warning: ${migrationResult.errorMessage}');
   }
 
-  // Create UserProvider and initialize it
+  // Create providers and initialize them
   final userProvider = UserProvider();
   await userProvider.initializeUser();
 
+  final themeProvider = ThemeProvider();
+
   runApp(
-    ChangeNotifierProvider.value(
-      value: userProvider,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: userProvider),
+        ChangeNotifierProvider.value(value: themeProvider),
+      ],
       child: const CareConnectApp(),
     ),
   );
@@ -49,6 +59,11 @@ Future<void> main() async {
 Future<void> _bootstrap() async {
   // Performance optimization: Warm up system caches
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+  // Initialize web-specific optimizations
+  if (kIsWeb) {
+    WebUtils.initializeWebOptimizations();
+  }
 }
 
 class CareConnectApp extends StatefulWidget {
@@ -116,28 +131,86 @@ class _CareConnectAppState extends State<CareConnectApp> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp.router(
       title: 'CareConnect',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        // Performance optimization: Reduce font loading
-        fontFamily: 'Roboto',
-        // Optimize material design
+      themeMode: themeProvider.themeMode,
+      theme: AppTheme.lightTheme.copyWith(
+        // Additional theme customizations
         useMaterial3: true,
-        // Reduce overdraw
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        textTheme: AppTheme.lightTheme.textTheme.apply(fontFamily: 'Roboto'),
+        // Platform-specific theme adjustments
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.android: OpenUpwardsPageTransitionsBuilder(),
+            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+            TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+            TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
+          },
+        ),
+        // Adjust card elevation for iOS vs Android
+        cardTheme: CardThemeData(
+          elevation: kIsWeb ? 2 : (ResponsiveUtils.isIOS ? 1 : 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ResponsiveUtils.isIOS ? 12 : 8),
+          ),
+        ),
+      ),
+      darkTheme: AppTheme.darkTheme.copyWith(
+        // Additional dark theme customizations
+        useMaterial3: true,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        textTheme: AppTheme.darkTheme.textTheme.apply(fontFamily: 'Roboto'),
+        // Platform-specific theme adjustments
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.android: OpenUpwardsPageTransitionsBuilder(),
+            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+            TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+            TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
+          },
+        ),
+        // Adjust card elevation for iOS vs Android
+        cardTheme: CardThemeData(
+          elevation: kIsWeb ? 3 : (ResponsiveUtils.isIOS ? 2 : 3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ResponsiveUtils.isIOS ? 12 : 8),
+          ),
+        ),
       ),
       routerConfig: appRouter,
-      // Performance optimization: Reduce memory usage
+      // Performance optimization and responsive behavior
       builder: (context, child) {
+        // Handle text scaling for accessibility
+        final mediaQuery = MediaQuery.of(context);
+        final textScaleFactor = mediaQuery.textScaleFactor.clamp(0.8, 1.2);
+
+        // Apply platform-specific adjustments
+        Widget updatedChild = child!;
+
+        // Apply safe area with platform awareness
+        updatedChild = SafeArea(
+          bottom: !ResponsiveUtils.isWeb, // Web doesn't need bottom padding
+          child: updatedChild,
+        );
+
+        // Apply the adjusted MediaQuery
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(
-              MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2),
-            ),
+          data: mediaQuery.copyWith(
+            textScaler: TextScaler.linear(textScaleFactor),
+            // Ensure proper viewport settings across devices
+            devicePixelRatio: ResponsiveUtils.isWeb
+                ? mediaQuery.devicePixelRatio
+                : mediaQuery.devicePixelRatio.clamp(1.0, 3.0),
           ),
-          child: child!,
+          child: updatedChild,
         );
       },
     );

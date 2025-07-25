@@ -1,11 +1,11 @@
 {
-    "name": "care_connect_app",
-    "short_name": "care_connect_app",
+    "name": "CareConnect",
+    "short_name": "CareConnect",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFFFF",
+    "theme_color": "#1976D2",
+    "description": "A comprehensive healthcare management platform for patients and caregivers",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

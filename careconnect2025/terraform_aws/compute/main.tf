@@ -43,8 +43,7 @@ resource "aws_lambda_function" "cc_main_backend_lambda" {
   runtime       = "java17"
   role          = data.terraform_remote_state.cc_common_state.outputs.cc_app_role_arn
   memory_size   = 2048
-  timeout       = 120
-#   filename      = "NONAMEYET"
+  timeout       = 30
   s3_bucket     = var.iac_cc_s3_bucket_name
   s3_key        = var.cc_main_backend_package_zip_s3key
   publish       = true
@@ -55,16 +54,13 @@ resource "aws_lambda_function" "cc_main_backend_lambda" {
   environment {
     variables = merge(
       var.cc_main_compute_env_vars,
+      data.terraform_remote_state.cc_common_state.outputs.cc_sensitive_env_variables_name,
+      data.terraform_remote_state.cc_common_state.outputs.cc_sensitive_env_variables_name,
       {
         CC_APP_ROLE           = "${data.terraform_remote_state.cc_common_state.outputs.cc_app_role_arn}"
         APP_FRONTEND_BASE_URL = "https://${data.terraform_remote_state.cc_common_state.outputs.amplify_url}"
         BASE_URL              = "${data.terraform_remote_state.cc_common_state.outputs.main_api_endpoint}"
         CORS_ALLOWED_LIST     = "${var.cors_allowed_list},https://${data.terraform_remote_state.cc_common_state.outputs.amplify_url}"
-        CC_DB_USER_SSM_PARAM  = "${data.terraform_remote_state.cc_common_state.outputs.rds_user_param_name}"
-        CC_DB_PASS_SSM_PARAM  = "${data.terraform_remote_state.cc_common_state.outputs.rds_pass_param_name}"
-        JDBC_URI              = "jdbc:mysql://${data.terraform_remote_state.cc_common_state.outputs.db_endpoint}/${data.terraform_remote_state.cc_common_state.outputs.db_name}"
-        DB_USER               = "${data.terraform_remote_state.cc_common_state.outputs.rds_user_param_name}"
-        DB_PASSWORD           = "${data.terraform_remote_state.cc_common_state.outputs.rds_pass_param_name}"
       }
     )
   }
@@ -76,4 +72,47 @@ resource "aws_lambda_function" "cc_main_backend_lambda" {
     apply_on = "PublishedVersions"
   }
   tags = merge(var.default_tags, { Name = "cc_main_backend" })
+}
+
+resource "aws_iam_policy" "cc_app_role_policy" {
+  name        = "CcApiGatewayLambdaPolicy"
+  description = "This policy allows API Gateway to invoke the main backend Lambda function"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowInvokeLambda",
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = [
+          "${aws_lambda_function.cc_main_backend_lambda.arn}",
+          "${aws_lambda_function.cc_main_backend_lambda.arn}:*",
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cc_app_role_policy_attach" {
+  role       = data.terraform_remote_state.cc_common_state.outputs.cc_api_gw_role.name
+  policy_arn = aws_iam_policy.cc_app_role_policy.arn
+}
+
+resource "aws_apigatewayv2_integration" "main" {
+  depends_on           = [aws_iam_role_policy_attachment.cc_app_role_policy_attach]
+  api_id               = data.terraform_remote_state.cc_common_state.outputs.main_api_id
+  integration_type     = "AWS_PROXY"
+  integration_method   = "ANY"
+  integration_uri      = aws_lambda_function.cc_main_backend_lambda.qualified_arn
+  credentials_arn      = data.terraform_remote_state.cc_common_state.outputs.cc_api_gw_role.arn
+  timeout_milliseconds = 30000
+}
+
+resource "aws_apigatewayv2_route" "cc_api_main_proxy" {
+  api_id    = data.terraform_remote_state.cc_common_state.outputs.main_api_id
+  route_key = "ANY /{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.main.id}"
 }
