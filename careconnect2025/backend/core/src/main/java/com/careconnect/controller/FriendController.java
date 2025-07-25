@@ -1,8 +1,10 @@
 package com.careconnect.controller;
 
 import com.careconnect.model.FriendRequest;
+import com.careconnect.model.Friendship;
 import com.careconnect.model.User;
 import com.careconnect.repository.FriendRequestRepository;
+import com.careconnect.repository.FriendshipRepository;
 import com.careconnect.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,9 @@ public class FriendController {
 
     @Autowired
     private UserRepository userRepo;
+
+    @Autowired
+    private FriendshipRepository friendshipRepository;
 
     // ✅ 1. Send friend request
     @PostMapping("/request")
@@ -83,7 +88,25 @@ public class FriendController {
         req.setStatus("accepted");
         friendRequestRepo.save(req);
 
-        return ResponseEntity.ok("Friend request accepted");
+        Optional<User> fromUserOpt = userRepo.findById(req.getFromUserId());
+        Optional<User> toUserOpt = userRepo.findById(req.getToUserId());
+
+        if (fromUserOpt.isEmpty() || toUserOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found");
+        }
+
+        User fromUser = fromUserOpt.get();
+        User toUser = toUserOpt.get();
+
+        Friendship friendship = Friendship.builder()
+                .user1(fromUser)
+                .user2(toUser)
+                .status("CONFIRMED")
+                .build();
+
+        friendshipRepository.save(friendship);
+
+        return ResponseEntity.ok("Friend request accepted and friendship created");
     }
 
     // ✅ 4. Reject a friend request

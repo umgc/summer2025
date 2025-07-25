@@ -64,4 +64,26 @@
                 );
             }).toList();
         }
+
+        public List<PostWithCommentCountDto> getPostsByUserAndFriends(Long userId) {
+            List<Long> friendIds = userRepository.findConfirmedFriendIds(userId);
+            friendIds.add(userId);
+
+            List<Post> posts = postRepository.findAllByUserIdInOrderByCreatedAtDesc(friendIds);
+            return posts.stream().map(post -> {
+                String username = userRepository.findById(post.getUserId())
+                        .map(u -> (u.getName() != null && !u.getName().isEmpty()) ? u.getName() : u.getEmail())
+                        .orElse("Unknown");
+                return new PostWithCommentCountDto(
+                        post.getId(),
+                        post.getUserId(),
+                        post.getContent(),
+                        post.getImageUrl(),
+                        post.getCreatedAt(),
+                        commentRepository.countByPostId(post.getId()),
+                        username
+                );
+            }).toList();
+        }
+
     }

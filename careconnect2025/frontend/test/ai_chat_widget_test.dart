@@ -1,39 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:care_connect_app/widgets/ai_chat.dart';
+import 'package:care_connect_app/widgets/ai_chat_improved.dart';
+import 'package:care_connect_app/services/ai_service.dart';
 
 void main() {
   group('AI Chat Widget Tests', () {
-    testWidgets('AI Chat should show correct button text', (
+    testWidgets('Modal AI Chat should show header text', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: AIChat(role: 'patient')),
+          home: Scaffold(body: AIChat(role: 'patient', isModal: true)),
         ),
       );
 
-      // Should show "Ask AI" text on the button
-      expect(find.textContaining('Ask AI'), findsOneWidget);
+      await tester.pumpAndSettle();
 
-      // Should show model indicator
-      expect(find.textContaining('DeepSeek'), findsOneWidget);
+      // Since we're using isModal: true, it should show the header title
+      expect(find.text('Health Assistant'), findsOneWidget);
+
+      // Should find the model dropdown
+      expect(find.byType(DropdownButton<AIModel>), findsOneWidget);
     });
 
-    testWidgets('AI Chat should show smart toy icon when collapsed', (
+    testWidgets('Modal AI Chat should show health assistant elements', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: AIChat(role: 'caregiver')),
+          home: Scaffold(body: AIChat(role: 'caregiver', isModal: true)),
         ),
       );
 
-      // Should show smart toy icon
-      expect(find.byIcon(Icons.smart_toy), findsOneWidget);
+      await tester.pumpAndSettle();
 
-      // Should show settings icon hint
-      expect(find.byIcon(Icons.settings), findsOneWidget);
+      // Should show a welcome message since this is a modal view
+      expect(
+        find.textContaining("Welcome to the Caregiver Assistant"),
+        findsOneWidget,
+      );
+
+      // Should show input field
+      expect(find.byType(TextField), findsOneWidget);
     });
   });
 }

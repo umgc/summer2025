@@ -8,14 +8,12 @@ import com.careconnect.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -72,10 +70,7 @@ public class FeedController {
         )
     })
     public ResponseEntity<?> getGlobalFeed() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
+        // (Updated) Removed manual authentication check
 
         List<PostWithCommentCountDto> posts = feedService.getAllPostsWithCommentCount();
         return ResponseEntity.ok(posts);
@@ -83,12 +78,10 @@ public class FeedController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserFeed(@PathVariable Long userId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
+        // (Updated) Removed manual authentication check
 
         // Get user from JWT token (email is the subject)
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
@@ -104,18 +97,32 @@ public class FeedController {
         return ResponseEntity.ok(posts);
     }
 
+    @GetMapping("/friends-feed")
+    public ResponseEntity<?> getFriendsFeed() {
+        // (Updated) Removed manual authentication check
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
+        }
+
+        List<PostWithCommentCountDto> posts = feedService.getPostsByUserAndFriends(user.getId());
+        return ResponseEntity.ok(posts);
+    }
+
+
     @PostMapping(value = "/create", consumes = "multipart/form-data")
     public ResponseEntity<?> createPost(
             @RequestParam("userId") Long userId,
             @RequestParam("content") String content,
             @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
+        // (Updated) Removed manual authentication check
 
         // Get user from JWT token (email is the subject)
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
@@ -155,7 +162,21 @@ public class FeedController {
             }
 
             Post post = feedService.createPost(userId, content, imageUrl);
-            return ResponseEntity.status(HttpStatus.CREATED).body(post);
+
+            String username = user.getName() != null && !user.getName().isEmpty() ? user.getName() : user.getEmail();
+            int commentCount = 0; // New post, so always 0
+
+            PostWithCommentCountDto dto = new PostWithCommentCountDto(
+                    post.getId(),
+                    post.getUserId(),
+                    post.getContent(),
+                    post.getImageUrl(),
+                    post.getCreatedAt(),
+                    commentCount,
+                    username
+            );
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
 
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -165,5 +186,7 @@ public class FeedController {
                     .body("Error creating post: " + e.getMessage());
         }
     }
+
+
 }
 

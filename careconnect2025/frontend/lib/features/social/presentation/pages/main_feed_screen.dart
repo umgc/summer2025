@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import '../model/post_with_comment_count_dto.dart';
+
 import 'chat_inbox_screen.dart';
 import 'comment_screen.dart';
 import 'friend_requests_screen.dart';
@@ -28,7 +30,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   int? _userId;
 
-  List<dynamic> posts = [];
+  List<PostWithCommentCountDto> posts = [];
   bool isLoading = true;
 
   @override
@@ -56,7 +58,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
     try {
       final headers = await ApiService.getAuthHeaders();
       final response = await http.get(
-        Uri.parse('${ApiConstants.feed}/all'),
+        Uri.parse('${ApiConstants.feed}/friends-feed'),
         headers: headers,
       );
 
@@ -66,7 +68,9 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          posts = data.where((post) => post['userId'] == _userId).toList();
+          posts = data
+              .map((json) => PostWithCommentCountDto.fromJson(json))
+              .toList();
           isLoading = false;
         });
       } else {
@@ -80,8 +84,8 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
     }
   }
 
-  Widget buildPostCard(Map<String, dynamic> post) {
-    final imageUrl = post['imageUrl'];
+  Widget buildPostCard(PostWithCommentCountDto post) {
+    final String? imageUrl = post.imageUrl;
     final String backendBaseUrl = getBackendBaseUrl();
     final resolvedUrl = imageUrl != null && imageUrl.isNotEmpty
         ? '$backendBaseUrl$imageUrl'
@@ -89,15 +93,13 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
 
     return InkWell(
       onTap: () {
-        if (post['id'] != null) {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => CommentScreen(postId: post['id']),
+              builder: (_) => CommentScreen(postId: post.id),
             ),
           );
-        }
-      },
+          },
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         elevation: 2,
@@ -109,24 +111,24 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
             children: [
               Row(
                 children: [
-                  UserAvatar(imageUrl: post['profileImageUrl'], radius: 20),
+                  UserAvatar(imageUrl: null, radius: 20),
                   const SizedBox(width: 10),
                   Text(
-                    post['username'] ?? 'Unknown',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    post.username,
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
                   ),
                   const Spacer(),
                   Text(
-                    post['timestamp'] ?? '',
+                    post.createdAt.toIso8601String().split('T').first,
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
-              Text(post['content'] ?? ''),
+              Text(post.content),
               if (resolvedUrl != null) ...[
                 const SizedBox(height: 10),
                 ClipRRect(
@@ -143,17 +145,15 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
               const Divider(height: 1),
               TextButton.icon(
                 onPressed: () {
-                  if (post['id'] != null) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => CommentScreen(postId: post['id']),
+                        builder: (_) => CommentScreen(postId: post.id),
                       ),
                     );
-                  }
                 },
                 icon: const Icon(Icons.comment, size: 18),
-                label: Text('${post['commentCount'] ?? 0} comments'),
+                label: Text('${post.commentCount} comments'),
               ),
             ],
           ),
