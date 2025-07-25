@@ -928,12 +928,14 @@ class ApiService {
 
   // Get list of files from saved S3 storage
   static Future<http.Response> getUserFilesByCategory(
-      int userId) async {
+      int userId, {
+      required String category,
+      }) async {
     try {
       final headers = await AuthTokenManager.getAuthHeaders();
 
       final uri = Uri.parse(
-        '${ApiConstants.baseUrl}files/users/$userId/list',
+        '${ApiConstants.baseUrl}users/$userId/list?category=$category',
       );
 
       return await _httpClient.get(
@@ -947,40 +949,6 @@ class ApiService {
       return http.Response(jsonEncode({'error': e.toString()}), 500);
     }
   }
-
-  // Download file from saved S3 storage
-  static Future<http.Response> downloadUserFile({
-    required int userId,
-    required String filePath,
-  }) async {
-    try {
-      final headers = await AuthTokenManager.getAuthHeaders();
-
-      // Encode filePath to ensure slashes and special chars are URL-safe
-      final encodedFilePath = Uri.encodeComponent(filePath);
-
-      // Replace slashes with semicolons to "matrix encode" the path
-      final matrixPath = filePath.replaceAll('/', ';');
-
-      final doubleEncodedFilePath = Uri.encodeComponent(Uri.encodeComponent(filePath));
-
-
-      final uri = Uri.parse(
-        '${ApiConstants.baseUrl}files/users/$userId/download/$doubleEncodedFilePath',
-      );
-
-      return await _httpClient.get(
-        uri,
-        headers: headers,
-      ).timeout(
-        const Duration(seconds: 15),
-        onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
-      );
-    } catch (e) {
-      return http.Response(jsonEncode({'error': e.toString()}), 500);
-    }
-  }
-
 
 
 

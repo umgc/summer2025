@@ -6,7 +6,6 @@ import 'package:care_connect_app/features/integrations/presentation/pages/medica
 import 'package:care_connect_app/features/integrations/presentation/pages/smart_devices.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/wearables_screen.dart';
 import 'package:care_connect_app/features/calls/presentation/pages/jitsi_meeting_screen.dart';
-import 'package:care_connect_app/features/notes/healthcare_notes.dart';
 import 'package:care_connect_app/features/profile/presentation/pages/profile_settings_page.dart';
 import 'package:care_connect_app/features/ai/presentation/pages/speech_to_text.dart';
 import 'package:flutter/material.dart';
@@ -185,36 +184,13 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(path: '/add-patient', builder: (_, __) => const AddPatientScreen()),
     GoRoute(path: '/speech-to-text', builder: (_, __) => SpeechToTextFile()),
-    GoRoute(
-      path: '/healthcare-notes',
-      builder: (context, state) {
-        final patientIdStr = state.uri.queryParameters['patientUserId'];
-
-        if (patientIdStr == null) {
-           return const Scaffold(
-             body: Center(child: Text('No patientUserId provided in the URL.')),
-           );
-         }
-
-        final patientId = patientIdStr != null
-            ? int.tryParse(patientIdStr)
-            : null;
-
-        if (patientId == null) {
-          return Scaffold(body: Center(child: Text('Invalid patientUserId.')));
-        }
-
-        return HealthcareNotes(patientUserId: patientId); // Pass patientId if provided
-      },
-    ),
     GoRoute(path: '/voice-commands', builder: (_, __) => VoiceCommandAI()),
     GoRoute(
       path: '/social-feed',
       builder: (context, state) {
         final userIdStr = state.uri.queryParameters['userId'];
-        final userId = userIdStr != null ? int.tryParse(userIdStr) ?? -1 : -1;
-
-        return MainFeedScreen(userId: userId);
+        final userId = userIdStr != null ? int.tryParse(userIdStr) : 1;
+        return MainFeedScreen(userId: userId ?? 1);
       },
     ),
     GoRoute(
