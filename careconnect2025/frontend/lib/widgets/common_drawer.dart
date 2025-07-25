@@ -192,22 +192,13 @@ class _CommonDrawerState extends State<CommonDrawer> {
             isActive: widget.currentRoute == '/gamification',
           ),
 
-          // Speech to Text
+          // Healthcare Notes
           _buildDrawerItem(
             context,
-            icon: Icons.emoji_events,
-            title: 'Speech to Text',
-            route: '/speech-to-text',
-            isActive: widget.currentRoute == '/speech-to-text',
-          ),
-
-          // Voice Commands
-          _buildDrawerItem(
-            context,
-            icon: Icons.emoji_events,
-            title: 'Voice Commands',
-            route: '/voice-commands',
-            isActive: widget.currentRoute == '/voice-commands',
+            icon: Icons.notes,
+            title: 'Healthcare Notes',
+            route: '/healthcare-notes',
+            isActive: widget.currentRoute == '/healthcare-notes',
           ),
 
           _buildDrawerItem(

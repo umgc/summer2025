@@ -1,20 +1,9 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:care_connect_app/widgets/common_drawer.dart';
-import 'package:care_connect_app/config/router/app_router.dart';
-import 'package:care_connect_app/providers/user_provider.dart';
-import 'package:care_connect_app/widgets/app_bar_helper.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 import 'package:care_connect_app/services/api_service.dart';
 import 'package:care_connect_app/services/auth_token_manager.dart';
-
-import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
-import 'package:universal_html/html.dart' as html;
 
 class SpeechToTextFile extends StatefulWidget {
   @override
@@ -124,29 +113,7 @@ class _SpeechToTextFileState extends State<SpeechToTextFile> {
     }
   }
 
-  // SAVE TO FILE
-
-  Future<void> _saveToFile1() async {
-    _uploadSpeechToText("test");
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('File Saved'),
-          content: Text('Your speech-to-text file has been saved successfully.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),  // Close dialog
-              child: Text('Close'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // SAVE TO FILE TEST 2
+  // Save text to file
   Future<void> _saveToFile() async {
     String fileName = '';
     final _formKey = GlobalKey<FormState>();
@@ -237,35 +204,19 @@ class _SpeechToTextFileState extends State<SpeechToTextFile> {
     }
   }
 
-
-  Future<void> _readFromFile() async {
-    try {
-      final directory = Directory.current;
-      final path = '${directory.path}/speech_text.txt';
-      final file = File(path);
-
-      if (await file.exists()) {
-        String contents = await file.readAsString();
-        setState(() {
-          _fileContent = contents;
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('File does not exist')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error reading file: $e')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: CommonDrawer(currentRoute: '/speech-to-text'),
-      appBar: AppBar(title: Text('Speech to Text')),
+      appBar: AppBar(
+        title: const Text('Speech to Text'),
+        centerTitle: true,
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -284,10 +235,6 @@ class _SpeechToTextFileState extends State<SpeechToTextFile> {
                 ElevatedButton(
                   onPressed: _saveToFile,
                   child: Text('Save to File'),
-                ),
-                ElevatedButton(
-                  onPressed: _readFromFile,
-                  child: Text('Open File'),
                 ),
               ],
             ),

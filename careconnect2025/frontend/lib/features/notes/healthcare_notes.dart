@@ -10,14 +10,11 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
 
 class HealthcareNotes extends StatefulWidget {
-  final int patientUserId;
-  const HealthcareNotes({super.key, required this.patientUserId});
-
   @override
-  State<HealthcareNotes> createState() => _HealthcareNotesState();
+  _HealthcareNotes createState() => _HealthcareNotes();
 }
 
-class _HealthcareNotesState extends State<HealthcareNotes> {
+class _HealthcareNotes extends State<HealthcareNotes> {
   late stt.SpeechToText _speech;
   bool _isListening = false;
   String _recognizedText = '';
@@ -141,7 +138,7 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
       if (_isPatient) {
         profileId = userSession?['id'] as int?;
       } else if (_isCaregiver) {
-        profileId = widget.patientUserId;
+        profileId = userSession?['id'] as int?;
       }
 
       if (profileId == null) {
@@ -259,7 +256,7 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
       if (_isPatient) {
         profileId = userSession?['id'] as int?;
       } else if (_isCaregiver) {
-        profileId = widget.patientUserId;
+        profileId = userSession?['id'] as int?;
       }
 
       if (profileId == null) {
@@ -321,7 +318,7 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
       if (_isPatient) {
         profileId = userSession?['patientId'] as int?;
       } else if (_isCaregiver) {
-        profileId = widget.patientUserId;
+        profileId = userSession?['caregiverId'] as int?;
       }
 
       if (profileId == null) {
@@ -378,20 +375,12 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
     }
   }
 
-  // Speech to Text Section
-  void _resetSpeechToText() {
-    _speech = stt.SpeechToText();  // Re-initialize the instance
-  }
-
   void _showSpeechToTextDialog() {
     final _fileNameController = TextEditingController();
     final _formKey = GlobalKey<FormState>();
 
     String recognizedText = '';
     bool isListening = false;
-
-    // Re-initialize speech to text instance to avoid conflict with other operations
-    _resetSpeechToText();
 
     showDialog(
       context: context,
@@ -525,6 +514,150 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
     );
   }
 
+
+  // Speech to Text Section
+  void _showSpeechToTextDialog1() {
+    final _fileNameController = TextEditingController();
+    final _formKey = GlobalKey<FormState>();
+
+    String recognizedText = '';
+    bool isListening = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Future<void> _startListening(StateSetter setState) async {
+              if (_speech.isListening) {
+                await _speech.stop();  // Ensure previous session is stopped
+                setState(() {});  // Update UI immediately
+                await Future.delayed(Duration(milliseconds: 300));  // Small buffer time
+              }
+
+              bool available = await _speech.initialize(
+                onStatus: (status) => print('Speech Status: $status'),
+                onError: (error) => print('Speech Error: $error'),
+              );
+
+              if (available) {
+                setState(() => _isListening = true);
+                _speech.listen(
+                  onResult: (val) {
+                    setState(() {
+                      _recognizedText = val.recognizedWords;
+                    });
+                  },
+                );
+              } else {
+                print('Speech recognition unavailable');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Microphone access denied or unavailable.')),
+                );
+              }
+            }
+
+            Future<void> _stopListening(StateSetter setState) async {
+              if (_speech.isListening) {
+                await _speech.stop();
+                setState(() => _isListening = false);
+              }
+            }
+
+            return AlertDialog(
+              title: Text('Speech to Text Entry'),
+              content: SingleChildScrollView(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: _fileNameController,
+                        decoration: InputDecoration(
+                          labelText: 'File Name',
+                          hintText: 'Enter file name (no extension)',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'File name cannot be empty';
+                          }
+                          if (!RegExp(r'^[a-zA-Z0-9_\-]+$').hasMatch(value.trim())) {
+                            return 'Invalid characters in file name';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: _isListening
+                            ? () => _stopListening(setState)
+                            : () => _startListening(setState),
+                        icon: Icon(_isListening ? Icons.mic_off : Icons.mic),
+                        label: Text(_isListening ? 'Stop Listening' : 'Start Listening'),
+                      ),
+                      SizedBox(height: 20),
+                      Text('Recognized Text:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Container(
+                        padding: EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4.0),
+                        ),
+                        child: Text(
+                          recognizedText.isNotEmpty ? recognizedText : 'No speech detected.',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    _speech.stop();
+                    setState(() {
+                      recognizedText = '';  // Reset recognized text on Cancel
+                      isListening = false;
+                    });
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      String fileName = _fileNameController.text.trim();
+                      String content = recognizedText.trim();
+
+                      if (content.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('No speech content to save.')),
+                        );
+                        return;
+                      }
+
+                      final fileBytes = utf8.encode(content);
+
+                      await _uploadManualTextFile(fileName, fileBytes);
+
+                      _speech.stop();
+                      Navigator.of(dialogContext).pop();
+                    }
+                  },
+                  child: Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   // View Notes Section
   Future<List<String>> getUserNotesFiles(int userId) async {
     List<String> allFiles = [];
@@ -565,7 +698,7 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
     if (_isPatient) {
       profileId = userSession?['id'] as int?;
     } else if (_isCaregiver) {
-      profileId = widget.patientUserId;
+      profileId = userSession?['id'] as int?;
     }
 
     if (profileId == null) {
@@ -579,94 +712,6 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
       _isLoadingNotes = false;
     });
   }
-
-  // Perform download on file tap
-  void _onNoteFileTapped(String filePath) {
-    print('Tapped file path: $filePath');
-
-    _downloadAndShowTextFile(filePath);
-  }
-
-  void _downloadAndShowTextFile(String filePath) async {
-    final userSession = await AuthTokenManager.getUserSession();
-    if (userSession == null || userSession['id'] == null) {
-      throw Exception('User session not found');
-    }
-
-    final userRole = userSession['role'] as String? ?? '';
-
-    setState(() {
-      _isPatient = userRole.toUpperCase() == 'PATIENT';
-      _isCaregiver =
-          userRole.toUpperCase() == 'CAREGIVER' ||
-              userRole.toUpperCase() == 'FAMILY_LINK' ||
-              userRole.toUpperCase() == 'ADMIN';
-    });
-
-    int? profileId;
-
-    if (_isPatient) {
-      profileId = userSession?['id'] as int?;
-    } else if (_isCaregiver) {
-      profileId = widget.patientUserId;
-    }
-
-    if (profileId == null) {
-      throw Exception("Profile ID not found for the current user role");
-    }
-
-    if (filePath.isEmpty || _userId == null) {
-      print('Invalid file path or userId');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid file selection')),
-      );
-
-      final response = await ApiService.downloadUserFile(
-          userId: profileId, filePath: filePath);
-
-      if (response.statusCode == 200) {
-        await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('File Saved'),
-              content: Text('Your file "${_selectedFile!
-                  .path
-                  .split('/')
-                  .last}" has been downloaded successfully.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Close'),
-                ),
-              ],
-            );
-          },
-        );
-      } else {
-        await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('Error'),
-              content: Text('Failed to download file "${_selectedFile!
-                  .path
-                  .split('/')
-                  .last}".'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Close'),
-                ),
-              ],
-            );
-          },
-        );
-      }
-    }
-  }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -685,7 +730,7 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
                 children: [
                   Text(
                     'Upload Notes',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 20),
                   Expanded(
@@ -725,20 +770,6 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                 child: ElevatedButton.icon(
-                                  onPressed: _showSpeechToTextDialog,
-                                  style: ElevatedButton.styleFrom(
-                                    padding: EdgeInsets.symmetric(vertical: 20),
-                                    textStyle: TextStyle(fontSize: 18),
-                                  ),
-                                  icon: Icon(Icons.mic, size: 28),
-                                  label: Text('Speech to Text'),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                child: ElevatedButton.icon(
                                   onPressed: _pickFile,
                                   style: ElevatedButton.styleFrom(
                                     padding: EdgeInsets.symmetric(vertical: 20),
@@ -763,6 +794,20 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
                                 ),
                               ),
                             ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: ElevatedButton.icon(
+                                  onPressed: _showSpeechToTextDialog,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: EdgeInsets.symmetric(vertical: 20),
+                                    textStyle: TextStyle(fontSize: 18),
+                                  ),
+                                  icon: Icon(Icons.mic, size: 28),
+                                  label: Text('Speech to Text'),
+                                ),
+                              ),
+                            ),
                           ],
                         );
                       },
@@ -772,14 +817,14 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
               ),
             ),
             Divider(height: 20),
-            // Download Notes Section
+            // View Notes Section
             Expanded(
               flex: 1,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'List of Notes',
+                    'View Notes',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 10),
@@ -794,6 +839,7 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
                         final fileName = _notesFiles[index].split('/').last;
                         return ListTile(
                           title: Text(fileName),
+                          trailing: Icon(Icons.arrow_forward),
                           // onTap: () => _onNoteFileTapped(_notesFiles[index]),
                         );
                       },
