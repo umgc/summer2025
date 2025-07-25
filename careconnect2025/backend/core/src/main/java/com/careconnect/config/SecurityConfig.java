@@ -51,6 +51,7 @@ public class SecurityConfig {
                 ).permitAll()
 
                 /* ---------- public API endpoints ------------------------ */
+
                 .requestMatchers(
                         "/v1/api/auth/**",
                         "/api/v1/auth/**",  // Support both URL patterns
@@ -60,15 +61,7 @@ public class SecurityConfig {
                         "/v1/api/caregivers/**",
                         "/v1/api/subscriptions/**",
                         "/v1/api/email-test/**",  // Allow email testing endpoints
-                        "/v1/api/test/**",  // Allow test endpoints (health check, swagger info)
-                        "/v1/api/patients/*/family-members",  // Temporarily allow family member creation for testing
-                        "/v1/api/feed/**", //for post and feed
-                        "/v1/api/comments/**", //for comments
-                        "/v1/api/friends/**", //for friends and requests
-                        "/v1/api/messages/**", //for inbox and chat
-                        "/v1/api/users/search", //for user search
-                        "/api/gamification/**",
-                        "/uploads/**"
+                        "/v1/api/test/**"  // Allow test endpoints (health check, swagger info)
                 ).permitAll()
 
                 /* ---------- public static assets ------------------------ */
@@ -80,6 +73,16 @@ public class SecurityConfig {
                 .requestMatchers(
                         "/v1/api/patients/**"
                 ).authenticated()
+
+                    .requestMatchers(
+                            "/v1/api/feed/**",
+                            "/v1/api/comments/**",
+                            "/v1/api/friends/**",
+                            "/v1/api/messages/**",
+                            "/v1/api/users/search",
+                            "/api/gamification/**",
+                            "/uploads/**"
+                    ).authenticated()
 
                 /* ---------- family member endpoints require auth -------- */
                 .requestMatchers(

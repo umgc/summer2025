@@ -8,14 +8,12 @@ import com.careconnect.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -72,10 +70,7 @@ public class FeedController {
         )
     })
     public ResponseEntity<?> getGlobalFeed() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
+        // (Updated) Removed manual authentication check
 
         List<PostWithCommentCountDto> posts = feedService.getAllPostsWithCommentCount();
         return ResponseEntity.ok(posts);
@@ -83,12 +78,10 @@ public class FeedController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserFeed(@PathVariable Long userId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
+        // (Updated) Removed manual authentication check
 
         // Get user from JWT token (email is the subject)
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
@@ -106,11 +99,9 @@ public class FeedController {
 
     @GetMapping("/friends-feed")
     public ResponseEntity<?> getFriendsFeed() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
+        // (Updated) Removed manual authentication check
 
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
@@ -128,12 +119,10 @@ public class FeedController {
             @RequestParam("content") String content,
             @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
+        // (Updated) Removed manual authentication check
 
         // Get user from JWT token (email is the subject)
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
