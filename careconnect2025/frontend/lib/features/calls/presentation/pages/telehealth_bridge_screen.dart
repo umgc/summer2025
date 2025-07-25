@@ -27,7 +27,7 @@ class _TelehealthBridgeScreenState extends State<TelehealthBridgeScreen> {
       'room': 'room_dr_johnson_1400'
     },
     {
-      'date': DateTime.now().add(Duration(days: 1)),
+      'date': DateTime.now().add(const Duration(days: 1)),
       'time': '9:00 AM',
       'with': 'Dr. Williams',
       'room': 'room_dr_williams_0900'

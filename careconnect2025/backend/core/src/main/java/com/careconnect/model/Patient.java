@@ -38,7 +38,7 @@ public class Patient {
     private User user;
 
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonIgnore  // Prevent lazy loading issues during JSON serialization
     @Builder.Default
     private List<Allergy> allergies = new ArrayList<>();
 

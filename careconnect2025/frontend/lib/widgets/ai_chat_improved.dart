@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:math' as math;
 import '../services/ai_service.dart';
+import '../providers/user_provider.dart';
 
 /// This is a consolidated AI Chat component that serves all use cases:
 /// - Regular floating chat widget for analytics/patient dashboards
@@ -12,12 +15,16 @@ class AIChat extends StatefulWidget {
   final String role; // 'caregiver', 'patient', or 'analytics'
   final String? healthDataContext; // Health data context for analytics role
   final bool isModal; // Whether the chat is displayed in a modal
+  final int? patientId; // Patient ID for API calls
+  final int? userId; // User ID for API calls
 
   const AIChat({
     super.key,
     required this.role,
     this.healthDataContext,
     this.isModal = false,
+    this.patientId,
+    this.userId,
   });
 
   @override
@@ -440,6 +447,11 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
     try {
+      // Get user info from provider if not provided as parameters
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final currentUserId = widget.userId ?? userProvider.user?.id ?? 1;
+      final currentPatientId = widget.patientId ?? userProvider.user?.id ?? 1;
+
       // Combine health data context with file context
       String combinedContext = '';
       if (widget.healthDataContext != null &&
@@ -460,6 +472,9 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
         role: widget.role,
         model: _selectedModel,
         healthDataContext: combinedContext.isNotEmpty ? combinedContext : null,
+        patientId: currentPatientId,
+        userId: currentUserId,
+        context: context, // Pass context for subscription checks
       );
 
       setState(() {
@@ -938,16 +953,78 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    message.text,
-                    style: TextStyle(
-                      color: message.isUser
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Theme.of(context).textTheme.bodyLarge?.color,
-                      fontSize: 14,
-                      height: 1.4,
-                    ),
-                  ),
+                  // Use markdown formatting for AI responses, plain text for user messages
+                  message.isUser
+                      ? Text(
+                          message.text,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            fontSize: 14,
+                            height: 1.4,
+                          ),
+                        )
+                      : MarkdownBody(
+                          data: message.text,
+                          styleSheet: MarkdownStyleSheet(
+                            p: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
+                              fontSize: 14,
+                              height: 1.4,
+                            ),
+                            h1: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            h2: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            h3: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            strong: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            em: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
+                              fontStyle: FontStyle.italic,
+                            ),
+                            code: TextStyle(
+                              backgroundColor: Theme.of(context).cardColor,
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
+                              fontFamily: 'monospace',
+                              fontSize: 13,
+                            ),
+                            codeblockDecoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            listBullet: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
+                            ),
+                          ),
+                        ),
                   const SizedBox(height: 4),
                   Text(
                     '${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}',
@@ -1013,8 +1090,7 @@ class AIChatModal extends StatelessWidget {
   final String role;
   final String? healthDataContext;
 
-  const AIChatModal({Key? key, required this.role, this.healthDataContext})
-    : super(key: key);
+  const AIChatModal({super.key, required this.role, this.healthDataContext});
 
   @override
   Widget build(BuildContext context) {

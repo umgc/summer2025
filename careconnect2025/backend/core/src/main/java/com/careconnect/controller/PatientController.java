@@ -299,7 +299,18 @@ public class PatientController {
             **Requirements:**
             - Must be authenticated as a PATIENT
             - Mood value: 1-10 scale (1 = worst, 10 = best)
-            - Pain value: 1-10 scale (1 = no pain, 10 = severe pain)
+            - Pain value: 0-10 scale:
+              • 0 = No pain
+              • 1 = Pain is very mild, barely noticeable. Most of the time you don't think about it
+              • 2 = Minor pain. It's annoying. You may have sharp pain now and then
+              • 3 = Noticeable pain. It may distract you, but you can get used to it
+              • 4 = Moderate pain. If you are involved in an activity, you're able to ignore the pain for a while. But it is still distracting
+              • 5 = Moderately strong pain. You can't ignore it for more than a few minutes. But, with effort, you can still work or do some social activities
+              • 6 = Moderately stronger pain. You avoid some of your normal daily activities. You have trouble concentrating
+              • 7 = Strong pain. It keeps you from doing normal activities
+              • 8 = Very strong pain. It's hard to do anything at all
+              • 9 = Pain that is very hard to tolerate. You can't carry on a conversation
+              • 10 = Worst pain possible
             - Timestamp cannot be in the future
             
             **Usage:**

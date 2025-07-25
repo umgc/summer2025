@@ -249,7 +249,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                               Container(
                                 width: 24,
                                 height: 24,
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                   color: AppTheme.primary,
                                   shape: BoxShape.circle,
                                 ),
@@ -591,7 +591,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                     Navigator.pop(context);
                   },
                   style: AppTheme.primaryButtonStyle.copyWith(
-                    padding: MaterialStateProperty.all(
+                    padding: WidgetStateProperty.all(
                       const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
@@ -616,7 +616,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                     });
                   },
                   style: AppTheme.textButtonStyle,
-                  child: Text(
+                  child: const Text(
                     'Add Another Platform',
                     style: TextStyle(color: AppTheme.primary, fontSize: 16),
                   ),
@@ -637,7 +637,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         child: ElevatedButton(
           onPressed: _getButtonAction(),
           style: AppTheme.primaryButtonStyle.copyWith(
-            padding: MaterialStateProperty.all(
+            padding: WidgetStateProperty.all(
               const EdgeInsets.symmetric(vertical: 16),
             ),
           ),

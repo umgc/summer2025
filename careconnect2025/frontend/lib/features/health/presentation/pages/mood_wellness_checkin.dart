@@ -118,7 +118,7 @@ class _MoodWellnessCheckInState extends State<MoodWellnessCheckIn> {
         context,
         title: 'Mood & Wellness Check-In',
       ),
-      drawer: CommonDrawer(currentRoute: '/mood_wellness'),
+      drawer: const CommonDrawer(currentRoute: '/mood_wellness'),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

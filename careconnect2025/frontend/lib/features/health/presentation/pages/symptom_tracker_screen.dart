@@ -102,7 +102,7 @@ class _SymptomTrackerScreenState extends State<SymptomTrackerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBarHelper.createAppBar(context, title: 'Symptom Tracker'),
-      drawer: CommonDrawer(currentRoute: '/symptom_tracker'),
+      drawer: const CommonDrawer(currentRoute: '/symptom_tracker'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

@@ -38,7 +38,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                 color: AppTheme.error,
                 size: isLargeScreen ? 28 : 24,
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   "Emergency SOS",
@@ -52,8 +52,8 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
             ],
           ),
         ),
-        contentPadding: EdgeInsets.fromLTRB(24, 20, 24, 24),
-        content: Container(
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+        content: SizedBox(
           width: isLargeScreen ? 400 : 300,
           child: Text(
             "Are you sure you want to send an alert to your caregiver?\nThey will be notified of your location.",
@@ -70,24 +70,24 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => CancelScreen()),
+                MaterialPageRoute(builder: (context) => const CancelScreen()),
               );
             },
             style: AppTheme.textButtonStyle,
-            child: Text("Cancel"),
+            child: const Text("Cancel"),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SosScreen()),
+                MaterialPageRoute(builder: (context) => const SosScreen()),
               );
             },
             style: AppTheme.textButtonStyle.copyWith(
-              foregroundColor: MaterialStatePropertyAll(AppTheme.error),
+              foregroundColor: const WidgetStatePropertyAll(AppTheme.error),
             ),
-            child: Text(
+            child: const Text(
               "Yes, Send SOS",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),

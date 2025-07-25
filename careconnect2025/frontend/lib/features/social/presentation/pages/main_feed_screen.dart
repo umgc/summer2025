@@ -151,7 +151,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: CommonDrawer(currentRoute: '/social-feed'),
+      drawer: const CommonDrawer(currentRoute: '/social-feed'),
       appBar: AppBarHelper.createAppBar(
         context,
         title: 'My Feed',

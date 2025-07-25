@@ -30,7 +30,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Search failed')));
+      ).showSnackBar(const SnackBar(content: Text('Search failed')));
     }
     setState(() => isLoading = false);
   }
@@ -43,11 +43,11 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     if (response.statusCode == 201) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Friend request sent')));
+      ).showSnackBar(const SnackBar(content: Text('Friend request sent')));
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Request failed')));
+      ).showSnackBar(const SnackBar(content: Text('Request failed')));
     }
   }
 
@@ -65,7 +65,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
               decoration: InputDecoration(
                 labelText: 'Search by name or email',
                 suffixIcon: IconButton(
-                  icon: Icon(Icons.search),
+                  icon: const Icon(Icons.search),
                   onPressed: searchUsers,
                 ),
               ),
@@ -73,7 +73,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
           ),
           Expanded(
             child: isLoading
-                ? Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
                     itemCount: results.length,
                     itemBuilder: (context, index) {
@@ -83,7 +83,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                         subtitle: Text(user['email']),
                         trailing: ElevatedButton(
                           onPressed: () => sendRequest(user['id']),
-                          child: Text('Add'),
+                          child: const Text('Add'),
                         ),
                       );
                     },

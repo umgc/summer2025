@@ -55,7 +55,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
     }
 
     // Auto-redirect after delay
-    Future.delayed(Duration(seconds: redirectDelay), () {
+    Future.delayed(const Duration(seconds: redirectDelay), () {
       if (mounted) {
         setState(() {
           _isRedirecting = true;

@@ -7,7 +7,7 @@ class SosScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("CarConnect"),
+        title: const Text("CarConnect"),
         centerTitle: true,
         backgroundColor: Colors.indigo,
       ),
@@ -15,22 +15,22 @@ class SosScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 60),
-            SizedBox(height: 20),
-            Text(
+            const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 60),
+            const SizedBox(height: 20),
+            const Text(
               "SOS Sent",
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
-            Text("Your caregiver has been notified."),
-            SizedBox(height: 30),
+            const SizedBox(height: 10),
+            const Text("Your caregiver has been notified."),
+            const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple,
                 foregroundColor: Colors.white,
               ),
-              child: Text("Back"),
+              child: const Text("Back"),
             ),
           ],
         ),

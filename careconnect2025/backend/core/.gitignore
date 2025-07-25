@@ -65,8 +65,10 @@ app.log
 *.temp
 
 ### Documentation Files ###
-SECURITY_CONFIG.md
-SECURITY_AUDIT.md
-CONSOLE_CLEANUP.md
-STARTUP_OPTIMIZATION.md
+# Ignore all .md files except README files
+*.md
+!README.md
+!**/README.md
+
+# Keep .env.example
 .env.example

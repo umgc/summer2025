@@ -73,7 +73,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBarHelper.createAppBar(context, title: 'Create New Post'),
-      drawer: CommonDrawer(currentRoute: '/new_post'),
+      drawer: const CommonDrawer(currentRoute: '/new_post'),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

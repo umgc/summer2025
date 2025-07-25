@@ -4,8 +4,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
-import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:care_connect_app/services/api_service.dart';
 import 'package:care_connect_app/config/theme/color_utils.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
@@ -152,7 +150,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           );
 
           if (!vitalsJsonMap.containsKey('data')) {
-            throw FormatException('Vitals response missing "data" key');
+            throw const FormatException('Vitals response missing "data" key');
           }
 
           final List<dynamic> vitalsDataList = vitalsJsonMap['data'] as List;
@@ -365,7 +363,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 children: [
                   // Header row
                   pw.TableRow(
-                    decoration: pw.BoxDecoration(color: PdfColors.grey300),
+                    decoration: const pw.BoxDecoration(color: PdfColors.grey300),
                     children: [
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(8),
@@ -522,7 +520,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
   String _getHealthDataContext() {
     if (vitals.isEmpty && dashboard == null) {
-      final defaultSpots = [FlSpot(0, 0)];
+      final defaultSpots = [const FlSpot(0, 0)];
       // default them t 0 if number of other indicate data not available but not as error
       return "No health data available for this patient in the selected period.";
     } else {
@@ -862,7 +860,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     Color? primaryColor,
     String? unit,
   }) {
-    final displaySpots = spots.isEmpty ? [FlSpot(0, 0)] : spots;
+    final displaySpots = spots.isEmpty ? [const FlSpot(0, 0)] : spots;
     final bool hasData = spots.isNotEmpty;
 
     return Card(
@@ -985,10 +983,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                         ),
                       ],
                       titlesData: FlTitlesData(
-                        rightTitles: AxisTitles(
+                        rightTitles: const AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
                         ),
-                        topTitles: AxisTitles(
+                        topTitles: const AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
                         ),
                         leftTitles: AxisTitles(

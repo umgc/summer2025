@@ -143,7 +143,7 @@ enum DeviceType { mobile, tablet, desktop }
 class ResponsiveBuilder extends StatelessWidget {
   final Widget Function(BuildContext, DeviceType) builder;
 
-  const ResponsiveBuilder({Key? key, required this.builder}) : super(key: key);
+  const ResponsiveBuilder({super.key, required this.builder});
 
   @override
   Widget build(BuildContext context) {

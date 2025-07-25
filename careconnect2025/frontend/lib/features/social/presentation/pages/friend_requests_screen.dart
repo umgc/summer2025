@@ -45,7 +45,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
       setState(() => isLoading = false);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Failed to load requests')));
+      ).showSnackBar(const SnackBar(content: Text('Failed to load requests')));
     }
   }
 
@@ -59,12 +59,12 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Request accepted')));
+      ).showSnackBar(const SnackBar(content: Text('Request accepted')));
       fetchRequests();
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Failed to accept request')));
+      ).showSnackBar(const SnackBar(content: Text('Failed to accept request')));
     }
   }
 
@@ -78,12 +78,12 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Request rejected')));
+      ).showSnackBar(const SnackBar(content: Text('Request rejected')));
       fetchRequests();
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Failed to reject request')));
+      ).showSnackBar(const SnackBar(content: Text('Failed to reject request')));
     }
   }
 
@@ -108,7 +108,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
           ),
         ],
       ),
-      drawer: CommonDrawer(currentRoute: '/friend_requests'),
+      drawer: const CommonDrawer(currentRoute: '/friend_requests'),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : requests.isEmpty

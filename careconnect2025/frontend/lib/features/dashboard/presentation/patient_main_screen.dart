@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../social/presentation/pages/main_feed_screen.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
-import 'package:care_connect_app/config/router/app_router.dart';
 import 'package:care_connect_app/providers/user_provider.dart';
 import 'package:care_connect_app/widgets/app_bar_helper.dart';
 
@@ -61,10 +59,10 @@ class _PatientDashboardState extends State<PatientDashboard> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                SingleChildScrollView(
+                const SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: const [
+                    children: [
                       EmojiLabel(emoji: '😡', label: 'Angry'),
                       EmojiLabel(emoji: '😐', label: 'Sad'),
                       EmojiLabel(emoji: '😫', label: 'Tired'),
@@ -82,15 +80,43 @@ class _PatientDashboardState extends State<PatientDashboard> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: const [
-                    PainEmojiLabel(emoji: '😀', label: '1\nNo Pain'),
-                    PainEmojiLabel(emoji: '🙂', label: '2\nMild'),
-                    PainEmojiLabel(emoji: '😐', label: '3\nModerate'),
-                    PainEmojiLabel(emoji: '😣', label: '4\nSevere'),
-                    PainEmojiLabel(emoji: '😭', label: '5\nWorst Pain'),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isMobile = constraints.maxWidth < 500;
+
+                    if (isMobile) {
+                      // Use horizontal scrolling for mobile to prevent overflow
+                      return const SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            PainEmojiLabel(emoji: '😀', label: '1\nNo Pain'),
+                            SizedBox(width: 12),
+                            PainEmojiLabel(emoji: '🙂', label: '2\nMild'),
+                            SizedBox(width: 12),
+                            PainEmojiLabel(emoji: '😐', label: '3\nModerate'),
+                            SizedBox(width: 12),
+                            PainEmojiLabel(emoji: '😣', label: '4\nSevere'),
+                            SizedBox(width: 12),
+                            PainEmojiLabel(emoji: '😭', label: '5\nWorst Pain'),
+                          ],
+                        ),
+                      );
+                    } else {
+                      // Use traditional row layout for larger screens
+                      return const Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          PainEmojiLabel(emoji: '😀', label: '1\nNo Pain'),
+                          PainEmojiLabel(emoji: '🙂', label: '2\nMild'),
+                          PainEmojiLabel(emoji: '😐', label: '3\nModerate'),
+                          PainEmojiLabel(emoji: '😣', label: '4\nSevere'),
+                          PainEmojiLabel(emoji: '😭', label: '5\nWorst Pain'),
+                        ],
+                      );
+                    }
+                  },
                 ),
                 const Divider(height: 30, thickness: 2),
                 ...caregivers.map(
@@ -209,8 +235,7 @@ class EmojiLabel extends StatelessWidget {
   final String emoji;
   final String label;
 
-  const EmojiLabel({Key? key, required this.emoji, required this.label})
-    : super(key: key);
+  const EmojiLabel({super.key, required this.emoji, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -245,21 +270,34 @@ class PainEmojiLabel extends StatelessWidget {
   final String emoji;
   final String label;
 
-  const PainEmojiLabel({Key? key, required this.emoji, required this.label})
-    : super(key: key);
+  const PainEmojiLabel({super.key, required this.emoji, required this.label});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(emoji, style: const TextStyle(fontSize: 24)),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
-        ),
-      ],
+    final isMobile = MediaQuery.of(context).size.width < 500;
+
+    return Container(
+      constraints: BoxConstraints(
+        minWidth: isMobile ? 50 : 60,
+        maxWidth: isMobile ? 65 : 80,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emoji, style: TextStyle(fontSize: isMobile ? 20 : 24)),
+          SizedBox(height: isMobile ? 2 : 4),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontSize: isMobile ? 9 : 11,
+              height: 1.1,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -270,11 +308,11 @@ class CaregiverCard extends StatelessWidget {
   final String lastInteraction;
 
   const CaregiverCard({
-    Key? key,
+    super.key,
     required this.name,
     required this.status,
     required this.lastInteraction,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -342,7 +380,7 @@ class CaregiverCard extends StatelessWidget {
               children: [
                 ElevatedButton.icon(
                   style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
-                    padding: MaterialStateProperty.all(
+                    padding: WidgetStateProperty.all(
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
                   ),

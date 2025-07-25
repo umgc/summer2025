@@ -15,7 +15,7 @@ class ApiConstants {
 }
 
 class ApiService {
-  static final storage = FlutterSecureStorage();
+  static const storage = FlutterSecureStorage();
 
   static Future<http.Response> register(
     String name,

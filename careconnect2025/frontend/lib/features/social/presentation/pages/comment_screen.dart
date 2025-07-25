@@ -130,7 +130,7 @@ class _CommentScreenState extends State<CommentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBarHelper.createAppBar(context, title: 'Comments'),
-      drawer: CommonDrawer(currentRoute: '/comments'),
+      drawer: const CommonDrawer(currentRoute: '/comments'),
       body: Column(
         children: [
           Expanded(

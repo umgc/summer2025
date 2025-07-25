@@ -82,3 +82,46 @@ coverage/
 !readme.md
 !README.MD
 !readme.MD
+
+# Additional Secret Protection
+test_video_calls.dart
+**/test/**/*token*
+**/test/**/*secret*
+**/test/**/*key*
+
+# Temporary files and scripts
+interactive-commit.sh
+cleanup-secrets.sh
+
+# Enhanced Secret Protection (added by cleanup script)
+# API Keys and Secrets
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+
+# Environment files
+.env*
+!.env.example
+!.env.template
+
+# Firebase
+google-services.json
+GoogleService-Info.plist
+firebase-adminsdk-*.json
+
+# OAuth and Auth
+credentials.json
+client_secret*.json
+oauth-credentials.json
+
+# Database
+database.env
+db.env
+
+# Test tokens and mock data
+test_video_calls.dart
+**/test/**/*token*
+**/test/**/*secret*
+**/test/**/*key*

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:care_connect_app/widgets/ai_chat_test.dart';
+import 'package:care_connect_app/widgets/ai_chat.dart';
 import 'package:care_connect_app/services/ai_service.dart';
 
 void main() {

@@ -80,7 +80,7 @@ public class CaregiverService {
     @Autowired
     private SubscriptionRepository subscriptionRepository;
     
-    @Autowired
+    @Autowired(required = false)
     private FirebaseNotificationService notificationService;    // 1. List patients under a caregiver, with optional filtering (ACTIVE links only)
     // public List<Patient> getPatientsByCaregiver(Long caregiverId, String email, String name) {
     //     // Get caregiver user
@@ -249,20 +249,25 @@ public Patient registerPatient(PatientRegistration reg) {
                     .map(c -> c.getFirstName() + " " + c.getLastName())
                     .orElse("Your caregiver") : "CareConnect";
             
-            notificationService.sendNotificationToUser(
-                savedUser.getId(),
-                "🎉 Welcome to CareConnect!",
-                String.format("You've been registered by %s. Please check your email to set up your password.", caregiverName),
-                "PATIENT_REGISTRATION",
-                Map.of(
-                    "type", "PATIENT_REGISTRATION",
-                    "caregiverName", caregiverName,
-                    "registeredAt", Instant.now().toString(),
+            // Send notification only if Firebase is enabled
+            if (notificationService != null) {
+                notificationService.sendNotificationToUser(
+                    savedUser.getId(),
+                    "🎉 Welcome to CareConnect!",
+                    String.format("You've been registered by %s. Please check your email to set up your password.", caregiverName),
+                    "PATIENT_REGISTRATION",
+                    Map.of(
+                        "type", "PATIENT_REGISTRATION",
+                        "caregiverName", caregiverName,
+                        "registeredAt", Instant.now().toString(),
                     "patientId", savedPatient.getId().toString()
                 )
             );
             
             log.info("Patient registration notification sent to user ID: {}", savedUser.getId());
+            } else {
+                log.info("Firebase notifications disabled - skipping notification for user ID: {}", savedUser.getId());
+            }
         } catch (Exception e) {
             log.warn("Failed to send patient registration notification: {}", e.getMessage());
             // Don't fail the registration if notification fails
@@ -426,6 +431,27 @@ public boolean hasAccessToPatient(Long userId, Long patientId) {
         default:
             return false;
     }
+}
+
+/**
+ * Check if a caregiver (by caregiver entity ID) has access to a patient (by patient entity ID)
+ * This method handles the conversion from entity IDs to user IDs internally
+ */
+public boolean caregiverHasAccessToPatient(Long caregiverId, Long patientId) {
+    // Get caregiver and extract user ID
+    Caregiver caregiver = caregiverRepository.findById(caregiverId).orElse(null);
+    if (caregiver == null) {
+        return false;
+    }
+    
+    // Get patient and extract user ID  
+    Patient patient = patientRepository.findById(patientId).orElse(null);
+    if (patient == null) {
+        return false;
+    }
+    
+    // Use the existing CaregiverPatientLinkService which works with user IDs
+    return caregiverPatientLinkService.hasAccessToPatient(caregiver.getUser().getId(), patient.getUser().getId());
 }
 
 /**

@@ -35,6 +35,7 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
   // final _passwordController = TextEditingController(); // Commented out - handled on backend
   final _phoneController = TextEditingController();
   final _dobController = TextEditingController();
+  String? _selectedGender; // Add gender field
 
   // Step 1: Address Information
   final _addressLine1Controller = TextEditingController();
@@ -70,7 +71,7 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
     'email': false,
     'phone': false,
     'dob': false,
-
+    'gender': false, // Add gender validation
     // Address Info
     'addressLine1': false,
     'city': false,
@@ -182,6 +183,11 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
         break;
       case 'dob':
         validationResult = value.isEmpty ? 'Please enter date of birth' : null;
+        break;
+      case 'gender':
+        validationResult = _selectedGender == null
+            ? 'Please select gender'
+            : null;
         break;
       case 'addressLine1':
         validationResult = value.isEmpty ? 'Please enter address line 1' : null;
@@ -328,10 +334,10 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
                       onPressed: _isLoading ? null : () => _nextStep(),
                       style: Theme.of(context).elevatedButtonTheme.style
                           ?.copyWith(
-                            backgroundColor: MaterialStateProperty.all(
+                            backgroundColor: WidgetStateProperty.all(
                               Theme.of(context).colorScheme.primary,
                             ),
-                            foregroundColor: MaterialStateProperty.all(
+                            foregroundColor: WidgetStateProperty.all(
                               Theme.of(context).colorScheme.onPrimary,
                             ),
                           ),
@@ -342,10 +348,10 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
                       onPressed: _isLoading ? null : () => _registerPatient(),
                       style: Theme.of(context).elevatedButtonTheme.style
                           ?.copyWith(
-                            backgroundColor: MaterialStateProperty.all(
+                            backgroundColor: WidgetStateProperty.all(
                               Theme.of(context).colorScheme.secondary,
                             ),
-                            foregroundColor: MaterialStateProperty.all(
+                            foregroundColor: WidgetStateProperty.all(
                               Theme.of(context).colorScheme.onSecondary,
                             ),
                           ),
@@ -542,6 +548,38 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
               }
             },
             readOnly: true,
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            value: _selectedGender,
+            decoration: AppTheme.inputDecoration('Gender *').copyWith(
+              prefixIcon: const Icon(Icons.person),
+              errorText:
+                  _selectedGender == null && !_fieldValidStatus['gender']!
+                  ? 'Please select gender'
+                  : null,
+            ),
+            items: const [
+              DropdownMenuItem(value: 'male', child: Text('Male')),
+              DropdownMenuItem(value: 'female', child: Text('Female')),
+              DropdownMenuItem(value: 'other', child: Text('Other')),
+              DropdownMenuItem(
+                value: 'prefer_not_to_say',
+                child: Text('Prefer not to say'),
+              ),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _selectedGender = value;
+                _fieldValidStatus['gender'] = value != null;
+              });
+            },
+            validator: (value) {
+              if (value == null) {
+                return 'Please select gender';
+              }
+              return null;
+            },
           ),
         ],
       ),
@@ -800,6 +838,7 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
         'email': _emailController.text.trim(),
         // 'password': _passwordController.text.trim(), // Removed - handled on backend
         'phone': _phoneController.text.trim(),
+        'gender': _selectedGender, // Add gender field
         'address': address.toJson(), // Use the Address model's toJson method
         'caregiverId': caregiverId,
         'relationship': _relationshipController.text.trim(),

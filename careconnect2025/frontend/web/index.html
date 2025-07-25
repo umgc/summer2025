@@ -36,6 +36,17 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/Icon-192.png"/>
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/Icon-192.png"/>
+  <link rel="shortcut icon" href="favicon.png"/>
+  
+  <!-- Material Icons Font -->
+  <link rel="preload" href="https://fonts.googleapis.com/icon?family=Material+Icons" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  </noscript>
   
   <!-- Improved web rendering -->
   <style>
@@ -85,18 +96,91 @@
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
+    
+    /* Ensure Material Icons render correctly */
+    .material-icons {
+      font-family: 'Material Icons';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* Ensure icons are loaded before Flutter app starts */
+    .icon-preload {
+      font-family: 'Material Icons';
+      position: absolute;
+      left: -9999px;
+      visibility: hidden;
+    }
   </style>
 
   <title>CareConnect</title>
   <link rel="manifest" href="manifest.json">
+  
+  <!-- Agora Web SDK for real video calling -->
+  <script src="https://cdn.agora.io/sdk/release/AgoraRTC_N-4.20.2.js"></script>
+  <script src="agora-web-sdk.js"></script>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+  
 </head>
 <body>
+  <!-- Preload Material Icons to prevent X symbols -->
+  <span class="icon-preload">visibility</span>
+  <span class="icon-preload">visibility_off</span>
+  <span class="icon-preload">settings</span>
+  <span class="icon-preload">smart_toy</span>
+  <span class="icon-preload">psychology</span>
+  <span class="icon-preload">tune</span>
+  
   <!-- Loading indicator that shows until Flutter loads -->
   <div class="loading" id="loading">
     <img src="icons/Icon-192.png" alt="Loading CareConnect"/>
   </div>
   
   <script>
+    // Optimized service worker registration to prevent timeout issues
+    if ('serviceWorker' in navigator) {
+      // Register service workers with timeout protection
+      const registerServiceWorker = async () => {
+        try {
+          // Register custom optimized service worker first
+          const swRegistration = await navigator.serviceWorker.register('/sw.js', {
+            scope: '/',
+            updateViaCache: 'none' // Always check for updates
+          });
+          console.log('✅ CareConnect SW registered successfully');
+          
+          // Register Firebase messaging service worker
+          const firebaseRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+            scope: '/firebase-messaging-sw.js',
+            updateViaCache: 'none'
+          });
+          console.log('✅ Firebase SW registered successfully');
+          
+          return { swRegistration, firebaseRegistration };
+        } catch (error) {
+          console.warn('⚠️ Service worker registration failed:', error);
+          // Continue without service worker - app still works
+          return null;
+        }
+      };
+      
+      // Register immediately instead of waiting for load event
+      registerServiceWorker();
+    }
+    
     // Add platform detection classes to the body element
     function detectPlatform() {
       var userAgent = navigator.userAgent || navigator.vendor || window.opera;

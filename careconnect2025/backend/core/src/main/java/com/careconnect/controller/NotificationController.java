@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +23,10 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping("/v1/api/notifications")
 @Tag(name = "Firebase Notifications", description = "Firebase Cloud Messaging for push notifications")
 @SecurityRequirement(name = "Bearer Authentication")
+@ConditionalOnProperty(name = "firebase.enabled", havingValue = "true", matchIfMissing = true)
 public class NotificationController {
     
-    @Autowired
+    @Autowired(required = false)
     private FirebaseNotificationService notificationService;
     
     @PostMapping("/send")

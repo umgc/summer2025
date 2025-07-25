@@ -83,7 +83,7 @@ class AuthTokenManager {
         final currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
         // Add buffer time (5 minutes) to prevent edge cases
-        final bufferTime = 5 * 60; // 5 minutes in seconds
+        const bufferTime = 5 * 60; // 5 minutes in seconds
         return currentTime < (expiry - bufferTime);
       }
 

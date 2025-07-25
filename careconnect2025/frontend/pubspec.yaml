@@ -39,6 +39,7 @@ dependencies:
   confetti: ^0.7.0
   url_launcher: ^6.1.12  # For OAuth redirects
   crypto: ^3.0.3  # For generating state parameter
+  pointycastle: ^3.7.3  # For RSA key operations
   app_links: ^6.3.2  # For handling deep links from OAuth callback (replaced uni_links)
 
 # -- Astha - start
@@ -47,7 +48,7 @@ dependencies:
   image_picker: ^1.0.7  # image upload
 
   jitsi_meet_flutter_sdk: ^11.2.0
-  permission_handler: ^12.0.0+1 # permission for camera
+  permission_handler: ^11.4.0 # permission for camera - downgraded for compatibility
   
   intl: ^0.20.2 # data formatting
   camera: ^0.11.1 # emotion detector use
@@ -57,8 +58,29 @@ dependencies:
   google_ml_kit: ^0.20.0
   firebase_core: ^3.14.0
   cloud_firestore: ^5.6.9
+  firebase_messaging: ^15.1.5
+  firebase_auth: ^5.3.4
+  
+  # Hybrid Video Calling Solution
+  # Agora for mobile platforms (iOS/Android) - Using only core engine to avoid namespace issues
+  # Note: While included in pubspec, conditional imports prevent web loading
+  agora_rtc_engine: ^6.5.2
+  
+  # WebRTC for web platform (fallback for web compatibility)
+  flutter_webrtc: ^0.14.2  
+  socket_io_client: ^2.0.3+1  # For WebRTC signaling server
+  
+  # Keep existing packages for other functionality
+  
+  # SMS functionality - temporarily disabled due to namespace issue
+  # telephony: ^0.2.0+1  # For Android SMS - updated for namespace compatibility
+  
+  # Platform detection
+  platform: ^3.1.0
 # my key storage
   flutter_dotenv: ^5.0.2
+  # Local storage for offline messaging
+  sqflite: ^2.3.0
 # -- Astha - start
 # ag
   provider: ^6.1.2 
@@ -78,17 +100,17 @@ dependencies:
   health: ^13.1.1
   mobile_scanner: ^3.5.6
 
-
-  flutter:
-    sdk: flutter
-
-
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   http: ^1.4.0
   universal_html: ^2.2.4
   flutter_secure_storage: ^9.2.4
+  flutter_markdown: ^0.7.4+1
+  
+  # Flutter SDK 
+  flutter:
+    sdk: flutter
 
 
   google_fonts: ^6.0.0
@@ -98,13 +120,14 @@ dev_dependencies:
     sdk: flutter
   mockito: ^5.4.4
   build_runner: ^2.4.9
+  flutter_launcher_icons: ^0.14.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^3.0.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -113,6 +136,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/images/banner.png
+    - assets/images/app_icon.png
     - .env
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -149,3 +173,19 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Flutter Launcher Icons Configuration
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  web:
+    generate: true
+    image_path: "assets/images/app_icon.png"
+  windows:
+    generate: true
+    image_path: "assets/images/app_icon.png"
+  macos:
+    generate: true
+    image_path: "assets/images/app_icon.png"

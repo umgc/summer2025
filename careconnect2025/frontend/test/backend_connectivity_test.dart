@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('Backend Connectivity Tests', () {
     // Define a mock Set-Cookie header for testing
-    final setCookieHeader = 'auth=mock_auth_token; Path=/; HttpOnly';
+    const setCookieHeader = 'auth=mock_auth_token; Path=/; HttpOnly';
     final authCookieMatch = RegExp(r'auth=([^;]+)').firstMatch(setCookieHeader);
 
     expect(authCookieMatch, isNotNull);
@@ -13,7 +13,7 @@ void main() {
 
   test('API endpoint URLs should be valid', () {
     // Test that API endpoints form valid URLs
-    final baseUrl = 'http://localhost:8080'; // Default for testing
+    const baseUrl = 'http://localhost:8080'; // Default for testing
 
     expect(Uri.tryParse('$baseUrl/v1/api/auth'), isNotNull);
     expect(Uri.tryParse('$baseUrl/v1/api/analytics'), isNotNull);
@@ -62,7 +62,7 @@ void main() {
 
   test('Authorization header format should be correct', () {
     const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test';
-    final authHeader = 'Bearer $token';
+    const authHeader = 'Bearer $token';
 
     expect(authHeader, startsWith('Bearer '));
     expect(authHeader.substring(7), equals(token));
@@ -71,7 +71,7 @@ void main() {
   group('API Service Health Tests', () {
     test('all API constants should form valid URLs', () {
       // Test that all API constants can form valid URLs
-      final testHost = 'http://localhost:8080';
+      const testHost = 'http://localhost:8080';
 
       expect(Uri.tryParse('$testHost/v1/api/auth'), isNotNull);
       expect(Uri.tryParse('$testHost/v1/api/analytics'), isNotNull);
@@ -81,7 +81,7 @@ void main() {
     });
 
     test('login endpoint should have correct path', () {
-      final loginPath = '/v1/api/auth/login';
+      const loginPath = '/v1/api/auth/login';
 
       expect(loginPath, startsWith('/v1/api/'));
       expect(loginPath, endsWith('/login'));

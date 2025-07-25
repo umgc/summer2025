@@ -36,7 +36,7 @@ class _JitsiMeetingScreenState extends State<JitsiMeetingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Telehealth Meeting'),
+        title: const Text('Telehealth Meeting'),
         backgroundColor: Colors.blue.shade900,
       ),
       body: const Center(

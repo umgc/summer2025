@@ -19,6 +19,7 @@ import com.careconnect.dto.LatestMoodPainDTO;
 import com.careconnect.dto.MedicalSummaryDTO;
 import com.careconnect.dto.VitalSampleDTO;
 import com.careconnect.dto.MoodPainLogResponse;
+import com.careconnect.service.AllergyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

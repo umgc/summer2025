@@ -13,6 +13,7 @@ class RegistrationData {
   static String? _lastName;
   static String? _dob;
   static String? _phone;
+  static String? _gender;
   static String? _licenseNumber;
   static String? _issuingState;
   static int? _yearsExperience;
@@ -34,9 +35,14 @@ class RegistrationData {
     _lastName = lastName;
   }
 
-  static void setPersonalData({required String dob, required String phone}) {
+  static void setPersonalData({
+    required String dob,
+    required String phone,
+    String? gender,
+  }) {
     _dob = dob;
     _phone = phone;
+    _gender = gender;
   }
 
   static void setProfessionalData({
@@ -70,6 +76,7 @@ class RegistrationData {
   static String? get lastName => _lastName;
   static String? get dob => _dob;
   static String? get phone => _phone;
+  static String? get gender => _gender;
   static String? get licenseNumber => _licenseNumber;
   static String? get issuingState => _issuingState;
   static int? get yearsExperience => _yearsExperience;
@@ -87,6 +94,7 @@ class RegistrationData {
     _lastName = null;
     _dob = null;
     _phone = null;
+    _gender = null;
     _licenseNumber = null;
     _issuingState = null;
     _yearsExperience = null;
@@ -131,6 +139,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   bool _showPassword = false;
   bool _showConfirmPassword = false;
+  String? _selectedGender;
 
   void _continue() async {
     if (_currentStep < 5) {
@@ -160,6 +169,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       RegistrationData.setPersonalData(
         dob: _dobController.text.trim(),
         phone: _phoneController.text.trim(),
+        gender: _selectedGender,
       );
 
       RegistrationData.setProfessionalData(
@@ -199,8 +209,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   // Validation methods
   String? _validateEmail(String email) {
-    if (email.isEmpty)
+    if (email.isEmpty) {
       return null; // Don't show error for empty field initially
+    }
 
     // More comprehensive email validation
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
@@ -209,8 +220,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   String? _validatePassword(String password) {
-    if (password.isEmpty)
+    if (password.isEmpty) {
       return null; // Don't show error for empty field initially
+    }
 
     if (password.length < 6) return 'Minimum 6 characters required';
 
@@ -229,8 +241,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   String? _validateConfirmPassword(String confirmPassword, String password) {
-    if (confirmPassword.isEmpty)
+    if (confirmPassword.isEmpty) {
       return null; // Don't show error for empty field initially
+    }
     if (confirmPassword != password) return 'Passwords do not match';
     return null;
   }
@@ -269,8 +282,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   String? _validateState(String state) {
-    if (state.isEmpty)
+    if (state.isEmpty) {
       return null; // Don't show error for empty field initially
+    }
 
     // Check if state contains numbers
     if (RegExp(r'\d').hasMatch(state)) {
@@ -287,8 +301,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   String? _validatePhone(String phone) {
-    if (phone.isEmpty)
+    if (phone.isEmpty) {
       return null; // Don't show error for empty field initially
+    }
 
     // Basic phone number validation - ensure it has the right length and only contains digits, dashes, spaces, and parentheses
     final phoneRegex = RegExp(r'^[\d\-\(\)\s]{10,15}$');
@@ -434,7 +449,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           style: AppTheme.primaryButtonStyle,
                           onPressed: isLoading ? null : details.onStepContinue,
                           child: isLoading
-                              ? CircularProgressIndicator(
+                              ? const CircularProgressIndicator(
                                   color: AppTheme.textLight,
                                 )
                               : Text(
@@ -562,6 +577,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             return _validatePhone(value);
                           },
                           onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          value: _selectedGender,
+                          decoration: AppTheme.inputDecoration(
+                            'Gender',
+                            hint: 'Select your gender',
+                          ),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'male',
+                              child: Text('Male'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'female',
+                              child: Text('Female'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'other',
+                              child: Text('Other'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'prefer_not_to_say',
+                              child: Text('Prefer not to say'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedGender = value;
+                            });
+                          },
                         ),
                       ],
                     ),
@@ -784,6 +830,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                         _buildReviewRow('Email', _emailController.text),
                         _buildReviewRow('Phone', _phoneController.text),
+                        _buildReviewRow(
+                          'Gender',
+                          _selectedGender ?? 'Not specified',
+                        ),
                         _buildReviewRow('Date of Birth', _dobController.text),
                         _buildReviewRow(
                           'License Number',
@@ -824,7 +874,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        Text(
+                        const Text(
                           'By proceeding, you will be directed to select a subscription package and complete payment. Your caregiver account will be created after successful payment.',
                           style: TextStyle(
                             fontSize: 14,
@@ -835,7 +885,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           const SizedBox(height: 10),
                           Text(
                             errorMessage!,
-                            style: TextStyle(color: AppTheme.error),
+                            style: const TextStyle(color: AppTheme.error),
                           ),
                         ],
                       ],
@@ -914,7 +964,7 @@ class _CaregiverRegistrationFlowPageState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             // Removed 'const' here because backgroundColor is not a compile-time constant
             content: Text(
               'Account created successfully! Now select your subscription package.',

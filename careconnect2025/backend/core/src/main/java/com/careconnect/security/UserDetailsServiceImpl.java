@@ -25,12 +25,12 @@ public class UserDetailsServiceImpl implements org.springframework.security.core
 
     // Additional method to load user by email and role for more precise authentication
     public UserDetails loadUserByEmailAndRole(String email, String role) throws UsernameNotFoundException {
-        User user = users.findByEmailAndRole(email, role)
+        User user = users.findByEmailAndRole(email, Role.valueOf(role.toUpperCase()))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email + " and role: " + role));
         
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(), 
-                user.getPasswordHash(),
+                user.getPassword(),
                 List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
         );
     }
@@ -41,7 +41,7 @@ public class UserDetailsServiceImpl implements org.springframework.security.core
         // if multiple users have the same email with different roles.
         // Prefer using loadUserByEmailAndRole when possible.
         User user = users.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPasswordHash(),
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(),
                 List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
     }
 

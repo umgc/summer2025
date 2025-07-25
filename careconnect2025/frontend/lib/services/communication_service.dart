@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../config/theme/app_theme.dart';
 
 class CommunicationService {
   // Make a phone call
@@ -119,7 +120,7 @@ class CommunicationService {
   // Show error message
   static void _showError(String message, BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(content: Text(message), backgroundColor: AppTheme.error),
     );
   }
 }

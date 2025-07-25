@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:care_connect_app/widgets/user_avatar.dart';
 import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'upload_avatar_screen.dart';
-import 'package:care_connect_app/config/env_constant.dart';
 import 'package:care_connect_app/config/theme/app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {

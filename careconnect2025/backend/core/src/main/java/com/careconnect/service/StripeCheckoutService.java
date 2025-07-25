@@ -20,23 +20,17 @@ import lombok.RequiredArgsConstructor;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class StripeCheckoutService {
-	@Autowired
-    private PaymentRepository paymentRepository;
-	@Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private CaregiverRepository caregiverRepository;
-    @Autowired
-    private PlanRepository planRepository;
-    @Autowired
-    private SubscriptionRepository subscriptionRepository;
+    private final PaymentRepository paymentRepository;
+    private final UserRepository userRepository;
+    private final CaregiverRepository caregiverRepository;
+    private final PlanRepository planRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
     public Session createCheckoutSession(String customerId, String plan, long amount, String successUrl, String cancelUrl) throws StripeException {
         // Check if the plan string is a Stripe price ID (starts with "price_")
