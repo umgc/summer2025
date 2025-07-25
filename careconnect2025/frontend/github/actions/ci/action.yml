@@ -1,0 +1,25 @@
+name: Backend CI
+description: Reusable CI action
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Run tests
+      working-directory: ./careconnect2025/backend/core
+      shell: bash
+      run: mvn test --batch-mode
+
+    - name: Build with Maven
+      working-directory: ./careconnect2025/backend/core
+      shell: bash
+      run: mvn clean install --batch-mode
