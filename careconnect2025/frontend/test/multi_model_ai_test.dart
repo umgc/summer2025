@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:care_connect_app/services/ai_service.dart';
 
 void main() {
-  group('Multi-Model AI Service Tests', () {
+  group('Multi-model AI Service Tests', () {
     test('AIModel enum should have correct values', () {
       expect(AIModel.deepseek.displayName, 'DeepSeek');
       expect(AIModel.deepseek.modelName, 'deepseek-chat');

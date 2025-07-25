@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import '../model/friend_dto.dart';
+import 'chat_room_screen.dart';
+
 class MyFriendsScreen extends StatefulWidget {
   const MyFriendsScreen({super.key});
 
@@ -16,7 +19,7 @@ class MyFriendsScreen extends StatefulWidget {
 class _MyFriendsScreenState extends State<MyFriendsScreen> {
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   int? _userId;
-  List<dynamic> friends = [];
+  List<FriendDto> friends = [];
   bool isLoading = true;
 
   @override
@@ -39,6 +42,8 @@ class _MyFriendsScreenState extends State<MyFriendsScreen> {
   }
 
   Future<void> fetchFriends() async {
+    if (_userId == null) return;
+
     final url = Uri.parse(
       '${getBackendBaseUrl()}/v1/api/friends/list/$_userId',
     );
@@ -46,8 +51,9 @@ class _MyFriendsScreenState extends State<MyFriendsScreen> {
     final response = await http.get(url, headers: headers);
 
     if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
       setState(() {
-        friends = jsonDecode(response.body);
+        friends = data.map((json) => FriendDto.fromJson(json)).toList();
         isLoading = false;
       });
     } else {
@@ -71,12 +77,24 @@ class _MyFriendsScreenState extends State<MyFriendsScreen> {
               itemBuilder: (context, index) {
                 final friend = friends[index];
                 return ListTile(
-                  leading: Icon(Icons.person),
-                  title: Text(friend['name']),
-                  subtitle: Text(friend['email']),
+                  leading: const Icon(Icons.person),
+                  title: Text(friend.name),
+                  subtitle: Text(friend.email),
+                  trailing: const Icon(Icons.chat),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => ChatRoomScreen(
+                                peerUserId: friend.id,
+                                peerName: friend.name
+                            ),
+                        ),
+                    );
+                  },
                 );
               },
-            ),
+            )
     );
   }
 }

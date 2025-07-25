@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import '../model/comment_dto.dart';
 class CommentScreen extends StatefulWidget {
   final int postId;
 
@@ -16,7 +17,8 @@ class CommentScreen extends StatefulWidget {
 }
 
 class _CommentScreenState extends State<CommentScreen> {
-  List<dynamic> comments = [];
+  List<CommentDto> comments = [];
+
   final TextEditingController _commentController = TextEditingController();
   bool isLoading = true;
   bool isSubmitting = false;
@@ -30,18 +32,21 @@ class _CommentScreenState extends State<CommentScreen> {
   Future<void> fetchComments() async {
     setState(() => isLoading = true);
 
-    final url = '${getBackendBaseUrl()}/api/comments/post/${widget.postId}';
+    final url = '${getBackendBaseUrl()}/v1/api/comments/post/${widget.postId}';
 
     try {
       final headers = await ApiService.getAuthHeaders();
       final response = await http.get(Uri.parse(url), headers: headers);
+
       print('Comments GET status: ${response.statusCode}');
       print('Comments GET body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          comments = data is List ? data : (data['comments'] ?? []);
+          comments = (data as List)
+              .map((json) => CommentDto.fromJson(json))
+              .toList();
           isLoading = false;
         });
       } else {
@@ -58,7 +63,8 @@ class _CommentScreenState extends State<CommentScreen> {
   Future<void> submitComment() async {
     final storage = FlutterSecureStorage();
     final userId = await storage.read(key: 'userId');
-    final username = await storage.read(key: 'username');
+    final username = await storage.read(key: 'name');
+    print('DEBUG — Loaded username from secure storage: $username');
 
     if (userId == null || _commentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -69,13 +75,13 @@ class _CommentScreenState extends State<CommentScreen> {
 
     setState(() => isSubmitting = true);
 
-    final url = '${getBackendBaseUrl()}/api/comments/post/${widget.postId}';
+    final url = '${getBackendBaseUrl()}/v1/api/comments/post/${widget.postId}';
     final headers = await ApiService.getAuthHeaders();
     headers['Content-Type'] = 'application/json';
 
     final body = jsonEncode({
       'userId': int.parse(userId),
-      'username': username, // Include username if your backend expects it!
+      'username': username,
       'content': _commentController.text.trim(),
     });
 
@@ -100,17 +106,17 @@ class _CommentScreenState extends State<CommentScreen> {
     }
   }
 
-  Widget buildCommentCard(Map<String, dynamic> comment) {
+  Widget buildCommentCard(CommentDto comment) {
     return ListTile(
       leading: const Icon(Icons.comment),
-      title: Text(comment['username'] ?? 'User'),
+      title: Text(comment.username ?? 'Unknown User'),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(comment['content'] ?? ''),
+          Text(comment.content),
           const SizedBox(height: 4),
           Text(
-            comment['timestamp'] ?? '',
+            comment.timestamp.toIso8601String().split('T').join(' at '),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         ],

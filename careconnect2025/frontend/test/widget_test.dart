@@ -32,7 +32,7 @@ import 'package:care_connect_app/features/health/presentation/pages/meal_trackin
 import 'package:care_connect_app/features/health/presentation/pages/symptom_tracker_screen.dart';
 import 'package:care_connect_app/features/profile/presentation/pages/settings_screen.dart';
 
-// Model imports
+// model imports
 import 'package:care_connect_app/features/dashboard/models/patient_model.dart';
 import 'package:care_connect_app/features/payments/models/package_model.dart';
 import 'package:care_connect_app/features/analytics/models/vital_model.dart';
@@ -328,7 +328,7 @@ STRIPE_PUBLISHABLE_KEY=test_key
     });
   });
 
-  group('Model Tests', () {
+  group('model Tests', () {
     test('Patient model creates correctly', () {
       final patient = Patient(
         id: 1,
