@@ -190,7 +190,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/social-feed',
       builder: (context, state) {
-        return MainFeedScreen(userId: 32);
+        final userIdStr = state.uri.queryParameters['userId'];
+        final userId = userIdStr != null ? int.tryParse(userIdStr) ?? -1 : -1;
+
+        return MainFeedScreen(userId: userId);
       },
     ),
     GoRoute(
