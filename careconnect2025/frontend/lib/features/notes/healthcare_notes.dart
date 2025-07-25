@@ -779,7 +779,7 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Download Notes',
+                    'List of Notes',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 10),
@@ -794,7 +794,7 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
                         final fileName = _notesFiles[index].split('/').last;
                         return ListTile(
                           title: Text(fileName),
-                          onTap: () => _onNoteFileTapped(_notesFiles[index]),
+                          // onTap: () => _onNoteFileTapped(_notesFiles[index]),
                         );
                       },
                     ),
