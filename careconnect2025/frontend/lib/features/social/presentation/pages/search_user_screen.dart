@@ -6,6 +6,9 @@ import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../model/search_user_dto.dart';
+
+
 class SearchUserScreen extends StatefulWidget {
   final int userId;
   const SearchUserScreen({super.key, required this.userId});
@@ -18,7 +21,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   final TextEditingController _controller = TextEditingController();
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
-  List<dynamic> results = [];
+  List<SearchUserDto> results = [];
   bool isLoading = false;
   int? _userId;
 
@@ -52,7 +55,12 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
       );
 
       if (response.statusCode == 200) {
-        setState(() => results = jsonDecode(response.body));
+        final data = jsonDecode(response.body);
+        setState(() {
+          results = (data as List)
+              .map((json) => SearchUserDto.fromJson(json))
+              .toList();
+        });
       } else {
         ScaffoldMessenger.of(
           context,
@@ -113,10 +121,10 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                     itemBuilder: (context, index) {
                       final user = results[index];
                       return ListTile(
-                        title: Text(user['name']),
-                        subtitle: Text(user['email']),
+                        title: Text(user.name),
+                        subtitle: Text(user.email),
                         trailing: ElevatedButton(
-                          onPressed: () => sendRequest(user['id']),
+                          onPressed: () => sendRequest(user.id),
                           child: Text('Add'),
                         ),
                       );

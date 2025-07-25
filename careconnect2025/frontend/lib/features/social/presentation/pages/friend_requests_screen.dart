@@ -8,6 +8,7 @@ import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import '../model/friend_request_dto.dart';
 
 class FriendRequestsScreen extends StatefulWidget {
   final int userId;
@@ -21,7 +22,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   int? _userId;
 
-  List<dynamic> requests = [];
+  List<FriendRequestDto> requests = [];
   bool isLoading = true;
 
   @override
@@ -58,8 +59,9 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
     final response = await http.get(url, headers: headers);
 
     if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
       setState(() {
-        requests = jsonDecode(response.body);
+        requests = data.map((json) => FriendRequestDto.fromJson(json)).toList();
         isLoading = false;
       });
     } else {
@@ -145,13 +147,13 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
               itemBuilder: (context, index) {
                 final req = requests[index];
                 return ListTile(
-                  title: Text(req['from_username'] ?? 'Unknown'),
-                  subtitle: Text('Request ID: ${req['id']}'),
+                  title: Text(req.fromUsername),
+                  subtitle: Text('Request ID: ${req.id}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       ElevatedButton(
-                        onPressed: () => acceptRequest(req['id']),
+                        onPressed: () => acceptRequest(req.id),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                         ),
@@ -159,7 +161,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: () => rejectRequest(req['id']),
+                        onPressed: () => rejectRequest(req.id),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                         ),
