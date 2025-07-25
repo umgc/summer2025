@@ -7,12 +7,14 @@ import 'package:care_connect_app/features/integrations/presentation/pages/smart_
 import 'package:care_connect_app/features/integrations/presentation/pages/wearables_screen.dart';
 import 'package:care_connect_app/features/calls/presentation/pages/jitsi_meeting_screen.dart';
 import 'package:care_connect_app/features/profile/presentation/pages/profile_settings_page.dart';
+import 'package:care_connect_app/features/ai/presentation/pages/speech_to_text.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:care_connect_app/config/theme/app_theme.dart';
 import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'package:provider/provider.dart';
 
+import '../../features/ai/presentation/pages/voice_command_ai.dart';
 import '../../features/analytics/analytics_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/oauth_callback_page.dart';
@@ -181,6 +183,8 @@ final GoRouter appRouter = GoRouter(
       builder: (_, __) => const PatientRegistrationPage(),
     ),
     GoRoute(path: '/add-patient', builder: (_, __) => const AddPatientScreen()),
+    GoRoute(path: '/speech-to-text', builder: (_, __) => SpeechToTextFile()),
+    GoRoute(path: '/voice-commands', builder: (_, __) => VoiceCommandAI()),
     GoRoute(
       path: '/social-feed',
       builder: (context, state) {
