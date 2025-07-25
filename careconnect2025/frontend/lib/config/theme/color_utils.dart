@@ -65,7 +65,7 @@ class ColorUtils {
       const Color(0xFFE3F2FD); // blue.shade50 equivalent
 
   // Consistent gradient generators
-  static LinearGradient getPrimaryGradient() => LinearGradient(
+  static LinearGradient getPrimaryGradient() => const LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [AppTheme.primary, AppTheme.primaryDark],

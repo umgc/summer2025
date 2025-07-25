@@ -9,10 +9,13 @@ import 'package:care_connect_app/providers/user_provider.dart';
 import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:care_connect_app/config/theme/app_theme.dart';
+import 'package:care_connect_app/widgets/profile_picture_widget.dart';
+import 'package:care_connect_app/services/enhanced_file_service.dart';
+import 'package:care_connect_app/services/profile_service.dart';
 import '../../models/profile_model.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
-  const ProfileSettingsPage({Key? key}) : super(key: key);
+  const ProfileSettingsPage({super.key});
 
   @override
   _ProfileSettingsPageState createState() => _ProfileSettingsPageState();
@@ -107,52 +110,39 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             userRole.toUpperCase() == 'ADMIN';
       });
 
-      // First, retrieve the user's profile using the appropriate ID from the session
+      // Use the new ProfileService to get complete profile data
+      Map<String, dynamic>? profileData;
+
       if (_isCaregiver) {
-        // Use the caregiver-specific ID from the session, not the user ID
         final caregiverId = userSession['caregiverId'] as int?;
         if (caregiverId == null) {
           throw Exception('Caregiver ID not found in user session');
         }
-
-        final response = await ApiService.getCaregiverProfile(caregiverId);
-        if (response.statusCode == 200) {
-          final data = await _parseResponse(response);
-          setState(() {
-            _userProfile = CaregiverProfile.fromJson(data);
-          });
-          _populateCaregiverFields();
-        } else {
-          throw Exception(
-            'Failed to load caregiver profile: ${response.statusCode}',
-          );
-        }
+        profileData = await ProfileService.getCaregiverProfile(caregiverId);
       } else if (_isPatient) {
-        // Use the patient-specific ID from the session, not the user ID
         final patientId = userSession['patientId'] as int?;
         if (patientId == null) {
           throw Exception('Patient ID not found in user session');
         }
-
-        final response = await ApiService.getPatientProfile(patientId);
-        if (response.statusCode == 200) {
-          final data = await _parseResponse(response);
-          setState(() {
-            _userProfile = PatientProfile.fromJson(data);
-          });
-          _populatePatientFields();
-        } else {
-          throw Exception(
-            'Failed to load patient profile: ${response.statusCode}',
-          );
-        }
+        profileData = await ProfileService.getPatientProfile(patientId);
       } else {
         throw Exception('Unknown user role: $userRole');
       }
 
-      // The profile picture URL should already be included in the user data from the API
-      // We don't need to make a separate API call for this
-      // If the API response includes profileImageUrl, we should use it directly in the parseResponse method
+      if (profileData != null) {
+        final parsedData = await _parseResponse(profileData);
+        setState(() {
+          if (_isCaregiver) {
+            _userProfile = CaregiverProfile.fromJson(parsedData);
+            _populateCaregiverFields();
+          } else {
+            _userProfile = PatientProfile.fromJson(parsedData);
+            _populatePatientFields();
+          }
+        });
+      } else {
+        throw Exception('Failed to load profile data');
+      }
     } catch (e) {
       setState(() {
         _error = 'Failed to load profile: $e';
@@ -166,81 +156,68 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   }
 
   // Helper to parse the API response
-  dynamic _parseResponse(response) {
+  dynamic _parseResponse(dynamic data) {
     try {
-      if (response.body.isEmpty) {
+      if (data == null || data.isEmpty) {
         return {};
       }
 
-      final rawData = json.decode(response.body);
+      // If data is already a Map, it's from ProfileService
+      if (data is Map<String, dynamic>) {
+        final rawData = data;
 
-      // Transform the API response structure to match our model expectations
-      if (_isCaregiver) {
-        // Check for profile picture URL in the user object
-        String? profilePictureUrl;
-        if (rawData['user'] != null &&
-            rawData['user']['profileImageUrl'] != null) {
-          profilePictureUrl = rawData['user']['profileImageUrl'];
-        } else {
-          profilePictureUrl = _userProfile?.profilePictureUrl;
+        // Transform the API response structure to match our model expectations
+        if (_isCaregiver) {
+          return {
+            'id': rawData['id'] ?? 0,
+            'name': '${rawData['firstName'] ?? ''} ${rawData['lastName'] ?? ''}'
+                .trim(),
+            'email': rawData['email'] ?? '',
+            'phoneNumber': rawData['phone'] ?? '',
+            'address': rawData['address']?['line1'] ?? '',
+            'city': rawData['address']?['city'] ?? '',
+            'state': rawData['address']?['state'] ?? '',
+            'zipCode': rawData['address']?['zip'] ?? '',
+            'country': '', // Default to empty as it's not in the response
+            // Extract specialization from the professional object - use yearsExperience as a string
+            'specialization': rawData['professional'] != null
+                ? rawData['professional']['yearsExperience']?.toString() ?? ''
+                : '',
+            // Use caregiverType for organization if available
+            'organization': rawData['caregiverType'] ?? '',
+            // Use license number from the professional object if available
+            'license': rawData['professional'] != null
+                ? rawData['professional']['licenseNumber'] ?? ''
+                : '',
+            'dateOfBirth': rawData['dob'] ?? '', // Added date of birth handling
+            'profilePictureUrl':
+                rawData['profileImageUrl'] ?? rawData['profilePictureUrl'],
+          };
+        } else if (_isPatient) {
+          return {
+            'id': rawData['id'] ?? 0,
+            'name': '${rawData['firstName'] ?? ''} ${rawData['lastName'] ?? ''}'
+                .trim(),
+            'email': rawData['email'] ?? '',
+            'phoneNumber': rawData['phone'] ?? '',
+            'address': rawData['address']?['line1'] ?? '',
+            'city': rawData['address']?['city'] ?? '',
+            'state': rawData['address']?['state'] ?? '',
+            'zipCode': rawData['address']?['zip'] ?? '',
+            'country': '', // Default to empty as it's not in the response
+            'dateOfBirth': rawData['dob'] ?? '',
+            'gender': rawData['gender'] ?? '',
+            'emergencyContact': rawData['emergencyContact'] ?? '',
+            'medicalConditions': rawData['medicalConditions'] ?? '',
+            'allergies': rawData['allergies'] ?? '',
+            'medications': rawData['medications'] ?? '',
+            'profilePictureUrl':
+                rawData['profileImageUrl'] ?? rawData['profilePictureUrl'],
+          };
         }
-
-        return {
-          'id': rawData['id'] ?? 0,
-          'name': '${rawData['firstName'] ?? ''} ${rawData['lastName'] ?? ''}'
-              .trim(),
-          'email': rawData['email'] ?? '',
-          'phoneNumber': rawData['phone'] ?? '',
-          'address': rawData['address']?['line1'] ?? '',
-          'city': rawData['address']?['city'] ?? '',
-          'state': rawData['address']?['state'] ?? '',
-          'zipCode': rawData['address']?['zip'] ?? '',
-          'country': '', // Default to empty as it's not in the response
-          // Extract specialization from the professional object - use yearsExperience as a string
-          'specialization': rawData['professional'] != null
-              ? rawData['professional']['yearsExperience']?.toString() ?? ''
-              : '',
-          // Use caregiverType for organization if available
-          'organization': rawData['caregiverType'] ?? '',
-          // Use license number from the professional object if available
-          'license': rawData['professional'] != null
-              ? rawData['professional']['licenseNumber'] ?? ''
-              : '',
-          'dateOfBirth': rawData['dob'] ?? '', // Added date of birth handling
-          'profilePictureUrl': profilePictureUrl,
-        };
-      } else if (_isPatient) {
-        // Check for profile picture URL in the user object
-        String? profilePictureUrl;
-        if (rawData['user'] != null &&
-            rawData['user']['profileImageUrl'] != null) {
-          profilePictureUrl = rawData['user']['profileImageUrl'];
-        } else {
-          profilePictureUrl = _userProfile?.profilePictureUrl;
-        }
-
-        return {
-          'id': rawData['id'] ?? 0,
-          'name': '${rawData['firstName'] ?? ''} ${rawData['lastName'] ?? ''}'
-              .trim(),
-          'email': rawData['email'] ?? '',
-          'phoneNumber': rawData['phone'] ?? '',
-          'address': rawData['address']?['line1'] ?? '',
-          'city': rawData['address']?['city'] ?? '',
-          'state': rawData['address']?['state'] ?? '',
-          'zipCode': rawData['address']?['zip'] ?? '',
-          'country': '', // Default to empty as it's not in the response
-          'dateOfBirth': rawData['dob'] ?? '',
-          'gender': rawData['gender'] ?? '',
-          'emergencyContact': rawData['emergencyContact'] ?? '',
-          'medicalConditions': rawData['medicalConditions'] ?? '',
-          'allergies': rawData['allergies'] ?? '',
-          'medications': rawData['medications'] ?? '',
-          'profilePictureUrl': profilePictureUrl,
-        };
       }
 
-      return rawData;
+      return data;
     } catch (e) {
       print('Error parsing response: $e');
       return {};
@@ -286,90 +263,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     _medicalConditionsController.text = profile.medicalConditions ?? '';
     _allergiesController.text = profile.allergies ?? '';
     _medicationsController.text = profile.medications ?? '';
-  }
-
-  Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await _picker.pickImage(source: source);
-
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
-
-      // Upload the image immediately
-      _uploadProfilePicture();
-    }
-  }
-
-  Future<void> _uploadProfilePicture() async {
-    if (_imageFile == null || _userProfile == null) return;
-
-    setState(() {
-      _isSaving = true;
-    });
-
-    try {
-      // Get the user session to retrieve the correct ID based on role
-      final userSession = await AuthTokenManager.getUserSession();
-      int? profileId;
-
-      if (_isPatient) {
-        profileId = userSession?['patientId'] as int?;
-      } else if (_isCaregiver) {
-        profileId = userSession?['caregiverId'] as int?;
-      }
-
-      if (profileId == null) {
-        throw Exception("Profile ID not found for the current user role");
-      }
-
-      // Send the correct profile ID and role for the file upload
-      final response = await ApiService.uploadUserFile(
-        userId: profileId,
-        file: _imageFile!,
-        category: 'profilePicture',
-        role: _isPatient ? 'PATIENT' : 'CAREGIVER',
-      );
-
-      if (response.statusCode == 200) {
-        // Parse the response directly to get the file URL
-        final responseData = json.decode(response.body);
-        if (responseData != null && responseData.containsKey('fileUrl')) {
-          final newUrl = responseData['fileUrl'] as String;
-
-          // Update the profile picture URL in the state
-          setState(() {
-            if (_isCaregiver) {
-              _userProfile = (_userProfile as CaregiverProfile).copyWith(
-                profilePictureUrl: newUrl,
-              );
-            } else if (_isPatient) {
-              _userProfile = (_userProfile as PatientProfile).copyWith(
-                profilePictureUrl: newUrl,
-              );
-            }
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile picture updated')),
-          );
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to upload image: ${response.statusCode}'),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error uploading image: $e')));
-    } finally {
-      setState(() {
-        _isSaving = false;
-      });
-    }
   }
 
   Future<void> _saveProfile() async {
@@ -541,6 +434,50 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     }
   }
 
+  void _showCurrentPlanDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Current Plan'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Basic Plan',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text('• Up to 5 patients'),
+            const Text('• Basic analytics'),
+            const Text('• Standard support'),
+            const SizedBox(height: 16),
+            Text(
+              'Upgrade to Premium for advanced features!',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed('/select-package');
+            },
+            child: const Text('Upgrade'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -565,7 +502,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 48, color: AppTheme.error),
+            const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
             const SizedBox(height: 16),
             Text(
               'Error Loading Profile',
@@ -740,6 +677,80 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   ),
                 ],
 
+                // Subscription Management Section - Only for caregivers
+                if (_isCaregiver) ...[
+                  const SizedBox(height: 32),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  _buildSectionHeader('Subscription Management'),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.payment,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Manage Your Subscription',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Upgrade your plan to access premium features like advanced analytics, unlimited patients, and priority support.',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.of(
+                                      context,
+                                    ).pushNamed('/select-package');
+                                  },
+                                  icon: const Icon(Icons.upgrade),
+                                  label: const Text('Upgrade Plan'),
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    // Navigate to billing history or current plan details
+                                    _showCurrentPlanDialog();
+                                  },
+                                  icon: const Icon(Icons.receipt_long),
+                                  label: const Text('View Plan'),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
@@ -768,58 +779,41 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     return Center(
       child: Column(
         children: [
-          GestureDetector(
-            onTap: () => _showImagePickerOptions(),
-            child: Builder(
-              builder: (BuildContext context) => Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundColor: AppTheme.backgroundSecondary,
-                    backgroundImage: _imageFile != null
-                        ? FileImage(_imageFile!) as ImageProvider
-                        : _userProfile?.profilePictureUrl != null
-                        ? _getNetworkImageSafely(_userProfile.profilePictureUrl)
-                        : null,
-                    // Only provide onBackgroundImageError when we have a backgroundImage
-                    onBackgroundImageError:
-                        _imageFile != null ||
-                            _userProfile?.profilePictureUrl != null
-                        ? (exception, stackTrace) {
-                            // Silently handle network image loading errors
-                            print('Error loading profile picture: $exception');
-                            // No setState needed as we'll show the fallback icon
-                          }
-                        : null,
-                    child:
-                        _userProfile?.profilePictureUrl == null &&
-                            _imageFile == null
-                        ? Icon(
-                            Icons.person,
-                            size: 60,
-                            color: AppTheme.textSecondary,
-                          )
-                        : null,
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        color: AppTheme.textLight,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          ProfilePictureWidget(
+            size: 120,
+            canEdit: true,
+            existingImageUrl: _userProfile?.profilePictureUrl,
+            onImageUpdated: (UserFileDTO updatedImage) {
+              // Handle profile picture update
+              setState(() {
+                if (updatedImage.id == -1) {
+                  // Image was deleted
+                  if (_isCaregiver) {
+                    _userProfile = (_userProfile as CaregiverProfile).copyWith(
+                      profilePictureUrl: null,
+                    );
+                  } else {
+                    _userProfile = (_userProfile as PatientProfile).copyWith(
+                      profilePictureUrl: null,
+                    );
+                  }
+                } else {
+                  // Image was updated
+                  final newUrl =
+                      updatedImage.downloadUrl ?? updatedImage.fileUrl;
+                  if (_isCaregiver) {
+                    _userProfile = (_userProfile as CaregiverProfile).copyWith(
+                      profilePictureUrl: newUrl,
+                    );
+                  } else {
+                    _userProfile = (_userProfile as PatientProfile).copyWith(
+                      profilePictureUrl: newUrl,
+                    );
+                  }
+                }
+              });
+            },
+            placeholderText: 'Add Photo',
           ),
           const SizedBox(height: 8),
           Text(
@@ -831,52 +825,13 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     );
   }
 
-  void _showImagePickerOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Take a photo'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.camera);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from gallery'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.gallery);
-              },
-            ),
-            if (_userProfile?.profilePictureUrl != null)
-              ListTile(
-                leading: Icon(Icons.delete, color: AppTheme.error),
-                title: const Text('Remove current photo'),
-                onTap: () {
-                  Navigator.pop(context);
-                  // Logic to remove profile photo would go here
-                  // This would require a backend endpoint to remove the profile picture
-                },
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildSectionHeader(String title) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: AppTheme.primary,
@@ -886,18 +841,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         const SizedBox(height: 8),
       ],
     );
-  }
-
-  // Helper method to safely create a NetworkImage or return null if URL is invalid
-  ImageProvider? _getNetworkImageSafely(String? url) {
-    if (url == null || url.isEmpty) return null;
-
-    try {
-      return NetworkImage(url) as ImageProvider;
-    } catch (e) {
-      print('Invalid image URL: $url, Error: $e');
-      return null;
-    }
   }
 
   Widget _buildTextField({

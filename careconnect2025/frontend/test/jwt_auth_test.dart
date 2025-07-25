@@ -158,7 +158,7 @@ void main() {
 
     test('Authorization header should be correctly formatted', () {
       const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test';
-      final authHeader = 'Bearer $mockToken';
+      const authHeader = 'Bearer $mockToken';
 
       expect(authHeader, startsWith('Bearer '));
       expect(authHeader.substring(7), equals(mockToken));

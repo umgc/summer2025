@@ -5,7 +5,7 @@ import 'package:care_connect_app/features/analytics/analytics_page.dart';
 void main() {
   testWidgets('Analytics page shows filter chips', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(MaterialApp(home: AnalyticsPage(patientId: 1)));
+    await tester.pumpWidget(const MaterialApp(home: AnalyticsPage(patientId: 1)));
 
     // Wait for the initial loading to complete
     await tester.pump();
@@ -18,7 +18,7 @@ void main() {
   });
 
   testWidgets('Filter chips can be selected', (WidgetTester tester) async {
-    await tester.pumpWidget(MaterialApp(home: AnalyticsPage(patientId: 1)));
+    await tester.pumpWidget(const MaterialApp(home: AnalyticsPage(patientId: 1)));
 
     await tester.pump();
 
@@ -34,7 +34,7 @@ void main() {
   });
 
   testWidgets('Refresh button works', (WidgetTester tester) async {
-    await tester.pumpWidget(MaterialApp(home: AnalyticsPage(patientId: 1)));
+    await tester.pumpWidget(const MaterialApp(home: AnalyticsPage(patientId: 1)));
 
     await tester.pump();
 

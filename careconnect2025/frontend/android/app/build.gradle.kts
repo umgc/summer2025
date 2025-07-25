@@ -1,6 +1,8 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    // Firebase Google Services plugin
+    id("com.google.gms.google-services")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -41,4 +43,13 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Exclude conflicting dependencies to avoid duplicate class errors
+    configurations.all {
+        exclude(group = "com.google.firebase", module = "firebase-iid")
+        // Exclude older Jitsi WebRTC to avoid conflicts with newer WebRTC SDK
+        exclude(group = "org.jitsi", module = "webrtc")
+    }
 }

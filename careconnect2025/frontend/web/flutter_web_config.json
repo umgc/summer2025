@@ -1,0 +1,19 @@
+{
+  "service_worker": {
+    "cache_strategy": "minimal",
+    "timeout_ms": 5000,
+    "enable_fallback": true,
+    "cache_version": "v1.0.0"
+  },
+  "renderer": "canvaskit",
+  "performance": {
+    "preload_fonts": true,
+    "optimize_startup": true,
+    "reduce_initial_bundle": true
+  },
+  "pwa": {
+    "theme_color": "#1976D2",
+    "background_color": "#FFFFFF",
+    "display": "standalone"
+  }
+}

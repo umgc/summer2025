@@ -8,6 +8,7 @@ import com.careconnect.repository.UserRepository;
 import com.careconnect.repository.CaregiverPatientLinkRepository;
 import com.careconnect.service.EmailService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +26,9 @@ public class ConnectionRequestService {
     private final UserRepository userRepo;
     private final CaregiverPatientLinkRepository linkRepo;
     private final EmailService emailService;
-    private final FirebaseNotificationService notificationService;
+    
+    @Autowired(required = false)
+    private FirebaseNotificationService notificationService;
     
     @Value("${frontend.base-url:http://localhost:3000}")
     private String frontendBaseUrl;
@@ -66,20 +69,22 @@ public class ConnectionRequestService {
         
         // Send Firebase notification to patient about connection request
         try {
-            notificationService.sendNotificationToUser(
-                patient.getId(),
-                "🔗 New Connection Request",
-                String.format("%s would like to connect with you as your caregiver", caregiver.getName()),
-                "CONNECTION_REQUEST",
-                Map.of(
-                    "type", "CONNECTION_REQUEST",
-                    "caregiverName", caregiver.getName(),
-                    "caregiverId", caregiver.getId().toString(),
-                    "relationshipType", relationshipType,
-                    "requestToken", request.getToken(),
-                    "requestedAt", request.getRequestedAt().toString()
-                )
-            );
+            if (notificationService != null) {
+                notificationService.sendNotificationToUser(
+                    patient.getId(),
+                    "🔗 New Connection Request",
+                    String.format("%s would like to connect with you as your caregiver", caregiver.getName()),
+                    "CONNECTION_REQUEST",
+                    Map.of(
+                        "type", "CONNECTION_REQUEST",
+                        "caregiverName", caregiver.getName(),
+                        "caregiverId", caregiver.getId().toString(),
+                        "relationshipType", relationshipType,
+                        "requestToken", request.getToken(),
+                        "requestedAt", request.getRequestedAt().toString()
+                    )
+                );
+            }
         } catch (Exception e) {
             // Log but don't fail the request creation if notification fails
             System.err.println("Failed to send connection request notification: " + e.getMessage());
@@ -110,20 +115,22 @@ public class ConnectionRequestService {
             
             // Send Firebase notification to caregiver about acceptance
             try {
-                notificationService.sendNotificationToUser(
-                    request.getCaregiver().getId(),
-                    "✅ Connection Request Accepted",
-                    String.format("%s has accepted your connection request! You are now connected.", 
-                            request.getPatient().getName()),
-                    "CONNECTION_ACCEPTED",
-                    Map.of(
-                        "type", "CONNECTION_ACCEPTED",
-                        "patientName", request.getPatient().getName(),
-                        "patientId", request.getPatient().getId().toString(),
-                        "relationshipType", request.getRelationshipType() != null ? request.getRelationshipType() : "Caregiver",
-                        "acceptedAt", request.getRespondedAt().toString()
-                    )
-                );
+                if (notificationService != null) {
+                    notificationService.sendNotificationToUser(
+                        request.getCaregiver().getId(),
+                        "✅ Connection Request Accepted",
+                        String.format("%s has accepted your connection request! You are now connected.", 
+                                request.getPatient().getName()),
+                        "CONNECTION_ACCEPTED",
+                        Map.of(
+                            "type", "CONNECTION_ACCEPTED",
+                            "patientName", request.getPatient().getName(),
+                            "patientId", request.getPatient().getId().toString(),
+                            "relationshipType", request.getRelationshipType() != null ? request.getRelationshipType() : "Caregiver",
+                            "acceptedAt", request.getRespondedAt().toString()
+                        )
+                    );
+                }
             } catch (Exception e) {
                 // Log but don't fail the acceptance if notification fails
                 System.err.println("Failed to send connection acceptance notification: " + e.getMessage());

@@ -22,7 +22,7 @@ public class VitalSampleService {
     private final VitalSampleRepository vitalSampleRepository;
     private final PatientRepository patientRepository;
     
-    @Autowired
+    @Autowired(required = false)
     private FirebaseNotificationService notificationService;
     
     /**
@@ -167,7 +167,7 @@ public class VitalSampleService {
             if (vitalSample.getHeartRate() != null) {
                 String alertLevel = determineHeartRateAlert(vitalSample.getHeartRate());
                 if (!"NORMAL".equals(alertLevel)) {
-                    notificationService.sendVitalAlert(
+                    sendVitalAlertIfEnabled(
                         patientId, 
                         "Heart Rate", 
                         vitalSample.getHeartRate() + " bpm", 
@@ -180,7 +180,7 @@ public class VitalSampleService {
             if (vitalSample.getSpo2() != null) {
                 String alertLevel = determineSpO2Alert(vitalSample.getSpo2());
                 if (!"NORMAL".equals(alertLevel)) {
-                    notificationService.sendVitalAlert(
+                    sendVitalAlertIfEnabled(
                         patientId, 
                         "Blood Oxygen (SpO2)", 
                         vitalSample.getSpo2() + "%", 
@@ -195,7 +195,7 @@ public class VitalSampleService {
                 if (!"NORMAL".equals(alertLevel)) {
                     String bpValue = (vitalSample.getSystolic() != null ? vitalSample.getSystolic() : "?") + 
                                    "/" + (vitalSample.getDiastolic() != null ? vitalSample.getDiastolic() : "?");
-                    notificationService.sendVitalAlert(
+                    sendVitalAlertIfEnabled(
                         patientId, 
                         "Blood Pressure", 
                         bpValue + " mmHg", 
@@ -206,7 +206,7 @@ public class VitalSampleService {
             
             // Check mood alerts (severe depression or anxiety)
             if (vitalSample.getMoodValue() != null && vitalSample.getMoodValue() <= 2) {
-                notificationService.sendVitalAlert(
+                sendVitalAlertIfEnabled(
                     patientId, 
                     "Mood", 
                     "Low mood score: " + vitalSample.getMoodValue(), 
@@ -216,7 +216,7 @@ public class VitalSampleService {
             
             // Check pain alerts (severe pain)
             if (vitalSample.getPainValue() != null && vitalSample.getPainValue() >= 8) {
-                notificationService.sendVitalAlert(
+                sendVitalAlertIfEnabled(
                     patientId, 
                     "Pain Level", 
                     "High pain score: " + vitalSample.getPainValue(), 
@@ -253,5 +253,14 @@ public class VitalSampleService {
         if (systolic != null && systolic < 90) return "LOW";
         if (diastolic != null && diastolic < 60) return "LOW";
         return "NORMAL";
+    }
+    
+    /**
+     * Helper method to send vital alerts only if Firebase is enabled
+     */
+    private void sendVitalAlertIfEnabled(Long patientId, String type, String value, String alertLevel) {
+        if (notificationService != null) {
+            notificationService.sendVitalAlert(patientId, type, value, alertLevel);
+        }
     }
 }

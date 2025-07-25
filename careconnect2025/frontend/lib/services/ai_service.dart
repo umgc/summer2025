@@ -1,6 +1,7 @@
-import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../config/env_constant.dart';
+import 'ai_chat_service.dart';
+import 'subscription_service.dart';
 
 enum AIModel {
   deepseek,
@@ -31,10 +32,6 @@ enum AIModel {
 }
 
 class AIService {
-  static const String _deepseekUrl =
-      'https://api.deepseek.com/chat/completions';
-  static const String _openaiUrl = 'https://api.openai.com/v1/chat/completions';
-
   // Performance optimization: Cache for recent responses
   static final Map<String, String> _responseCache = {};
   static const int _maxCacheSize = 100;
@@ -49,7 +46,23 @@ class AIService {
     String role = 'patient',
     AIModel model = AIModel.deepseek,
     String? healthDataContext,
+    int? patientId,
+    int? userId,
+    BuildContext? context,
   }) async {
+    // Check subscription access for caregivers
+    if (context != null && role == 'caregiver') {
+      final canUseAI = await SubscriptionService.canUseAIAssistant(context);
+      if (!canUseAI) {
+        // This will show the premium dialog
+        await SubscriptionService.checkPremiumAccessWithDialog(
+          context,
+          'AI Health Assistant',
+        );
+        return 'AI Assistant requires a Premium subscription. Please upgrade to continue.';
+      }
+    }
+
     // Create cache key
     final cacheKey = _createCacheKey(question, role, model, healthDataContext);
 
@@ -67,116 +80,46 @@ class AIService {
     }
 
     try {
-      final baseUrl = model == AIModel.deepseek ? _deepseekUrl : _openaiUrl;
-      String apiKey;
-
-      // Get API key based on model from environment variables
-      if (model == AIModel.deepseek) {
-        // For DeepSeek, get the key from environment variables
-        try {
-          apiKey = getDeepSeekKey();
-          // Remove "Bearer " prefix if present
-          if (apiKey.startsWith('Bearer ')) {
-            apiKey = apiKey.substring(7);
-          }
-        } catch (e) {
-          // Debug: Error getting DeepSeek API key: $e
-          throw Exception(
-            'DeepSeek API key not configured. Please set DEEPSEEK_API_KEY in environment variables.',
-          );
-        }
-      } else {
-        // For OpenAI, get the key from environment variables
-        try {
-          apiKey = getOpenAIKey();
-        } catch (e) {
-          // Debug: Error getting OpenAI API key: $e
-          throw Exception(
-            'OpenAI API key not configured. Please set OPENAI_API_KEY in environment variables.',
-          );
-        }
-      }
-
-      // Health-related system prompt with role-specific context
-      String systemPrompt;
+      // Use the corrected AIChatService for API requests
+      String chatType = 'GENERAL_SUPPORT';
       if (role == 'analytics') {
-        systemPrompt =
-            "You are a specialized health data analyst AI assistant. You have the ability to analyze patient health data from uploaded files, text content, and documents. When users upload files, you have direct access to read and analyze the content. You provide insights, interpretations, and recommendations based on the data provided. You help healthcare professionals and caregivers understand health trends, identify potential concerns, and make data-driven decisions. IMPORTANT: Personal identifiers have been removed from all data for privacy protection. Only answer questions related to health data analysis, medical insights, or patient care recommendations. If asked about non-health topics, respond with 'I can only assist with health data analysis and medical insights.'";
-      } else if (role == 'patient') {
-        systemPrompt =
-            "You are a helpful health assistant for patients. You have the ability to read and analyze any files or documents that users upload to help answer their health-related questions. When users upload files (like medical reports, lab results, health documents, CSV data, or text files), you can access and analyze the content directly to provide relevant health advice. You can process various file formats including text files, CSV files, JSON data, and more. Only answer questions related to health, wellness, psychosocial support, or medical topics. If the question is not related to health, respond with 'I can not help you with that. I can only assist with health-related questions.'";
-      } else {
-        systemPrompt =
-            "You are a helpful health assistant for caregivers. You have the ability to read and analyze any files or documents that users upload to help with patient care. When users upload files (like medical reports, patient records, health documents, CSV data, or text files), you can access and analyze the content directly to provide relevant caregiving advice. You can process various file formats including text files, CSV files, JSON data, and more. Only answer questions related to health, wellness, patient care, or medical topics. If the question is not related to health, respond with 'I can not help you with that. I can only assist with health-related questions.'";
+        chatType = 'MEDICAL_CONSULTATION';
+      } else if (role == 'caregiver') {
+        chatType = 'MEDICAL_CONSULTATION';
       }
 
-      final messages = [
-        {'role': 'system', 'content': systemPrompt},
-      ];
-
-      // Add health data context (including file content) if provided
+      // Create enhanced message with context
+      String enhancedMessage = question;
       if (healthDataContext != null && healthDataContext.isNotEmpty) {
-        // Check if this contains file data
-        if (healthDataContext.contains(
-              'The user has uploaded the following files',
-            ) ||
-            healthDataContext.contains('=== UPLOADED FILES CONTEXT ===')) {
-          messages.add({
-            'role': 'system',
-            'content':
-                'I have access to the following uploaded file content. I can read and analyze this data directly:\n\n$healthDataContext',
-          });
-        } else {
-          // Regular health data context
-          messages.add({
-            'role': 'system',
-            'content':
-                'Here is the current patient health data for your analysis:\n\n$healthDataContext',
-          });
-        }
+        enhancedMessage =
+            '$healthDataContext\n\nBased on the above context, please answer: $question';
       }
 
-      messages.add({'role': 'user', 'content': question});
+      final response = await AIChatService.sendMessage(
+        message: enhancedMessage,
+        patientId: patientId ?? 1, // Default patient ID if not provided
+        userId: userId ?? 1, // Default user ID if not provided
+        chatType: chatType,
+        preferredModel: model.modelName,
+        temperature: 0.7,
+        maxTokens: 1000,
+        includeVitals: role == 'analytics' || role == 'caregiver',
+        includeMedications: role == 'analytics' || role == 'caregiver',
+        includeNotes: role == 'analytics' || role == 'caregiver',
+        includeMoodPainLogs: role == 'analytics',
+        includeAllergies: role == 'analytics' || role == 'caregiver',
+      );
 
-      final requestBody = {
-        'model': model.modelName,
-        'messages': messages,
-        'stream': false,
-      };
-
-      // Add model-specific parameters
-      if (model == AIModel.gpt4) {
-        requestBody['max_tokens'] = 1000; // Increased for file analysis
-        requestBody['temperature'] = 0.7;
-      } else {
-        // DeepSeek parameters for better file analysis
-        requestBody['max_tokens'] = 1000;
-        requestBody['temperature'] = 0.7;
-      }
-
-      final response = await _httpClient
-          .post(
-            Uri.parse(baseUrl),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $apiKey',
-            },
-            body: jsonEncode(requestBody),
-          )
-          .timeout(
-            const Duration(seconds: 120),
-          ); // Reduced timeout for better UX
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final content = data['choices'][0]['message']['content'];
+      if (response['success'] != false && response['response'] != null) {
+        final aiResponse = response['response'] as String;
 
         // Cache the response
-        _cacheResponse(cacheKey, content);
+        _cacheResponse(cacheKey, aiResponse);
 
-        return content;
+        return aiResponse;
       } else {
-        return 'Sorry, I encountered an error. Please try again later. (${response.statusCode})';
+        return response['response'] ??
+            'Sorry, I encountered an error. Please try again later.';
       }
     } catch (e) {
       // Better error handling

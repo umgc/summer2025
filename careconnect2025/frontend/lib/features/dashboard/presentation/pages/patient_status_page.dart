@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -8,9 +7,8 @@ import 'package:care_connect_app/services/api_service.dart';
 import 'package:care_connect_app/providers/user_provider.dart';
 import 'package:care_connect_app/features/dashboard/models/patient_model.dart';
 import 'package:care_connect_app/features/analytics/models/dashboard_analytics_model.dart';
-import 'package:care_connect_app/config/router/app_router.dart';
-import 'package:care_connect_app/config/theme/app_theme.dart';
 import 'package:care_connect_app/widgets/responsive_container.dart';
+import 'package:care_connect_app/widgets/enhanced_patient_notes_widget.dart';
 
 class PatientStatusPage extends StatefulWidget {
   final int? patientId;
@@ -161,8 +159,221 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
     }
   }
 
+  Widget _buildInfoSection(
+    String title,
+    IconData icon,
+    List<Widget> children, {
+    Widget? customContent,
+  }) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            if (customContent != null) ...[
+              const SizedBox(height: 16),
+              customContent,
+            ] else if (children.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              ...children,
+            ] else ...[
+              const SizedBox(height: 16),
+              Text(
+                'No information available',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$label:',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(fontSize: 16),
+                  overflow: TextOverflow.visible,
+                ),
+              ],
+            )
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 120,
+                  child: Text(
+                    '$label:',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Text(value, style: const TextStyle(fontSize: 16)),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildMedicalInfoSection() {
+    final hasAllergies = patient!.allergies?.isNotEmpty == true;
+    final hasVitalConditions = patient!.vitalConditions?.isNotEmpty == true;
+
+    // Safely extract medications from various possible sources
+    String? medications;
+
+    // Try to get medications from vitalConditions
+    if (hasVitalConditions &&
+        patient!.vitalConditions!.containsKey('medications')) {
+      final medicationsValue = patient!.vitalConditions!['medications'];
+      if (medicationsValue != null && medicationsValue.toString().isNotEmpty) {
+        medications = medicationsValue.toString();
+      }
+    }
+
+    // Try to get medications from patient direct property if available
+    // This would be if the patient model has a medications field directly
+
+    final hasMedications = medications?.isNotEmpty == true;
+
+    // Check if we have any medical information to display
+    if (!hasAllergies && !hasVitalConditions && !hasMedications) {
+      return _buildInfoSection(
+        'Medical Information',
+        Icons.medical_information,
+        [],
+      );
+    }
+
+    final children = <Widget>[];
+
+    // Add allergies (always show)
+    final allergiesText = hasAllergies
+        ? (patient!.allergies is List
+              ? (patient!.allergies as List).join(', ')
+              : patient!.allergies.toString())
+        : 'No allergies listed';
+    children.add(_buildInfoRow('Allergies', allergiesText));
+
+    // Add medications if available
+    if (hasMedications) {
+      children.add(_buildInfoRow('Current Medications', medications!));
+    }
+
+    // Add vital signs if available
+    if (hasVitalConditions) {
+      final vitals = patient!.vitalConditions!;
+
+      // Safely check and add each vital sign
+      if (vitals.containsKey('heartRate') && vitals['heartRate'] != null) {
+        final heartRate = vitals['heartRate'].toString();
+        if (heartRate.isNotEmpty && heartRate != 'null') {
+          children.add(_buildInfoRow('Heart Rate', '$heartRate bpm'));
+        }
+      }
+
+      if (vitals.containsKey('bloodPressure') &&
+          vitals['bloodPressure'] != null) {
+        final bloodPressure = vitals['bloodPressure'].toString();
+        if (bloodPressure.isNotEmpty && bloodPressure != 'null') {
+          children.add(_buildInfoRow('Blood Pressure', '$bloodPressure mmHg'));
+        }
+      }
+
+      if (vitals.containsKey('temperature') && vitals['temperature'] != null) {
+        final temperature = vitals['temperature'].toString();
+        if (temperature.isNotEmpty && temperature != 'null') {
+          children.add(_buildInfoRow('Temperature', '$temperature°F'));
+        }
+      }
+
+      if (vitals.containsKey('oxygenSaturation') &&
+          vitals['oxygenSaturation'] != null) {
+        final oxygenSat = vitals['oxygenSaturation'].toString();
+        if (oxygenSat.isNotEmpty && oxygenSat != 'null') {
+          children.add(_buildInfoRow('Oxygen Saturation', '$oxygenSat%'));
+        }
+      }
+
+      // Add any other vital conditions that might be present
+      vitals.forEach((key, value) {
+        if (value != null &&
+            value.toString().isNotEmpty &&
+            value.toString() != 'null' &&
+            ![
+              'heartRate',
+              'bloodPressure',
+              'temperature',
+              'oxygenSaturation',
+              'medications',
+            ].contains(key)) {
+          // Format the key to be more readable
+          final formattedKey = key
+              .replaceAllMapped(
+                RegExp(r'([A-Z])'),
+                (match) => ' ${match.group(1)}',
+              )
+              .toLowerCase()
+              .split(' ')
+              .map(
+                (word) => word.isNotEmpty
+                    ? '${word[0].toUpperCase()}${word.substring(1)}'
+                    : '',
+              )
+              .join(' ');
+
+          children.add(_buildInfoRow(formattedKey, value.toString()));
+        }
+      });
+    }
+
+    return _buildInfoSection(
+      'Medical Information',
+      Icons.medical_information,
+      children,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -181,68 +392,257 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
           ? const Center(child: Text('No patient data found.'))
           : SingleChildScrollView(
               child: ResponsiveContainer(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(isMobile ? 16 : 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 32,
-                          backgroundImage: NetworkImage(
-                            (patient!.profileImageUrl ??
-                                'https://randomuser.me/api/portraits/men/32.jpg'),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${patient!.firstName} ${patient!.lastName}',
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
+                    // Patient header - responsive layout
+                    isMobile
+                        ? Column(
+                            children: [
+                              CircleAvatar(
+                                radius: 40,
+                                backgroundImage: NetworkImage(
+                                  (patient!.profileImageUrl ??
+                                      'https://randomuser.me/api/portraits/men/32.jpg'),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '${patient!.firstName} ${patient!.lastName}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                    textAlign: TextAlign.center,
                                   ),
-                            ),
-                            Text('Age: ${_calculateAge(patient!.dob)}'),
-                            Text('Phone: ${patient!.phone}'),
-                          ],
-                        ),
-                      ],
-                    ),
+                                  const SizedBox(height: 8),
+                                  if (patient!.dob.isNotEmpty)
+                                    Text(
+                                      'Age: ${_calculateAge(patient!.dob)}',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  if (patient!.phone.isNotEmpty)
+                                    Text(
+                                      'Phone: ${patient!.phone}',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  if (patient!.email.isNotEmpty)
+                                    Text(
+                                      'Email: ${patient!.email}',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                ],
+                              ),
+                            ],
+                          )
+                        : Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 32,
+                                backgroundImage: NetworkImage(
+                                  (patient!.profileImageUrl ??
+                                      'https://randomuser.me/api/portraits/men/32.jpg'),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${patient!.firstName} ${patient!.lastName}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                    if (patient!.dob.isNotEmpty)
+                                      Text(
+                                        'Age: ${_calculateAge(patient!.dob)}',
+                                      ),
+                                    if (patient!.phone.isNotEmpty)
+                                      Text('Phone: ${patient!.phone}'),
+                                    if (patient!.email.isNotEmpty)
+                                      Text('Email: ${patient!.email}'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                     const SizedBox(height: 24),
-                    Text(
-                      'Current Condition',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      patient!.relationship,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Address',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${patient!.address?.line1 ?? ''} ${patient!.address?.line2 ?? ''}\n'
-                      '${patient!.address?.city ?? ''}, ${patient!.address?.state ?? ''} ${patient!.address?.zip ?? ''}',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(height: 24),
-                    buildVitalsSummary(vitals),
+
+                    // Content sections with responsive layout
+                    isMobile
+                        ? Column(
+                            children: [
+                              // Patient Information Section
+                              _buildInfoSection(
+                                'Patient Information',
+                                Icons.person,
+                                [
+                                  if (patient!.relationship.isNotEmpty)
+                                    _buildInfoRow(
+                                      'Relationship',
+                                      patient!.relationship,
+                                    ),
+                                  if (patient!.gender != null &&
+                                      patient!.gender!.isNotEmpty)
+                                    _buildInfoRow('Gender', patient!.gender!),
+                                  if (patient!.dob.isNotEmpty)
+                                    _buildInfoRow(
+                                      'Date of Birth',
+                                      patient!.dob,
+                                    ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              // Address Section
+                              if (patient!.address != null) ...[
+                                _buildInfoSection('Address', Icons.location_on, [
+                                  if (patient!.address!.line1?.isNotEmpty ==
+                                      true)
+                                    _buildInfoRow(
+                                      'Address',
+                                      '${patient!.address!.line1}${patient!.address!.line2?.isNotEmpty == true ? '\n${patient!.address!.line2}' : ''}',
+                                    ),
+                                  if (patient!.address!.city?.isNotEmpty ==
+                                      true)
+                                    _buildInfoRow(
+                                      'City',
+                                      patient!.address!.city!,
+                                    ),
+                                  if (patient!.address!.state?.isNotEmpty ==
+                                      true)
+                                    _buildInfoRow(
+                                      'State',
+                                      patient!.address!.state!,
+                                    ),
+                                  if (patient!.address!.zip?.isNotEmpty == true)
+                                    _buildInfoRow(
+                                      'ZIP Code',
+                                      patient!.address!.zip!,
+                                    ),
+                                ]),
+                                const SizedBox(height: 16),
+                              ],
+
+                              // Medical Information Section
+                              _buildMedicalInfoSection(),
+
+                              const SizedBox(height: 16),
+
+                              // Vitals Summary Section
+                              _buildInfoSection(
+                                'Vitals Summary (Past 7 Days)',
+                                Icons.favorite,
+                                [],
+                                customContent: buildVitalsSummary(vitals),
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              // Medical Notes Section - Full width on mobile
+                              EnhancedPatientNotesWidget(
+                                patientId: patient!.id,
+                                showCompactView: false,
+                                initialItemCount: 3,
+                              ),
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              // Patient Information Section
+                              _buildInfoSection(
+                                'Patient Information',
+                                Icons.person,
+                                [
+                                  if (patient!.relationship.isNotEmpty)
+                                    _buildInfoRow(
+                                      'Relationship',
+                                      patient!.relationship,
+                                    ),
+                                  if (patient!.gender != null &&
+                                      patient!.gender!.isNotEmpty)
+                                    _buildInfoRow('Gender', patient!.gender!),
+                                  if (patient!.dob.isNotEmpty)
+                                    _buildInfoRow(
+                                      'Date of Birth',
+                                      patient!.dob,
+                                    ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              // Address Section
+                              if (patient!.address != null) ...[
+                                _buildInfoSection('Address', Icons.location_on, [
+                                  if (patient!.address!.line1?.isNotEmpty ==
+                                      true)
+                                    _buildInfoRow(
+                                      'Address',
+                                      '${patient!.address!.line1}${patient!.address!.line2?.isNotEmpty == true ? '\n${patient!.address!.line2}' : ''}',
+                                    ),
+                                  if (patient!.address!.city?.isNotEmpty ==
+                                      true)
+                                    _buildInfoRow(
+                                      'City',
+                                      patient!.address!.city!,
+                                    ),
+                                  if (patient!.address!.state?.isNotEmpty ==
+                                      true)
+                                    _buildInfoRow(
+                                      'State',
+                                      patient!.address!.state!,
+                                    ),
+                                  if (patient!.address!.zip?.isNotEmpty == true)
+                                    _buildInfoRow(
+                                      'ZIP Code',
+                                      patient!.address!.zip!,
+                                    ),
+                                ]),
+                                const SizedBox(height: 24),
+                              ],
+
+                              // Medical Information Section
+                              _buildMedicalInfoSection(),
+
+                              const SizedBox(height: 24),
+
+                              // Vitals Summary Section
+                              _buildInfoSection(
+                                'Vitals Summary (Past 7 Days)',
+                                Icons.favorite,
+                                [],
+                                customContent: buildVitalsSummary(vitals),
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              // Medical Notes Section
+                              EnhancedPatientNotesWidget(
+                                patientId: patient!.id,
+                                showCompactView: false,
+                                initialItemCount: 3,
+                              ),
+                            ],
+                          ),
                   ],
                 ),
               ),
@@ -252,38 +652,61 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
 
   Widget buildVitalsSummary(DashboardAnalytics? vitals) {
     if (vitals == null) {
-      return const Text('No vitals data available for summary.');
-    }
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Vitals Summary (Past 7 Days)',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Heart Rate: avg ${vitals.avgHeartRate?.toStringAsFixed(1) ?? 'N/A'} bpm',
-            ),
-            Text('SpO₂: avg ${vitals.avgSpo2?.toStringAsFixed(1) ?? 'N/A'}%'),
-            Text(
-              'Blood Pressure (Systolic): avg ${vitals.avgSystolic?.toStringAsFixed(1) ?? 'N/A'} mmHg',
-            ),
-            Text(
-              'Blood Pressure (Diastolic): avg ${vitals.avgDiastolic?.toStringAsFixed(1) ?? 'N/A'} mmHg',
-            ),
-            Text(
-              'Weight: avg ${vitals.avgWeight?.toStringAsFixed(1) ?? 'N/A'} lbs',
-            ),
-            Text(
-              'Adherence Rate: ${vitals.adherenceRate?.toStringAsFixed(1) ?? 'N/A'}%',
-            ),
-          ],
+      return Text(
+        'No vitals data available for summary.',
+        style: TextStyle(
+          color: Colors.grey.shade600,
+          fontStyle: FontStyle.italic,
         ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (vitals.avgHeartRate != null)
+          _buildVitalRow(
+            'Heart Rate',
+            '${vitals.avgHeartRate!.toStringAsFixed(1)} bpm',
+          ),
+        if (vitals.avgSpo2 != null)
+          _buildVitalRow('SpO₂', '${vitals.avgSpo2!.toStringAsFixed(1)}%'),
+        if (vitals.avgSystolic != null)
+          _buildVitalRow(
+            'Systolic BP',
+            '${vitals.avgSystolic!.toStringAsFixed(1)} mmHg',
+          ),
+        if (vitals.avgDiastolic != null)
+          _buildVitalRow(
+            'Diastolic BP',
+            '${vitals.avgDiastolic!.toStringAsFixed(1)} mmHg',
+          ),
+        if (vitals.avgWeight != null)
+          _buildVitalRow(
+            'Weight',
+            '${vitals.avgWeight!.toStringAsFixed(1)} lbs',
+          ),
+        if (vitals.adherenceRate != null)
+          _buildVitalRow(
+            'Adherence Rate',
+            '${vitals.adherenceRate!.toStringAsFixed(1)}%',
+          ),
+      ],
+    );
+  }
+
+  Widget _buildVitalRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ],
       ),
     );
   }

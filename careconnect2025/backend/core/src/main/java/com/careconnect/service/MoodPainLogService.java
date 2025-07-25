@@ -289,8 +289,8 @@ public class MoodPainLogService {
             throw new AppException(HttpStatus.BAD_REQUEST, "Mood value must be between 1 and 10");
         }
         
-        if (request.getPainValue() == null || request.getPainValue() < 1 || request.getPainValue() > 10) {
-            throw new AppException(HttpStatus.BAD_REQUEST, "Pain value must be between 1 and 10");
+        if (request.getPainValue() == null || request.getPainValue() < 0 || request.getPainValue() > 10) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Pain value must be between 0 and 10");
         }
         
         if (request.getTimestamp() == null) {

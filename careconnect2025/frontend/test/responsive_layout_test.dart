@@ -11,7 +11,7 @@ void main() {
         MaterialApp(
           home: ChangeNotifierProvider(
             create: (_) => UserProvider(),
-            child: CaregiverDashboard(),
+            child: const CaregiverDashboard(),
           ),
         ),
       );
@@ -27,7 +27,7 @@ void main() {
         MaterialApp(
           home: ChangeNotifierProvider(
             create: (_) => UserProvider(),
-            child: CaregiverDashboard(),
+            child: const CaregiverDashboard(),
           ),
         ),
       );

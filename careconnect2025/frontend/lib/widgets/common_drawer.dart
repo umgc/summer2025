@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
-import '../providers/theme_provider.dart';
 import '../config/router/app_router.dart';
 import 'theme_toggle_switch.dart';
 import '../services/api_service.dart';
@@ -10,7 +9,7 @@ import '../services/api_service.dart';
 class CommonDrawer extends StatefulWidget {
   final String currentRoute;
 
-  const CommonDrawer({Key? key, required this.currentRoute}) : super(key: key);
+  const CommonDrawer({super.key, required this.currentRoute});
 
   @override
   State<CommonDrawer> createState() => _CommonDrawerState();
@@ -64,7 +63,7 @@ class _CommonDrawerState extends State<CommonDrawer> {
           GestureDetector(
             onTap: () {
               Navigator.pop(context);
-              context.go('/profile-settings');
+              context.go('/profile');
             },
             child: DrawerHeader(
               decoration: BoxDecoration(
@@ -110,7 +109,7 @@ class _CommonDrawerState extends State<CommonDrawer> {
                       ),
                       const SizedBox(width: 8),
                       Icon(
-                        Icons.edit,
+                        Icons.person,
                         size: 14,
                         color:
                             (Theme.of(context).appBarTheme.foregroundColor ??
@@ -118,7 +117,7 @@ class _CommonDrawerState extends State<CommonDrawer> {
                                 .withOpacity(0.7),
                       ),
                       Text(
-                        ' Edit Profile',
+                        ' View Profile',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color:
                               (Theme.of(context).appBarTheme.foregroundColor ??
@@ -146,31 +145,13 @@ class _CommonDrawerState extends State<CommonDrawer> {
             },
           ),
 
-          // Caregiver-specific menu items
-          if (isCaregiver) ...[
-            _buildDrawerItem(
-              context,
-              icon: Icons.person_add,
-              title: 'Add Patient',
-              route: '/add-patient',
-              isActive: widget.currentRoute == '/add-patient',
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.payment,
-              title: 'Subscription Management',
-              route: '/select-package',
-              isActive: widget.currentRoute == '/select-package',
-            ),
-          ],
-
-          // Analytics removed as requested
+          // Core Features (reordered logically)
           _buildDrawerItem(
             context,
-            icon: Icons.emoji_events,
-            title: 'Gamification',
-            route: '/gamification',
-            isActive: widget.currentRoute == '/gamification',
+            icon: Icons.medication,
+            title: 'Medication Management',
+            route: '/medication',
+            isActive: widget.currentRoute == '/medication',
           ),
 
           _buildDrawerItem(
@@ -186,7 +167,17 @@ class _CommonDrawerState extends State<CommonDrawer> {
             },
           ),
 
-          // Device integration items
+          _buildDrawerItem(
+            context,
+            icon: Icons.emoji_events,
+            title: 'Gamification',
+            route: '/gamification',
+            isActive: widget.currentRoute == '/gamification',
+          ),
+
+          const Divider(),
+
+          // Device Integration
           _buildDrawerItem(
             context,
             icon: Icons.watch,
@@ -211,23 +202,36 @@ class _CommonDrawerState extends State<CommonDrawer> {
             isActive: widget.currentRoute == '/smart-devices',
           ),
 
-          _buildDrawerItem(
-            context,
-            icon: Icons.medication,
-            title: 'Medication Management',
-            route: '/medication',
-            isActive: widget.currentRoute == '/medication',
-          ),
+          // Caregiver-specific menu items
+          if (isCaregiver) ...[
+            const Divider(),
+            _buildDrawerItem(
+              context,
+              icon: Icons.person_add,
+              title: 'Add Patient',
+              route: '/add-patient',
+              isActive: widget.currentRoute == '/add-patient',
+            ),
+          ],
 
           const Divider(),
 
-          // Profile Settings
+          // Settings
           _buildDrawerItem(
             context,
             icon: Icons.settings,
-            title: 'Profile Settings',
-            route: '/profile-settings',
-            isActive: widget.currentRoute == '/profile-settings',
+            title: 'Settings',
+            route: '/settings',
+            isActive: widget.currentRoute == '/settings',
+          ),
+
+          // File Management
+          _buildDrawerItem(
+            context,
+            icon: Icons.folder,
+            title: 'File Management',
+            route: '/file-management',
+            isActive: widget.currentRoute == '/file-management',
           ),
 
           // Theme Toggle

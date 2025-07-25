@@ -30,9 +30,13 @@
 	<string>Main</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<key>NSCameraUsageDescription</key>
-	<string>The app needs access to your camera for meetings.</string>
+	<string>The app needs access to your camera for video calls with patients and caregivers.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Microphone access needed for talking with AI.</string>
+	<string>Microphone access needed for video calls and voice messaging with patients and caregivers.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location access needed for emergency features and nearby services.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access needed to share images during conversations.</string>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>

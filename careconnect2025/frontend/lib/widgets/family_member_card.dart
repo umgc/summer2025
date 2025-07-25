@@ -61,7 +61,7 @@ class FamilyMemberCard extends StatelessWidget {
               children: [
                 // Phone button
                 IconButton(
-                  icon: Icon(Icons.phone, color: AppTheme.success, size: 20),
+                  icon: const Icon(Icons.phone, color: AppTheme.success, size: 20),
                   onPressed: () async {
                     final uri = Uri(scheme: 'tel', path: phone);
                     if (await canLaunchUrl(uri)) {
@@ -72,7 +72,7 @@ class FamilyMemberCard extends StatelessWidget {
                 ),
                 // SMS button
                 IconButton(
-                  icon: Icon(Icons.message, color: AppTheme.info, size: 20),
+                  icon: const Icon(Icons.message, color: AppTheme.info, size: 20),
                   onPressed: () async {
                     final uri = Uri(scheme: 'sms', path: phone);
                     if (await canLaunchUrl(uri)) {
@@ -84,7 +84,7 @@ class FamilyMemberCard extends StatelessWidget {
                 // Email button (show only if email is provided)
                 if (email.isNotEmpty)
                   IconButton(
-                    icon: Icon(Icons.email, color: AppTheme.warning, size: 20),
+                    icon: const Icon(Icons.email, color: AppTheme.warning, size: 20),
                     onPressed: () async {
                       final uri = Uri(
                         scheme: 'mailto',
@@ -159,34 +159,34 @@ class FamilyMemberCard extends StatelessWidget {
             }
           },
           itemBuilder: (context) => [
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'call',
               child: Row(
                 children: [
                   Icon(Icons.phone, color: AppTheme.success),
-                  const SizedBox(width: 8),
-                  const Text('Call'),
+                  SizedBox(width: 8),
+                  Text('Call'),
                 ],
               ),
             ),
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'sms',
               child: Row(
                 children: [
                   Icon(Icons.message, color: AppTheme.info),
-                  const SizedBox(width: 8),
-                  const Text('Send SMS'),
+                  SizedBox(width: 8),
+                  Text('Send SMS'),
                 ],
               ),
             ),
             if (email.isNotEmpty)
-              PopupMenuItem(
+              const PopupMenuItem(
                 value: 'email',
                 child: Row(
                   children: [
                     Icon(Icons.email, color: AppTheme.warning),
-                    const SizedBox(width: 8),
-                    const Text('Send Email'),
+                    SizedBox(width: 8),
+                    Text('Send Email'),
                   ],
                 ),
               ),
@@ -201,13 +201,13 @@ class FamilyMemberCard extends StatelessWidget {
                 ],
               ),
             ),
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'delete',
               child: Row(
                 children: [
                   Icon(Icons.delete, color: AppTheme.error),
-                  const SizedBox(width: 8),
-                  const Text('Delete'),
+                  SizedBox(width: 8),
+                  Text('Delete'),
                 ],
               ),
             ),

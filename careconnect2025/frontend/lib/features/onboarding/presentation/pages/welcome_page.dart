@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:care_connect_app/widgets/app_bar_helper.dart';
-import 'package:care_connect_app/config/theme/app_theme.dart';
 import 'package:care_connect_app/widgets/responsive_container.dart';
 
 class WelcomePage extends StatelessWidget {

@@ -23,13 +23,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @Service
+@ConditionalOnProperty(name = "firebase.enabled", havingValue = "true", matchIfMissing = true)
 public class FirebaseNotificationService {
     
     private static final Logger logger = LoggerFactory.getLogger(FirebaseNotificationService.class);
     
-    @Autowired
+    @Autowired(required = false)
     private FirebaseMessaging firebaseMessaging;
     
     @Autowired
@@ -48,6 +50,11 @@ public class FirebaseNotificationService {
      * Send notification to a specific device token
      */
     public NotificationResponse sendNotification(FirebaseNotificationRequest request) {
+        if (firebaseMessaging == null) {
+            logger.warn("Firebase not initialized, cannot send notification");
+            return NotificationResponse.failure("Firebase not available");
+        }
+        
         try {
             Message message = buildMessage(request);
             String response = firebaseMessaging.send(message);
@@ -69,6 +76,13 @@ public class FirebaseNotificationService {
      * Send notification to multiple device tokens
      */
     public List<NotificationResponse> sendBulkNotifications(List<FirebaseNotificationRequest> requests) {
+        if (firebaseMessaging == null) {
+            logger.warn("Firebase not initialized, cannot send bulk notifications");
+            return requests.stream()
+                    .map(req -> NotificationResponse.failure("Firebase not available"))
+                    .collect(Collectors.toList());
+        }
+        
         List<Message> messages = requests.stream()
                 .map(this::buildMessage)
                 .collect(Collectors.toList());

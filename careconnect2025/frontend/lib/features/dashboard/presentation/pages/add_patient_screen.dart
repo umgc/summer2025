@@ -11,7 +11,7 @@ import '../../../../config/theme/app_theme.dart';
 import '../../models/connection_request_model.dart';
 
 class AddPatientScreen extends StatefulWidget {
-  const AddPatientScreen({Key? key}) : super(key: key);
+  const AddPatientScreen({super.key});
 
   @override
   _AddPatientScreenState createState() => _AddPatientScreenState();
@@ -162,7 +162,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      drawer: CommonDrawer(currentRoute: '/add-patient'),
+      drawer: const CommonDrawer(currentRoute: '/add-patient'),
       appBar: AppBarHelper.createAppBar(context, title: 'Add Patient'),
       body: SafeArea(
         child: Center(
@@ -322,10 +322,10 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                                   ElevatedButton.icon(
                                     onPressed: _registerNewPatient,
                                     style: AppTheme.primaryButtonStyle.copyWith(
-                                      minimumSize: MaterialStateProperty.all(
+                                      minimumSize: WidgetStateProperty.all(
                                         const Size(double.infinity, 45),
                                       ),
-                                      shape: MaterialStateProperty.all(
+                                      shape: WidgetStateProperty.all(
                                         RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
                                             8.0,
@@ -458,15 +458,15 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                                     : _sendConnectionRequest,
                                 style: AppTheme.primaryButtonStyle.copyWith(
                                   backgroundColor:
-                                      MaterialStateProperty.resolveWith<Color>(
+                                      WidgetStateProperty.resolveWith<Color>(
                                         (states) =>
                                             states.contains(
-                                              MaterialState.disabled,
+                                              WidgetState.disabled,
                                             )
                                             ? Colors.grey.shade400
                                             : Colors.blue.shade900,
                                       ),
-                                  minimumSize: MaterialStateProperty.all(
+                                  minimumSize: WidgetStateProperty.all(
                                     const Size(double.infinity, 50),
                                   ),
                                 ),

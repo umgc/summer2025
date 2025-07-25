@@ -37,7 +37,7 @@ class _MyFriendsScreenState extends State<MyFriendsScreen> {
       setState(() => isLoading = false);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Failed to load friends')));
+      ).showSnackBar(const SnackBar(content: Text('Failed to load friends')));
     }
   }
 
@@ -45,17 +45,17 @@ class _MyFriendsScreenState extends State<MyFriendsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBarHelper.createAppBar(context, title: 'My Friends'),
-      drawer: CommonDrawer(currentRoute: '/my_friends'),
+      drawer: const CommonDrawer(currentRoute: '/my_friends'),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : friends.isEmpty
-          ? Center(child: Text("You have no friends yet."))
+          ? const Center(child: Text("You have no friends yet."))
           : ListView.builder(
               itemCount: friends.length,
               itemBuilder: (context, index) {
                 final friend = friends[index];
                 return ListTile(
-                  leading: Icon(Icons.person),
+                  leading: const Icon(Icons.person),
                   title: Text(friend['name']),
                   subtitle: Text(friend['email']),
                 );

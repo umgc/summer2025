@@ -25,7 +25,7 @@ public class MoodPainLog {
     private Integer moodValue; // Scale 1-10
     
     @Column(name = "pain_value", nullable = false)
-    private Integer painValue; // Scale 1-10
+    private Integer painValue; // Scale 0-10
     
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;

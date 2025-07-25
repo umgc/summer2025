@@ -108,7 +108,7 @@ class _CaregiverLoginScreenState extends State<CaregiverLoginScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.error_outline,
                             color: AppTheme.error,
                             size: 20,
@@ -117,7 +117,7 @@ class _CaregiverLoginScreenState extends State<CaregiverLoginScreen> {
                           Expanded(
                             child: Text(
                               errorMessage!,
-                              style: TextStyle(color: AppTheme.error),
+                              style: const TextStyle(color: AppTheme.error),
                             ),
                           ),
                         ],
@@ -132,8 +132,8 @@ class _CaregiverLoginScreenState extends State<CaregiverLoginScreen> {
                       style: AppTheme.primaryButtonStyle,
                       onPressed: isLoading ? null : _login,
                       child: isLoading
-                          ? CircularProgressIndicator(color: AppTheme.textLight)
-                          : Text('Log in', style: AppTheme.buttonText),
+                          ? const CircularProgressIndicator(color: AppTheme.textLight)
+                          : const Text('Log in', style: AppTheme.buttonText),
                     ),
                   ),
                   const SizedBox(height: 20),

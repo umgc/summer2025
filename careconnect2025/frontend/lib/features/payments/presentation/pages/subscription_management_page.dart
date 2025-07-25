@@ -13,7 +13,7 @@ import '../../models/package_model.dart';
 import '../pages/stripe_checkout_page.dart';
 
 class SubscriptionManagementPage extends StatefulWidget {
-  const SubscriptionManagementPage({Key? key}) : super(key: key);
+  const SubscriptionManagementPage({super.key});
 
   @override
   _SubscriptionManagementPageState createState() =>
@@ -287,38 +287,173 @@ class _SubscriptionManagementPageState
     // For existing active subscriptions that need to be changed,
     // first cancel the existing subscription, then redirect to checkout
     if (_currentSubscription != null && _currentSubscription!.isActive) {
-      // Show confirmation dialog before proceeding
+      // Enhanced confirmation dialog showing plan comparison
       final bool? confirmSwitch = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Change Subscription'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          title: Row(
             children: [
-              Text(
-                'To switch to the ${newPlan.name}, your current plan will first be cancelled, then you\'ll complete payment for the new plan.',
+              Icon(
+                Icons.swap_horiz,
+                color: Theme.of(context).colorScheme.primary,
               ),
-              const SizedBox(height: 12),
-              Text(
-                'You will not be charged for the remainder of your current billing period.',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 12),
-              const Text('Do you want to continue?'),
+              const SizedBox(width: 8),
+              const Text('Confirm Plan Change'),
             ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'You are about to change your subscription plan:',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 16),
+
+                // Current plan info
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.error.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.remove_circle_outline,
+                            color: Theme.of(context).colorScheme.error,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Current Plan (to be cancelled)',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${_currentSubscription!.planName} - ${_currentSubscription!.formattedAmount}/${_currentSubscription!.formattedInterval}',
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // New plan info
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.add_circle_outline,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'New Plan (to be activated)',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${newPlan.name} - ${newPlan.formattedAmount}/${newPlan.formattedInterval}',
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.secondary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Theme.of(context).colorScheme.secondary,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'What happens next:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '1. Your current subscription will be cancelled\n'
+                        '2. You\'ll be redirected to checkout for the new plan\n'
+                        '3. No charge for unused time on current plan\n'
+                        '4. New plan starts immediately after payment',
+                        style: TextStyle(height: 1.4),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
               child: const Text('CANCEL'),
             ),
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.primary,
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
               ),
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('CONTINUE'),
+              child: const Text('CONFIRM CHANGE'),
             ),
           ],
         ),
@@ -619,79 +754,271 @@ class _SubscriptionManagementPageState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Current Subscription',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Icon(
+                  Icons.credit_card,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Current Subscription',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
             const Divider(height: 32),
 
             if (_currentSubscription == null) ...[
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    'You don\'t have an active subscription.\nChoose a plan below to get started.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withOpacity(0.3),
                   ),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 48,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No Active Subscription',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Choose a plan below to get started with CareConnect',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
             ] else ...[
-              // Subscription details
-              _buildInfoRow(
-                icon: Icons.credit_card,
-                label: 'Plan',
-                value: _currentSubscription!.planName,
-              ),
-              const SizedBox(height: 12),
+              // Enhanced subscription details with better visual hierarchy
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      Theme.of(context).colorScheme.secondary.withOpacity(0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.2),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Plan name prominently displayed
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.star,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _currentSubscription!.planName,
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                        const Spacer(),
+                        // Status badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(
+                              _currentSubscription!.status,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            _currentSubscription!.statusDisplay.toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
 
-              _buildInfoRow(
-                icon: Icons.attach_money,
-                label: 'Price',
-                value:
-                    '${_currentSubscription!.formattedAmount} ${_currentSubscription!.formattedInterval}',
+                    // Amount paid and billing info
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Amount Paid',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.7),
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _currentSubscription!.formattedAmount,
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                              ),
+                              Text(
+                                '/ ${_currentSubscription!.formattedInterval}',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.7),
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          height: 50,
+                          width: 1,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withOpacity(0.3),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Next Billing',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.7),
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _formatDate(
+                                  _currentSubscription!.currentPeriodEnd,
+                                ),
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
 
+              const SizedBox(height: 16),
+
+              // Additional subscription details
               _buildInfoRow(
                 icon: Icons.event,
-                label: 'Billing Period',
+                label: 'Current Period',
                 value:
-                    _formatDate(_currentSubscription!.currentPeriodStart) +
-                    ' - ' +
-                    _formatDate(_currentSubscription!.currentPeriodEnd),
-              ),
-              const SizedBox(height: 12),
-
-              _buildInfoRow(
-                icon: Icons.info_outline,
-                label: 'Status',
-                value: _currentSubscription!.statusDisplay,
-                valueColor: _getStatusColor(_currentSubscription!.status),
+                    '${_formatDate(_currentSubscription!.currentPeriodStart)} - ${_formatDate(_currentSubscription!.currentPeriodEnd)}',
               ),
 
+              if (_currentSubscription!.cancelAtPeriodEnd) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.error.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.warning_outlined,
+                        color: Theme.of(context).colorScheme.error,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Subscription will be cancelled at the end of current period',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              // Action buttons
               if (!_currentSubscription!.cancelAtPeriodEnd &&
                   _currentSubscription!.isActive) ...[
                 const SizedBox(height: 24),
-                Center(
-                  child: OutlinedButton(
-                    onPressed: _processingAction ? null : _cancelSubscription,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.error,
-                      side: BorderSide(
-                        color: Theme.of(context).colorScheme.error,
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _processingAction
+                            ? null
+                            : _cancelSubscription,
+                        icon: const Icon(Icons.cancel_outlined),
+                        label: const Text('Cancel Subscription'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Theme.of(context).colorScheme.error,
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
                       ),
                     ),
-                    child: _processingAction
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Cancel Subscription'),
-                  ),
+                  ],
                 ),
               ],
             ],
@@ -727,7 +1054,7 @@ class _SubscriptionManagementPageState
       case 'incomplete_expired':
         return AppTheme.error;
       default:
-        return Theme.of(context).colorScheme.onBackground;
+        return Theme.of(context).colorScheme.onSurface;
     }
   }
 
@@ -1013,7 +1340,7 @@ class _SubscriptionManagementPageState
                 ),
               ),
             );
-          }).toList(),
+          }),
       ],
     );
   }

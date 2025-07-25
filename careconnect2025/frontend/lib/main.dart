@@ -6,16 +6,32 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:app_links/app_links.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'firebase_options.dart';
 import 'providers/user_provider.dart';
 import 'providers/theme_provider.dart';
 import 'config/router/app_router.dart';
 import 'services/auth_migration_helper.dart';
+import 'services/messaging_service.dart';
+import 'services/video_call_service.dart';
 import 'config/theme/app_theme.dart';
 import 'config/utils/responsive_utils.dart';
 import 'config/utils/web_utils.dart';
 
+// Background message handler for Firebase
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  print("Handling a background message: ${message.messageId}");
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Only do critical initialization synchronously
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   // Performance optimization: Set preferred orientations
   await SystemChrome.setPreferredOrientations([
@@ -28,23 +44,14 @@ Future<void> main() async {
   // Configure URL strategy for web to remove hash from URLs
   usePathUrlStrategy();
 
+  // Load environment quickly
   await dotenv.load();
-  await _bootstrap(); // load env, init DI, etc.
 
-  // Migrate from old auth system to new JWT-only system
-  final migrationResult = await AuthMigrationHelper.migrateAuthData();
-  if (!migrationResult.isSuccess && migrationResult.errorMessage != null) {
-    // Log migration errors for debugging, but don't block app startup
-    // The app can still function without migration
-    debugPrint('Auth migration warning: ${migrationResult.errorMessage}');
-  }
-
-  // Create providers and initialize them
+  // Create providers (don't initialize them yet)
   final userProvider = UserProvider();
-  await userProvider.initializeUser();
-
   final themeProvider = ThemeProvider();
 
+  // Start the app immediately, initialize services in background
   runApp(
     MultiProvider(
       providers: [
@@ -54,6 +61,38 @@ Future<void> main() async {
       child: const CareConnectApp(),
     ),
   );
+
+  // Initialize heavy services in background after app starts
+  _initializeServicesInBackground(userProvider);
+}
+
+// Background initialization to not block app startup
+Future<void> _initializeServicesInBackground(UserProvider userProvider) async {
+  try {
+    // Run these in parallel for faster initialization
+    await Future.wait([
+      _bootstrap(),
+      MessagingService.initialize(),
+      VideoCallService.initializeService(),
+      userProvider.initializeUser(),
+      _handleAuthMigration(),
+    ], eagerError: false); // Don't stop if one fails
+
+    print('✅ Background services initialized');
+  } catch (e) {
+    print('⚠️ Some background services failed to initialize: $e');
+  }
+}
+
+Future<void> _handleAuthMigration() async {
+  try {
+    final migrationResult = await AuthMigrationHelper.migrateAuthData();
+    if (!migrationResult.isSuccess && migrationResult.errorMessage != null) {
+      debugPrint('Auth migration warning: ${migrationResult.errorMessage}');
+    }
+  } catch (e) {
+    debugPrint('Auth migration error: $e');
+  }
 }
 
 Future<void> _bootstrap() async {
@@ -139,7 +178,6 @@ class _CareConnectAppState extends State<CareConnectApp> {
       themeMode: themeProvider.themeMode,
       theme: AppTheme.lightTheme.copyWith(
         // Additional theme customizations
-        useMaterial3: true,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         textTheme: AppTheme.lightTheme.textTheme.apply(fontFamily: 'Roboto'),
         // Platform-specific theme adjustments
@@ -163,7 +201,6 @@ class _CareConnectAppState extends State<CareConnectApp> {
       ),
       darkTheme: AppTheme.darkTheme.copyWith(
         // Additional dark theme customizations
-        useMaterial3: true,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         textTheme: AppTheme.darkTheme.textTheme.apply(fontFamily: 'Roboto'),
         // Platform-specific theme adjustments

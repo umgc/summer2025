@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 class UserProfile {
   final int id;
@@ -50,7 +49,7 @@ class UserProfile {
     String? profilePictureUrl,
   }) {
     return UserProfile(
-      id: this.id,
+      id: id,
       name: name ?? this.name,
       email: email ?? this.email,
       phoneNumber: phoneNumber ?? this.phoneNumber,
@@ -135,7 +134,7 @@ class CaregiverProfile extends UserProfile {
     String? dateOfBirth, // Added parameter
   }) {
     return CaregiverProfile(
-      id: this.id,
+      id: id,
       name: name ?? this.name,
       email: email ?? this.email,
       phoneNumber: phoneNumber ?? this.phoneNumber,
@@ -234,7 +233,7 @@ class PatientProfile extends UserProfile {
     String? medications,
   }) {
     return PatientProfile(
-      id: this.id,
+      id: id,
       name: name ?? this.name,
       email: email ?? this.email,
       phoneNumber: phoneNumber ?? this.phoneNumber,

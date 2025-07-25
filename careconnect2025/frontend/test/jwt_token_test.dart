@@ -46,7 +46,7 @@ void main() {
       const token =
           "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJjYXJlY29ubmVjdCIsInN1YiI6ImphbmUuZG9lMjNAZXhhbXBsZS5jb20iLCJyb2xlIjoiUEFUSUVOVCIsImlhdCI6MTc1MTY4NjU4OCwiZXhwIjoxNzUxNjg3NDg4fQ.gExhTny88bbfLCaeAqO-jK1XTs-Cw6h4rZXhZbKY-ag";
 
-      final authHeader = 'Bearer $token';
+      const authHeader = 'Bearer $token';
 
       expect(authHeader, startsWith('Bearer '));
       expect(authHeader.substring(7), equals(token));

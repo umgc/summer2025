@@ -168,7 +168,7 @@ class PatientParser {
     print('🔎 Examining link data keys: ${linkData.keys.toList()}');
 
     // Try to extract an integer from a field, handling both int and String types
-    int? _tryExtractInt(dynamic value, String fieldName) {
+    int? tryExtractInt(dynamic value, String fieldName) {
       if (value == null) return null;
 
       if (value is int) {
@@ -201,7 +201,7 @@ class PatientParser {
 
     for (final field in possibleFields) {
       if (linkData.containsKey(field)) {
-        final id = _tryExtractInt(linkData[field], field);
+        final id = tryExtractInt(linkData[field], field);
         if (id != null) {
           print('✅ Using linkId from $field field: $id');
           return id;
@@ -214,7 +214,7 @@ class PatientParser {
         linkData['link'] is Map<String, dynamic>) {
       final nestedLinkData = linkData['link'] as Map<String, dynamic>;
       if (nestedLinkData.containsKey('id')) {
-        final id = _tryExtractInt(nestedLinkData['id'], 'link.id');
+        final id = tryExtractInt(nestedLinkData['id'], 'link.id');
         if (id != null) {
           print('✅ Using linkId from nested link.id field: $id');
           return id;

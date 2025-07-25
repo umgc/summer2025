@@ -4,11 +4,8 @@ import 'ai_chat_improved.dart';
 /// A modal dialog wrapper for the AI chat component
 class AIChatModal extends StatelessWidget {
   final String role;
-  
-  const AIChatModal({
-    Key? key,
-    required this.role,
-  }) : super(key: key);
+
+  const AIChatModal({super.key, required this.role});
 
   @override
   Widget build(BuildContext context) {
@@ -19,11 +16,11 @@ class AIChatModal extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 800, maxHeight: 600),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Theme.of(context).shadowColor.withOpacity(0.1),
               spreadRadius: 5,
               blurRadius: 15,
               offset: const Offset(0, 3),

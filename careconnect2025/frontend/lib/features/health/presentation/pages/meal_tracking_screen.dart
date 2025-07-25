@@ -73,7 +73,7 @@ class _MealTrackingScreenState extends State<MealTrackingScreen> {
         context,
         title: 'Meal & Nutrition Tracking',
       ),
-      drawer: CommonDrawer(currentRoute: '/meal_tracking'),
+      drawer: const CommonDrawer(currentRoute: '/meal_tracking'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

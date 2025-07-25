@@ -20,6 +20,10 @@ public class User {
     private Long id;
 
     private String name;
+    
+    // Split name into first and last name for better usability
+    private String firstName;
+    private String lastName;
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -66,9 +70,12 @@ public class User {
     // Additional getters for compatibility
     public Long getId() { return id; }
     public String getName() { return name; }
+    public String getFirstName() { return firstName; }
+    public String getLastName() { return lastName; }
     public String getEmail() { return email; }
     public com.careconnect.security.Role getRole() { return role; }
     public Boolean getIsVerified() { return isVerified; }
+    public String getVerificationToken() { return verificationToken; }
     public String getStatus() { return status; }
     public String getProfileImageUrl() { return profileImageUrl; }
     public String getStripeCustomerId() { return stripeCustomerId; }
@@ -76,9 +83,12 @@ public class User {
     // Additional setters for compatibility
     public void setId(Long id) { this.id = id; }
     public void setName(String name) { this.name = name; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
     public void setEmail(String email) { this.email = email; }
     public void setRole(com.careconnect.security.Role role) { this.role = role; }
     public void setIsVerified(Boolean isVerified) { this.isVerified = isVerified; }
+    public void setVerificationToken(String verificationToken) { this.verificationToken = verificationToken; }
     public void setStatus(String status) { this.status = status; }
     public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
     public void setStripeCustomerId(String stripeCustomerId) { this.stripeCustomerId = stripeCustomerId; }

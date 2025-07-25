@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../../../services/auth_service.dart';
+import '../../../../services/enhanced_auth_service.dart';
+import '../../../../widgets/role_mismatch_dialog.dart';
 import '../../../../providers/user_provider.dart';
 import '../../../../config/router/app_router.dart';
 import '../../../../config/theme/app_theme.dart';
@@ -53,29 +54,42 @@ class _LoginPageState extends State<LoginPage> {
         role = extra['userType'];
       }
 
-      final user = await AuthService.login(
-        _email.text.trim(),
-        _pwd.text,
-        role: role,
+      // Use enhanced authentication service with role validation
+      final authResult = await EnhancedAuthService.loginWithRoleValidation(
+        email: _email.text.trim(),
+        password: _pwd.text,
+        expectedRole: role,
       );
 
-      // Save user info to Provider
-      Provider.of<UserProvider>(context, listen: false).setUser(user);
+      if (authResult.isSuccess) {
+        // Login and role validation successful
+        final user = authResult.userSession!;
 
-      // Add a small delay to ensure JWT token is fully saved before navigation
-      await Future.delayed(const Duration(milliseconds: 100));
+        // Save user info to Provider
+        Provider.of<UserProvider>(context, listen: false).setUser(user);
 
-      // Navigate to the appropriate dashboard based on user role
-      navigateToDashboard(context);
+        // Add a small delay to ensure JWT token is fully saved before navigation
+        await Future.delayed(const Duration(milliseconds: 100));
 
-      // If navigation fails, handle the error
-      if (!mounted) return;
-      if (user.role.toUpperCase() != 'CAREGIVER' &&
-          user.role.toUpperCase() != 'PATIENT' &&
-          user.role.toUpperCase() != 'FAMILY_MEMBER') {
-        setState(() {
-          _error = 'Unknown user role: ${user.role}';
-        });
+        // Navigate to the appropriate dashboard based on user role
+        navigateToDashboard(context);
+      } else {
+        // Handle different types of authentication errors
+        if (authResult.errorType == AuthErrorType.roleValidation) {
+          // Show role mismatch dialog
+          await RoleMismatchDialog.show(
+            context: context,
+            actualRole: authResult.actualRole!,
+            expectedRole: authResult.expectedRole!,
+            correctLoginRoute: authResult.correctLoginRoute!,
+            message: authResult.errorMessage!,
+          );
+        } else {
+          // Show regular authentication error
+          setState(() {
+            _error = authResult.errorMessage;
+          });
+        }
       }
     } catch (e) {
       setState(() {
@@ -93,24 +107,55 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final user = await AuthService.loginWithGoogle();
+      // Get userType from widget or from GoRouter extra data
+      final extra = GoRouter.of(
+        context,
+      ).routerDelegate.currentConfiguration.extra;
+      String role = 'patient'; // Default
 
-      // Save user info to Provider
-      Provider.of<UserProvider>(context, listen: false).setUser(user);
+      if (widget.userType != null) {
+        role = widget.userType!;
+      } else if (extra != null &&
+          extra is Map<String, dynamic> &&
+          extra.containsKey('userType')) {
+        role = extra['userType'];
+      }
 
-      // Add a small delay to ensure JWT token is fully saved before navigation
-      await Future.delayed(const Duration(milliseconds: 100));
+      // Use enhanced authentication service with role validation for Google login
+      final authResult =
+          await EnhancedAuthService.loginWithGoogleAndRoleValidation(
+            expectedRole: role,
+          );
 
-      // Navigate to the appropriate dashboard based on user role
-      navigateToDashboard(context);
+      if (authResult.isSuccess) {
+        // Login and role validation successful
+        final user = authResult.userSession!;
 
-      // If navigation fails, handle the error
-      if (!mounted) return;
-      if (user.role.toUpperCase() != 'CAREGIVER' &&
-          user.role.toUpperCase() != 'PATIENT') {
-        setState(() {
-          _error = 'Unknown user role: ${user.role}';
-        });
+        // Save user info to Provider
+        Provider.of<UserProvider>(context, listen: false).setUser(user);
+
+        // Add a small delay to ensure JWT token is fully saved before navigation
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        // Navigate to the appropriate dashboard based on user role
+        navigateToDashboard(context);
+      } else {
+        // Handle different types of authentication errors
+        if (authResult.errorType == AuthErrorType.roleValidation) {
+          // Show role mismatch dialog
+          await RoleMismatchDialog.show(
+            context: context,
+            actualRole: authResult.actualRole!,
+            expectedRole: authResult.expectedRole!,
+            correctLoginRoute: authResult.correctLoginRoute!,
+            message: authResult.errorMessage!,
+          );
+        } else {
+          // Show regular authentication error
+          setState(() {
+            _error = authResult.errorMessage;
+          });
+        }
       }
     } catch (e) {
       setState(() {
@@ -217,7 +262,7 @@ class _LoginPageState extends State<LoginPage> {
                           'Email',
                           hint: 'Enter your email',
                         ).copyWith(
-                          prefixIcon: Icon(
+                          prefixIcon: const Icon(
                             Icons.email,
                             color: AppTheme.primary,
                           ),
@@ -233,7 +278,10 @@ class _LoginPageState extends State<LoginPage> {
                           'Password',
                           hint: 'Enter your password',
                         ).copyWith(
-                          prefixIcon: Icon(Icons.lock, color: AppTheme.primary),
+                          prefixIcon: const Icon(
+                            Icons.lock,
+                            color: AppTheme.primary,
+                          ),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _showPassword
@@ -262,7 +310,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: AppTheme.primaryButtonStyle,
                       child: _busy
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : Text('Log in', style: AppTheme.buttonText),
+                          : const Text('Log in', style: AppTheme.buttonText),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -278,7 +326,7 @@ class _LoginPageState extends State<LoginPage> {
                         shadowColor: Colors.grey[300],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
-                          side: BorderSide(color: AppTheme.borderColor),
+                          side: const BorderSide(color: AppTheme.borderColor),
                         ),
                       ),
                       child: _googleSignInBusy

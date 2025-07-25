@@ -96,7 +96,15 @@ public class AuthService {
 
     public ResponseEntity<?> register(RegisterRequest request) {
         // 1. Lookup existing user by email & role
-        Optional<User> existingUserOpt = userRepository.findByEmailAndRole(request.getEmail(), request.getRole());
+        Role roleEnum;
+        try {
+            roleEnum = Role.valueOf(request.getRole().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Collections.singletonMap("error", "Invalid role specified"));
+        }
+        
+        Optional<User> existingUserOpt = userRepository.findByEmailAndRole(request.getEmail(), roleEnum);
 
         // 2. If user exists
         if (existingUserOpt.isPresent()) {
@@ -153,19 +161,25 @@ public class AuthService {
 
     // ✅ Validate user for login
     public Optional<User> validateUser(String email, String password, String role) {
-        Optional<User> userOpt = userRepository.findByEmailAndRole(email, role);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            // Check password
-            if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-                return Optional.empty();
+        try {
+            Role roleEnum = Role.valueOf(role.toUpperCase());
+            Optional<User> userOpt = userRepository.findByEmailAndRole(email, roleEnum);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                // Check password
+                if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+                    return Optional.empty();
+                }
+                // Check email verification
+                if (!Boolean.TRUE.equals(user.getIsVerified())) {
+                    // Instead of returning empty, you could throw to signal "not verified"
+                    throw new RuntimeException("Please verify your email before logging in.");
+                }
+                return Optional.of(user);
             }
-            // Check email verification
-            if (!Boolean.TRUE.equals(user.getIsVerified())) {
-                // Instead of returning empty, you could throw to signal "not verified"
-                throw new RuntimeException("Please verify your email before logging in.");
-            }
-            return Optional.of(user);
+        } catch (IllegalArgumentException e) {
+            // Invalid role provided
+            return Optional.empty();
         }
         return Optional.empty();
     }
@@ -245,8 +259,13 @@ public LoginResponse loginV2(LoginRequest req,
     // have the same email with different roles
     User user;
     if (req.getRole() != null && !req.getRole().trim().isEmpty()) {
-        user = users.findByEmailAndRole(req.getEmail(), req.getRole())
-                   .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+        try {
+            Role roleEnum = Role.valueOf(req.getRole().toUpperCase());
+            user = users.findByEmailAndRole(req.getEmail(), roleEnum)
+                       .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+        } catch (IllegalArgumentException e) {
+            throw new AuthenticationException("Invalid role specified");
+        }
     } else {
         // Fallback to findByEmail for backward compatibility, but this may cause issues
         // if multiple users have the same email with different roles

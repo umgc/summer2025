@@ -4,11 +4,9 @@ import 'dart:convert';
 import '../../models/package_model.dart';
 import '../../../payments/models/subscription_plan_model.dart';
 import 'stripe_checkout_page.dart';
-import 'package:go_router/go_router.dart';
 import 'package:care_connect_app/services/api_service.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:care_connect_app/widgets/app_bar_helper.dart';
-import 'package:care_connect_app/config/theme/app_theme.dart';
 import 'package:care_connect_app/widgets/responsive_container.dart';
 
 class SelectPackagePage extends StatefulWidget {

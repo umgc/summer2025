@@ -212,7 +212,7 @@ void main() {
         const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test';
 
         // Act
-        final authHeader = 'Bearer $mockToken';
+        const authHeader = 'Bearer $mockToken';
 
         // Assert
         expect(authHeader, startsWith('Bearer '));

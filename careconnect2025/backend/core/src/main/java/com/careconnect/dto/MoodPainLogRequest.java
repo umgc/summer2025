@@ -21,8 +21,8 @@ public class MoodPainLogRequest {
     private Integer moodValue;
     
     @NotNull(message = "Pain value is required")
-    @Min(value = 1, message = "Pain value must be between 1 and 10")
-    @Max(value = 10, message = "Pain value must be between 1 and 10")
+    @Min(value = 0, message = "Pain value must be between 0 and 10")
+    @Max(value = 10, message = "Pain value must be between 0 and 10")
     private Integer painValue;
     
     private String note;

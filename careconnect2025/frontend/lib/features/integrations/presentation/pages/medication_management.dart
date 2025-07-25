@@ -106,7 +106,7 @@ class _MedicationManagementScreenState
                     ),
                   ),
                   style: AppTheme.primaryButtonStyle.copyWith(
-                    padding: MaterialStateProperty.all(
+                    padding: WidgetStateProperty.all(
                       const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
@@ -122,8 +122,8 @@ class _MedicationManagementScreenState
                   onPressed: () {
                     _enterMedicationCode();
                   },
-                  icon: Icon(Icons.keyboard, color: AppTheme.primary),
-                  label: Text(
+                  icon: const Icon(Icons.keyboard, color: AppTheme.primary),
+                  label: const Text(
                     'Enter Drug Code Manually',
                     style: TextStyle(
                       color: AppTheme.primary,
@@ -132,7 +132,7 @@ class _MedicationManagementScreenState
                     ),
                   ),
                   style: AppTheme.secondaryButtonStyle.copyWith(
-                    padding: MaterialStateProperty.all(
+                    padding: WidgetStateProperty.all(
                       const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),

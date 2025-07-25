@@ -46,6 +46,10 @@ class Patient {
   final Address? address;
   final int? linkId; // Added to track the relationship link ID
   final String linkStatus; // Added to track active/suspended status
+  final String? gender; // Added for gender information
+  final List<String>? allergies; // Added for allergies list
+  final Map<String, dynamic>?
+  vitalConditions; // Added for vital conditions summary
 
   Patient({
     required this.id,
@@ -59,6 +63,9 @@ class Patient {
     this.address,
     this.linkId,
     this.linkStatus = 'ACTIVE',
+    this.gender,
+    this.allergies,
+    this.vitalConditions,
   });
 
   factory Patient.fromJson(Map<String, dynamic> json) {
@@ -159,11 +166,18 @@ class Patient {
           : null,
       linkId: linkId,
       linkStatus: linkStatus,
+      gender: patientData['gender']?.toString(),
+      allergies: patientData['allergies'] != null
+          ? List<String>.from(patientData['allergies'])
+          : null,
+      vitalConditions: patientData['vitalConditions'] != null
+          ? Map<String, dynamic>.from(patientData['vitalConditions'])
+          : null,
     );
   }
 
   @override
   String toString() {
-    return 'Patient{id: $id, firstName: $firstName, lastName: $lastName, email: $email, phone: $phone, dob: $dob, relationship: $relationship, linkId: $linkId, linkStatus: $linkStatus}';
+    return 'Patient{id: $id, firstName: $firstName, lastName: $lastName, email: $email, phone: $phone, dob: $dob, relationship: $relationship, linkId: $linkId, linkStatus: $linkStatus, gender: $gender, allergies: $allergies, vitalConditions: $vitalConditions}';
   }
 }

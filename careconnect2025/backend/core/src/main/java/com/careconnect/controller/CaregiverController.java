@@ -80,8 +80,8 @@ public class CaregiverController {
             @PathVariable Long caregiverId,
             @PathVariable Long patientId) {
         
-        // First check if the caregiver has access to this patient
-        if (!caregiverService.hasAccessToPatient(caregiverId, patientId)) {
+        // Check if the caregiver has access to this patient using entity IDs
+        if (!caregiverService.caregiverHasAccessToPatient(caregiverId, patientId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body("Caregiver does not have access to this patient");
         }

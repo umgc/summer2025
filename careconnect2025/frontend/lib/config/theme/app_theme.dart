@@ -75,6 +75,42 @@ class AppTheme {
   // Border colors for dark theme
   static const Color borderColorDarkTheme = Color(0xFF424242); // grey.shade800
 
+  // Video call specific colors
+  static const Color videoCallBackground = Color(0xFF000000); // black
+  static const Color videoCallBackgroundDarkTheme = Color(
+    0xFF121212,
+  ); // dark background
+  static const Color videoCallText = Color(0xFFFFFFFF); // white
+  static const Color videoCallTextSecondary = Color(
+    0xFFBDBDBD,
+  ); // white70 equivalent
+  static const Color videoCallTextTertiary = Color(
+    0xFF9E9E9E,
+  ); // white60 equivalent
+  static const Color videoCallEndCall = Color(0xFFE53935); // red for end call
+  static const Color videoCallEndCallDarkTheme = Color(
+    0xFFEF5350,
+  ); // lighter red for dark theme
+
+  // Chat/messaging specific colors
+  static const Color chatUserMessage = Color(0xFF14366E); // primary blue
+  static const Color chatUserMessageDarkTheme = Color(
+    0xFF2D5196,
+  ); // primary dark theme
+  static const Color chatBotMessage = Color(0xFFF5F5F5); // light grey
+  static const Color chatBotMessageDarkTheme = Color(
+    0xFF242424,
+  ); // card background dark theme
+  static const Color chatTextOnPrimary = Color(
+    0xFFFFFFFF,
+  ); // white text on primary
+  static const Color chatTextOnSecondary = Color(
+    0xFF212121,
+  ); // dark text on light background
+  static const Color chatTextOnSecondaryDarkTheme = Color(
+    0xFFF5F5F5,
+  ); // light text on dark background
+
   // Typography styles
   static const TextStyle headingLarge = TextStyle(
     fontSize: 28,
@@ -191,16 +227,19 @@ class AppTheme {
         primary: primary,
         secondary: accent,
         error: error,
-        background: backgroundPrimary,
         surface: cardBackground,
         onPrimary: textLight,
         onSecondary: textLight,
-        onBackground: textPrimary,
         onSurface: textPrimary,
         onError: textLight,
         brightness: Brightness.light,
       ),
       scaffoldBackgroundColor: backgroundPrimary,
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: cardBackground,
+        contentTextStyle: TextStyle(color: textPrimary),
+        actionTextColor: primary,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: primary, // Using our UX blue color
         foregroundColor: textLight,
@@ -239,8 +278,8 @@ class AppTheme {
       ),
       dividerTheme: const DividerThemeData(thickness: 1, color: borderColor),
       checkboxTheme: CheckboxThemeData(
-        fillColor: MaterialStateProperty.resolveWith<Color>((states) {
-          if (states.contains(MaterialState.disabled)) {
+        fillColor: WidgetStateProperty.resolveWith<Color>((states) {
+          if (states.contains(WidgetState.disabled)) {
             return textSecondary.withOpacity(0.3);
           }
           return primary;
@@ -265,16 +304,19 @@ class AppTheme {
         primary: primaryDarkTheme,
         secondary: accentDarkTheme,
         error: errorDarkTheme,
-        background: backgroundPrimaryDarkTheme,
         surface: cardBackgroundDarkTheme,
         onPrimary: textDarkThemeDark,
         onSecondary: textDarkThemeDark,
-        onBackground: textPrimaryDarkTheme,
         onSurface: textPrimaryDarkTheme,
         onError: textDarkThemeDark,
         brightness: Brightness.dark,
       ),
       scaffoldBackgroundColor: backgroundPrimaryDarkTheme,
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: cardBackgroundDarkTheme,
+        contentTextStyle: TextStyle(color: textPrimaryDarkTheme),
+        actionTextColor: primaryDarkThemeLight,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: primaryDarkTheme, // Using our primary dark theme color
         foregroundColor: textDarkThemeDark,
@@ -352,8 +394,8 @@ class AppTheme {
         color: borderColorDarkTheme,
       ),
       checkboxTheme: CheckboxThemeData(
-        fillColor: MaterialStateProperty.resolveWith<Color>((states) {
-          if (states.contains(MaterialState.disabled)) {
+        fillColor: WidgetStateProperty.resolveWith<Color>((states) {
+          if (states.contains(WidgetState.disabled)) {
             return textSecondaryDarkTheme.withOpacity(0.3);
           }
           return primaryDarkTheme;
@@ -366,8 +408,10 @@ class AppTheme {
         selectedItemColor: primaryDarkThemeLight,
         unselectedItemColor: textSecondaryDarkTheme,
       ),
-      dialogBackgroundColor: cardBackgroundDarkTheme,
       useMaterial3: true,
+      dialogTheme: const DialogThemeData(
+        backgroundColor: cardBackgroundDarkTheme,
+      ),
     );
   }
 }

@@ -4,10 +4,13 @@ import 'package:care_connect_app/features/integrations/presentation/pages/smart_
 import 'package:care_connect_app/features/integrations/presentation/pages/wearables_screen.dart';
 import 'package:care_connect_app/features/calls/presentation/pages/jitsi_meeting_screen.dart';
 import 'package:care_connect_app/features/profile/presentation/pages/profile_settings_page.dart';
+import 'package:care_connect_app/pages/profile_page.dart';
+import 'package:care_connect_app/pages/settings_page.dart';
+import 'package:care_connect_app/pages/ai_configuration_page.dart';
+import 'package:care_connect_app/pages/file_management_page.dart';
+import 'package:care_connect_app/widgets/hybrid_video_call_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:care_connect_app/config/theme/app_theme.dart';
-import 'package:care_connect_app/widgets/app_bar_helper.dart';
 
 import '../../features/welcome/presentation/pages/welcome_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -40,8 +43,7 @@ void navigateToDashboard(BuildContext context, {String? role}) {
 
   if (userRole == null) {
     // If no role is found, redirect to login with the last known userType if available
-    final lastUserType =
-        userProvider.user != null && userProvider.user!.role != null
+    final lastUserType = userProvider.user != null
         ? userProvider.user!.role.toLowerCase()
         : 'patient';
     context.go('/login', extra: {'userType': lastUserType});
@@ -355,7 +357,9 @@ final GoRouter appRouter = GoRouter(
 
         final patientId = int.tryParse(patientIdStr);
         if (patientId == null) {
-          return Scaffold(body: Center(child: Text('Invalid patientId.')));
+          return const Scaffold(
+            body: Center(child: Text('Invalid patientId.')),
+          );
         }
         return AnalyticsPage(patientId: patientId);
       },
@@ -464,6 +468,22 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/profile-settings',
       builder: (_, __) => const ProfileSettingsPage(),
+    ),
+    GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
+    GoRoute(path: '/settings', builder: (_, __) => const SettingsPage()),
+    GoRoute(
+      path: '/file-management',
+      builder: (_, __) => const FileManagementPage(),
+    ),
+    GoRoute(
+      path: '/ai-configuration',
+      builder: (_, __) => const AIConfigurationPage(),
+    ),
+
+    // Video Call Test Route
+    GoRoute(
+      path: '/video-call-test',
+      builder: (_, __) => const VideoCallTestPage(),
     ),
 
     // Handle routes from legacy menus

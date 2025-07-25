@@ -14,6 +14,9 @@ import '../../../../widgets/family_member_card.dart';
 import '../../../../widgets/add_family_member_dialog.dart';
 import '../../../../widgets/responsive_container.dart';
 import 'package:care_connect_app/services/communication_service.dart';
+import 'package:care_connect_app/services/call_notification_service.dart';
+import '../../../../widgets/call_notification_status_indicator.dart';
+import '../../../../utils/call_integration_helper.dart';
 
 class PatientDashboard extends StatefulWidget {
   final int? userId;
@@ -35,14 +38,51 @@ class _PatientDashboardState extends State<PatientDashboard> {
   String? selectedMood;
   String? selectedPain;
 
-  bool _isSavingMoodPain = false;
-  bool _showSaveButton = false;
+  // Real-time call notification state
+  bool _callNotificationInitialized = false;
 
   @override
   void initState() {
     super.initState();
     fetchPatientAndCaregivers();
     _loadFamilyMembers();
+    _initializeCallNotifications();
+  }
+
+  /// Initialize real-time call notification service for patient
+  Future<void> _initializeCallNotifications() async {
+    try {
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+      final patientId = user?.patientId;
+
+      if (patientId == null) {
+        print('❌ Cannot initialize call notifications - no patient ID');
+        return;
+      }
+
+      print(
+        '🔔 Initializing call notification service for patient: $patientId',
+      );
+
+      // Initialize call notification service
+      try {
+        await CallNotificationService.initialize(
+          userId: patientId.toString(),
+          userRole: 'PATIENT',
+          context: context,
+        );
+        _callNotificationInitialized = true;
+        setState(() {
+          // Update state with initialization status
+        });
+        print('✅ Patient call notification service initialized successfully');
+      } catch (e) {
+        print('❌ Error initializing patient call notification service: $e');
+        _callNotificationInitialized = false;
+      }
+    } catch (e) {
+      print('❌ Error initializing patient dashboard services: $e');
+    }
   }
 
   Future<void> fetchPatientAndCaregivers() async {
@@ -172,7 +212,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
   Future<void> _addFamilyMember() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AddFamilyMemberDialog(),
+      builder: (context) => const AddFamilyMemberDialog(),
     );
 
     if (result != null) {
@@ -201,10 +241,10 @@ class _PatientDashboardState extends State<PatientDashboard> {
         if (response.statusCode == 201) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Family member added successfully!'),
+              const SnackBar(
+                content: Text('Family member added successfully!'),
                 backgroundColor: AppTheme.success,
-                duration: const Duration(seconds: 2),
+                duration: Duration(seconds: 2),
               ),
             );
           }
@@ -240,12 +280,28 @@ class _PatientDashboardState extends State<PatientDashboard> {
   }
 
   @override
+  void dispose() {
+    // Clean up services
+    CallNotificationService.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBarHelper.createAppBar(context, title: 'Patient Dashboard'),
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Patient Dashboard',
+        additionalActions: [
+          CallNotificationStatusIndicator(
+            isInitialized: _callNotificationInitialized,
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       drawer: const CommonDrawer(currentRoute: '/dashboard'),
       // Add floating action button for AI Chat
       floatingActionButton: FloatingActionButton(
@@ -301,46 +357,6 @@ class _PatientDashboardState extends State<PatientDashboard> {
                       ),
                       const SizedBox(height: 10),
                       _buildPainSelector(),
-
-                      // Save button (show when both are selected)
-                      if (_showSaveButton) ...[
-                        const SizedBox(height: 20),
-                        Center(
-                          child: ElevatedButton.icon(
-                            onPressed: _isSavingMoodPain
-                                ? null
-                                : _saveMoodAndPain,
-                            icon: _isSavingMoodPain
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                : const Icon(Icons.save),
-                            label: Text(
-                              _isSavingMoodPain
-                                  ? 'Saving...'
-                                  : 'Save Today\'s Status',
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.success,
-                              foregroundColor: theme.colorScheme.onPrimary,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
 
                       const Divider(height: 30, thickness: 2),
 
@@ -417,32 +433,12 @@ class _PatientDashboardState extends State<PatientDashboard> {
 
                       const SizedBox(height: 30),
 
-                      Align(
-                        alignment: Alignment.bottomRight,
-                        child: TextButton.icon(
-                          onPressed: () {
-                            // Use emergency number for SOS
-                            CommunicationService.makePhoneCall('911', context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('SOS Call initiated!'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.phone_in_talk_rounded,
-                            color: Colors.red,
-                          ),
-                          label: const Text(
-                            'SOS CALL',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                      // Enhanced SOS Emergency Button
+                      CallIntegrationHelper.createSOSButton(
+                        context: context,
+                        currentPatient: patient,
                       ),
+
                       // Add some bottom padding to ensure content isn't hidden behind AI chat
                       const SizedBox(height: 100),
                     ],
@@ -453,18 +449,15 @@ class _PatientDashboardState extends State<PatientDashboard> {
     );
   }
 
-  void _checkSaveButtonVisibility() {
-    setState(() {
-      _showSaveButton = selectedMood != null && selectedPain != null;
-    });
+  // Auto-save when both mood and pain are selected
+  void _autoSaveWhenBothSelected() {
+    if (selectedMood != null && selectedPain != null) {
+      _saveMoodAndPain();
+    }
   }
 
   Future<void> _saveMoodAndPain() async {
     if (selectedMood == null || selectedPain == null) return;
-
-    setState(() {
-      _isSavingMoodPain = true;
-    });
 
     try {
       // Convert mood to number value
@@ -482,16 +475,11 @@ class _PatientDashboardState extends State<PatientDashboard> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Mood and pain levels saved successfully!'),
-              backgroundColor: Colors.green,
+              content: Text('✓ Status saved automatically'),
+              backgroundColor: AppTheme.success,
+              duration: Duration(seconds: 2),
             ),
           );
-          // Reset selections after saving
-          setState(() {
-            selectedMood = null;
-            selectedPain = null;
-            _showSaveButton = false;
-          });
         }
       } else {
         final errorData = jsonDecode(response.body);
@@ -508,10 +496,6 @@ class _PatientDashboardState extends State<PatientDashboard> {
           ),
         );
       }
-    } finally {
-      setState(() {
-        _isSavingMoodPain = false;
-      });
     }
   }
 
@@ -535,12 +519,12 @@ class _PatientDashboardState extends State<PatientDashboard> {
   }
 
   int _getPainLevelFromLabel(String label) {
-    if (label.startsWith('1')) return 1;
-    if (label.startsWith('2')) return 2;
-    if (label.startsWith('3')) return 3;
-    if (label.startsWith('4')) return 4;
-    if (label.startsWith('5')) return 5;
-    return 1; // Default
+    // Extract the number from the beginning of the label
+    final match = RegExp(r'^(\d+)').firstMatch(label);
+    if (match != null) {
+      return int.tryParse(match.group(1)!) ?? 0;
+    }
+    return 0; // Default to no pain
   }
 
   Widget _buildMoodSelector() {
@@ -563,7 +547,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
               setState(() {
                 selectedMood = mood['label'] as String;
               });
-              _checkSaveButtonVisibility(); // Add this line
+              _autoSaveWhenBothSelected(); // Auto-save when both mood and pain are selected
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -599,50 +583,104 @@ class _PatientDashboardState extends State<PatientDashboard> {
 
   Widget _buildPainSelector() {
     final pains = [
-      {'emoji': '😀', 'label': '1\nNo Pain'},
-      {'emoji': '🙂', 'label': '2\nMild'},
-      {'emoji': '😐', 'label': '3\nModerate'},
-      {'emoji': '😣', 'label': '4\nSevere'},
-      {'emoji': '😭', 'label': '5\nWorst Pain'},
+      {'emoji': '😊', 'label': '0\nNo Pain', 'description': 'No pain'},
+      {
+        'emoji': '🙂',
+        'label': '1\nVery Mild',
+        'description': 'Pain is very mild, barely noticeable',
+      },
+      {
+        'emoji': '😐',
+        'label': '2\nMinor',
+        'description': 'Minor pain, annoying',
+      },
+      {
+        'emoji': '😕',
+        'label': '3\nNoticeable',
+        'description': 'Noticeable pain, may distract you',
+      },
+      {
+        'emoji': '😒',
+        'label': '4\nModerate',
+        'description': 'Moderate pain, can ignore while active',
+      },
+      {
+        'emoji': '😞',
+        'label': '5\nMod. Strong',
+        'description': 'Moderately strong pain',
+      },
+      {
+        'emoji': '😖',
+        'label': '6\nStronger',
+        'description': 'Moderately stronger pain',
+      },
+      {
+        'emoji': '😫',
+        'label': '7\nStrong',
+        'description': 'Strong pain, prevents normal activities',
+      },
+      {
+        'emoji': '😰',
+        'label': '8\nVery Strong',
+        'description': 'Very strong pain, hard to do anything',
+      },
+      {
+        'emoji': '😭',
+        'label': '9\nHard to Tolerate',
+        'description': 'Very hard to tolerate',
+      },
+      {
+        'emoji': '😱',
+        'label': '10\nWorst Pain',
+        'description': 'Worst pain possible',
+      },
     ];
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: pains.map((pain) {
-        final isSelected = selectedPain == pain['label'];
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              selectedPain = pain['label'] as String;
-            });
-            _checkSaveButtonVisibility(); // Add this line
-          },
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isSelected ? Colors.red[100] : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  border: isSelected
-                      ? Border.all(color: Colors.red, width: 2)
-                      : null,
-                ),
-                child: Text(
-                  pain['emoji'] as String,
-                  style: const TextStyle(fontSize: 28),
-                ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: pains.map((pain) {
+          final isSelected = selectedPain == pain['label'];
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                selectedPain = pain['label'] as String;
+              });
+              _autoSaveWhenBothSelected(); // Auto-save when both mood and pain are selected
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.red[100] : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      border: isSelected
+                          ? Border.all(color: Colors.red, width: 2)
+                          : null,
+                    ),
+                    child: Text(
+                      pain['emoji'] as String,
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: 65,
+                    child: Text(
+                      pain['label'] as String,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                pain['label'] as String,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -663,7 +701,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Status: Available', style: AppTheme.bodyMedium),
+            const Text('Status: Available', style: AppTheme.bodyMedium),
             Text(
               'Last Interaction: ${caregiver['lastSeen'] ?? 'Recently'}',
               style: AppTheme.bodyMedium,
@@ -678,17 +716,21 @@ class _PatientDashboardState extends State<PatientDashboard> {
             final phone = caregiver['phone'];
             final email = caregiver['email'];
             final caregiverId = caregiver['id'];
-            final name = '${caregiver['firstName']} ${caregiver['lastName']}';
 
             if (value == 'call' && phone != null) {
               // Use CommunicationService for phone call
               CommunicationService.makePhoneCall(phone, context);
             } else if (value == 'videocall' && caregiverId != null) {
-              // Use CommunicationService for video call
-              CommunicationService.startVideoCall(
-                caregiverId.toString(),
-                name,
+              // Use the enhanced video call integration
+              final user = Provider.of<UserProvider>(
                 context,
+                listen: false,
+              ).user;
+              CallIntegrationHelper.startVideoCallToCaregiver(
+                context: context,
+                currentUser: user,
+                targetCaregiver: caregiver,
+                isVideoCall: true,
               );
             } else if (value == 'email' && email != null) {
               final uri = Uri(
@@ -710,8 +752,12 @@ class _PatientDashboardState extends State<PatientDashboard> {
                 );
               }
             } else if (value == 'sms' && phone != null) {
-              // Show message dialog
-              _showSendMessageDialog(context, caregiver);
+              // Use the enhanced SMS integration
+              final user = Provider.of<UserProvider>(
+                context,
+                listen: false,
+              ).user;
+              _showSendMessageDialog(context, caregiver, user);
             }
           },
           itemBuilder: (context) => [
@@ -729,10 +775,10 @@ class _PatientDashboardState extends State<PatientDashboard> {
   void _showSendMessageDialog(
     BuildContext context,
     Map<String, dynamic> caregiver,
+    dynamic currentUser,
   ) {
     final TextEditingController messageController = TextEditingController();
     final String name = '${caregiver['firstName']} ${caregiver['lastName']}';
-    final String phone = caregiver['phone'] ?? '';
 
     showDialog(
       context: context,
@@ -761,12 +807,16 @@ class _PatientDashboardState extends State<PatientDashboard> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                // Use CommunicationService for SMS
-                CommunicationService.sendSMS(
-                  phone,
-                  context,
+                // Use enhanced SMS integration
+                CallIntegrationHelper.sendSMSToCaregiver(
+                  currentUser: currentUser,
+                  targetCaregiver: caregiver,
                   message: messageController.text,
                 );
+
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('SMS sent to $name')));
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade900,

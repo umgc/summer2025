@@ -165,7 +165,7 @@ class _PasswordResetConfirmScreenState
                     ),
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.error_outline,
                           color: AppTheme.error,
                           size: 20,
@@ -174,7 +174,7 @@ class _PasswordResetConfirmScreenState
                         Expanded(
                           child: Text(
                             _error!,
-                            style: TextStyle(color: AppTheme.error),
+                            style: const TextStyle(color: AppTheme.error),
                           ),
                         ),
                       ],
@@ -194,7 +194,7 @@ class _PasswordResetConfirmScreenState
                     ),
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.check_circle_outline,
                           color: AppTheme.success,
                           size: 20,
@@ -203,7 +203,7 @@ class _PasswordResetConfirmScreenState
                         Expanded(
                           child: Text(
                             _message!,
-                            style: TextStyle(color: AppTheme.success),
+                            style: const TextStyle(color: AppTheme.success),
                           ),
                         ),
                       ],
@@ -219,7 +219,7 @@ class _PasswordResetConfirmScreenState
                     style: AppTheme.primaryButtonStyle,
                     onPressed: _isLoading ? null : _resetPassword,
                     child: _isLoading
-                        ? SizedBox(
+                        ? const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(

@@ -21,6 +21,10 @@ class ApiConstants {
   static final String files = '$_host/v1/api/files';
   static final String connectionRequests = '$_host/v1/api/connection-requests';
   static final String subscriptions = '$_host/v1/api/subscriptions';
+
+  // AI Services endpoints
+  static final String aiChat = '$_host/v1/api/ai-chat';
+  static final String aiConfig = '$_host/v1/api/ai-chat/config';
 }
 
 class ApiService {
@@ -889,7 +893,7 @@ class ApiService {
   ]) async {
     final headers = await AuthTokenManager.getAuthHeaders();
     // Use the users endpoint to get files consistently
-    final endpoint = 'users';
+    const endpoint = 'users';
 
     try {
       final response = await _httpClient
