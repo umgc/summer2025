@@ -37,24 +37,22 @@ module "s3_internal" {
   cc_vpc_id               = module.vpc.vpc_id
   cc_app_role_arn         = module.iam.cc_app_role_arn
 }
-
-module "ssm" {
-  source              = "./modules/ssm"
-  default_tags        = var.default_tags
-  rds_username        = var.rds_username
-  rds_password        = var.rds_password
-  rds_user_param_name = var.rds_user_param_name
-  rds_pass_param_name = var.rds_pass_param_name
+locals {
+  params_keys = toset([for k, v in var.cc_ssm_params : k])
 }
+module "ssm" {
+  source                = "./modules/ssm"
+  default_tags          = var.default_tags
+  params_keys           = local.params_keys
+  cc_sensitive_params   = var.cc_ssm_params
+}
+
 module "iam" {
-  source                     = "./modules/iam"
-  default_tags               = var.default_tags
-  primary_region             = var.primary_region
-  cc_internal_bucket_arn     = module.s3_internal.internal_s3_bucket.arn
-  only_compute_required_ssm_parameters = [
-    module.ssm.rds_username_param.arn,
-    module.ssm.rds_password_param.arn
-  ]
+  source                               = "./modules/iam"
+  default_tags                         = var.default_tags
+  primary_region                       = var.primary_region
+  cc_internal_bucket_arn               = module.s3_internal.internal_s3_bucket.arn
+  only_compute_required_ssm_parameters = [for p in module.ssm.sensitive_params : p.arn]
 }
 
 module "cloudmap" {
@@ -68,8 +66,8 @@ module "rds" {
   source            = "./modules/db"
   cc_rds_sg_id      = module.vpc.cc_rds_sg
   cc_sbn_group_name = module.vpc.cc_db_main_sbn_group
-  rds_username      = var.rds_username
-  rds_password      = var.rds_password
+  rds_username      = var.cc_ssm_params["DB_USER"]
+  rds_password      = var.cc_ssm_params["DB_PASSWORD"]
   default_tags      = var.default_tags
 }
 
@@ -116,8 +114,8 @@ module "amplify" {
 }
 
 module "ses" {
-  source = "./modules/ses"
-  default_tags    = var.default_tags
+  source         = "./modules/ses"
+  default_tags   = var.default_tags
   primary_region = var.primary_region
   domain_name    = var.domain_name
 }
