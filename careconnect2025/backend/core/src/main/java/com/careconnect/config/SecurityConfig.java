@@ -54,6 +54,7 @@ public class SecurityConfig {
                 ).permitAll()
 
                 /* ---------- public API endpoints ------------------------ */
+
                 .requestMatchers(
                         "/v1/api/auth/**",
                         "/api/v1/auth/**",  // Support both URL patterns
@@ -75,6 +76,16 @@ public class SecurityConfig {
                 .requestMatchers(
                         "/v1/api/patients/**"
                 ).authenticated()
+
+                    .requestMatchers(
+                            "/v1/api/feed/**",
+                            "/v1/api/comments/**",
+                            "/v1/api/friends/**",
+                            "/v1/api/messages/**",
+                            "/v1/api/users/search",
+                            "/api/gamification/**",
+                            "/uploads/**"
+                    ).authenticated()
 
                 /* ---------- family member endpoints require auth -------- */
                 .requestMatchers(

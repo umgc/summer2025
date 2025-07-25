@@ -173,6 +173,15 @@ class _CommonDrawerState extends State<CommonDrawer> {
             isActive: widget.currentRoute == '/gamification',
           ),
 
+          // Healthcare Notes
+          _buildDrawerItem(
+            context,
+            icon: Icons.notes,
+            title: 'Healthcare Notes',
+            route: '/healthcare-notes',
+            isActive: widget.currentRoute == '/healthcare-notes',
+          ),
+
           _buildDrawerItem(
             context,
             icon: Icons.people_alt,

@@ -16,6 +16,3 @@ output "cc_compute_sg_id" {
 output "cc_main_api_sg_id" {
   value = aws_security_group.cc_api_sg.id
 }
-output "https_endpoints_sg" {
-  value = aws_security_group.https_endpoints_sg
-}

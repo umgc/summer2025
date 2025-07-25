@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:health/health.dart';
+import 'package:fitbitter/fitbitter.dart';
 
 import 'add_devices_screen.dart';
 
@@ -49,12 +50,14 @@ class HealthData {
   final double value;
   final String unit;
   final DateTime date;
+  final String source; // Add source field to track where data came from
 
   HealthData({
     required this.type,
     required this.value,
     required this.unit,
     required this.date,
+    required this.source,
   });
 }
 
@@ -70,6 +73,10 @@ class _WearablesScreenState extends State<WearablesScreen> {
   Map<String, HealthData> latestHealthData = {};
   bool isLoadingData = false;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  // Fitbit configuration
+  static const String fitbitClientId = '23QG9C';
+  static const String fitbitClientSecret = 'c77f0a7a3839a9307674b893fae14934';
 
   @override
   void initState() {
@@ -106,68 +113,291 @@ class _WearablesScreenState extends State<WearablesScreen> {
     });
 
     try {
-      Health health = Health();
       DateTime now = DateTime.now();
       DateTime yesterday = now.subtract(const Duration(days: 1));
 
-      // Check if we have any Google Fit or Apple Health devices
-      bool hasHealthDevice = connectedDevices.any((device) =>
-      device.platform == 'google_fit' || device.platform == 'apple_health');
+      // Fetch Fitbit data
+      await _fetchFitbitData(yesterday, now);
 
-      if (hasHealthDevice) {
-        try {
-          await health.configure();
+      // Fetch Google Health/Apple Health data
+      await _fetchGoogleAppleHealthData(yesterday, now);
 
-          // Fetch steps data
-          List<HealthDataPoint> stepsData = await health.getHealthDataFromTypes(
-            startTime: yesterday,
-            endTime: now,
-            types: [HealthDataType.STEPS],
-          );
-
-          if (stepsData.isNotEmpty) {
-            // Calculate total steps for the day
-            int totalSteps = stepsData.fold(0, (sum, point) => sum + (point.value as num).toInt());
-
-            setState(() {
-              latestHealthData['steps'] = HealthData(
-                type: 'Steps',
-                value: totalSteps.toDouble(),
-                unit: 'steps',
-                date: now,
-              );
-            });
-          } else {
-            // No data available
-            setState(() {
-              latestHealthData['steps'] = HealthData(
-                type: 'Steps',
-                value: 0,
-                unit: 'steps',
-                date: now,
-              );
-            });
-          }
-
-          print('✓ Fetched health data: ${latestHealthData.length} metrics');
-        } catch (e) {
-          print('⚠ Health data fetch failed: $e');
-          // Still show 0 data rather than error
-          setState(() {
-            latestHealthData['steps'] = HealthData(
-              type: 'Steps',
-              value: 0,
-              unit: 'steps',
-              date: now,
-            );
-          });
-        }
-      }
+      print('✓ Fetched health data: ${latestHealthData.length} metrics');
     } catch (e) {
       print('✗ Error fetching health data: $e');
     } finally {
       setState(() {
         isLoadingData = false;
+      });
+    }
+  }
+
+  Future<void> _fetchFitbitData(DateTime startTime, DateTime endTime) async {
+    // Check if we have any Fitbit devices
+    bool hasFitbitDevice = connectedDevices.any((device) => device.platform == 'fitbit');
+
+    if (!hasFitbitDevice) return;
+
+    try {
+      // Get Fitbit access token and userID
+      String? accessToken = await _secureStorage.read(key: 'fitbit_access_token');
+      String? userID = await _secureStorage.read(key: 'fitbit_user_id');
+
+      if (accessToken == null) {
+        _setDefaultFitbitData();
+        return;
+      }
+
+      if (userID == null) {
+        userID = '-'; // Fallback to current user
+      }
+
+      // Create Fitbit credentials object
+      FitbitCredentials fitbitCredentials = FitbitCredentials(
+        userID: userID,
+        fitbitAccessToken: accessToken,
+        fitbitRefreshToken: '',
+      );
+
+      // Create data managers
+      FitbitActivityTimeseriesDataManager stepsManager = FitbitActivityTimeseriesDataManager(
+        clientID: fitbitClientId,
+        clientSecret: fitbitClientSecret,
+      );
+
+      FitbitActivityTimeseriesDataManager caloriesManager = FitbitActivityTimeseriesDataManager(
+        clientID: fitbitClientId,
+        clientSecret: fitbitClientSecret,
+      );
+
+      DateTime today = DateTime.now();
+
+      // Fetch steps data
+      try {
+        final stepsData = await stepsManager.fetch(
+            FitbitActivityTimeseriesAPIURL.dayWithResource(
+              date: today,
+              resource: Resource.steps,
+              fitbitCredentials: fitbitCredentials,
+            )
+        );
+
+        if (stepsData != null) {
+          List<dynamic> dataList = stepsData is List ? stepsData : [stepsData];
+
+          if (dataList.isNotEmpty) {
+            var latestData = dataList.last;
+            dynamic stepsValue = 0;
+            DateTime dataDate = DateTime.now();
+
+            if (latestData is FitbitActivityTimeseriesData) {
+              stepsValue = latestData.value;
+              dataDate = latestData.dateOfMonitoring ?? DateTime.now();
+            } else if (latestData is Map) {
+              stepsValue = latestData['value'] ?? 0;
+              if (latestData['dateTime'] != null) {
+                try {
+                  dataDate = DateTime.parse(latestData['dateTime']);
+                } catch (e) {
+                  dataDate = DateTime.now();
+                }
+              }
+            }
+
+            double finalStepsValue = 0;
+            try {
+              if (stepsValue is String) {
+                finalStepsValue = double.parse(stepsValue);
+              } else if (stepsValue is num) {
+                finalStepsValue = stepsValue.toDouble();
+              }
+            } catch (e) {
+              finalStepsValue = 0;
+            }
+
+            setState(() {
+              latestHealthData['steps'] = HealthData(
+                type: 'Steps',
+                value: finalStepsValue,
+                unit: 'steps',
+                date: dataDate,
+                source: 'Fitbit',
+              );
+            });
+          } else {
+            _setDefaultStepsData();
+          }
+        } else {
+          _setDefaultStepsData();
+        }
+      } catch (e) {
+        _setDefaultStepsData();
+      }
+
+      // Fetch calories data
+      try {
+        final caloriesData = await caloriesManager.fetch(
+            FitbitActivityTimeseriesAPIURL.dayWithResource(
+              date: today,
+              resource: Resource.calories,
+              fitbitCredentials: fitbitCredentials,
+            )
+        );
+
+        if (caloriesData != null) {
+          List<dynamic> dataList = caloriesData is List ? caloriesData : [caloriesData];
+
+          if (dataList.isNotEmpty) {
+            var latestData = dataList.last;
+            dynamic caloriesValue = 0;
+            DateTime dataDate = DateTime.now();
+
+            if (latestData is FitbitActivityTimeseriesData) {
+              caloriesValue = latestData.value;
+              dataDate = latestData.dateOfMonitoring ?? DateTime.now();
+            } else if (latestData is Map) {
+              caloriesValue = latestData['value'] ?? 0;
+              if (latestData['dateTime'] != null) {
+                try {
+                  dataDate = DateTime.parse(latestData['dateTime']);
+                } catch (e) {
+                  dataDate = DateTime.now();
+                }
+              }
+            }
+
+            double finalCaloriesValue = 0;
+            try {
+              if (caloriesValue is String) {
+                finalCaloriesValue = double.parse(caloriesValue);
+              } else if (caloriesValue is num) {
+                finalCaloriesValue = caloriesValue.toDouble();
+              }
+            } catch (e) {
+              finalCaloriesValue = 0;
+            }
+
+            setState(() {
+              latestHealthData['calories'] = HealthData(
+                type: 'Calories',
+                value: finalCaloriesValue,
+                unit: 'cal',
+                date: dataDate,
+                source: 'Fitbit',
+              );
+            });
+          } else {
+            _setDefaultCaloriesData();
+          }
+        } else {
+          _setDefaultCaloriesData();
+        }
+      } catch (e) {
+        _setDefaultCaloriesData();
+      }
+
+    } catch (e) {
+      _setDefaultFitbitData();
+    }
+  }
+
+  void _setDefaultStepsData() {
+    setState(() {
+      latestHealthData['steps'] = HealthData(
+        type: 'Steps',
+        value: 0,
+        unit: 'steps',
+        date: DateTime.now(),
+        source: 'Fitbit',
+      );
+    });
+  }
+
+  void _setDefaultCaloriesData() {
+    setState(() {
+      latestHealthData['calories'] = HealthData(
+        type: 'Calories',
+        value: 0,
+        unit: 'cal',
+        date: DateTime.now(),
+        source: 'Fitbit',
+      );
+    });
+  }
+
+  void _setDefaultFitbitData() {
+    _setDefaultStepsData();
+    _setDefaultCaloriesData();
+  }
+
+  Future<void> _fetchGoogleAppleHealthData(DateTime startTime, DateTime endTime) async {
+    // Check if we have any Google Fit or Apple Health devices
+    bool hasHealthDevice = connectedDevices.any((device) =>
+    device.platform == 'google_fit' || device.platform == 'apple_health');
+
+    if (!hasHealthDevice) return;
+
+    try {
+      Health health = Health();
+      await health.configure();
+
+      // Fetch steps data
+      List<HealthDataPoint> stepsData = await health.getHealthDataFromTypes(
+        startTime: startTime,
+        endTime: endTime,
+        types: [HealthDataType.STEPS],
+      );
+
+      if (stepsData.isNotEmpty) {
+        // Calculate total steps for the day
+        int totalSteps = stepsData.fold(0, (sum, point) => sum + (point.value as num).toInt());
+
+        // Determine source
+        String source = 'Health Connect';
+        if (connectedDevices.any((device) => device.platform == 'apple_health')) {
+          source = 'Apple Health';
+        }
+
+        setState(() {
+          latestHealthData['steps'] = HealthData(
+            type: 'Steps',
+            value: totalSteps.toDouble(),
+            unit: 'steps',
+            date: DateTime.now(),
+            source: source,
+          );
+        });
+
+        print('✓ Fetched $source steps: $totalSteps');
+      } else {
+        // No data available
+        String source = connectedDevices.any((device) => device.platform == 'apple_health')
+            ? 'Apple Health' : 'Health Connect';
+
+        setState(() {
+          latestHealthData['steps'] = HealthData(
+            type: 'Steps',
+            value: 0,
+            unit: 'steps',
+            date: DateTime.now(),
+            source: source,
+          );
+        });
+      }
+    } catch (e) {
+      print('⚠ Health data fetch failed: $e');
+      // Still show 0 data rather than error
+      String source = connectedDevices.any((device) => device.platform == 'apple_health')
+          ? 'Apple Health' : 'Health Connect';
+
+      setState(() {
+        latestHealthData['steps'] = HealthData(
+          type: 'Steps',
+          value: 0,
+          unit: 'steps',
+          date: DateTime.now(),
+          source: source,
+        );
       });
     }
   }
@@ -215,10 +445,16 @@ class _WearablesScreenState extends State<WearablesScreen> {
 
         // Clear health data for this device
         if (connectedDevices.isEmpty ||
-            !connectedDevices.any((d) => d.platform == 'google_fit' || d.platform == 'apple_health')) {
+            !connectedDevices.any((d) =>
+            d.platform == 'google_fit' ||
+                d.platform == 'apple_health' ||
+                d.platform == 'fitbit')) {
           setState(() {
             latestHealthData.clear();
           });
+        } else {
+          // Refresh data to show data from remaining devices
+          await _fetchLatestHealthData();
         }
 
         // Show success message
@@ -568,6 +804,26 @@ class _WearablesScreenState extends State<WearablesScreen> {
   }
 
   Widget _buildHealthDataItem(HealthData data) {
+    // Get icon and color based on data source
+    IconData dataIcon;
+    Color dataColor;
+
+    switch (data.source) {
+      case 'Fitbit':
+        dataIcon = Icons.fitness_center;
+        dataColor = Colors.green;
+        break;
+      case 'Apple Health':
+        dataIcon = Icons.favorite;
+        dataColor = Colors.red;
+        break;
+      case 'Health Connect':
+      default:
+        dataIcon = Icons.directions_walk;
+        dataColor = Colors.blue;
+        break;
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -576,12 +832,12 @@ class _WearablesScreenState extends State<WearablesScreen> {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
+              color: dataColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.directions_walk,
-              color: Colors.blue,
+            child: Icon(
+              dataIcon,
+              color: dataColor,
               size: 28,
             ),
           ),
@@ -590,12 +846,32 @@ class _WearablesScreenState extends State<WearablesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  data.type,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      data.type,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: dataColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        data.source,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: dataColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 Text(
                   'Last updated: ${_formatDate(data.date)}',

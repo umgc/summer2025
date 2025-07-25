@@ -71,10 +71,10 @@ dependencies:
   # AI Voice Commands 
   # ag added as a fix
   porcupine_flutter: ^3.0.2
-  speech_to_text: ^6.0.0
+  speech_to_text: ^6.4.0
 
   # device integration
-  fitbitter: ^2.0.0
+  fitbitter: ^2.0.6
   health: ^13.1.1
   mobile_scanner: ^3.5.6
 
