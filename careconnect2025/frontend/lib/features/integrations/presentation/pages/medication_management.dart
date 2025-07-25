@@ -53,7 +53,12 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
       final medicationsJson = jsonEncode(medications);
       await prefs.setString('medications', medicationsJson);
     } catch (e) {
-      // Handle error silently in production
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error saving medication. Please try again'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
