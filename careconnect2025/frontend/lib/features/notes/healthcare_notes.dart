@@ -378,12 +378,20 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
     }
   }
 
+  // Speech to Text Section
+  void _resetSpeechToText() {
+    _speech = stt.SpeechToText();  // Re-initialize the instance
+  }
+
   void _showSpeechToTextDialog() {
     final _fileNameController = TextEditingController();
     final _formKey = GlobalKey<FormState>();
 
     String recognizedText = '';
     bool isListening = false;
+
+    // Re-initialize speech to text instance to avoid conflict with other operations
+    _resetSpeechToText();
 
     showDialog(
       context: context,
@@ -501,150 +509,6 @@ class _HealthcareNotesState extends State<HealthcareNotes> {
                       }
 
                       final fileBytes = utf8.encode(content);
-                      await _uploadManualTextFile(fileName, fileBytes);
-
-                      _speech.stop();
-                      Navigator.of(dialogContext).pop();
-                    }
-                  },
-                  child: Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-
-  // Speech to Text Section
-  void _showSpeechToTextDialog1() {
-    final _fileNameController = TextEditingController();
-    final _formKey = GlobalKey<FormState>();
-
-    String recognizedText = '';
-    bool isListening = false;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            Future<void> _startListening(StateSetter setState) async {
-              if (_speech.isListening) {
-                await _speech.stop();  // Ensure previous session is stopped
-                setState(() {});  // Update UI immediately
-                await Future.delayed(Duration(milliseconds: 300));  // Small buffer time
-              }
-
-              bool available = await _speech.initialize(
-                onStatus: (status) => print('Speech Status: $status'),
-                onError: (error) => print('Speech Error: $error'),
-              );
-
-              if (available) {
-                setState(() => _isListening = true);
-                _speech.listen(
-                  onResult: (val) {
-                    setState(() {
-                      _recognizedText = val.recognizedWords;
-                    });
-                  },
-                );
-              } else {
-                print('Speech recognition unavailable');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Microphone access denied or unavailable.')),
-                );
-              }
-            }
-
-            Future<void> _stopListening(StateSetter setState) async {
-              if (_speech.isListening) {
-                await _speech.stop();
-                setState(() => _isListening = false);
-              }
-            }
-
-            return AlertDialog(
-              title: Text('Speech to Text Entry'),
-              content: SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextFormField(
-                        controller: _fileNameController,
-                        decoration: InputDecoration(
-                          labelText: 'File Name',
-                          hintText: 'Enter file name (no extension)',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'File name cannot be empty';
-                          }
-                          if (!RegExp(r'^[a-zA-Z0-9_\-]+$').hasMatch(value.trim())) {
-                            return 'Invalid characters in file name';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: _isListening
-                            ? () => _stopListening(setState)
-                            : () => _startListening(setState),
-                        icon: Icon(_isListening ? Icons.mic_off : Icons.mic),
-                        label: Text(_isListening ? 'Stop Listening' : 'Start Listening'),
-                      ),
-                      SizedBox(height: 20),
-                      Text('Recognized Text:', style: TextStyle(fontWeight: FontWeight.bold)),
-                      Container(
-                        padding: EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(4.0),
-                        ),
-                        child: Text(
-                          recognizedText.isNotEmpty ? recognizedText : 'No speech detected.',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    _speech.stop();
-                    setState(() {
-                      recognizedText = '';  // Reset recognized text on Cancel
-                      isListening = false;
-                    });
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      String fileName = _fileNameController.text.trim();
-                      String content = recognizedText.trim();
-
-                      if (content.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('No speech content to save.')),
-                        );
-                        return;
-                      }
-
-                      final fileBytes = utf8.encode(content);
-
                       await _uploadManualTextFile(fileName, fileBytes);
 
                       _speech.stop();
