@@ -98,7 +98,7 @@ class WelcomePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Closer Connections. Better Care',
+                  'Closer Connections. Better Care.',
                   style: TextStyle(
                     fontSize: 18,
                     color: Theme.of(

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:porcupine_flutter/porcupine_manager.dart';
 import 'package:porcupine_flutter/porcupine_error.dart';
 import 'package:porcupine_flutter/porcupine.dart';
@@ -137,6 +138,7 @@ class _VoiceCommandAIState extends State<VoiceCommandAI> {
   @override
   Widget build(BuildContext ctx) {
     return Scaffold(
+      drawer: CommonDrawer(currentRoute: '/voice-commands'),
       appBar: AppBar(
         title: const Text('Voice Commands'),
         backgroundColor: Colors.blue.shade900,

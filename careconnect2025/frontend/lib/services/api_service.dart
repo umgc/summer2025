@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as path;
 import 'auth_token_manager.dart';
+import 'dart:typed_data';
+import 'package:http_parser/http_parser.dart';
+
 
 class ApiConstants {
   static final String _host = getBackendBaseUrl();
@@ -881,6 +884,71 @@ class ApiService {
 
     return response;
   }
+
+  // Save speech-to-text to a file and upload it to S3
+  static Future<http.Response> uploadUserFileFromBytes({
+    required int userId,
+    required Uint8List fileBytes,
+    required String fileName,
+    required String category,
+    String? role,
+  }) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers.remove('Content-Type'); // Multipart will handle it
+
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ApiConstants.files}/users/$userId/upload'),
+    );
+
+    // Add headers
+    request.headers.addAll(headers);
+
+    // Create MultipartFile from bytes
+    var fileStream = http.ByteStream(Stream.fromIterable([fileBytes]));
+    var fileLength = await fileStream.length;
+    var multipartFile = http.MultipartFile(
+      'file',
+      fileStream,
+      fileLength,
+      filename: fileName,
+    );
+
+    request.files.add(multipartFile);
+    request.fields['category'] = category;
+
+    // Send the request
+    var streamedResponse = await request.send().timeout(
+      const Duration(seconds: 30),
+    );
+    var response = await http.Response.fromStream(streamedResponse);
+
+    return response;
+  }
+
+  // Get list of files from saved S3 storage
+  static Future<http.Response> getUserFilesByCategory(
+      int userId) async {
+    try {
+      final headers = await AuthTokenManager.getAuthHeaders();
+
+      final uri = Uri.parse(
+        '${ApiConstants.baseUrl}files/users/$userId/list',
+      );
+
+      return await _httpClient.get(
+        uri,
+        headers: headers,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
+      );
+    } catch (e) {
+      return http.Response(jsonEncode({'error': e.toString()}), 500);
+    }
+  }
+
+
 
   // ========================
   // MESSAGING METHODS
