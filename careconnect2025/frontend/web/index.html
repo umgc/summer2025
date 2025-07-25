@@ -18,21 +18,127 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="CareConnect - A comprehensive healthcare management platform for patients and caregivers">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1976D2">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="care_connect_app">
+  <meta name="apple-mobile-web-app-title" content="CareConnect">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="CareConnect">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>care_connect_app</title>
+  <!-- Improved web rendering -->
+  <style>
+    body {
+      background-color: #FFFFFF;
+      height: 100vh;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      position: fixed;
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      background-color: #FFFFFF;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 999;
+    }
+
+    .loading img {
+      width: 120px;
+      height: 120px;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.7; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.7; }
+    }
+
+    /* Hardware acceleration for smoother animations */
+    * {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Better touch handling for mobile web */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+  </style>
+
+  <title>CareConnect</title>
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <!-- Loading indicator that shows until Flutter loads -->
+  <div class="loading" id="loading">
+    <img src="icons/Icon-192.png" alt="Loading CareConnect"/>
+  </div>
+
+  <script>
+    // Add platform detection classes to the body element
+    function detectPlatform() {
+      var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      var body = document.body;
+
+      // Detect iOS
+      if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+        body.classList.add('ios-device');
+      }
+      // Detect Android
+      else if (/android/i.test(userAgent)) {
+        body.classList.add('android-device');
+      }
+      // Detect desktop browsers
+      else if (window.innerWidth >= 1024) {
+        body.classList.add('desktop-browser');
+      }
+      // Detect mobile browsers
+      else {
+        body.classList.add('mobile-browser');
+      }
+
+      // Detect touch capability
+      if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        body.classList.add('touch-device');
+      } else {
+        body.classList.add('no-touch-device');
+      }
+    }
+
+    // Run platform detection as soon as possible
+    detectPlatform();
+
+    // Hide loading indicator once Flutter is initialized
+    window.addEventListener('flutter-first-frame', function() {
+      var loading = document.getElementById('loading');
+      if (loading) {
+        loading.style.display = 'none';
+      }
+    });
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
