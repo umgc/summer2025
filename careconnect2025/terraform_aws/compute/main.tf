@@ -27,6 +27,15 @@ data "terraform_remote_state" "cc_common_state" {
   }
 }
 
+data "terraform_remote_state" "cc_db_state" {
+  backend = "s3"
+  config = {
+    bucket = "${var.iac_cc_s3_bucket_name}"
+    key    = "tf-state/careconnect-db.tfstate"
+    region = "us-east-1"
+  }
+}
+
 resource "aws_cloudwatch_log_group" "cc_main_lambda_log_group" {
   name              = "/aws/lambda/cc_main_backend"
   retention_in_days = 90
@@ -55,7 +64,7 @@ resource "aws_lambda_function" "cc_main_backend_lambda" {
     variables = merge(
       var.cc_main_compute_env_vars,
       data.terraform_remote_state.cc_common_state.outputs.cc_sensitive_env_variables_name,
-      data.terraform_remote_state.cc_common_state.outputs.cc_sensitive_env_variables_name,
+      data.terraform_remote_state.cc_db_state.outputs.sensitive_params,
       {
         CC_APP_ROLE           = "${data.terraform_remote_state.cc_common_state.outputs.cc_app_role_arn}"
         APP_FRONTEND_BASE_URL = "https://${data.terraform_remote_state.cc_common_state.outputs.amplify_url}"

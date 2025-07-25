@@ -1,11 +1,15 @@
-variable "cc_rds_sg_id" {
-  type = string
-}
-variable "cc_sbn_group_name" {
-  type = string
-}
 variable "default_tags" {
   type = map(any)
+  default = {
+    Purpose    = "capstone at UMGC"
+    CourseCode = "SWEN-670"
+    Project    = "careconnect"
+    Use        = "IaC"
+  }
+}
+variable "iac_cc_s3_bucket_name" {
+  description = "S3 bucket name where application packages are stored"
+  type        = string
 }
 variable "rds_username" {
   description = "RDS database username"
