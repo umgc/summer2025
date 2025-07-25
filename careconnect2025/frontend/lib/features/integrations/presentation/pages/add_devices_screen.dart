@@ -64,7 +64,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   // Fitbit configuration
   static const String fitbitClientId = '23QG9C';
   static const String fitbitClientSecret = 'c77f0a7a3839a9307674b893fae14934';
-  static const String redirectUri = 'careconnect://add-device';
+  static const String redirectUri = 'care-connect://add-device';
 
   // Platform-specific health platforms
   List<Map<String, dynamic>> get healthPlatforms {
@@ -148,6 +148,16 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
       print('Stored $platform access token securely');
     } catch (e) {
       print('Failed to store access token: $e');
+    }
+  }
+
+  // New method to store Fitbit userID
+  Future<void> _storeFitbitUserID(String userID) async {
+    try {
+      await _secureStorage.write(key: 'fitbit_user_id', value: userID);
+      print('Stored Fitbit userID securely: $userID');
+    } catch (e) {
+      print('Failed to store Fitbit userID: $e');
     }
   }
 
@@ -918,7 +928,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         clientID: fitbitClientId,
         clientSecret: fitbitClientSecret,
         redirectUri: redirectUri,
-        callbackUrlScheme: 'careconnect',
+        callbackUrlScheme: 'care-connect',
       );
 
       print('Authorization method completed');
@@ -929,19 +939,24 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
 
         String accessToken = fitbitCredentials.fitbitAccessToken;
         String? refreshToken = fitbitCredentials.fitbitRefreshToken;
+        String userID = fitbitCredentials.userID; // Get the userID
 
         print('Access Token: ${accessToken.isNotEmpty ? accessToken.substring(0, 10) + "..." : "EMPTY!"}');
         print('Refresh Token: ${refreshToken?.isNotEmpty == true ? refreshToken!.substring(0, 10) + "..." : "EMPTY!"}');
+        print('User ID: $userID');
         print('Access Token Length: ${accessToken.length}');
 
         print('Credentials properties:');
         print('   - fitbitAccessToken: ${accessToken.isNotEmpty}');
         print('   - fitbitRefreshToken: ${refreshToken?.isNotEmpty == true}');
+        print('   - userID: ${userID.isNotEmpty}');
 
-        if (accessToken.isNotEmpty) {
-          print('Valid access token received');
+        if (accessToken.isNotEmpty && userID.isNotEmpty) {
+          print('Valid access token and userID received');
 
+          // Store both access token and userID
           await _storeAccessToken('fitbit', accessToken);
+          await _storeFitbitUserID(userID);
           await _storeConnectedDevice('fitbit', ['steps', 'heart_rate', 'sleep', 'calories']);
 
           setState(() {
@@ -951,8 +966,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
 
           print('Fitbit connected successfully');
         } else {
-          print('Access token is empty');
-          throw Exception('Failed to get access token - token is empty');
+          print('Access token or userID is empty');
+          throw Exception('Failed to get access token or userID - one or both are empty');
         }
       } else {
         print('Credentials object is null');
