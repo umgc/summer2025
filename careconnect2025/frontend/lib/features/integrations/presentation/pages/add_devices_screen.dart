@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fitbitter/fitbitter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:health/health.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -62,8 +63,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   List<ConnectedDevice> _connectedDevices = [];
 
   // Fitbit configuration
-  static const String fitbitClientId = '23QG9C';
-  static const String fitbitClientSecret = 'c77f0a7a3839a9307674b893fae14934';
+  final fitbitClientId = dotenv.env['FITBIT_CLIENT_ID']!;
+  final fitbitClientSecret = dotenv.env['FITBIT_CLIENT_SECRET']!;
   static const String redirectUri = 'care-connect://add-device';
 
   // Platform-specific health platforms
