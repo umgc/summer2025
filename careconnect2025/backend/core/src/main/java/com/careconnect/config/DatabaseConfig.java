@@ -1,24 +1,29 @@
 package com.careconnect.config;
 
+
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.annotation.*;
 
 import com.careconnect.service.ParameterStoreService;
-import software.amazon.awssdk.services.ssm.SsmClient;
+import org.springframework.core.env.ConfigurableEnvironment;
+
+import javax.sql.DataSource;
 
 @Configuration
 public class DatabaseConfig {
 
-    @Value("${spring.datasource.url}")
+    @Value("${careconnect.db.url}")
     private String jdbcUrl;
 
-    @Value("${spring.datasource.username}")
+    @Value("${careconnect.db.username}")
     private String userParameter;
 
-    @Value("${spring.datasource.password}")
+    @Value("${careconnect.db.password}")
     private String passwordParameter;
 
     private final ParameterStoreService parameterService;
@@ -30,6 +35,7 @@ public class DatabaseConfig {
 
     /**
      * Will get the sensitive value/properties for database connection from SSM Parameter Store
+     *
      * @return DataSourceProperties
      */
     @Bean
@@ -47,4 +53,18 @@ public class DatabaseConfig {
 
         return properties;
     }
+
+    @Bean
+    @Primary
+    @DependsOn("dataSourceProperties")
+    public DataSource dataSource(DataSourceProperties dataSourceProperties, ConfigurableEnvironment env) {
+        HikariDataSource dataSource = dataSourceProperties.initializeDataSourceBuilder()
+                .type(HikariDataSource.class)
+                .build();
+
+        Binder.get(env).bind("spring.datasource.hikari", Bindable.ofInstance(dataSource));
+
+        return dataSource;
+    }
+
 }

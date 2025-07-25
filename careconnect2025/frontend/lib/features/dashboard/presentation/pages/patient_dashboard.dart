@@ -788,16 +788,6 @@ class _PatientDashboardState extends State<PatientDashboard> {
               'route': '/wearables',
             },
             {
-              'icon': Icons.home_outlined,
-              'title': 'Home Monitoring',
-              'route': '/home-monitoring',
-            },
-            {
-              'icon': Icons.devices,
-              'title': 'Smart Devices',
-              'route': '/smart-devices',
-            },
-            {
               'icon': Icons.medication,
               'title': 'Medication Management',
               'route': '/medication',
