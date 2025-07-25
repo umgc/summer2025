@@ -1,0 +1,341 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------< com.careconnect:careconnect-backend >-----------------
+[INFO] Building CareConnect Backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] The artifact mysql:mysql-connector-java:jar:8.0.33 has been relocated to com.mysql:mysql-connector-j:jar:8.0.33: MySQL Connector/J artifacts moved to reverse-DNS compliant Maven 2+ coordinates.
+[INFO] 
+[INFO] --- clean:3.3.2:clean (default-clean) @ careconnect-backend ---
+[INFO] Deleting /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ careconnect-backend ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 5 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ careconnect-backend ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 137 source files with javac [debug release 17] to target/classes
+[INFO] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java: /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java uses unchecked or unsafe operations.
+[INFO] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java: Recompile with -Xlint:unchecked for details.
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/PasswordResetService.java:[40,34] variable mail is already defined in class com.careconnect.service.PasswordResetService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/ExportSigner.java:[36,29] cannot find symbol
+  symbol:   method builder()
+  location: class com.careconnect.dto.ExportLinkDTO
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/controller/UserController.java:[42,27] constructor UserResponse in class com.careconnect.dto.UserResponse cannot be applied to given types;
+  required: no arguments
+  found:    java.lang.Long,java.lang.String,java.lang.String,com.careconnect.security.Role,boolean,java.lang.String,java.lang.String
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/controller/UserController.java:[51,24] incompatible types: java.util.List<java.lang.Object> cannot be converted to java.util.List<com.careconnect.dto.UserResponse>
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AnalyticsService.java:[84,28] cannot find symbol
+  symbol:   method builder()
+  location: class com.careconnect.dto.DashboardDTO
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AnalyticsService.java:[118,39] cannot find symbol
+  symbol:   method builder()
+  location: class com.careconnect.dto.VitalSampleDTO
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AnalyticsService.java:[145,22] cannot find symbol
+  symbol:   method builder()
+  location: class com.careconnect.dto.VitalSampleDTO
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/SubscriptionService.java:[143,34] cannot find symbol
+  symbol:   method builder()
+  location: class com.careconnect.model.Payment
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/FamilyMemberService.java:[60,19] cannot find symbol
+  symbol:   method setVerificationToken(java.lang.String)
+  location: variable familyUser of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/FamilyMemberService.java:[65,34] cannot find symbol
+  symbol:   method builder()
+  location: class com.careconnect.model.Address
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/FamilyMemberService.java:[73,49] cannot find symbol
+  symbol:   method builder()
+  location: class com.careconnect.model.FamilyMember
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[28,13] cannot find symbol
+  symbol:   variable log
+  location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[36,13] cannot find symbol
+  symbol:   variable log
+  location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[38,13] cannot find symbol
+  symbol:   variable log
+  location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[49,13] cannot find symbol
+  symbol:   variable log
+  location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[55,13] cannot find symbol
+  symbol:   variable log
+  location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[57,13] cannot find symbol
+  symbol:   variable log
+  location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[68,13] cannot find symbol
+  symbol:   variable log
+  location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[77,13] cannot find symbol
+  symbol:   variable log
+  location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[79,13] cannot find symbol
+  symbol:   variable log
+  location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[115,21] cannot find symbol
+  symbol:   method builder()
+  location: class com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[132,30] cannot find symbol
+  symbol:   method builder()
+  location: class com.careconnect.model.Patient
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[162,49] cannot find symbol
+  symbol:   method getEmail()
+  location: class com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[166,39] cannot find symbol
+  symbol:   method getEmail()
+  location: class com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[167,57] cannot find symbol
+  symbol:   method getPassword()
+  location: class com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[168,61] cannot find symbol
+  symbol:   method getPassword()
+  location: class com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[176,13] cannot find symbol
+  symbol:   method setLicenseNumber(java.lang.String)
+  location: variable prof of type com.careconnect.model.ProfessionalInfo
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[177,13] cannot find symbol
+  symbol:   method setIssuingState(java.lang.String)
+  location: variable prof of type com.careconnect.model.ProfessionalInfo
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[178,13] cannot find symbol
+  symbol:   method setYearsExperience(int)
+  location: variable prof of type com.careconnect.model.ProfessionalInfo
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[187,29] cannot find symbol
+  symbol:   method builder()
+  location: class com.careconnect.model.Caregiver
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[191,40] cannot find symbol
+  symbol:   method getEmail()
+  location: class com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[210,23] cannot find symbol
+  symbol:   method builder()
+  location: class com.careconnect.model.Address
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[95,83] cannot find symbol
+  symbol:   method getEmail()
+  location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[95,103] cannot find symbol
+  symbol:   method getRole()
+  location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[103,29] cannot find symbol
+  symbol:   method setVerificationToken(java.lang.String)
+  location: variable existingUser of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[107,53] cannot find symbol
+  symbol:   method getVerificationBaseUrl()
+  location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[127,30] cannot find symbol
+  symbol:   method getEmail()
+  location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[128,56] cannot find symbol
+  symbol:   method getPassword()
+  location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[129,29] cannot find symbol
+  symbol:   method getName()
+  location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[130,42] cannot find symbol
+  symbol:   method getRole()
+  location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[132,13] cannot find symbol
+  symbol:   method setVerificationToken(java.lang.String)
+  location: variable user of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[133,13] cannot find symbol
+  symbol:   method setCreatedAt(java.sql.Timestamp)
+  location: variable user of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[136,45] cannot find symbol
+  symbol:   method getVerificationBaseUrl()
+  location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[189,17] cannot find symbol
+  symbol:   method setVerificationToken(<nulltype>)
+  location: variable user of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[253,38] cannot find symbol
+  symbol:   method getEmail()
+  location: variable req of type com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[256,37] cannot find symbol
+  symbol:   method getPassword()
+  location: variable req of type com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[385,17] cannot find symbol
+  symbol:   method setPasswordHash(java.lang.String)
+  location: variable user of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[425,13] cannot find symbol
+  symbol:   method setPasswordHash(java.lang.String)
+  location: variable user of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[427,13] cannot find symbol
+  symbol:   method setVerificationToken(<nulltype>)
+  location: variable user of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/config/SecurityConfig.java:[24,45] constructor JwtAuthenticationFilter in class com.careconnect.security.JwtAuthenticationFilter cannot be applied to given types;
+  required: no arguments
+  found:    com.careconnect.security.JwtTokenProvider,org.springframework.security.core.userdetails.UserDetailsService
+  reason: actual and formal argument lists differ in length
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/StripeCheckoutService.java:[47,34] cannot find symbol
+  symbol:   method builder()
+  location: class com.careconnect.model.Payment
+[INFO] 51 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  16.184 s
+[INFO] Finished at: 2025-07-05T23:10:06-04:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile (default-compile) on project careconnect-backend: Compilation failure: Compilation failure: 
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/PasswordResetService.java:[40,34] variable mail is already defined in class com.careconnect.service.PasswordResetService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/ExportSigner.java:[36,29] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: class com.careconnect.dto.ExportLinkDTO
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/controller/UserController.java:[42,27] constructor UserResponse in class com.careconnect.dto.UserResponse cannot be applied to given types;
+[ERROR]   required: no arguments
+[ERROR]   found:    java.lang.Long,java.lang.String,java.lang.String,com.careconnect.security.Role,boolean,java.lang.String,java.lang.String
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/controller/UserController.java:[51,24] incompatible types: java.util.List<java.lang.Object> cannot be converted to java.util.List<com.careconnect.dto.UserResponse>
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AnalyticsService.java:[84,28] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: class com.careconnect.dto.DashboardDTO
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AnalyticsService.java:[118,39] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: class com.careconnect.dto.VitalSampleDTO
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AnalyticsService.java:[145,22] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: class com.careconnect.dto.VitalSampleDTO
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/SubscriptionService.java:[143,34] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: class com.careconnect.model.Payment
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/FamilyMemberService.java:[60,19] cannot find symbol
+[ERROR]   symbol:   method setVerificationToken(java.lang.String)
+[ERROR]   location: variable familyUser of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/FamilyMemberService.java:[65,34] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: class com.careconnect.model.Address
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/FamilyMemberService.java:[73,49] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: class com.careconnect.model.FamilyMember
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[28,13] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[36,13] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[38,13] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[49,13] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[55,13] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[57,13] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[68,13] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[77,13] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/LinkMaintenanceService.java:[79,13] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.careconnect.service.LinkMaintenanceService
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[115,21] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: class com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[132,30] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: class com.careconnect.model.Patient
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[162,49] cannot find symbol
+[ERROR]   symbol:   method getEmail()
+[ERROR]   location: class com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[166,39] cannot find symbol
+[ERROR]   symbol:   method getEmail()
+[ERROR]   location: class com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[167,57] cannot find symbol
+[ERROR]   symbol:   method getPassword()
+[ERROR]   location: class com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[168,61] cannot find symbol
+[ERROR]   symbol:   method getPassword()
+[ERROR]   location: class com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[176,13] cannot find symbol
+[ERROR]   symbol:   method setLicenseNumber(java.lang.String)
+[ERROR]   location: variable prof of type com.careconnect.model.ProfessionalInfo
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[177,13] cannot find symbol
+[ERROR]   symbol:   method setIssuingState(java.lang.String)
+[ERROR]   location: variable prof of type com.careconnect.model.ProfessionalInfo
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[178,13] cannot find symbol
+[ERROR]   symbol:   method setYearsExperience(int)
+[ERROR]   location: variable prof of type com.careconnect.model.ProfessionalInfo
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[187,29] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: class com.careconnect.model.Caregiver
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[191,40] cannot find symbol
+[ERROR]   symbol:   method getEmail()
+[ERROR]   location: class com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/CaregiverService.java:[210,23] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: class com.careconnect.model.Address
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[95,83] cannot find symbol
+[ERROR]   symbol:   method getEmail()
+[ERROR]   location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[95,103] cannot find symbol
+[ERROR]   symbol:   method getRole()
+[ERROR]   location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[103,29] cannot find symbol
+[ERROR]   symbol:   method setVerificationToken(java.lang.String)
+[ERROR]   location: variable existingUser of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[107,53] cannot find symbol
+[ERROR]   symbol:   method getVerificationBaseUrl()
+[ERROR]   location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[127,30] cannot find symbol
+[ERROR]   symbol:   method getEmail()
+[ERROR]   location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[128,56] cannot find symbol
+[ERROR]   symbol:   method getPassword()
+[ERROR]   location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[129,29] cannot find symbol
+[ERROR]   symbol:   method getName()
+[ERROR]   location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[130,42] cannot find symbol
+[ERROR]   symbol:   method getRole()
+[ERROR]   location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[132,13] cannot find symbol
+[ERROR]   symbol:   method setVerificationToken(java.lang.String)
+[ERROR]   location: variable user of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[133,13] cannot find symbol
+[ERROR]   symbol:   method setCreatedAt(java.sql.Timestamp)
+[ERROR]   location: variable user of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[136,45] cannot find symbol
+[ERROR]   symbol:   method getVerificationBaseUrl()
+[ERROR]   location: variable request of type com.careconnect.dto.RegisterRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[189,17] cannot find symbol
+[ERROR]   symbol:   method setVerificationToken(<nulltype>)
+[ERROR]   location: variable user of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[253,38] cannot find symbol
+[ERROR]   symbol:   method getEmail()
+[ERROR]   location: variable req of type com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[256,37] cannot find symbol
+[ERROR]   symbol:   method getPassword()
+[ERROR]   location: variable req of type com.careconnect.dto.LoginRequest
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[385,17] cannot find symbol
+[ERROR]   symbol:   method setPasswordHash(java.lang.String)
+[ERROR]   location: variable user of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[425,13] cannot find symbol
+[ERROR]   symbol:   method setPasswordHash(java.lang.String)
+[ERROR]   location: variable user of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/AuthService.java:[427,13] cannot find symbol
+[ERROR]   symbol:   method setVerificationToken(<nulltype>)
+[ERROR]   location: variable user of type com.careconnect.model.User
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/config/SecurityConfig.java:[24,45] constructor JwtAuthenticationFilter in class com.careconnect.security.JwtAuthenticationFilter cannot be applied to given types;
+[ERROR]   required: no arguments
+[ERROR]   found:    com.careconnect.security.JwtTokenProvider,org.springframework.security.core.userdetails.UserDetailsService
+[ERROR]   reason: actual and formal argument lists differ in length
+[ERROR] /Users/ashenafigebreeziabhere/Documents/VPProjects/summer2025/careconnect2025/backend/core/src/main/java/com/careconnect/service/StripeCheckoutService.java:[47,34] cannot find symbol
+[ERROR]   symbol:   method builder()
+[ERROR]   location: class com.careconnect.model.Payment
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
