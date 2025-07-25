@@ -928,14 +928,12 @@ class ApiService {
 
   // Get list of files from saved S3 storage
   static Future<http.Response> getUserFilesByCategory(
-      int userId, {
-      required String category,
-      }) async {
+      int userId) async {
     try {
       final headers = await AuthTokenManager.getAuthHeaders();
 
       final uri = Uri.parse(
-        '${ApiConstants.baseUrl}users/$userId/list?category=$category',
+        '${ApiConstants.baseUrl}files/users/$userId/list',
       );
 
       return await _httpClient.get(
