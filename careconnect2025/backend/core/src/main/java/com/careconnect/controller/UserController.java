@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/api/users")
@@ -177,6 +178,42 @@ public class UserController {
                 .toList();
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/check-email")
+    @Operation(
+            summary = "Check if email exists",
+            description = "Check if a user exists with the given email address and return their role if they do",
+            tags = {"User Management"},
+            security = {}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Email check completed",
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(value = """
+                    {
+                        "exists": true,
+                        "role": "PATIENT"
+                    }
+                    """)
+                    )
+            )
+    })
+    public ResponseEntity<?> checkEmailExists(@RequestParam String email) {
+        Optional<User> userOpt = userRepo.findByEmail(email);
+
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            return ResponseEntity.ok(Map.of(
+                    "exists", true,
+                    "role", user.getRole(),
+                    "userId", user.getId()
+            ));
+        } else {
+            return ResponseEntity.ok(Map.of(
+                    "exists", false
+            ));
+        }
     }
 
 }

@@ -2,8 +2,16 @@ package com.careconnect.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "caregiver_patient_link")
 public class CaregiverPatientLink {
     
@@ -52,8 +60,7 @@ public class CaregiverPatientLink {
         PERMANENT, TEMPORARY, EMERGENCY
     }
 
-    // Constructors
-    public CaregiverPatientLink() {}
+    // Constructor for creating caregiver-patient links
 
     public CaregiverPatientLink(User caregiverUser, User patientUser, User createdBy, LinkType linkType) {
         this.caregiverUser = caregiverUser;

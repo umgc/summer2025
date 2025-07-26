@@ -15,7 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.careconnect.model.User;
 import com.careconnect.repository.PatientRepository;
+import com.careconnect.model.Plan;
+import com.careconnect.model.Subscription;
 import com.careconnect.model.ProfessionalInfo;
+import com.careconnect.dto.PatientWithLinkDto;
+
 import com.careconnect.repository.UserRepository;
 import com.careconnect.security.JwtTokenProvider;
 import com.careconnect.security.Role;
@@ -23,6 +27,10 @@ import com.careconnect.dto.ProfessionalInfoDto;
 import com.careconnect.dto.AddressDto;
 import com.careconnect.model.Address;
 import com.careconnect.repository.FamilyMemberLinkRepository;
+import com.careconnect.repository.PlanRepository;
+import com.careconnect.repository.SubscriptionRepository;
+import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.HttpStatus;
@@ -58,37 +66,86 @@ public class CaregiverService {
     @Autowired 
     private  FamilyMemberLinkRepository familyMemberLinkRepository;
 
+    @Autowired
+    private StripeService stripeService;
+
+    @Autowired
+    private PlanRepository planRepository;
+
+    @Autowired
+    private SubscriptionRepository subscriptionRepository;
+
     // 1. List patients under a caregiver, with optional filtering (ACTIVE links only)
-    public List<Patient> getPatientsByCaregiver(Long caregiverId, String email, String name) {
+    // public List<Patient> getPatientsByCaregiver(Long caregiverId, String email, String name) {
+    //     // Get caregiver user
+    //     Caregiver caregiver = getCaregiverById(caregiverId);
+    //     User caregiverUser = caregiver.getUser();
+
+    //     // Get active patient links via CaregiverPatientLinkService
+    //     List<CaregiverPatientLinkResponse> activeLinks = caregiverPatientLinkService.getPatientsByCaregiver(caregiverUser.getId());
+
+    //     // Extract patient user IDs from active links and get Patient objects
+    //     List<Patient> patients = activeLinks.stream()
+    //             .map(link -> users.findById(link.patientUserId()))
+    //             .filter(Optional::isPresent)
+    //             .map(Optional::get)
+    //             .map(user -> patientRepository.findByUser(user))
+    //             .filter(Optional::isPresent)
+    //             .map(Optional::get)
+    //             .collect(Collectors.toList());
+
+    //     // Apply filters
+    //     if (email != null && !email.isEmpty()) {
+    //         patients = patients.stream()
+    //                 .filter(p -> p.getEmail() != null && p.getEmail().equalsIgnoreCase(email))
+    //                 .collect(Collectors.toList());
+    //     }
+    //     if (name != null && !name.isEmpty()) {
+    //         patients = patients.stream()
+    //                 .filter(p -> (p.getFirstName() + " " + p.getLastName()).toLowerCase().contains(name.toLowerCase()))
+    //                 .collect(Collectors.toList());
+    //     }
+    //     return patients;
+    // }
+
+    // 1. List patients under a caregiver, with optional filtering (ACTIVE links only)
+    public List<PatientWithLinkDto> getPatientsByCaregiver(Long caregiverId, String email, String name) {
         // Get caregiver user
         Caregiver caregiver = getCaregiverById(caregiverId);
         User caregiverUser = caregiver.getUser();
-        
+
         // Get active patient links via CaregiverPatientLinkService
         List<CaregiverPatientLinkResponse> activeLinks = caregiverPatientLinkService.getPatientsByCaregiver(caregiverUser.getId());
-        
-        // Extract patient user IDs from active links and get Patient objects
-        List<Patient> patients = activeLinks.stream()
-                .map(link -> users.findById(link.patientUserId()))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .map(user -> patientRepository.findByUser(user))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toList());
 
-        // Apply filters
-        if (email != null && !email.isEmpty()) {
-            patients = patients.stream()
-                    .filter(p -> p.getEmail() != null && p.getEmail().equalsIgnoreCase(email))
-                    .collect(Collectors.toList());
-        }
-        if (name != null && !name.isEmpty()) {
-            patients = patients.stream()
-                    .filter(p -> (p.getFirstName() + " " + p.getLastName()).toLowerCase().contains(name.toLowerCase()))
-                    .collect(Collectors.toList());
-        }
-        return patients;
+        // Get patient objects and combine with link data
+        return activeLinks.stream()
+                .map(link -> {
+                    Optional<User> userOpt = users.findById(link.patientUserId());
+                    if (userOpt.isPresent()) {
+                        Optional<Patient> patientOpt = patientRepository.findByUser(userOpt.get());
+                        if (patientOpt.isPresent()) {
+                            Patient patient = patientOpt.get();
+
+                            // Apply filters
+                            if (email != null && !email.isEmpty() &&
+                                    (patient.getEmail() == null || !patient.getEmail().equalsIgnoreCase(email))) {
+                                return null;
+                            }
+
+                            if (name != null && !name.isEmpty() &&
+                                    !(patient.getFirstName() + " " + patient.getLastName())
+                                            .toLowerCase().contains(name.toLowerCase())) {
+                                return null;
+                            }
+
+                            // Return combined data
+                            return new PatientWithLinkDto(patient, link);
+                        }
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     // 2. Get caregiver details
@@ -198,53 +255,105 @@ public Patient registerPatient(PatientRegistration reg) {
         return sb.toString();
     }
 
+    @Transactional
     public Caregiver registerCaregiver(CaregiverRegistration reg) {
-    if (users.existsByEmail(reg.getCredentials().getEmail()))
-        throw new RegistrationException("Email already registered");
+        if (users.existsByEmail(reg.getCredentials().getEmail()))
+            throw new RegistrationException("Email already registered");
 
-    User user = new User();
-    user.setEmail(reg.getCredentials().getEmail());
-    String encodedPassword = encoder.encode(reg.getCredentials().getPassword());
-    user.setPassword(encodedPassword);
-    user.setPasswordHash(encodedPassword);
-    user.setRole(Role.CAREGIVER);
+        // Create Stripe customer first
+        String fullName = reg.getFirstName() + " " + reg.getLastName();
+        Map<String, Object> customerResult;
 
-    Address addr = toAddress(reg.getAddress());
+        try {
+            customerResult = stripeService.createCustomer(fullName, reg.getCredentials().getEmail());
+        } catch (Exception e) {
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to create Stripe customer: " + e.getMessage());
+        }
 
-    ProfessionalInfoDto profDto = reg.getProfessional();
-    ProfessionalInfo prof = new ProfessionalInfo();
-    if (profDto != null) {
-        prof.setLicenseNumber(profDto.getLicenseNumber());
-        prof.setIssuingState(profDto.getIssuingState());
-        prof.setYearsExperience(profDto.getYearsExperience());
+        // Extract customer ID
+        String stripeCustomerId = (String) customerResult.get("id");
+        if (stripeCustomerId == null) {
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Invalid response from Stripe customer creation");
+        }
+
+        User user = new User();
+        user.setEmail(reg.getCredentials().getEmail());
+        String encodedPassword = encoder.encode(reg.getCredentials().getPassword());
+        user.setPassword(encodedPassword);
+        user.setPasswordHash(encodedPassword);
+        user.setRole(Role.CAREGIVER);
+        user.setStripeCustomerId(stripeCustomerId);
+
+        Address addr = toAddress(reg.getAddress());
+
+        ProfessionalInfoDto profDto = reg.getProfessional();
+        ProfessionalInfo prof = new ProfessionalInfo();
+        if (profDto != null) {
+            prof.setLicenseNumber(profDto.getLicenseNumber());
+            prof.setIssuingState(profDto.getIssuingState());
+            prof.setYearsExperience(profDto.getYearsExperience());
+        }
+
+        String caregiverType = reg.getCaregiverType();
+        if (caregiverType == null || caregiverType.isBlank()) {
+            caregiverType = "PROFESSIONAL";
+        }
+
+        Caregiver cg = Caregiver.builder()
+                .firstName(reg.getFirstName())
+                .lastName(reg.getLastName())
+                .dob(reg.getDob())
+                .email(reg.getCredentials().getEmail())
+                .phone(reg.getPhone())
+                .professional(prof)
+                .address(addr)
+                .user(user)
+                .caregiverType(caregiverType)
+                .build();
+
+        try {
+            Caregiver savedCaregiver = caregiverRepository.save(cg);
+
+            // If plan ID is provided, create subscription
+            if (reg.getPlanId() != null) {
+                // Get the plan from database - convert String to Long
+                Plan plan = planRepository.findById(Long.parseLong(reg.getPlanId()))
+                        .orElseThrow(() -> new AppException(HttpStatus.BAD_REQUEST, "Invalid plan selected"));
+
+                // Create subscription
+                try {
+                    Map<String, Object> subscriptionResult = stripeService.createSubscription(
+                            stripeCustomerId, plan.getCode() // using plan.code as the Stripe price ID
+                    );
+
+                    // Save subscription information to database
+                    if (subscriptionResult != null && subscriptionResult.get("id") != null) {
+                        Subscription subscription = new Subscription();
+                        subscription.setStripeSubscriptionId((String) subscriptionResult.get("id"));
+                        subscription.setStripeCustomerId(stripeCustomerId);
+                        subscription.setUser(user);
+                        subscription.setPlan(plan);
+                        subscription.setStatus("active");
+                        subscription.setStartedAt(java.time.Instant.now());
+                        subscription.setCurrentPeriodEnd(java.time.Instant.now().plusSeconds(2592000)); // 30 days
+                        // Add additional fields as needed
+                        subscriptionRepository.save(subscription);
+                    }
+                } catch (Exception e) {
+                    // Log the error but continue with registration
+                    System.err.println("Failed to create subscription: " + e.getMessage());
+                    // You could rollback the customer creation in Stripe here if needed
+                }
+            }
+
+            return savedCaregiver;
+        } catch (Exception e) {
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Exception occurred while saving caregiver to the database: " + e.getMessage());
+        }
     }
-
-    String caregiverType = reg.getCaregiverType();
-    if (caregiverType == null || caregiverType.isBlank()) {
-        caregiverType = "PROFESSIONAL";
-    }
-    
-
-    Caregiver cg = Caregiver.builder()
-            .firstName(reg.getFirstName())
-            .lastName(reg.getLastName())
-            .dob(reg.getDob())
-            .email(reg.getCredentials().getEmail())
-            .phone(reg.getPhone())
-            .professional(prof)
-            .address(addr)
-            .user(user)
-            .caregiverType(caregiverType)
-            .build();
-
-
-    try {
-        return caregiverRepository.save(cg);
-    } catch (Exception e) {
-        throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Exception occurred while saving caregiver to the database");
-    }
-}
 
     private Address toAddress(AddressDto dto) {
 
@@ -286,4 +395,36 @@ public boolean hasAccessToPatient(Long userId, Long patientId) {
             return false;
     }
 }
+
+    /**
+     * Get a specific patient with link information by patientId for a caregiver
+     * @param caregiverId The ID of the caregiver
+     * @param patientId The ID of the patient
+     * @return A PatientWithLinkDto object containing patient and link information
+     */
+    public PatientWithLinkDto getPatientWithLinkById(Long caregiverId, Long patientId) {
+        // Get caregiver user
+        Caregiver caregiver = getCaregiverById(caregiverId);
+        User caregiverUser = caregiver.getUser();
+
+        // Check if patient exists
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Patient not found"));
+
+        // Get link between caregiver and patient
+        List<CaregiverPatientLinkResponse> activeLinks = caregiverPatientLinkService.getPatientsByCaregiver(caregiverUser.getId());
+
+        // Find the specific link for this patient
+        Optional<CaregiverPatientLinkResponse> linkOpt = activeLinks.stream()
+                .filter(link -> link.patientUserId().equals(patient.getUser().getId()))
+                .findFirst();
+
+        if (linkOpt.isEmpty()) {
+            throw new AppException(HttpStatus.FORBIDDEN, "Caregiver has no active link to this patient");
+        }
+
+        // Return combined data
+        return new PatientWithLinkDto(patient, linkOpt.get());
+    }
+
 }
