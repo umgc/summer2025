@@ -27,7 +27,6 @@ class _MedicationManagementScreenState
     _loadMedications();
   }
 
-  // Load medications from SharedPreferences
   Future<void> _loadMedications() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -51,7 +50,6 @@ class _MedicationManagementScreenState
     }
   }
 
-  // Save medications to SharedPreferences
   Future<void> _saveMedications() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -91,12 +89,12 @@ class _MedicationManagementScreenState
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Medication Management'),
+      drawer: const CommonDrawer(currentRoute: '/medication'),
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Medication Management',
         centerTitle: true,
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-        actions: [
+        additionalActions: [
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
@@ -115,7 +113,6 @@ class _MedicationManagementScreenState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Large medication icon
           Container(
             width: 120,
             height: 120,
@@ -132,7 +129,6 @@ class _MedicationManagementScreenState
 
           const SizedBox(height: 32),
 
-          // Title
           Text(
             'No Medications Added',
             style: TextStyle(
@@ -144,7 +140,6 @@ class _MedicationManagementScreenState
 
           const SizedBox(height: 16),
 
-          // Description
           const Text(
             'Scan medication barcodes, enter NDC codes, or manually add medications to manage your patient\'s medication schedule.',
             textAlign: TextAlign.center,
@@ -153,10 +148,8 @@ class _MedicationManagementScreenState
 
           const SizedBox(height: 40),
 
-          // Add Medication Buttons
           Column(
             children: [
-              // Scan Barcode Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -185,7 +178,6 @@ class _MedicationManagementScreenState
 
               const SizedBox(height: 12),
 
-              // Enter Code Button
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -211,7 +203,6 @@ class _MedicationManagementScreenState
 
               const SizedBox(height: 12),
 
-              // Manual Add Button
               SizedBox(
                 width: double.infinity,
                 child: TextButton.icon(
@@ -249,7 +240,6 @@ class _MedicationManagementScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Section
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -279,7 +269,6 @@ class _MedicationManagementScreenState
           ),
           const SizedBox(height: 20),
 
-          // Medication List
           Expanded(
             child: ListView.builder(
               itemCount: medications.length,
@@ -406,7 +395,6 @@ class _MedicationManagementScreenState
   }
 
   Future<void> _scanMedicationCode() async {
-    // Request camera permission
     final status = await Permission.camera.request();
     if (status != PermissionStatus.granted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -418,7 +406,6 @@ class _MedicationManagementScreenState
       return;
     }
 
-    // Navigate to scanner screen
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -433,7 +420,6 @@ class _MedicationManagementScreenState
   }
 
   Future<void> _processScannedCode(String code) async {
-    // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -452,7 +438,7 @@ class _MedicationManagementScreenState
 
     try {
       final medicationData = await _lookupMedication(code);
-      Navigator.pop(context); // Close loading dialog
+      Navigator.pop(context);
 
       if (medicationData != null) {
         _showMedicationDetails(medicationData);
@@ -472,7 +458,7 @@ class _MedicationManagementScreenState
         );
       }
     } catch (e) {
-      Navigator.pop(context); // Close loading dialog
+      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error looking up medication. Please try again.'),
@@ -694,7 +680,6 @@ class _MedicationManagementScreenState
                     ),
                     const SizedBox(height: 12),
 
-                    // Start Date Field
                     InkWell(
                       onTap: () async {
                         final DateTime? picked = await showDatePicker(
@@ -735,7 +720,6 @@ class _MedicationManagementScreenState
                     ),
                     const SizedBox(height: 12),
 
-                    // End Date Field
                     InkWell(
                       onTap: () async {
                         final DateTime? picked = await showDatePicker(
@@ -918,7 +902,6 @@ class _MedicationManagementScreenState
                     ),
                     const SizedBox(height: 12),
 
-                    // Start Date Field
                     InkWell(
                       onTap: () async {
                         final DateTime? picked = await showDatePicker(
@@ -970,7 +953,6 @@ class _MedicationManagementScreenState
                     ),
                     const SizedBox(height: 12),
 
-                    // End Date Field
                     InkWell(
                       onTap: () async {
                         final DateTime? picked = await showDatePicker(
@@ -1053,7 +1035,6 @@ class _MedicationManagementScreenState
                       };
                     });
 
-                    // Save to persistent storage
                     _saveMedications();
 
                     Navigator.pop(context);
@@ -1093,7 +1074,6 @@ class _MedicationManagementScreenState
                 setState(() {
                   medications.removeAt(index);
                 });
-                // Save to persistent storage
                 _saveMedications();
 
                 Navigator.pop(context);
@@ -1118,7 +1098,7 @@ class _MedicationManagementScreenState
 
     try {
       final uri = Uri.parse(
-        'https://api.fda.gov/drug/ndc.json?search=product_ndc:"$cleanCode"&limit=1'
+          'https://api.fda.gov/drug/ndc.json?search=product_ndc:"$cleanCode"&limit=1'
       );
 
       final response = await http.get(uri);
@@ -1231,7 +1211,6 @@ class _MedicationManagementScreenState
                     ),
                     const SizedBox(height: 12),
 
-                    // Start Date Field
                     InkWell(
                       onTap: () async {
                         final DateTime? picked = await showDatePicker(
@@ -1272,7 +1251,6 @@ class _MedicationManagementScreenState
                     ),
                     const SizedBox(height: 12),
 
-                    // End Date Field
                     InkWell(
                       onTap: () async {
                         final DateTime? picked = await showDatePicker(
@@ -1378,7 +1356,6 @@ class _MedicationManagementScreenState
       });
     });
 
-    // Save to persistent storage
     await _saveMedications();
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1449,7 +1426,6 @@ class _MedicationManagementScreenState
   }
 }
 
-// Barcode Scanner Screen
 class BarcodeScannerScreen extends StatefulWidget {
   final Function(String) onCodeScanned;
 
@@ -1522,7 +1498,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
       body: Column(
         children: [
           Expanded(
-            flex: 4,
+            flex: 6,
             child: MobileScanner(
               controller: cameraController,
               onDetect: (capture) {
@@ -1536,7 +1512,6 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                     });
                     cameraController.stop();
 
-                    // Process the scanned code
                     widget.onCodeScanned(barcode.rawValue!);
                     break;
                   }
@@ -1544,77 +1519,66 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
               },
             ),
           ),
-          Expanded(
-            flex: 1,
-            child: Container(
-              color: Colors.white,
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.qr_code_scanner,
-                        size: 24,
-                        color: Colors.indigo,
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.view_module,
-                        size: 24,
-                        color: Colors.indigo,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Scanning for QR codes and barcodes',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.qr_code_scanner,
+                      size: 24,
+                      color: Colors.indigo,
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Supports UPC, EAN, Code128, Code39, and more',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.view_module,
+                      size: 24,
+                      color: Colors.indigo,
                     ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Scanning for QR codes and barcodes',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Position any barcode or QR code in the camera view',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Position any barcode or QR code in the camera view',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+                      icon: const Icon(Icons.close, color: Colors.white, size: 18),
+                      label: const Text('Cancel', style: TextStyle(color: Colors.white)),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
-                        icon: const Icon(Icons.close, color: Colors.white, size: 18),
-                        label: const Text('Cancel', style: TextStyle(color: Colors.white)),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          cameraController.switchCamera();
-                        },
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
-                        icon: const Icon(Icons.flip_camera_ios, color: Colors.white, size: 18),
-                        label: const Text('Flip', style: TextStyle(color: Colors.white)),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        cameraController.switchCamera();
+                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
+                      icon: const Icon(Icons.flip_camera_ios, color: Colors.white, size: 18),
+                      label: const Text('Flip', style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
