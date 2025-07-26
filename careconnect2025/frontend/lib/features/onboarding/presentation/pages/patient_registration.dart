@@ -790,12 +790,13 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
   }
 
   Future<void> _registerPatient() async {
-    if (!_formKeys[_currentStep].currentState!.validate()) {
-      // Display error message and validate relationship field
+    if (!_formKeys[_currentStep].currentState!.validate() ||
+        _selectedGender == null) {
+      // Display error message and validate relationship and gender field
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Please complete all required fields correctly before registering',
+            'Please complete all required fields correctly before registering, including gender selection.',
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: AppTheme.error,
@@ -804,6 +805,7 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
       );
 
       _validateAndUpdate('relationship', _relationshipController.text);
+      _validateAndUpdate('gender', _selectedGender ?? '');
       return;
     }
 

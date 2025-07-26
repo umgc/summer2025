@@ -161,30 +161,33 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  widget.isRegistration == true
-                      ? 'Welcome to CareConnect! Your account has been created and your subscription is active. You can now log in to access all features.'
-                      : 'Thank you for your payment! Your subscription has been updated successfully.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
+                widget.isRegistration == true
+                    ? _buildWelcomeText(context)
+                    : Text(
+                        'Thank you for your payment! Your subscription has been updated successfully.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                if (widget.sessionId != null)
+                  Column(
+                    children: [
+                      const SizedBox(height: 16),
+                      Text(
+                        'Session ID: ${widget.sessionId}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.5),
+                        ),
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                if (widget.sessionId != null) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    'Session ID: ${widget.sessionId}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.5),
-                    ),
-                  ),
-                ],
                 const SizedBox(height: 48),
                 SizedBox(
                   width: double.infinity,
@@ -225,6 +228,45 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Add the method after build
+  Widget _buildWelcomeText(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final name = userProvider.user?.name ?? '';
+    return RichText(
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        style: TextStyle(
+          fontSize: 16,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        ),
+        children: [
+          const TextSpan(text: 'Welcome to CareConnect'),
+          if (name.isNotEmpty)
+            TextSpan(
+              text: ', ',
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
+          if (name.isNotEmpty)
+            TextSpan(
+              text: name,
+              style: TextStyle(
+                color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          const TextSpan(
+            text:
+                '! Your account has been created and your subscription is active. You can now log in to access all features.',
+          ),
+        ],
       ),
     );
   }

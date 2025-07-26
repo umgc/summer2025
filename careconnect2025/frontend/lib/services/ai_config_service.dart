@@ -163,25 +163,42 @@ class AIConfigService {
   ) async {
     try {
       final authHeaders = await ApiService.getAuthHeaders();
-      final response = await http.post(
-        Uri.parse('$baseUrl/config'),
+      // Check if config exists for patient
+      final checkResponse = await http.get(
+        Uri.parse('$baseUrl/config/${config.patientId}'),
         headers: authHeaders,
-        body: jsonEncode(config.toJson()),
       );
-
-      print(
-        '🤖 Saving AI config for patient ${config.patientId}: ${response.statusCode}',
-      );
-
+      http.Response response;
+      if (checkResponse.statusCode == 200) {
+        // Config exists, use PUT to update
+        response = await http.put(
+          Uri.parse('$baseUrl/config/${config.patientId}'),
+          headers: authHeaders,
+          body: jsonEncode(config.toJson()),
+        );
+        print(
+          '🤖 Updating AI config for patient ${config.patientId}: ${response.statusCode}',
+        );
+      } else {
+        // Config does not exist, use POST to create
+        response = await http.post(
+          Uri.parse('$baseUrl/config'),
+          headers: authHeaders,
+          body: jsonEncode(config.toJson()),
+        );
+        print(
+          '🤖 Creating AI config for patient ${config.patientId}: ${response.statusCode}',
+        );
+      }
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return PatientAIConfigDTO.fromJson(data);
       } else {
-        print('❌ Failed to save AI config: ${response.statusCode}');
+        print('❌ Failed to save/update AI config: ${response.statusCode}');
         return null;
       }
     } catch (e) {
-      print('❌ Error saving AI config: $e');
+      print('❌ Error saving/updating AI config: $e');
       return null;
     }
   }

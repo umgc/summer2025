@@ -620,23 +620,24 @@ class CallIntegrationHelper {
     required BuildContext context,
     required dynamic currentPatient,
   }) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.all(16),
       child: ElevatedButton.icon(
         onPressed: () =>
-            _showSOSDialog(context: context, currentPatient: currentPatient),
-        icon: const Icon(Icons.emergency, color: Colors.white, size: 28),
-        label: const Text(
+            showSOSDialog(context: context, currentPatient: currentPatient),
+        icon: Icon(Icons.emergency, color: theme.colorScheme.onError, size: 28),
+        label: Text(
           'SOS EMERGENCY',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: theme.colorScheme.onError,
             fontWeight: FontWeight.bold,
+            fontSize: 18,
           ),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
+          backgroundColor: theme.colorScheme.error,
+          foregroundColor: theme.colorScheme.onError,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -648,7 +649,7 @@ class CallIntegrationHelper {
   }
 
   /// Show SOS emergency type selection dialog
-  static void _showSOSDialog({
+  static void showSOSDialog({
     required BuildContext context,
     required dynamic currentPatient,
   }) {
@@ -691,47 +692,71 @@ class CallIntegrationHelper {
       },
     ];
 
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(
+        title: Text(
           '🚨 SOS Emergency',
-          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: theme.colorScheme.error,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: SizedBox(
           width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Select the type of emergency:'),
-              const SizedBox(height: 16),
-              ...emergencyTypes.map(
-                (emergency) => Card(
-                  child: ListTile(
-                    leading: Icon(
-                      emergency['icon'] as IconData,
-                      color: Colors.red,
-                    ),
-                    title: Text(emergency['title'] as String),
-                    subtitle: Text(emergency['description'] as String),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      sendSOSEmergencyAlert(
-                        context: context,
-                        currentUser: currentPatient,
-                        additionalInfo: emergency['description'] as String,
-                      );
-                    },
+          // Set a max height to prevent overflow
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 400),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Select the type of emergency:',
+                    style: theme.textTheme.bodyMedium,
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  ...emergencyTypes.map(
+                    (emergency) => Card(
+                      child: ListTile(
+                        leading: Icon(
+                          emergency['icon'] as IconData,
+                          color: theme.colorScheme.error,
+                        ),
+                        title: Text(
+                          emergency['title'] as String,
+                          style: theme.textTheme.titleSmall,
+                        ),
+                        subtitle: Text(
+                          emergency['description'] as String,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          sendSOSEmergencyAlert(
+                            context: context,
+                            currentUser: currentPatient,
+                            additionalInfo: emergency['description'] as String,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
           ),
         ],
       ),

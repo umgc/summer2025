@@ -15,12 +15,15 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
-    print('🔍 SettingsPage: Building settings page');
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider.user;
-    final isPatient = user != null && user.role.toUpperCase() == 'PATIENT';
+    if (user == null) {
+      // Redirect to login if not authenticated
+      Future.microtask(() => context.go('/login'));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
-    print('🔍 SettingsPage: User is patient: $isPatient, User: ${user?.name}');
+    final isPatient = user.role.toUpperCase() == 'PATIENT';
 
     return Scaffold(
       appBar: AppBar(
@@ -32,7 +35,6 @@ class _SettingsPageState extends State<SettingsPage> {
           // Cancel button
           TextButton(
             onPressed: () {
-              // Use GoRouter to navigate back properly
               if (context.canPop()) {
                 context.pop();
               } else {
@@ -73,136 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 24),
           ],
-
-          // Billing Section (Caregiver only)
-          if (!isPatient) ...[
-            _buildSettingsCard(
-              context,
-              icon: Icons.receipt_long,
-              title: 'Billing History',
-              subtitle: 'View past invoices and payments',
-              onTap: () => context.go('/billing-history'),
-            ),
-            const SizedBox(height: 24),
-          ],
-
-          // Notifications Section
-          _buildSectionHeader(context, 'Notifications'),
-          _buildSettingsCard(
-            context,
-            icon: Icons.notifications,
-            title: 'Notification Settings',
-            subtitle: 'Configure alerts and reminders',
-            onTap: () => context.go('/notification-settings'),
-          ),
-          _buildSettingsCard(
-            context,
-            icon: Icons.sms,
-            title: 'SMS Settings',
-            subtitle: 'Manage SMS notifications',
-            onTap: () => context.go('/sms-settings'),
-          ),
-          const SizedBox(height: 24),
-
-          // Privacy & Security Section
-          _buildSectionHeader(context, 'Privacy & Security'),
-          _buildSettingsCard(
-            context,
-            icon: Icons.security,
-            title: 'Privacy Settings',
-            subtitle: 'Control your data and privacy',
-            onTap: () => context.go('/privacy-settings'),
-          ),
-          _buildSettingsCard(
-            context,
-            icon: Icons.password,
-            title: 'Change Password',
-            subtitle: 'Update your account password',
-            onTap: () => context.go('/change-password'),
-          ),
-          const SizedBox(height: 24),
-
-          // App Preferences Section
-          _buildSectionHeader(context, 'App Preferences'),
-          _buildThemeCard(context),
-          _buildSettingsCard(
-            context,
-            icon: Icons.language,
-            title: 'Language',
-            subtitle: 'Change app language',
-            onTap: () => context.go('/language-settings'),
-          ),
-          const SizedBox(height: 24),
-
-          // Emergency Contacts Section
-          _buildSectionHeader(context, 'Emergency'),
-          _buildSettingsCard(
-            context,
-            icon: Icons.emergency,
-            title: 'Emergency Contacts',
-            subtitle: 'Manage emergency contact information',
-            onTap: () => context.go('/emergency-contacts'),
-          ),
-          const SizedBox(height: 24),
-
-          // Data & Storage Section
-          _buildSectionHeader(context, 'Data & Storage'),
-          _buildSettingsCard(
-            context,
-            icon: Icons.backup,
-            title: 'Data Backup',
-            subtitle: 'Backup and restore your data',
-            onTap: () => context.go('/data-backup'),
-          ),
-          _buildSettingsCard(
-            context,
-            icon: Icons.delete_sweep,
-            title: 'Clear Cache',
-            subtitle: 'Clear app cache and temporary files',
-            onTap: () => _showClearCacheDialog(context),
-          ),
-          const SizedBox(height: 24),
-
-          // Support Section
-          _buildSectionHeader(context, 'Support'),
-          _buildSettingsCard(
-            context,
-            icon: Icons.help,
-            title: 'Help & Support',
-            subtitle: 'Get help and contact support',
-            onTap: () => context.go('/help-support'),
-          ),
-          _buildSettingsCard(
-            context,
-            icon: Icons.info,
-            title: 'About',
-            subtitle: 'App version and information',
-            onTap: () => context.go('/about'),
-          ),
-          const SizedBox(height: 24),
-
-          // Account Section
-          _buildSectionHeader(context, 'Account'),
-          _buildSettingsCard(
-            context,
-            icon: Icons.logout,
-            title: 'Sign Out',
-            subtitle: 'Sign out of your account',
-            onTap: () => _showSignOutDialog(context),
-            textColor: Theme.of(context).colorScheme.error,
-            iconColor: Theme.of(context).colorScheme.error,
-          ),
-          _buildSettingsCard(
-            context,
-            icon: Icons.delete_forever,
-            title: 'Delete Account',
-            subtitle: 'Permanently delete your account',
-            onTap: () => _showDeleteAccountDialog(context),
-            textColor: Theme.of(context).colorScheme.error,
-            iconColor: Theme.of(context).colorScheme.error,
-          ),
-
-          const SizedBox(height: 32),
+          // ...existing code...
         ],
       ),
     );

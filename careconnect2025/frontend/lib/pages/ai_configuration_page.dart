@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../widgets/common_drawer.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../services/ai_config_service.dart';
@@ -11,6 +13,48 @@ class AIConfigurationPage extends StatefulWidget {
 }
 
 class _AIConfigurationPageState extends State<AIConfigurationPage> {
+  Widget _buildConfigForm() {
+    final theme = Theme.of(context);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildInfoCard(theme),
+          const SizedBox(height: 24),
+          _buildProviderSection(theme),
+          const SizedBox(height: 24),
+          _buildPersonalitySection(theme),
+          const SizedBox(height: 24),
+          _buildFeaturesSection(theme),
+          const SizedBox(height: 24),
+          _buildAdvancedSection(theme),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.user;
+    if (user == null) {
+      Future.microtask(() => context.go('/login'));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('AI Configuration'),
+        // ...existing code...
+      ),
+      drawer: const CommonDrawer(currentRoute: '/ai-configuration'),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _buildConfigForm(),
+    );
+  }
+
   PatientAIConfigDTO? _currentConfig;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -161,69 +205,7 @@ class _AIConfigurationPageState extends State<AIConfigurationPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('AI Assistant Configuration'),
-        backgroundColor: theme.colorScheme.surface,
-        foregroundColor: theme.colorScheme.onSurface,
-        elevation: 0,
-        actions: [
-          if (!_isLoading)
-            TextButton(
-              onPressed: _isSaving ? null : _saveConfiguration,
-              child: _isSaving
-                  ? SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          theme.colorScheme.primary,
-                        ),
-                      ),
-                    )
-                  : Text(
-                      'Save',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-            ),
-        ],
-      ),
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  theme.colorScheme.primary,
-                ),
-              ),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildInfoCard(theme),
-                  const SizedBox(height: 24),
-                  _buildProviderSection(theme),
-                  const SizedBox(height: 24),
-                  _buildPersonalitySection(theme),
-                  const SizedBox(height: 24),
-                  _buildFeaturesSection(theme),
-                  const SizedBox(height: 24),
-                  _buildAdvancedSection(theme),
-                  const SizedBox(height: 32),
-                ],
-              ),
-            ),
-    );
-  }
+  // ...existing code...
 
   Widget _buildInfoCard(ThemeData theme) {
     return Container(

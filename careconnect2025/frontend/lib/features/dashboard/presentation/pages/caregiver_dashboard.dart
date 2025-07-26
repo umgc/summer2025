@@ -18,6 +18,7 @@ import '../../../../services/call_notification_service.dart';
 import '../../../../widgets/messaging_widget.dart';
 import '../../../../widgets/video_call_widget.dart';
 import '../../../../widgets/call_notification_status_indicator.dart';
+
 import 'patient_medical_notes_page.dart';
 
 class CaregiverDashboard extends StatefulWidget {
@@ -44,6 +45,11 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
 
   // Real-time call notification state
   bool _callNotificationInitialized = false;
+
+  // Main content builder method
+  Widget _buildMainContent() {
+    return _buildContentBasedOnState();
+  }
 
   @override
   void initState() {
@@ -150,79 +156,51 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
         final List<dynamic> data = jsonDecode(response.body);
         print('🔍 Received patient data: $data');
 
-        // Safely parse each patient, skipping any that cause errors
         List<Patient> parsedPatients = [];
         for (var json in data) {
           try {
-            // Check if we have a nested structure
+            Map<String, dynamic> patientJson;
             if (json.containsKey('patient') &&
                 json['patient'] is Map<String, dynamic>) {
-              print('🔍 Found nested patient data structure');
-
-              // Extract link info if available
+              patientJson = Map<String, dynamic>.from(json['patient']);
+              // Merge link info
               if (json.containsKey('link') &&
                   json['link'] is Map<String, dynamic>) {
                 final link = json['link'] as Map<String, dynamic>;
-                if (link.containsKey('id')) {
-                  json['linkId'] = link['id'];
-                  json['linkStatus'] = link['status'] ?? 'ACTIVE';
-                  print(
-                    '🔍 Extracted link info: ID=${link['id']}, status=${link['status']}',
-                  );
-                }
+                patientJson['linkId'] = link['id'];
+                patientJson['linkStatus'] = link['status'] ?? 'ACTIVE';
+                // Always set relationship from link if present
+                patientJson['relationship'] =
+                    patientJson['relationship'] ??
+                    (link['relationship'] ?? 'Patient');
               }
-            }
-
-            final patient = Patient.fromJson(json);
-            if (patient.id <= 0) {
-              print(
-                '⚠️ Warning: Parsed patient has invalid ID (${patient.id}): $json',
-              );
             } else {
+              patientJson = Map<String, dynamic>.from(json);
+            }
+            // Ensure null gender is handled
+            if (!patientJson.containsKey('gender') ||
+                patientJson['gender'] == null) {
+              patientJson['gender'] = '';
+            }
+            // Ensure linkId and linkStatus are present
+            if (!patientJson.containsKey('linkId') &&
+                json.containsKey('link')) {
+              patientJson['linkId'] = json['link']?['id'];
+            }
+            if (!patientJson.containsKey('linkStatus') &&
+                json.containsKey('link')) {
+              patientJson['linkStatus'] = json['link']?['status'] ?? 'ACTIVE';
+            }
+            final patient = Patient.fromJson(patientJson);
+            if (patient.id > 0) {
+              parsedPatients.add(patient);
               print(
                 '✅ Successfully parsed patient with ID: ${patient.id}, name: ${patient.firstName} ${patient.lastName}',
               );
-
-              // Add mock vital conditions for demonstration if not present
-              if (patient.vitalConditions == null ||
-                  patient.gender == null ||
-                  patient.allergies == null) {
-                // Create a modified patient with mock data
-                final patientWithData = Patient(
-                  id: patient.id,
-                  firstName: patient.firstName,
-                  lastName: patient.lastName,
-                  email: patient.email,
-                  phone: patient.phone,
-                  dob: patient.dob,
-                  relationship: patient.relationship,
-                  profileImageUrl: patient.profileImageUrl,
-                  address: patient.address,
-                  linkId: patient.linkId,
-                  linkStatus: patient.linkStatus,
-                  gender:
-                      patient.gender ??
-                      (patient.id % 2 == 0 ? 'Female' : 'Male'),
-                  allergies:
-                      patient.allergies ??
-                      <String>[], // Use empty list instead of mock data
-                  vitalConditions:
-                      patient.vitalConditions ??
-                      {
-                        'heartRate': (60 + (patient.id * 7) % 40)
-                            .toString(), // Mock HR between 60-100
-                        'bloodPressure':
-                            '${120 + (patient.id * 3) % 20}/${80 + (patient.id * 2) % 10}', // Mock BP
-                        'temperature': (98.6 + (patient.id % 3 - 1) * 0.5)
-                            .toStringAsFixed(1), // Mock temp
-                        'oxygenSaturation': (95 + (patient.id * 2) % 5)
-                            .toString(), // Mock O2 sat
-                      },
-                );
-                parsedPatients.add(patientWithData);
-              } else {
-                parsedPatients.add(patient);
-              }
+            } else {
+              print(
+                '⚠️ Warning: Parsed patient has invalid ID (${patient.id}): $patientJson',
+              );
             }
           } catch (e) {
             print('❌ Error parsing patient: $e, data: $json');
@@ -473,19 +451,19 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    // Get user provider for context
-
-    // Use the responsive utilities for screen size detection
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.user;
+    if (user == null) {
+      Future.microtask(() => context.go('/login'));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     final isLargeScreen = context.isLargeDesktop;
-
     return ResponsiveScaffold(
       title: caregiverName != null
           ? 'Welcome, $caregiverName'
           : 'Caregiver Dashboard',
-      // Optionally add responsive elements to app bar for large screens
       appBarActions: isLargeScreen
           ? [
-              // Call notification status indicator
               CallNotificationStatusIndicator(
                 isInitialized: _callNotificationInitialized,
               ),
@@ -493,7 +471,6 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
               IconButton(
                 icon: const Icon(Icons.help_outline),
                 onPressed: () {
-                  // Show help dialog
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Help documentation coming soon'),
@@ -504,125 +481,65 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
               const SizedBox(width: 8),
             ]
           : [
-              // For smaller screens, show status indicator in actions
               CallNotificationStatusIndicator(
                 isInitialized: _callNotificationInitialized,
               ),
               const SizedBox(width: 8),
             ],
       currentRoute: '/dashboard',
-      body: Stack(
-        children: [
-          // The ResponsiveScaffold already handles content centering and constraints
-          _buildMainContent(),
-
-          // Always show AI Chat button at the bottom right
-          // Using responsive utils for positioning
-          Positioned(
-            right: context.responsiveValue(
-              mobile: 16.0,
-              tablet: 24.0,
-              desktop: 32.0,
-            ),
-            bottom: context.responsiveValue(
-              mobile: 16.0,
-              tablet: 24.0,
-              desktop: 32.0,
-            ),
-            child: FloatingActionButton(
-              heroTag: 'chatButton',
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: Icon(
-                Icons.chat,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
-              onPressed: () async {
-                // Check subscription for caregivers before showing AI chat
-                final hasAccess =
-                    await SubscriptionService.checkPremiumAccessWithDialog(
-                      context,
-                      'AI Assistant is only available with premium subscriptions.',
-                    );
-                if (!hasAccess) return;
-
-                // Use responsive height for the sheet based on screen size
-                double sheetHeight = context.responsiveValue(
-                  mobile: MediaQuery.of(context).size.height * 0.75,
-                  desktop: MediaQuery.of(context).size.height * 0.8,
-                );
-
-                showModalBottomSheet(
-                  isScrollControlled: true,
-                  context: context,
-                  backgroundColor: Colors.white,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
-                  ),
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width,
-                  ),
-                  builder: (context) => SizedBox(
-                    height: sheetHeight,
-                    child: const AIChat(role: 'caregiver', isModal: true),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-      // Removed "Add Patient" floating action button as requested
+      body: _buildMainContent(),
     );
   }
 
-  // Extract main content to a separate method for better organization
-  Widget _buildMainContent() {
+  Widget _buildContentBasedOnState() {
     if (loading) {
       return const Center(child: CircularProgressIndicator());
     } else if (error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Error Loading Patients',
-                style: AppTheme.headingSmall,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                error!,
-                style: AppTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: fetchPatients,
-                style: AppTheme.primaryButtonStyle,
-                child: const Text('Try Again'),
-              ),
-            ],
-          ),
-        ),
-      );
+      return _buildErrorState();
     } else if (patients.isEmpty) {
-      return _buildEmptyState();
+      return _buildEmptyStateContent();
     } else {
-      return _buildPatientList();
+      return _buildPatientListContent();
     }
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Error Loading Patients',
+              style: AppTheme.headingSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error!,
+              style: AppTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: fetchPatients,
+              style: AppTheme.primaryButtonStyle,
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyStateContent() {
     // Use responsive utils for width calculation
     final isMobile = context.isMobile;
 
@@ -712,7 +629,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     );
   }
 
-  Widget _buildPatientList() {
+  Widget _buildPatientListContent() {
     // Use responsive utils for margins
     final horizontalMargin = context.horizontalMargin;
 
@@ -720,64 +637,16 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
       onRefresh: fetchPatients,
       child: CustomScrollView(
         slivers: [
+          // Show patient count
           SliverPadding(
             padding: EdgeInsets.fromLTRB(
               horizontalMargin,
-              16.0,
+              0,
               horizontalMargin,
               8.0,
             ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Your Patients', style: AppTheme.headingSmall),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        print('🔍 Add Patient button pressed'); // Debug print
-                        try {
-                          Navigator.pushNamed(context, '/add-patient').then((
-                            _,
-                          ) {
-                            print('🔍 Returned from add patient screen');
-                            // Refresh patient list when returning from add patient screen
-                            fetchPatients();
-                          });
-                        } catch (e) {
-                          print('🔍 Navigation error: $e');
-                          // Fallback to context.go if pushNamed fails
-                          try {
-                            context.go('/add-patient');
-                          } catch (e2) {
-                            print('🔍 Secondary navigation error: $e2');
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Navigation error. Please try again.',
-                                ),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        }
-                      },
-                      icon: const Icon(Icons.person_add),
-                      label: const Text('Add Patient'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
-                        // Ensure proper button sizing for touch
-                        minimumSize: const Size(120, 40),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
                 Text(
                   'Showing ${patients.length} patients',
                   style: AppTheme.bodyMedium.copyWith(
@@ -838,672 +707,6 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     );
   }
 
-  Widget _buildPatientCard(Patient patient) {
-    // Use responsive utils for device type detection
-    final bool isGridView = context.isDesktopOrLarger;
-
-    // Use responsive values for avatar sizes
-    final double avatarSize = context.responsiveValue(
-      mobile: 35.0,
-      desktop: 45.0,
-    );
-
-    return Card(
-      margin: isGridView ? EdgeInsets.zero : const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: Theme.of(context).dividerColor.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          ListTile(
-            contentPadding: const EdgeInsets.all(20),
-            leading: CircleAvatar(
-              radius: avatarSize,
-              backgroundColor: Theme.of(
-                context,
-              ).colorScheme.primary.withOpacity(0.2),
-              child: Text(
-                patient.firstName.isNotEmpty
-                    ? patient.firstName.substring(0, 1).toUpperCase()
-                    : patient.lastName.isNotEmpty
-                    ? patient.lastName.substring(0, 1).toUpperCase()
-                    : '?',
-                style: AppTheme.headingSmall.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontSize: isGridView ? 28 : 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            title: Text(
-              "${patient.firstName} ${patient.lastName}",
-              style: AppTheme.headingSmall.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.cake,
-                      size: 16,
-                      color: Theme.of(context).hintColor,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      patient.dob.isNotEmpty
-                          ? 'Age ${_calculateAgeFromDob(patient.dob)}'
-                          : 'Age not specified',
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: Theme.of(context).hintColor,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.person,
-                      size: 16,
-                      color: Theme.of(context).hintColor,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      patient.gender?.isNotEmpty == true
-                          ? patient.gender!
-                          : 'Gender not specified',
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: Theme.of(context).hintColor,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.family_restroom,
-                      size: 16,
-                      color: Theme.of(context).hintColor,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      patient.relationship.isNotEmpty
-                          ? patient.relationship
-                          : 'Patient',
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: Theme.of(context).hintColor,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.warning_amber,
-                      size: 16,
-                      color: Theme.of(context).hintColor,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        patient.allergies?.isNotEmpty == true
-                            ? 'Allergies: ${patient.allergies!.join(', ')}'
-                            : 'No allergies listed',
-                        style: AppTheme.bodyMedium.copyWith(
-                          color: Theme.of(context).hintColor,
-                          fontSize: 14,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-
-                // Vital conditions summary
-                Row(
-                  children: [
-                    Icon(
-                      Icons.favorite,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        _getVitalConditionsSummary(patient),
-                        style: AppTheme.bodyMedium.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            trailing: PopupMenuButton<String>(
-              icon: Icon(
-                Icons.more_vert,
-                color: Theme.of(context).colorScheme.primary,
-                size: 28,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              onSelected: (value) async {
-                // Verify we have a valid patient ID and linkId before taking action
-                if (patient.id <= 0) {
-                  print('⚠️ Warning: Invalid patient ID: ${patient.id}');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Error: Invalid patient ID')),
-                  );
-                  return;
-                }
-
-                if (value == 'view') {
-                  print('✅ Navigating to patient profile: ${patient.id}');
-                  context.go('/patient/${patient.id}');
-                } else if (value == 'suspend') {
-                  // Show confirmation dialog
-                  final bool? confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Suspend Relationship'),
-                      content: Text(
-                        'Are you sure you want to suspend your relationship with ${patient.firstName} ${patient.lastName}?',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('CANCEL'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text('SUSPEND'),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (confirm == true) {
-                    try {
-                      final linkId = patient.linkId;
-                      if (linkId == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Error: Missing link ID'),
-                          ),
-                        );
-                        return;
-                      }
-
-                      final response =
-                          await ApiService.suspendCaregiverPatientLink(linkId);
-                      if (response.statusCode == 200) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Relationship with ${patient.firstName} suspended',
-                            ),
-                          ),
-                        );
-                        fetchPatients(); // Refresh the patient list
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Failed to suspend relationship: ${response.statusCode}',
-                            ),
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                    }
-                  }
-                } else if (value == 'reactivate') {
-                  // Show confirmation dialog
-                  final bool? confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Reactivate Relationship'),
-                      content: Text(
-                        'Do you want to reactivate your relationship with ${patient.firstName} ${patient.lastName}?',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('CANCEL'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text('REACTIVATE'),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (confirm == true) {
-                    try {
-                      final linkId = patient.linkId;
-                      if (linkId == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Error: Missing link ID'),
-                          ),
-                        );
-                        return;
-                      }
-
-                      final response =
-                          await ApiService.reactivateCaregiverPatientLink(
-                            linkId,
-                          );
-                      if (response.statusCode == 200) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Relationship with ${patient.firstName} reactivated',
-                            ),
-                          ),
-                        );
-                        fetchPatients(); // Refresh the patient list
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Failed to reactivate relationship: ${response.statusCode}',
-                            ),
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                    }
-                  }
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem<String>(
-                  value: 'view',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.visibility,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text('View Profile'),
-                    ],
-                  ),
-                ),
-                if (patient.linkStatus.toUpperCase() == 'ACTIVE')
-                  PopupMenuItem<String>(
-                    value: 'suspend',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.pause_circle_outline,
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('Suspend Relationship'),
-                      ],
-                    ),
-                  ),
-                if (patient.linkStatus.toUpperCase() == 'SUSPENDED')
-                  PopupMenuItem<String>(
-                    value: 'reactivate',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.play_circle_outline,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('Reactivate Relationship'),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            onTap: () {
-              // Verify we have a valid patient ID before navigating
-              if (patient.id <= 0) {
-                print(
-                  '⚠️ Warning: Attempted to navigate to patient profile with invalid ID: ${patient.id}',
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Error: Invalid patient ID')),
-                );
-                return;
-              }
-
-              print('✅ Navigating to patient profile: ${patient.id}');
-              context.go('/patient/${patient.id}');
-            },
-          ),
-          // Status indicators removed as per design update
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                // Only showing patient link status
-                Row(
-                  children: [
-                    Icon(
-                      patient.linkStatus == 'ACTIVE'
-                          ? Icons.check_circle
-                          : Icons.pause_circle_filled,
-                      color: patient.linkStatus == 'ACTIVE'
-                          ? Theme.of(context).colorScheme.secondary
-                          : Theme.of(context).disabledColor,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      patient.linkStatus == 'ACTIVE'
-                          ? 'Active'
-                          : patient.linkStatus,
-                      style: AppTheme.bodyMedium.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: patient.linkStatus == 'ACTIVE'
-                            ? Theme.of(context).colorScheme.secondary
-                            : Theme.of(context).disabledColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Check if we need scrollable layout for mobile
-                final isMobile = constraints.maxWidth < 500;
-
-                if (isMobile) {
-                  // Use horizontal scrolling for mobile
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        _buildActionButton(
-                          icon: Icons.videocam,
-                          label: 'Call',
-                          onPressed: () async {
-                            // Verify we have a valid patient ID before navigating
-                            if (patient.id <= 0) {
-                              print(
-                                '⚠️ Warning: Attempted to initiate video call with invalid patient ID: ${patient.id}',
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Error: Invalid patient ID'),
-                                ),
-                              );
-                              return;
-                            }
-
-                            // Show call type selection
-                            final callType = await showDialog<String>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Choose Call Type'),
-                                content: const Text(
-                                  'Would you like to make a video call or audio call?',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop('audio'),
-                                    child: const Text('Audio Call'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop('video'),
-                                    child: const Text('Video Call'),
-                                  ),
-                                ],
-                              ),
-                            );
-
-                            if (callType != null) {
-                              await _initiateCall(patient, callType == 'video');
-                            }
-                          },
-                        ),
-                        const SizedBox(
-                          width: 16,
-                        ), // Add spacing between buttons
-                        _buildActionButton(
-                          icon: Icons.message,
-                          label: 'Message',
-                          onPressed: () async {
-                            // Open messaging widget
-                            final result = await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => MessagingWidget(
-                                  currentUserId: widget.caregiverId.toString(),
-                                  currentUserName: caregiverName ?? 'Caregiver',
-                                  recipientId: patient.id.toString(),
-                                  recipientName:
-                                      '${patient.firstName} ${patient.lastName}',
-                                ),
-                              ),
-                            );
-
-                            // Handle result if user triggered a call from messaging
-                            if (result == 'video_call') {
-                              await _initiateCall(patient, true);
-                            } else if (result == 'audio_call') {
-                              await _initiateCall(patient, false);
-                            }
-                          },
-                        ),
-                        const SizedBox(width: 16),
-                        _buildActionButton(
-                          icon: Icons.analytics,
-                          label: 'Analytics',
-                          onPressed: () {
-                            // Verify we have a valid patient ID before navigating
-                            if (patient.id <= 0) {
-                              print(
-                                '⚠️ Warning: Attempted to navigate to analytics with invalid patient ID: ${patient.id}',
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Error: Invalid patient ID'),
-                                ),
-                              );
-                              return;
-                            }
-
-                            print(
-                              '✅ Navigating to analytics for patient: ${patient.id}',
-                            );
-                            context.go('/analytics?patientId=${patient.id}');
-                          },
-                        ),
-                        const SizedBox(width: 16),
-                        _buildActionButton(
-                          icon: Icons.medical_information,
-                          label: 'Medical Notes',
-                          onPressed: () {
-                            // Navigate to medical notes page
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => PatientMedicalNotesPage(
-                                  patientId: patient.id,
-                                  patientName:
-                                      '${patient.firstName} ${patient.lastName}',
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  // Use traditional row layout for larger screens
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildActionButton(
-                        icon: Icons.videocam,
-                        label: 'Call',
-                        onPressed: () async {
-                          if (patient.id <= 0) {
-                            print(
-                              '⚠️ Warning: Attempted to initiate video call with invalid patient ID: ${patient.id}',
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Error: Invalid patient ID'),
-                              ),
-                            );
-                            return;
-                          }
-
-                          final callType = await showDialog<String>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Choose Call Type'),
-                              content: const Text(
-                                'Would you like to make a video call or audio call?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop('audio'),
-                                  child: const Text('Audio Call'),
-                                ),
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop('video'),
-                                  child: const Text('Video Call'),
-                                ),
-                              ],
-                            ),
-                          );
-
-                          if (callType != null) {
-                            await _initiateCall(patient, callType == 'video');
-                          }
-                        },
-                      ),
-                      _buildActionButton(
-                        icon: Icons.message,
-                        label: 'Message',
-                        onPressed: () async {
-                          final result = await Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => MessagingWidget(
-                                currentUserId: widget.caregiverId.toString(),
-                                currentUserName: caregiverName ?? 'Caregiver',
-                                recipientId: patient.id.toString(),
-                                recipientName:
-                                    '${patient.firstName} ${patient.lastName}',
-                              ),
-                            ),
-                          );
-
-                          if (result == 'video_call') {
-                            await _initiateCall(patient, true);
-                          } else if (result == 'audio_call') {
-                            await _initiateCall(patient, false);
-                          }
-                        },
-                      ),
-                      _buildActionButton(
-                        icon: Icons.analytics,
-                        label: 'Analytics',
-                        onPressed: () {
-                          if (patient.id <= 0) {
-                            print(
-                              '⚠️ Warning: Attempted to navigate to analytics with invalid patient ID: ${patient.id}',
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Error: Invalid patient ID'),
-                              ),
-                            );
-                            return;
-                          }
-
-                          print(
-                            '✅ Navigating to analytics for patient: ${patient.id}',
-                          );
-                          context.go('/analytics?patientId=${patient.id}');
-                        },
-                      ),
-                      _buildActionButton(
-                        icon: Icons.medical_information,
-                        label: 'Medical Notes',
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => PatientMedicalNotesPage(
-                                patientId: patient.id,
-                                patientName:
-                                    '${patient.firstName} ${patient.lastName}',
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  );
-                }
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // _buildStatusIndicator method removed as per design update
-  /* 
-  Widget _buildStatusIndicator({
-    required String title,
-    required String status,
-  }) {
-    // Implementation removed
-  }
-  */
-
   Widget _buildActionButton({
     required IconData icon,
     required String label,
@@ -1550,6 +753,505 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildPatientCard(Patient patient) {
+    final bool isGridView = context.isDesktopOrLarger;
+    final double avatarSize = context.responsiveValue(
+      mobile: 35.0,
+      desktop: 45.0,
+    );
+
+    // Set a wider max width for desktop/tablet
+    double maxCardWidth = context.isDesktopOrLarger ? 520.0 : double.infinity;
+
+    return Card(
+      margin: isGridView ? EdgeInsets.zero : const EdgeInsets.only(bottom: 16),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: Theme.of(context).dividerColor.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Container(
+        constraints: BoxConstraints(maxWidth: maxCardWidth),
+        child: Column(
+          children: [
+            ListTile(
+              contentPadding: const EdgeInsets.all(20),
+              leading: CircleAvatar(
+                radius: avatarSize,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withOpacity(0.2),
+                child: Text(
+                  patient.firstName.isNotEmpty
+                      ? patient.firstName.substring(0, 1).toUpperCase()
+                      : patient.lastName.isNotEmpty
+                      ? patient.lastName.substring(0, 1).toUpperCase()
+                      : '?',
+                  style: AppTheme.headingSmall.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: isGridView ? 28 : 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              title: Text(
+                "${patient.firstName} ${patient.lastName}",
+                style: AppTheme.headingSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              subtitle: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: 400),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildActionButton(
+                            icon: Icons.message,
+                            label: 'Message',
+                            onPressed: () async {
+                              final result = await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => MessagingWidget(
+                                    currentUserId: widget.caregiverId
+                                        .toString(),
+                                    currentUserName:
+                                        caregiverName ?? 'Caregiver',
+                                    recipientId: patient.id.toString(),
+                                    recipientName:
+                                        '${patient.firstName} ${patient.lastName}',
+                                  ),
+                                ),
+                              );
+                              if (result == 'video_call') {
+                                await _initiateCall(patient, true);
+                              } else if (result == 'audio_call') {
+                                await _initiateCall(patient, false);
+                              }
+                            },
+                          ),
+                          _buildActionButton(
+                            icon: Icons.video_call,
+                            label: 'Video Call',
+                            onPressed: () async {
+                              await _initiateCall(patient, true);
+                            },
+                          ),
+                          _buildActionButton(
+                            icon: Icons.call,
+                            label: 'Audio Call',
+                            onPressed: () async {
+                              await _initiateCall(patient, false);
+                            },
+                          ),
+                          _buildActionButton(
+                            icon: Icons.analytics,
+                            label: 'Analytics',
+                            onPressed: () {
+                              if (patient.id <= 0) {
+                                print(
+                                  '⚠️ Warning: Attempted to navigate to analytics with invalid patient ID: ${patient.id}',
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Error: Invalid patient ID'),
+                                  ),
+                                );
+                                return;
+                              }
+                              print(
+                                '✅ Navigating to analytics for patient: ${patient.id}',
+                              );
+                              context.go('/analytics?patientId=${patient.id}');
+                            },
+                          ),
+                          _buildActionButton(
+                            icon: Icons.medical_information,
+                            label: 'Medical Notes',
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => PatientMedicalNotesPage(
+                                    patientId: patient.id,
+                                    patientName:
+                                        '${patient.firstName} ${patient.lastName}',
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.cake,
+                            size: 16,
+                            color: Theme.of(context).hintColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              patient.dob.isNotEmpty
+                                  ? 'Age ${_calculateAgeFromDob(patient.dob)}'
+                                  : 'Age not specified',
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: Theme.of(context).hintColor,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.person,
+                            size: 16,
+                            color: Theme.of(context).hintColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              patient.gender?.isNotEmpty == true
+                                  ? patient.gender!
+                                  : 'Gender not specified',
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: Theme.of(context).hintColor,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.family_restroom,
+                            size: 16,
+                            color: Theme.of(context).hintColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              patient.relationship.isNotEmpty
+                                  ? patient.relationship
+                                  : 'Patient',
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: Theme.of(context).hintColor,
+                                fontSize: 14,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.warning_amber,
+                            size: 16,
+                            color: Theme.of(context).hintColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              patient.allergies?.isNotEmpty == true
+                                  ? 'Allergies: ${patient.allergies!.join(', ')}'
+                                  : 'No allergies listed',
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: Theme.of(context).hintColor,
+                                fontSize: 14,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.favorite,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              _getVitalConditionsSummary(patient),
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              trailing: PopupMenuButton<String>(
+                icon: Icon(
+                  Icons.more_vert,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 28,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                onSelected: (value) async {
+                  if (patient.id <= 0) {
+                    print('⚠️ Warning: Invalid patient ID: ${patient.id}');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Error: Invalid patient ID'),
+                      ),
+                    );
+                    return;
+                  }
+                  if (value == 'view') {
+                    print('✅ Navigating to patient profile: ${patient.id}');
+                    context.go('/patient/${patient.id}');
+                  } else if (value == 'suspend') {
+                    final bool? confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Suspend Relationship'),
+                        content: Text(
+                          'Are you sure you want to suspend your relationship with ${patient.firstName} ${patient.lastName}?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('CANCEL'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('SUSPEND'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      try {
+                        final linkId = patient.linkId;
+                        if (linkId == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Error: Missing link ID'),
+                            ),
+                          );
+                          return;
+                        }
+                        final response =
+                            await ApiService.suspendCaregiverPatientLink(
+                              linkId,
+                            );
+                        if (response.statusCode == 200) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Relationship with ${patient.firstName} suspended',
+                              ),
+                            ),
+                          );
+                          fetchPatients();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Failed to suspend relationship: ${response.statusCode}',
+                              ),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                      }
+                    }
+                  } else if (value == 'reactivate') {
+                    final bool? confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Reactivate Relationship'),
+                        content: Text(
+                          'Do you want to reactivate your relationship with ${patient.firstName} ${patient.lastName}?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('CANCEL'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('REACTIVATE'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      try {
+                        final linkId = patient.linkId;
+                        if (linkId == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Error: Missing link ID'),
+                            ),
+                          );
+                          return;
+                        }
+                        final response =
+                            await ApiService.reactivateCaregiverPatientLink(
+                              linkId,
+                            );
+                        if (response.statusCode == 200) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Relationship with ${patient.firstName} reactivated',
+                              ),
+                            ),
+                          );
+                          fetchPatients();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Failed to reactivate relationship: ${response.statusCode}',
+                              ),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                      }
+                    }
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem<String>(
+                    value: 'view',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.visibility,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('View Profile'),
+                      ],
+                    ),
+                  ),
+                  if (patient.linkStatus.toUpperCase() == 'ACTIVE')
+                    PopupMenuItem<String>(
+                      value: 'suspend',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.pause_circle_outline,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('Suspend Relationship'),
+                        ],
+                      ),
+                    ),
+                  if (patient.linkStatus.toUpperCase() == 'SUSPENDED')
+                    PopupMenuItem<String>(
+                      value: 'reactivate',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.play_circle_outline,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('Reactivate Relationship'),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              onTap: () {
+                if (patient.id <= 0) {
+                  print(
+                    '⚠️ Warning: Attempted to navigate to patient profile with invalid ID: ${patient.id}',
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Error: Invalid patient ID')),
+                  );
+                  return;
+                }
+                print('✅ Navigating to patient profile: ${patient.id}');
+                context.go('/patient/${patient.id}');
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        patient.linkStatus == 'ACTIVE'
+                            ? Icons.check_circle
+                            : Icons.pause_circle_filled,
+                        color: patient.linkStatus == 'ACTIVE'
+                            ? Theme.of(context).colorScheme.secondary
+                            : Theme.of(context).disabledColor,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        patient.linkStatus == 'ACTIVE'
+                            ? 'Active'
+                            : patient.linkStatus,
+                        style: AppTheme.bodyMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: patient.linkStatus == 'ACTIVE'
+                              ? Theme.of(context).colorScheme.secondary
+                              : Theme.of(context).disabledColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -945,6 +945,7 @@ class _CaregiverRegistrationFlowPageState
         password: RegistrationData.password!,
         dob: RegistrationData.dob!,
         phone: RegistrationData.phone!,
+        gender: RegistrationData.gender,
         licenseNumber: RegistrationData.licenseNumber,
         issuingState: RegistrationData.issuingState,
         yearsExperience: RegistrationData.yearsExperience,

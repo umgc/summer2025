@@ -210,6 +210,7 @@ class AuthService {
     required String password,
     String? dob,
     String? phone,
+    String? gender,
     String? licenseNumber,
     String? issuingState,
     int? yearsExperience,
@@ -228,6 +229,7 @@ class AuthService {
       'dob': dob ?? "01/01/1990",
       'email': email,
       'phone': phone ?? "000-000-0000",
+      'gender': gender ?? "",
     };
 
     print('🔍 Debug: Basic data added successfully');

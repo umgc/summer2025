@@ -96,6 +96,13 @@ class _FileManagementPageState extends State<FileManagementPage>
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.user;
+    if (user == null) {
+      Future.microtask(() => Navigator.pushReplacementNamed(context, '/login'));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    final isCaregiver = user.role.toUpperCase() == 'CAREGIVER';
     return Scaffold(
       appBar: AppBar(
         title: const Text('File Management'),
@@ -276,16 +283,26 @@ class _FileManagementPageState extends State<FileManagementPage>
   }
 
   Widget _buildFileCard(UserFileDTO file) {
+    final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primary.withOpacity(0.1),
-          child: Text(file.fileIcon, style: const TextStyle(fontSize: 20)),
+          backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+          child: Text(
+            file.fileIcon,
+            style:
+                theme.textTheme.titleLarge?.copyWith(fontSize: 20) ??
+                const TextStyle(fontSize: 20),
+          ),
         ),
         title: Text(
           file.originalFilename,
-          style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+          style:
+              theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ) ??
+              AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.bold),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -294,18 +311,27 @@ class _FileManagementPageState extends State<FileManagementPage>
           children: [
             Row(
               children: [
-                Text(file.categoryDisplayName),
-                const Text(' • '),
-                Text(_formatFileSize(file.fileSize)),
-                const Text(' • '),
-                Text(_formatDate(file.createdAt)),
+                Text(
+                  file.categoryDisplayName,
+                  style: theme.textTheme.bodyMedium,
+                ),
+                Text(' • ', style: theme.textTheme.bodyMedium),
+                Text(
+                  _formatFileSize(file.fileSize),
+                  style: theme.textTheme.bodyMedium,
+                ),
+                Text(' • ', style: theme.textTheme.bodyMedium),
+                Text(
+                  _formatDate(file.createdAt),
+                  style: theme.textTheme.bodyMedium,
+                ),
               ],
             ),
             if (file.description != null && file.description!.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(
                 file.description!,
-                style: AppTheme.bodySmall,
+                style: theme.textTheme.bodySmall ?? AppTheme.bodySmall,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -315,36 +341,41 @@ class _FileManagementPageState extends State<FileManagementPage>
         trailing: PopupMenuButton<String>(
           onSelected: (String action) => _handleFileAction(action, file),
           itemBuilder: (BuildContext context) => [
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'download',
               child: ListTile(
-                leading: Icon(Icons.download),
-                title: Text('Download'),
+                leading: Icon(Icons.download, color: theme.iconTheme.color),
+                title: Text('Download', style: theme.textTheme.bodyMedium),
                 contentPadding: EdgeInsets.zero,
               ),
             ),
             if (file.isPreviewable)
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'preview',
                 child: ListTile(
-                  leading: Icon(Icons.visibility),
-                  title: Text('Preview'),
+                  leading: Icon(Icons.visibility, color: theme.iconTheme.color),
+                  title: Text('Preview', style: theme.textTheme.bodyMedium),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'info',
               child: ListTile(
-                leading: Icon(Icons.info),
-                title: Text('Info'),
+                leading: Icon(Icons.info, color: theme.iconTheme.color),
+                title: Text('Info', style: theme.textTheme.bodyMedium),
                 contentPadding: EdgeInsets.zero,
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'delete',
               child: ListTile(
-                leading: Icon(Icons.delete, color: AppTheme.error),
-                title: Text('Delete', style: TextStyle(color: AppTheme.error)),
+                leading: Icon(Icons.delete, color: theme.colorScheme.error),
+                title: Text(
+                  'Delete',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
                 contentPadding: EdgeInsets.zero,
               ),
             ),
@@ -367,18 +398,50 @@ class _FileManagementPageState extends State<FileManagementPage>
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('File uploaded: ${response.originalFilename}'),
-                  backgroundColor: AppTheme.success,
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
                 ),
               );
             },
           ),
           const SizedBox(height: 24),
 
-          // Full upload widget
+          // Full upload widget with improved feedback
           FileUploadWidget(
             onUploadSuccess: (response) {
               _loadFiles(); // Refresh the files list
             },
+            onUploadError: (error) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(error),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          // Upload instructions and warning
+          Card(
+            color: Theme.of(context).colorScheme.surface,
+            elevation: 0,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'To upload a file, select a category and choose a file. The upload button will be enabled when ready.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
