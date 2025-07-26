@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:care_connect_app/config/env_constant.dart';
@@ -6,8 +7,8 @@ import 'package:care_connect_app/shared/widgets/user_avatar.dart';
 import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:care_connect_app/config/theme/app_theme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import '../model/post_with_comment_count_dto.dart';
@@ -27,33 +28,37 @@ class MainFeedScreen extends StatefulWidget {
 }
 
 class _MainFeedScreenState extends State<MainFeedScreen> {
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-  int? _userId;
-
   List<PostWithCommentCountDto> posts = [];
   bool isLoading = true;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
-    _loadUserIdAndFetchFeed();
-  }
-
-  Future<void> _loadUserIdAndFetchFeed() async {
-    final userIdStr = await _secureStorage.read(key: 'userId');
-    if (userIdStr != null) {
-      setState(() => _userId = int.tryParse(userIdStr));
-      await fetchFeed();
-    } else {
+    if (widget.userId == 0 || widget.userId == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid user ID. Please re-login.')),
+        );
+      });
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('User ID not found')));
+    } else {
+      fetchFeed();
+      _pollingTimer = Timer.periodic(
+          const Duration(seconds: 10),
+              (_) => fetchFeed(silent: true),
+      );
     }
   }
 
-  Future<void> fetchFeed() async {
-    setState(() => isLoading = true);
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> fetchFeed({bool silent = false}) async {
+    if (!silent) setState(() => isLoading = true);
 
     try {
       final headers = await ApiService.getAuthHeaders();
@@ -62,25 +67,31 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
         headers: headers,
       );
 
-      print('Feed status: ${response.statusCode}');
-      print('Feed response: ${response.body}');
-
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          posts = data
-              .map((json) => PostWithCommentCountDto.fromJson(json))
-              .toList();
-          isLoading = false;
-        });
+        final newPosts = data
+            .map((json) => PostWithCommentCountDto.fromJson(json))
+            .toList();
+
+        // Update only if different to prevent unnecessary rebuilds
+        if (!listEquals(posts, newPosts)) {
+          setState(() {
+            posts = newPosts;
+            isLoading = false;
+          });
+        } else if (!silent) {
+          setState(() => isLoading = false);
+        }
       } else {
         throw Exception('Failed to load feed');
       }
     } catch (e) {
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      if (!silent) {
+        setState(() => isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -210,7 +221,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                           context,
                           MaterialPageRoute(
                               builder: (_) =>
-                                  SearchUserScreen(userId: widget.userId)
+                                  SearchUserScreen()
                           ),
                         );
                       },
@@ -223,19 +234,9 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                           context,
                           MaterialPageRoute(
                               builder: (_) =>
-                                  FriendRequestsScreen(userId: widget.userId)
+                                  FriendRequestsScreen()
                           ),
                         );
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                          Icons.calendar_today,
-                          color: Colors.white
-                      ),
-                      tooltip: 'Calendar',
-                      onPressed: () {
-                        // TODO
                       },
                     ),
                     IconButton(
@@ -256,14 +257,18 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                       ),
                       tooltip: 'Create Post',
                       onPressed: () async {
-                        final success = await Navigator.push(
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (_) =>
-                                  NewPostScreen(userId: widget.userId)
+                                  NewPostScreen()
                           ),
                         );
-                        if (success == true) fetchFeed();
+                        if (result is PostWithCommentCountDto) {
+                          setState(() {
+                            posts.insert(0, result);
+                          });
+                        }
                       },
                     ),
                   ],

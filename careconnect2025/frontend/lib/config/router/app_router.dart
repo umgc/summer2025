@@ -26,7 +26,6 @@ import '../../features/calls/presentation/pages/mobile_web_call.dart';
 import '../../features/dashboard/presentation/pages/caregiver_dashboard.dart';
 //import '../../features/dashboard/presentation/pages/edit_patient.dart';
 import '../../features/dashboard/presentation/pages/patient_dashboard.dart';
-import '../../features/gamification/presentation/pages/caregiver_gamification_landingpage.dart';
 import '../../features/gamification/presentation/pages/gamification_screen.dart';
 import '../../features/onboarding/presentation/pages/patient_registration.dart';
 import '../../features/payments/models/package_model.dart';
@@ -274,10 +273,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/gamification',
       builder: (_, __) => const GamificationScreen(),
-    ),
-    GoRoute(
-      path: '/caregiver-gamification',
-      builder: (_, __) => CaregiverGamificationLandingScreen(),
     ),
     GoRoute(
       path: '/stripe-checkout',

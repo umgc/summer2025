@@ -2,9 +2,10 @@
   import 'package:care_connect_app/services/api_service.dart';
 import 'package:flutter/foundation.dart';
   import 'package:flutter/material.dart';
-  import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
 
-  import '../model/message_dto.dart';
+  import '../../../../providers/user_provider.dart';
+import '../model/message_dto.dart';
 
   class ChatRoomScreen extends StatefulWidget {
     final int peerUserId;
@@ -21,8 +22,6 @@ import 'package:flutter/foundation.dart';
   }
 
   class _ChatRoomScreenState extends State<ChatRoomScreen> {
-    final FlutterSecureStorage _secureStorage =
-        FlutterSecureStorage();
     final TextEditingController _controller = TextEditingController();
 
     int? _currentUserId;
@@ -30,13 +29,31 @@ import 'package:flutter/foundation.dart';
     bool isLoading = true;
     bool _initialLoading = true;
     Timer? _pollingTimer;
+    bool _initialized = false;
 
     @override
-    void initState() {
-      super.initState();
-      _loadUserId();
+    void didChangeDependencies() {
+      super.didChangeDependencies();
 
-      _pollingTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (!_initialized) {
+        final user = Provider.of<UserProvider>(context, listen: false).user;
+        if (user == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('User not logged in')),
+          );
+          return;
+        }
+
+        _currentUserId = user.id;
+        fetchConversation();
+        _startPolling();
+
+        _initialized = true;
+      }
+    }
+
+    void _startPolling() {
+      _pollingTimer = Timer.periodic(const Duration(seconds: 2), (_) {
         if (_currentUserId != null && mounted) {
           fetchConversation(silent: true);
         }
@@ -48,18 +65,6 @@ import 'package:flutter/foundation.dart';
       _pollingTimer?.cancel();
       _controller.dispose();
       super.dispose();
-    }
-
-    Future<void> _loadUserId() async {
-      final idString = await _secureStorage.read(key: 'userId');
-      if (idString != null) {
-        setState(() => _currentUserId = int.tryParse(idString));
-        fetchConversation();
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Unable to load user ID')));
-      }
     }
 
     Future<void> fetchConversation({bool silent = false}) async {
