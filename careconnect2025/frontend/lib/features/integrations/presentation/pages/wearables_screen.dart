@@ -52,7 +52,7 @@ class HealthData {
   final double value;
   final String unit;
   final DateTime date;
-  final String source; // Add source field to track where data came from
+  final String source;
 
   HealthData({
     required this.type,
@@ -135,13 +135,10 @@ class _WearablesScreenState extends State<WearablesScreen> {
   }
 
   Future<void> _fetchFitbitData(DateTime startTime, DateTime endTime) async {
-    // Check if we have any Fitbit devices
     bool hasFitbitDevice = connectedDevices.any((device) => device.platform == 'fitbit');
-
     if (!hasFitbitDevice) return;
 
     try {
-      // Get Fitbit access token and userID
       String? accessToken = await _secureStorage.read(key: 'fitbit_access_token');
       String? userID = await _secureStorage.read(key: 'fitbit_user_id');
 
@@ -151,189 +148,171 @@ class _WearablesScreenState extends State<WearablesScreen> {
       }
 
       if (userID == null) {
-        userID = '-'; // Fallback to current user
+        userID = '-';
       }
 
-      // Create Fitbit credentials object
       FitbitCredentials fitbitCredentials = FitbitCredentials(
         userID: userID,
         fitbitAccessToken: accessToken,
         fitbitRefreshToken: '',
       );
 
-      // Create data managers
-      FitbitActivityTimeseriesDataManager stepsManager = FitbitActivityTimeseriesDataManager(
-        clientID: fitbitClientId,
-        clientSecret: fitbitClientSecret,
-      );
-
-      FitbitActivityTimeseriesDataManager caloriesManager = FitbitActivityTimeseriesDataManager(
-        clientID: fitbitClientId,
-        clientSecret: fitbitClientSecret,
-      );
-
       DateTime today = DateTime.now();
 
-      // Fetch steps data
-      try {
-        final stepsData = await stepsManager.fetch(
-            FitbitActivityTimeseriesAPIURL.dayWithResource(
-              date: today,
-              resource: Resource.steps,
-              fitbitCredentials: fitbitCredentials,
-            )
-        );
+      // Fetch Steps
+      await _fetchFitbitSteps(fitbitCredentials, today);
 
-        if (stepsData != null) {
-          List<dynamic> dataList = stepsData is List ? stepsData : [stepsData];
-
-          if (dataList.isNotEmpty) {
-            var latestData = dataList.last;
-            dynamic stepsValue = 0;
-            DateTime dataDate = DateTime.now();
-
-            if (latestData is FitbitActivityTimeseriesData) {
-              stepsValue = latestData.value;
-              dataDate = latestData.dateOfMonitoring ?? DateTime.now();
-            } else if (latestData is Map) {
-              stepsValue = latestData['value'] ?? 0;
-              if (latestData['dateTime'] != null) {
-                try {
-                  dataDate = DateTime.parse(latestData['dateTime']);
-                } catch (e) {
-                  dataDate = DateTime.now();
-                }
-              }
-            }
-
-            double finalStepsValue = 0;
-            try {
-              if (stepsValue is String) {
-                finalStepsValue = double.parse(stepsValue);
-              } else if (stepsValue is num) {
-                finalStepsValue = stepsValue.toDouble();
-              }
-            } catch (e) {
-              finalStepsValue = 0;
-            }
-
-            setState(() {
-              latestHealthData['steps'] = HealthData(
-                type: 'Steps',
-                value: finalStepsValue,
-                unit: 'steps',
-                date: dataDate,
-                source: 'Fitbit',
-              );
-            });
-          } else {
-            _setDefaultStepsData();
-          }
-        } else {
-          _setDefaultStepsData();
-        }
-      } catch (e) {
-        _setDefaultStepsData();
-      }
-
-      // Fetch calories data
-      try {
-        final caloriesData = await caloriesManager.fetch(
-            FitbitActivityTimeseriesAPIURL.dayWithResource(
-              date: today,
-              resource: Resource.calories,
-              fitbitCredentials: fitbitCredentials,
-            )
-        );
-
-        if (caloriesData != null) {
-          List<dynamic> dataList = caloriesData is List ? caloriesData : [caloriesData];
-
-          if (dataList.isNotEmpty) {
-            var latestData = dataList.last;
-            dynamic caloriesValue = 0;
-            DateTime dataDate = DateTime.now();
-
-            if (latestData is FitbitActivityTimeseriesData) {
-              caloriesValue = latestData.value;
-              dataDate = latestData.dateOfMonitoring ?? DateTime.now();
-            } else if (latestData is Map) {
-              caloriesValue = latestData['value'] ?? 0;
-              if (latestData['dateTime'] != null) {
-                try {
-                  dataDate = DateTime.parse(latestData['dateTime']);
-                } catch (e) {
-                  dataDate = DateTime.now();
-                }
-              }
-            }
-
-            double finalCaloriesValue = 0;
-            try {
-              if (caloriesValue is String) {
-                finalCaloriesValue = double.parse(caloriesValue);
-              } else if (caloriesValue is num) {
-                finalCaloriesValue = caloriesValue.toDouble();
-              }
-            } catch (e) {
-              finalCaloriesValue = 0;
-            }
-
-            setState(() {
-              latestHealthData['calories'] = HealthData(
-                type: 'Calories',
-                value: finalCaloriesValue,
-                unit: 'cal',
-                date: dataDate,
-                source: 'Fitbit',
-              );
-            });
-          } else {
-            _setDefaultCaloriesData();
-          }
-        } else {
-          _setDefaultCaloriesData();
-        }
-      } catch (e) {
-        _setDefaultCaloriesData();
-      }
+      // Fetch Calories
+      await _fetchFitbitCalories(fitbitCredentials, today);
 
     } catch (e) {
       _setDefaultFitbitData();
     }
   }
 
-  void _setDefaultStepsData() {
-    setState(() {
-      latestHealthData['steps'] = HealthData(
-        type: 'Steps',
-        value: 0,
-        unit: 'steps',
-        date: DateTime.now(),
-        source: 'Fitbit',
+  Future<void> _fetchFitbitSteps(FitbitCredentials credentials, DateTime date) async {
+    try {
+      FitbitActivityTimeseriesDataManager stepsManager = FitbitActivityTimeseriesDataManager(
+        clientID: fitbitClientId,
+        clientSecret: fitbitClientSecret,
       );
-    });
+
+      final stepsData = await stepsManager.fetch(
+          FitbitActivityTimeseriesAPIURL.dayWithResource(
+            date: date,
+            resource: Resource.steps,
+            fitbitCredentials: credentials,
+          )
+      );
+
+      if (stepsData != null) {
+        List<dynamic> dataList = stepsData is List ? stepsData : [stepsData];
+        if (dataList.isNotEmpty) {
+          var latestData = dataList.last;
+          double finalValue = _extractFitbitValue(latestData);
+          DateTime dataDate = _extractFitbitDate(latestData);
+
+          setState(() {
+            latestHealthData['steps'] = HealthData(
+              type: 'Steps',
+              value: finalValue,
+              unit: 'steps',
+              date: dataDate,
+              source: 'Fitbit',
+            );
+          });
+        }
+      }
+    } catch (e) {
+      _setDefaultValue('steps', 'Steps', 'steps', 'Fitbit');
+    }
   }
 
-  void _setDefaultCaloriesData() {
+  Future<void> _fetchFitbitCalories(FitbitCredentials credentials, DateTime date) async {
+    try {
+      FitbitActivityTimeseriesDataManager caloriesManager = FitbitActivityTimeseriesDataManager(
+        clientID: fitbitClientId,
+        clientSecret: fitbitClientSecret,
+      );
+
+      final caloriesData = await caloriesManager.fetch(
+          FitbitActivityTimeseriesAPIURL.dayWithResource(
+            date: date,
+            resource: Resource.calories,
+            fitbitCredentials: credentials,
+          )
+      );
+
+      if (caloriesData != null) {
+        List<dynamic> dataList = caloriesData is List ? caloriesData : [caloriesData];
+        if (dataList.isNotEmpty) {
+          var latestData = dataList.last;
+          double finalValue = _extractFitbitValue(latestData);
+          DateTime dataDate = _extractFitbitDate(latestData);
+
+          setState(() {
+            latestHealthData['calories'] = HealthData(
+              type: 'Calories',
+              value: finalValue,
+              unit: 'cal',
+              date: dataDate,
+              source: 'Fitbit',
+            );
+          });
+        }
+      }
+    } catch (e) {
+      _setDefaultValue('calories', 'Calories', 'cal', 'Fitbit');
+    }
+  }
+
+  Future<void> _fetchFitbitHeartRate(FitbitCredentials credentials, DateTime date) async {
+    try {
+      setState(() {
+        latestHealthData['heart_rate'] = HealthData(
+          type: 'Heart Rate',
+          value: 0,
+          unit: 'bpm',
+          date: DateTime.now(),
+          source: 'Fitbit',
+        );
+      });
+    } catch (e) {
+      _setDefaultValue('heart_rate', 'Heart Rate', 'bpm', 'Fitbit');
+    }
+  }
+
+  double _extractFitbitValue(dynamic data) {
+    dynamic value = 0;
+    if (data is FitbitActivityTimeseriesData) {
+      value = data.value;
+    } else if (data is Map) {
+      value = data['value'] ?? 0;
+    }
+
+    try {
+      if (value is String) {
+        return double.parse(value);
+      } else if (value is num) {
+        return value.toDouble();
+      }
+    } catch (e) {
+      return 0;
+    }
+    return 0;
+  }
+
+  DateTime _extractFitbitDate(dynamic data) {
+    if (data is FitbitActivityTimeseriesData) {
+      return data.dateOfMonitoring ?? DateTime.now();
+    } else if (data is Map && data['dateTime'] != null) {
+      try {
+        return DateTime.parse(data['dateTime']);
+      } catch (e) {
+        return DateTime.now();
+      }
+    }
+    return DateTime.now();
+  }
+
+  void _setDefaultValue(String key, String type, String unit, String source) {
     setState(() {
-      latestHealthData['calories'] = HealthData(
-        type: 'Calories',
+      latestHealthData[key] = HealthData(
+        type: type,
         value: 0,
-        unit: 'cal',
+        unit: unit,
         date: DateTime.now(),
-        source: 'Fitbit',
+        source: source,
       );
     });
   }
 
   void _setDefaultFitbitData() {
-    _setDefaultStepsData();
-    _setDefaultCaloriesData();
+    _setDefaultValue('steps', 'Steps', 'steps', 'Fitbit');
+    _setDefaultValue('calories', 'Calories', 'cal', 'Fitbit');
   }
 
   Future<void> _fetchGoogleAppleHealthData(DateTime startTime, DateTime endTime) async {
-    // Check if we have any Google Fit or Apple Health devices
     bool hasHealthDevice = connectedDevices.any((device) =>
     device.platform == 'google_fit' || device.platform == 'apple_health');
 
@@ -343,64 +322,217 @@ class _WearablesScreenState extends State<WearablesScreen> {
       Health health = Health();
       await health.configure();
 
-      // Fetch steps data
-      List<HealthDataPoint> stepsData = await health.getHealthDataFromTypes(
-        startTime: startTime,
-        endTime: endTime,
-        types: [HealthDataType.STEPS],
-      );
-
-      if (stepsData.isNotEmpty) {
-        // Calculate total steps for the day
-        int totalSteps = stepsData.fold(0, (sum, point) => sum + (point.value as num).toInt());
-
-        // Determine source
-        String source = 'Health Connect';
-        if (connectedDevices.any((device) => device.platform == 'apple_health')) {
-          source = 'Apple Health';
-        }
-
-        setState(() {
-          latestHealthData['steps'] = HealthData(
-            type: 'Steps',
-            value: totalSteps.toDouble(),
-            unit: 'steps',
-            date: DateTime.now(),
-            source: source,
-          );
-        });
-
-        print('✓ Fetched $source steps: $totalSteps');
-      } else {
-        // No data available
-        String source = connectedDevices.any((device) => device.platform == 'apple_health')
-            ? 'Apple Health' : 'Health Connect';
-
-        setState(() {
-          latestHealthData['steps'] = HealthData(
-            type: 'Steps',
-            value: 0,
-            unit: 'steps',
-            date: DateTime.now(),
-            source: source,
-          );
-        });
-      }
-    } catch (e) {
-      print('⚠ Health data fetch failed: $e');
-      // Still show 0 data rather than error
       String source = connectedDevices.any((device) => device.platform == 'apple_health')
           ? 'Apple Health' : 'Health Connect';
+
+      List<HealthDataType> types = [
+        HealthDataType.STEPS,
+        HealthDataType.ACTIVE_ENERGY_BURNED,
+        HealthDataType.HEART_RATE,
+        HealthDataType.BLOOD_GLUCOSE,
+        HealthDataType.BLOOD_PRESSURE_DIASTOLIC,
+        HealthDataType.BLOOD_PRESSURE_SYSTOLIC,
+      ];
+
+      // Fetch all health data types at once
+      List<HealthDataPoint> allHealthData = await health.getHealthDataFromTypes(
+        startTime: startTime,
+        endTime: endTime,
+        types: types,
+      );
+
+      // Process each type of health data
+      await _processHealthDataByType(allHealthData, source);
+
+    } catch (e) {
+      print('⚠ Health data fetch failed: $e');
+      _setDefaultHealthData();
+    }
+  }
+
+  Future<void> _processHealthDataByType(List<HealthDataPoint> allHealthData, String source) async {
+    // Group data by type
+    Map<HealthDataType, List<HealthDataPoint>> groupedData = {};
+    for (var point in allHealthData) {
+      if (!groupedData.containsKey(point.type)) {
+        groupedData[point.type] = [];
+      }
+      groupedData[point.type]!.add(point);
+    }
+
+    // Process Steps
+    if (groupedData.containsKey(HealthDataType.STEPS)) {
+      int totalSteps = groupedData[HealthDataType.STEPS]!
+          .fold(0, (sum, point) => sum + (point.value as num).toInt());
 
       setState(() {
         latestHealthData['steps'] = HealthData(
           type: 'Steps',
-          value: 0,
+          value: totalSteps.toDouble(),
           unit: 'steps',
           date: DateTime.now(),
           source: source,
         );
       });
+    }
+
+    // Process Calories (Active Energy Burned)
+    if (groupedData.containsKey(HealthDataType.ACTIVE_ENERGY_BURNED)) {
+      double totalCalories = groupedData[HealthDataType.ACTIVE_ENERGY_BURNED]!
+          .fold(0.0, (sum, point) => sum + (point.value as num).toDouble());
+
+      setState(() {
+        latestHealthData['calories'] = HealthData(
+          type: 'Calories',
+          value: totalCalories,
+          unit: 'cal',
+          date: DateTime.now(),
+          source: source,
+        );
+      });
+    }
+
+    // Process Heart Rate (get latest reading)
+    if (groupedData.containsKey(HealthDataType.HEART_RATE)) {
+      var heartRateData = groupedData[HealthDataType.HEART_RATE]!;
+      if (heartRateData.isNotEmpty) {
+        // Get the most recent heart rate reading
+        heartRateData.sort((a, b) => b.dateFrom.compareTo(a.dateFrom));
+        var latestHR = heartRateData.first;
+
+        setState(() {
+          latestHealthData['heart_rate'] = HealthData(
+            type: 'Heart Rate',
+            value: (latestHR.value as num).toDouble(),
+            unit: 'bpm',
+            date: latestHR.dateFrom,
+            source: source,
+          );
+        });
+      }
+    }
+
+    // Process Blood Glucose (get latest reading)
+    if (groupedData.containsKey(HealthDataType.BLOOD_GLUCOSE)) {
+      var glucoseData = groupedData[HealthDataType.BLOOD_GLUCOSE]!;
+      if (glucoseData.isNotEmpty) {
+        glucoseData.sort((a, b) => b.dateFrom.compareTo(a.dateFrom));
+        var latestGlucose = glucoseData.first;
+
+        setState(() {
+          latestHealthData['blood_glucose'] = HealthData(
+            type: 'Blood Glucose',
+            value: (latestGlucose.value as num).toDouble(),
+            unit: 'mg/dL',
+            date: latestGlucose.dateFrom,
+            source: source,
+          );
+        });
+      }
+    }
+
+    // Process Blood Pressure Diastolic (get latest reading)
+    if (groupedData.containsKey(HealthDataType.BLOOD_PRESSURE_DIASTOLIC)) {
+      var diastolicData = groupedData[HealthDataType.BLOOD_PRESSURE_DIASTOLIC]!;
+      if (diastolicData.isNotEmpty) {
+        diastolicData.sort((a, b) => b.dateFrom.compareTo(a.dateFrom));
+        var latestDiastolic = diastolicData.first;
+
+        setState(() {
+          latestHealthData['blood_pressure_diastolic'] = HealthData(
+            type: 'Blood Pressure (Diastolic)',
+            value: (latestDiastolic.value as num).toDouble(),
+            unit: 'mmHg',
+            date: latestDiastolic.dateFrom,
+            source: source,
+          );
+        });
+      }
+    }
+
+    // Process Blood Pressure Systolic (get latest reading)
+    if (groupedData.containsKey(HealthDataType.BLOOD_PRESSURE_SYSTOLIC)) {
+      var systolicData = groupedData[HealthDataType.BLOOD_PRESSURE_SYSTOLIC]!;
+      if (systolicData.isNotEmpty) {
+        systolicData.sort((a, b) => b.dateFrom.compareTo(a.dateFrom));
+        var latestSystolic = systolicData.first;
+
+        setState(() {
+          latestHealthData['blood_pressure_systolic'] = HealthData(
+            type: 'Blood Pressure (Systolic)',
+            value: (latestSystolic.value as num).toDouble(),
+            unit: 'mmHg',
+            date: latestSystolic.dateFrom,
+            source: source,
+          );
+        });
+      }
+    }
+
+    // Set default values for any missing data
+    _setDefaultHealthData(source);
+  }
+
+  void _setDefaultHealthData([String? source]) {
+    String defaultSource = source ??
+        (connectedDevices.any((device) => device.platform == 'apple_health')
+            ? 'Apple Health' : 'Health Connect');
+
+    List<Map<String, String>> defaultMetrics = [
+      {'key': 'steps', 'type': 'Steps', 'unit': 'steps'},
+      {'key': 'calories', 'type': 'Calories', 'unit': 'cal'},
+      {'key': 'heart_rate', 'type': 'Heart Rate', 'unit': 'bpm'},
+      {'key': 'blood_glucose', 'type': 'Blood Glucose', 'unit': 'mg/dL'},
+      {'key': 'blood_pressure_diastolic', 'type': 'Blood Pressure (Diastolic)', 'unit': 'mmHg'},
+      {'key': 'blood_pressure_systolic', 'type': 'Blood Pressure (Systolic)', 'unit': 'mmHg'},
+    ];
+
+    for (var metric in defaultMetrics) {
+      if (!latestHealthData.containsKey(metric['key'])) {
+        _setDefaultValue(metric['key']!, metric['type']!, metric['unit']!, defaultSource);
+      }
+    }
+  }
+
+  // Get appropriate icon for health data type
+  IconData _getHealthDataIcon(String type) {
+    switch (type.toLowerCase()) {
+      case 'steps':
+        return Icons.directions_walk;
+      case 'calories':
+        return Icons.local_fire_department;
+      case 'heart rate':
+        return Icons.favorite;
+      case 'blood glucose':
+        return Icons.water_drop;
+      case 'blood pressure (diastolic)':
+      case 'blood pressure (systolic)':
+        return Icons.monitor_heart;
+      case 'body fat percentage':
+        return Icons.accessibility;
+      default:
+        return Icons.health_and_safety;
+    }
+  }
+
+  // Get appropriate color for health data type
+  Color _getHealthDataColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'steps':
+        return Colors.blue;
+      case 'calories':
+        return Colors.orange;
+      case 'heart rate':
+        return Colors.red;
+      case 'blood glucose':
+        return Colors.purple;
+      case 'blood pressure (diastolic)':
+      case 'blood pressure (systolic)':
+        return Colors.indigo;
+      case 'body fat percentage':
+        return Colors.green;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -411,7 +543,6 @@ class _WearablesScreenState extends State<WearablesScreen> {
 
   Future<void> _removeDevice(ConnectedDevice device) async {
     try {
-      // Show confirmation dialog
       bool? shouldRemove = await showDialog<bool>(
         context: context,
         builder: (BuildContext context) {
@@ -434,18 +565,13 @@ class _WearablesScreenState extends State<WearablesScreen> {
       );
 
       if (shouldRemove == true) {
-        // Remove from local list
         setState(() {
           connectedDevices.removeWhere((d) => d.id == device.id);
         });
 
-        // Remove from persistent storage
         await _saveConnectedDevicesToStorage();
-
-        // Remove access token
         await _secureStorage.delete(key: '${device.platform}_access_token');
 
-        // Clear health data for this device
         if (connectedDevices.isEmpty ||
             !connectedDevices.any((d) =>
             d.platform == 'google_fit' ||
@@ -455,11 +581,9 @@ class _WearablesScreenState extends State<WearablesScreen> {
             latestHealthData.clear();
           });
         } else {
-          // Refresh data to show data from remaining devices
           await _fetchLatestHealthData();
         }
 
-        // Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -495,7 +619,6 @@ class _WearablesScreenState extends State<WearablesScreen> {
     }
   }
 
-  // Get platform-specific supported devices
   List<Widget> get supportedDeviceWidgets {
     List<Map<String, dynamic>> devices = [
       {
@@ -561,7 +684,6 @@ class _WearablesScreenState extends State<WearablesScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Large icon
           Container(
             width: 120,
             height: 120,
@@ -578,7 +700,6 @@ class _WearablesScreenState extends State<WearablesScreen> {
 
           const SizedBox(height: 32),
 
-          // Title
           Text(
             'No Wearables Connected',
             style: TextStyle(
@@ -590,7 +711,6 @@ class _WearablesScreenState extends State<WearablesScreen> {
 
           const SizedBox(height: 16),
 
-          // Description
           const Text(
             'Connect wearable devices to track your patient\'s health data in real-time.',
             textAlign: TextAlign.center,
@@ -599,7 +719,6 @@ class _WearablesScreenState extends State<WearablesScreen> {
 
           const SizedBox(height: 40),
 
-          // Add Device Button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -630,7 +749,6 @@ class _WearablesScreenState extends State<WearablesScreen> {
 
           const SizedBox(height: 24),
 
-          // Supported Devices Info
           Card(
             elevation: 2,
             shape: RoundedRectangleBorder(
@@ -693,7 +811,6 @@ class _WearablesScreenState extends State<WearablesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -732,7 +849,6 @@ class _WearablesScreenState extends State<WearablesScreen> {
 
             const SizedBox(height: 20),
 
-            // Health Data Summary
             if (latestHealthData.isNotEmpty) ...[
               const Text(
                 'Latest Health Data',
@@ -757,7 +873,6 @@ class _WearablesScreenState extends State<WearablesScreen> {
               const SizedBox(height: 20),
             ],
 
-            // Connected Devices List
             const Text(
               'Your Devices',
               style: TextStyle(
@@ -784,78 +899,83 @@ class _WearablesScreenState extends State<WearablesScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          children: latestHealthData.values.map((data) =>
-              _buildHealthDataItem(data)
-          ).toList(),
+          children: [
+            const Text(
+              'Health Metrics',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.indigo,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 400),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: latestHealthData.values.map((data) =>
+                      _buildHealthDataItem(data)
+                  ).toList(),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildHealthDataItem(HealthData data) {
-    // Get icon and color based on data source
-    IconData dataIcon;
-    Color dataColor;
-
-    switch (data.source) {
-      case 'Fitbit':
-        dataIcon = Icons.fitness_center;
-        dataColor = Colors.green;
-        break;
-      case 'Apple Health':
-        dataIcon = Icons.favorite;
-        dataColor = Colors.red;
-        break;
-      case 'Health Connect':
-      default:
-        dataIcon = Icons.directions_walk;
-        dataColor = Colors.blue;
-        break;
-    }
+    IconData dataIcon = _getHealthDataIcon(data.type);
+    Color dataColor = _getHealthDataColor(data.type);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
         children: [
           Container(
-            width: 50,
-            height: 50,
+            width: 45,
+            height: 45,
             decoration: BoxDecoration(
-              color: dataColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: dataColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               dataIcon,
               color: dataColor,
-              size: 28,
+              size: 24,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Text(
-                      data.type,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    Flexible(
+                      child: Text(
+                        data.type,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                       decoration: BoxDecoration(
-                        color: dataColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
+                        color: _getSourceColor(data.source).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         data.source,
                         style: TextStyle(
-                          fontSize: 10,
-                          color: dataColor,
+                          fontSize: 9,
+                          color: _getSourceColor(data.source),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -863,9 +983,9 @@ class _WearablesScreenState extends State<WearablesScreen> {
                   ],
                 ),
                 Text(
-                  'Last updated: ${_formatDate(data.date)}',
+                  'Updated: ${_formatDate(data.date)}',
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: Colors.grey,
                   ),
                 ),
@@ -876,9 +996,9 @@ class _WearablesScreenState extends State<WearablesScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                data.value.toInt().toString(),
+                _formatHealthValue(data.value, data.type),
                 style: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.indigo,
                 ),
@@ -886,7 +1006,7 @@ class _WearablesScreenState extends State<WearablesScreen> {
               Text(
                 data.unit,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 12,
                   color: Colors.grey,
                 ),
               ),
@@ -895,6 +1015,29 @@ class _WearablesScreenState extends State<WearablesScreen> {
         ],
       ),
     );
+  }
+
+  String _formatHealthValue(double value, String type) {
+    if (type.toLowerCase().contains('percentage')) {
+      return value.toStringAsFixed(1);
+    } else if (type.toLowerCase().contains('glucose') ||
+        type.toLowerCase().contains('pressure')) {
+      return value.toStringAsFixed(0);
+    } else {
+      return value.toInt().toString();
+    }
+  }
+
+  Color _getSourceColor(String source) {
+    switch (source) {
+      case 'Fitbit':
+        return Colors.green;
+      case 'Apple Health':
+        return Colors.red;
+      case 'Health Connect':
+      default:
+        return Colors.blue;
+    }
   }
 
   Widget _buildDeviceCard(ConnectedDevice device) {
@@ -991,7 +1134,6 @@ class _WearablesScreenState extends State<WearablesScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Remove button
                 InkWell(
                   onTap: () => _removeDevice(device),
                   borderRadius: BorderRadius.circular(20),
@@ -1039,7 +1181,6 @@ class _WearablesScreenState extends State<WearablesScreen> {
       ),
     );
 
-    // Refresh data when returning from add device screen
     if (result == true) {
       await _refreshData();
     }

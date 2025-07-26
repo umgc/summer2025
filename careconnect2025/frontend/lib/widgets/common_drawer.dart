@@ -216,22 +216,6 @@ class _CommonDrawerState extends State<CommonDrawer> {
 
           _buildDrawerItem(
             context,
-            icon: Icons.home_outlined,
-            title: 'Home Monitoring',
-            route: '/home-monitoring',
-            isActive: widget.currentRoute == '/home-monitoring',
-          ),
-
-          _buildDrawerItem(
-            context,
-            icon: Icons.devices,
-            title: 'Smart Devices',
-            route: '/smart-devices',
-            isActive: widget.currentRoute == '/smart-devices',
-          ),
-
-          _buildDrawerItem(
-            context,
             icon: Icons.medication,
             title: 'Medication Management',
             route: '/medication',
