@@ -1,70 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
+import 'package:care_connect_app/widgets/responsive_container.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Welcome', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF14366E),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Color(0xFF14366E)),
-              child: const Text(
-                'Menu',
-                style: TextStyle(color: Colors.white, fontSize: 24),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/dashboard/caregiver');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.login),
-              title: const Text('Login'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/login');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.emoji_events),
-              title: const Text('Achievements'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/gamification');
-              },
-            ),
-          ],
-        ),
-      ),
+      appBar: AppBarHelper.createAppBar(context, title: 'Welcome'),
+      // No drawer needed for the welcome page
       body: SafeArea(
         child: Center(
-          child: Padding(
+          child: ResponsiveContainer(
             padding: const EdgeInsets.all(32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.favorite, size: 72, color: Color(0xFF14366E)),
+                Icon(
+                  Icons.favorite,
+                  size: 72,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(height: 32),
-                const Text(
+                Text(
                   'Welcome to CareConnect',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF14366E),
+                  style: theme.textTheme.displayMedium?.copyWith(
+                    color: theme.colorScheme.primary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -73,11 +39,10 @@ class WelcomePage extends StatelessWidget {
                   width: double.infinity,
                   child: FilledButton(
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF14366E),
-                      foregroundColor: Colors.white,
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      textStyle: const TextStyle(
-                        fontSize: 18,
+                      textStyle: theme.textTheme.labelLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                       shape: RoundedRectangleBorder(
