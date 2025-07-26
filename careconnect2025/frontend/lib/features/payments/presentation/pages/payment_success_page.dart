@@ -1,15 +1,21 @@
 // filepath: lib/features/payments/presentation/pages/payment_success_page.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../../../config/router/app_router.dart';
+import '../../../../providers/user_provider.dart';
+import '../../../../widgets/responsive_container.dart';
 
 class PaymentSuccessPage extends StatefulWidget {
   final String? sessionId;
   final bool? isRegistration;
+  final bool fromPortal;
 
   const PaymentSuccessPage({
     super.key,
     this.sessionId,
     this.isRegistration = false,
+    this.fromPortal = false,
   });
 
   @override
@@ -20,6 +26,8 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
+  bool _isRedirecting = false;
+  double _progressValue = 0.0;
 
   @override
   void initState() {
@@ -34,9 +42,24 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
 
     _animationController.forward();
 
-    // Auto-redirect after 4 seconds
-    Future.delayed(const Duration(seconds: 4), () {
+    // Start the progress animation over 4 seconds
+    const redirectDelay = 4;
+    for (int i = 1; i <= redirectDelay; i++) {
+      Future.delayed(Duration(seconds: i), () {
+        if (mounted) {
+          setState(() {
+            _progressValue = i / redirectDelay;
+          });
+        }
+      });
+    }
+
+    // Auto-redirect after delay
+    Future.delayed(Duration(seconds: redirectDelay), () {
       if (mounted) {
+        setState(() {
+          _isRedirecting = true;
+        });
         _navigateToNext();
       }
     });
@@ -51,10 +74,19 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
   void _navigateToNext() {
     if (widget.isRegistration == true) {
       // For new registrations, go to login
-      context.go('/login');
+      // Determine user type from the provider or route info
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final userType = userProvider.user != null
+          ? userProvider.user!.role.toLowerCase()
+          : 'caregiver'; // Default to caregiver for registration flows
+
+      context.go('/login', extra: {'userType': userType});
+    } else if (widget.fromPortal) {
+      // If coming from subscription management portal, return to subscription management page
+      context.go('/select-package');
     } else {
-      // For existing users, go to dashboard
-      context.go('/dashboard/patient');
+      // For existing users, go to dashboard based on their role
+      navigateToDashboard(context);
     }
   }
 
@@ -64,7 +96,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
-          child: Padding(
+          child: ResponsiveContainer(
             padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -75,25 +107,56 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                     width: 120,
                     height: 120,
                     decoration: BoxDecoration(
-                      color: Colors.green.shade100,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.secondary.withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.check_circle,
                       size: 80,
-                      color: Colors.green.shade600,
+                      color: Theme.of(context).colorScheme.secondary,
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
+                // Progress indicator showing redirect countdown
+                Container(
+                  width: 200,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
+                    children: [
+                      LinearProgressIndicator(
+                        value: _progressValue,
+                        backgroundColor: Theme.of(context).colorScheme.surface,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).primaryColor,
+                        ),
+                        minHeight: 6.0,
+                        borderRadius: BorderRadius.circular(3.0),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Redirecting in ${((1.0 - _progressValue) * 4).ceil()} seconds...',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Text(
                   widget.isRegistration == true
                       ? 'Registration Complete!'
                       : 'Payment Successful!',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF14366E),
+                    color: Theme.of(context).primaryColor,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -102,14 +165,24 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                   widget.isRegistration == true
                       ? 'Welcome to CareConnect! Your account has been created and your subscription is active. You can now log in to access all features.'
                       : 'Thank you for your payment! Your subscription has been updated successfully.',
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 if (widget.sessionId != null) ...[
                   const SizedBox(height: 16),
                   Text(
                     'Session ID: ${widget.sessionId}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.5),
+                    ),
                   ),
                 ],
                 const SizedBox(height: 48),
@@ -117,8 +190,8 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF14366E),
-                      foregroundColor: Colors.white,
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -128,6 +201,8 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                     child: Text(
                       widget.isRegistration == true
                           ? 'Continue to Login'
+                          : widget.fromPortal
+                          ? 'Return to Subscription Management'
                           : 'Continue to Dashboard',
                       style: const TextStyle(
                         fontSize: 16,
@@ -139,7 +214,12 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                 const SizedBox(height: 16),
                 Text(
                   'Redirecting automatically in 4 seconds...',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.5),
+                  ),
                 ),
               ],
             ),

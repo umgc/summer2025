@@ -1,12 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'dart:convert';
-import '../../models/patient_model.dart';
-import 'package:provider/provider.dart';
+
 import 'package:care_connect_app/providers/user_provider.dart';
 import 'package:care_connect_app/services/api_service.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../../widgets/ai_chat.dart';
+import '../../../social/presentation/pages/main_feed_screen.dart';
+import '../../models/patient_model.dart';
 
 class CaregiverDashboard extends StatefulWidget {
   final String userRole;
@@ -78,7 +81,6 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
       });
     }
   }
-
 
   Future<List<Map<String, dynamic>>> fetchPatientVitals(int patientId) async {
     try {
@@ -225,6 +227,18 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                   onTap: () {
                     Navigator.pop(context);
                     context.go('/gamification');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.feed),
+                  title: const Text('Social Feed'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    final userId = Provider.of<UserProvider>(context, listen: false).user?.id ?? 0;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => MainFeedScreen(userId: userId)),
+                    );
                   },
                 ),
                 ListTile(
@@ -466,7 +480,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                             ),
                                           ),
 
-                                          //Adding the PopupMenuButton
+                                          /* //Adding the PopupMenuButton
                                           PopupMenuButton<String>(
                                             onSelected: (value) {
                                               if (value == 'edit') {
@@ -485,7 +499,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                               PopupMenuItem(value: 'inviteFamilyMember', child: Text('Invite Family Member')),
                                               PopupMenuItem(value: 'MediaScreen', child: Text('Media Upload')),
                                             ],
-                                          ),
+                                          ), */
                                         ],
                                       ),
 
@@ -543,6 +557,17 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                                     Expanded(
                                                       child: _dashboardButton(
                                                         context,
+                                                        Icons.notes,
+                                                        'Healthcare Notes',
+                                                            () => context.go(
+                                                          '/healthcare-notes?patientUserId=${patient.userId}',
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Expanded(
+                                                      child: _dashboardButton(
+                                                        context,
                                                         Icons.view_list,
                                                         'View Logs',
                                                         () =>
@@ -567,9 +592,12 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                                         context,
                                                         Icons.call,
                                                         'Call',
-                                                            () {
-                                                          final String patientName = '${patient.firstName} ${patient.lastName}';
-                                                          final String roomId = 'room-${patient.id}'; // or any room ID logic you use
+                                                        () {
+                                                          final String
+                                                          patientName =
+                                                              '${patient.firstName} ${patient.lastName}';
+                                                          final String roomId =
+                                                              'room-${patient.id}'; // or any room ID logic you use
 
                                                           context.go(
                                                             '/mobile-web-call?patientName=${Uri.encodeComponent(patientName)}&roomId=${Uri.encodeComponent(roomId)}',
@@ -619,6 +647,17 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                                 Expanded(
                                                   child: _dashboardButton(
                                                     context,
+                                                    Icons.notes,
+                                                    'Healthcare Notes',
+                                                        () => context.go(
+                                                          '/healthcare-notes?patientUserId=${patient.userId}',
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: _dashboardButton(
+                                                    context,
                                                     Icons.view_list,
                                                     'View Logs',
                                                     () =>
@@ -639,9 +678,11 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                                     context,
                                                     Icons.call,
                                                     'Call',
-                                                        () {
-                                                      final String patientName = '${patient.firstName} ${patient.lastName}';
-                                                      final String roomId = 'room-${patient.id}'; // or any room ID logic you use
+                                                    () {
+                                                      final String patientName =
+                                                          '${patient.firstName} ${patient.lastName}';
+                                                      final String roomId =
+                                                          'room-${patient.id}'; // or any room ID logic you use
 
                                                       context.go(
                                                         '/mobile-web-call?patientName=${Uri.encodeComponent(patientName)}&roomId=${Uri.encodeComponent(roomId)}',
@@ -722,5 +763,3 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     );
   }
 }
-
-

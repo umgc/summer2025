@@ -48,7 +48,7 @@ dependencies:
 
   jitsi_meet_flutter_sdk: ^11.2.0
   permission_handler: ^12.0.0+1 # permission for camera
-
+  
   intl: ^0.20.2 # data formatting
   camera: ^0.11.1 # emotion detector use
   pdf: ^3.10.8 # PDF generation
@@ -61,23 +61,22 @@ dependencies:
   flutter_dotenv: ^5.0.2
 # -- Astha - start
 # ag
-  provider: ^6.1.2
-  go_router: ^13.2.1
+  provider: ^6.1.2 
+  go_router: ^13.2.1 
   flutter_stripe: ^9.5.0
   geolocator: ^11.0.0
   google_maps_flutter: ^2.6.0
   fl_chart: ^0.66.0
-
-  # AI Voice Commands
+  
+  # AI Voice Commands 
   # ag added as a fix
   porcupine_flutter: ^3.0.2
-
-
-
+  speech_to_text: ^6.6.0
 
   # device integration
-  fitbitter: ^2.0.0
+  fitbitter: ^2.0.6
   health: ^13.1.1
+  mobile_scanner: ^3.5.6
 
 
   flutter:
@@ -92,11 +91,7 @@ dependencies:
   flutter_secure_storage: ^9.2.4
 
 
-  speech_to_text: ^6.0.0
   google_fonts: ^6.0.0
-
-
-
 
 dev_dependencies:
   flutter_test:

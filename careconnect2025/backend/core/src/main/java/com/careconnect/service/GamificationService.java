@@ -26,9 +26,8 @@ public class GamificationService {
         this.userAchievementRepository = userAchievementRepository;
     }
 
-    // XP level threshold (simple static rule: every 100 XP = 1 level)
     private int calculateLevel(int xp) {
-        return xp / 100 + 1;
+        return xp / 50 + 1;
     }
 
     public XPProgress awardXp(Long userId, int amount) {
@@ -100,6 +99,20 @@ public class GamificationService {
         userAchievement.setAchievement(achievement);
         userAchievement.setEarnedAt(LocalDateTime.now()); // ✅ correct method name
         userAchievementRepository.save(userAchievement);
+    }
+    public XPProgress getOrInitXpProgress(Long userId) {
+        // Try to find existing XP progress
+        Optional<XPProgress> opt = xpProgressRepository.findByUserId(userId);
+        if (opt.isPresent()) {
+            return opt.get();
+        }
+        // If not found, create and save new XP progress row
+        XPProgress xp = new XPProgress();
+        xp.setUserId(userId);
+        xp.setXp(0);
+        xp.setLevel(1);
+        xp.setUpdatedAt(LocalDateTime.now());
+        return xpProgressRepository.save(xp);
     }
 
 }

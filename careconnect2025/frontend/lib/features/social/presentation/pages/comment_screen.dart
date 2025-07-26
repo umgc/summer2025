@@ -1,8 +1,16 @@
-import 'package:care_connect_app/config/env_constant.dart';
-import 'package:care_connect_app/services/session_manager.dart';
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+
+import 'package:care_connect_app/config/env_constant.dart';
+import 'package:care_connect_app/services/api_service.dart';
+import 'package:flutter/material.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+
+import '../../../../providers/user_provider.dart';
+import '../model/comment_dto.dart';
 
 class CommentScreen extends StatefulWidget {
   final int postId;
@@ -14,34 +22,57 @@ class CommentScreen extends StatefulWidget {
 }
 
 class _CommentScreenState extends State<CommentScreen> {
-  List<dynamic> comments = [];
+  List<CommentDto> comments = [];
+
   final TextEditingController _commentController = TextEditingController();
   bool isLoading = true;
   bool isSubmitting = false;
 
+  int? _userId;
+  String? _username;
+
   @override
   void initState() {
     super.initState();
-    fetchComments();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_userId == null) {
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not logged in')),
+        );
+        return;
+      }
+
+      setState(() {
+        _userId = user.id;
+        _username = user.name;
+      });
+
+      fetchComments();
+    }
   }
 
   Future<void> fetchComments() async {
     setState(() => isLoading = true);
 
-    final session = SessionManager();
-    await session.restoreSession();
-
-    final url = '${getBackendBaseUrl()}/api/comments/post/${widget.postId}';
+    final url = '${getBackendBaseUrl()}/v1/api/comments/post/${widget.postId}';
 
     try {
-      final response = await session.get(url);
-      print('Comments GET status: ${response.statusCode}');
-      print('Comments GET body: ${response.body}');
+      final headers = await ApiService.getAuthHeaders();
+      final response = await http.get(Uri.parse(url), headers: headers);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          comments = data is List ? data : (data['comments'] ?? []);
+          comments = (data as List)
+              .map((json) => CommentDto.fromJson(json))
+              .toList();
           isLoading = false;
         });
       } else {
@@ -49,43 +80,40 @@ class _CommentScreenState extends State<CommentScreen> {
       }
     } catch (e) {
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
     }
   }
 
   Future<void> submitComment() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('userId');
-    final username = prefs.getString('username'); // If you have it stored
-
-    if (userId == null || _commentController.text.trim().isEmpty) {
+    if (_userId == null || _username == null || _commentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User ID missing or comment empty')),
+        const SnackBar(content: Text('User not loaded or comment empty')),
       );
       return;
     }
 
     setState(() => isSubmitting = true);
 
-    final session = SessionManager();
-    await session.restoreSession();
-
-    final url = '${getBackendBaseUrl()}/api/comments/post/${widget.postId}';
+    final url = '${getBackendBaseUrl()}/v1/api/comments/post/${widget.postId}';
+    final headers = await ApiService.getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
 
     final body = jsonEncode({
-      'userId': int.parse(userId),
-      'username': username, // Include username if your backend expects it!
+      'userId': _userId,
+      'username': _username,
       'content': _commentController.text.trim(),
     });
 
-    final response = await session.post(url, body: body);
+    final response = await http.post(
+      Uri.parse(url),
+      headers: headers,
+      body: body,
+    );
 
     setState(() => isSubmitting = false);
 
-    print('Submit comment status: ${response.statusCode}');
-    print('Submit comment body: ${response.body}');
 
     if (response.statusCode == 201) {
       _commentController.clear();
@@ -97,17 +125,17 @@ class _CommentScreenState extends State<CommentScreen> {
     }
   }
 
-  Widget buildCommentCard(Map<String, dynamic> comment) {
+  Widget buildCommentCard(CommentDto comment) {
     return ListTile(
       leading: const Icon(Icons.comment),
-      title: Text(comment['username'] ?? 'User'),
+      title: Text(comment.username ?? 'Unknown User'),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(comment['content'] ?? ''),
+          Text(comment.content),
           const SizedBox(height: 4),
           Text(
-            comment['timestamp'] ?? '',
+            comment.timestamp.toIso8601String().split('T').join(' at '),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         ],
@@ -118,10 +146,8 @@ class _CommentScreenState extends State<CommentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Comments'),
-        backgroundColor: Colors.blue.shade900,
-      ),
+      appBar: AppBarHelper.createAppBar(context, title: 'Comments'),
+      drawer: CommonDrawer(currentRoute: '/comments'),
       body: Column(
         children: [
           Expanded(
