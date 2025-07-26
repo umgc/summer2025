@@ -120,13 +120,10 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Friend Requests'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Friend Requests',
+        additionalActions: [
           IconButton(
             icon: const Icon(Icons.group),
             tooltip: 'My Friends',
