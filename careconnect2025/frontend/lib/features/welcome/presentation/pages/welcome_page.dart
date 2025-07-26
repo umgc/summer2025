@@ -98,12 +98,10 @@ class WelcomePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Closer Connections. Better Care',
+                  'Closer Connections. Better Care.',
                   style: TextStyle(
                     fontSize: 18,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.7),
+                    color: Theme.of(context).primaryColor,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -114,9 +112,13 @@ class WelcomePage extends StatelessWidget {
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 30),
-                const Text(
+                Text(
                   'Welcome to CareConnect!',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -124,7 +126,7 @@ class WelcomePage extends StatelessWidget {
                   "We're here to help you stay connected, supported, and in control of your care journey. Whether you're managing a loved one's health or tracking your own, everything you need is just a tap away.\nLet's get started.",
                   style: TextStyle(
                     fontSize: 16,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: Theme.of(context).primaryColor,
                   ),
                   textAlign: TextAlign.center,
                 ),

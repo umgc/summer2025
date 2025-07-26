@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import '../config/theme/app_theme.dart';
 
 class AddFamilyMemberDialog extends StatefulWidget {
+  const AddFamilyMemberDialog({super.key});
+
   @override
   _AddFamilyMemberDialogState createState() => _AddFamilyMemberDialogState();
 }
@@ -25,6 +28,9 @@ class _AddFamilyMemberDialogState extends State<AddFamilyMemberDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     return Dialog(
       child: Container(
         padding: const EdgeInsets.all(20),
@@ -35,19 +41,13 @@ class _AddFamilyMemberDialogState extends State<AddFamilyMemberDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Add Family Member',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+              Text('Add Family Member', style: textTheme.titleLarge),
               const SizedBox(height: 20),
 
               // First Name field
               TextFormField(
                 controller: _firstNameController,
-                decoration: const InputDecoration(
-                  labelText: 'First Name',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: AppTheme.inputDecoration('First Name'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter first name';
@@ -60,10 +60,7 @@ class _AddFamilyMemberDialogState extends State<AddFamilyMemberDialog> {
               // Last Name field
               TextFormField(
                 controller: _lastNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Last Name',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: AppTheme.inputDecoration('Last Name'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter last name';
@@ -76,10 +73,9 @@ class _AddFamilyMemberDialogState extends State<AddFamilyMemberDialog> {
               // Relationship field
               TextFormField(
                 controller: _relationshipController,
-                decoration: const InputDecoration(
-                  labelText: 'Relationship',
-                  border: OutlineInputBorder(),
-                  hintText: 'e.g., Son, Daughter, Spouse',
+                decoration: AppTheme.inputDecoration(
+                  'Relationship',
+                  hint: 'e.g., Son, Daughter, Spouse',
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -93,10 +89,7 @@ class _AddFamilyMemberDialogState extends State<AddFamilyMemberDialog> {
               // Phone field
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: AppTheme.inputDecoration('Phone Number'),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -110,10 +103,11 @@ class _AddFamilyMemberDialogState extends State<AddFamilyMemberDialog> {
               // Email field
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email Address',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
+                decoration: AppTheme.inputDecoration('Email Address').copyWith(
+                  prefixIcon: Icon(
+                    Icons.email,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
@@ -134,6 +128,7 @@ class _AddFamilyMemberDialogState extends State<AddFamilyMemberDialog> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
+                    style: theme.textButtonTheme.style,
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: 8),
@@ -149,10 +144,7 @@ class _AddFamilyMemberDialogState extends State<AddFamilyMemberDialog> {
                         });
                       }
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade900,
-                      foregroundColor: Colors.white,
-                    ),
+                    style: AppTheme.primaryButtonStyle,
                     child: const Text('Add'),
                   ),
                 ],

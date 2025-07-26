@@ -159,6 +159,7 @@ class PatientParser {
         phone: '',
         dob: '',
         relationship: 'Error: $e',
+        userId: 0,
       );
     }
   }

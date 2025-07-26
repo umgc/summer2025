@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 // Web-specific utilities for file downloads
 // This is a stub that will be replaced with actual implementation on web
 

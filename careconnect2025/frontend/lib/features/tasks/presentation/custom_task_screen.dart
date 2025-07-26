@@ -94,11 +94,11 @@ class _CustomTaskScreenState extends State<CustomTaskScreen> {
                     DropdownButtonFormField<String>(
                       value: task.frequency,
                       items: const [
-                        DropdownMenuItem(value: 'Daily', child: Text('Daily')),
-                        DropdownMenuItem(value: 'Weekly', child: Text('Weekly')),
-                        DropdownMenuItem(value: 'Monthly', child: Text('Monthly')),
-                        DropdownMenuItem(value: 'Yearly', child: Text('Yearly')),
-                        DropdownMenuItem(value: 'Every Week Day', child: Text('Every Week Day')),
+                        DropdownMenuItem(value: 'DAILY', child: Text('Daily')),
+                        DropdownMenuItem(value: 'WEEKLY', child: Text('Weekly')),
+                        DropdownMenuItem(value: 'MONTHLY', child: Text('Monthly')),
+                        DropdownMenuItem(value: 'YEARLY', child: Text('Yearly')),
+                        DropdownMenuItem(value: 'EVERY_WEEK_DAY', child: Text('Every Week Day')),
                       ],
                       onChanged: (value) {
                         setState(() {
@@ -237,16 +237,23 @@ class _CustomTaskScreenState extends State<CustomTaskScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(8.0),
         child: ElevatedButton(
-          onPressed: () {
-            final result = ApiService.createTask(
-              widget.patientId,
-              task,
-            );
-            context.go('/patient-tasks',
-                extra: {
-                  'patientId': widget.patientId,
-                  'patientName': widget.patientName,
-                });
+          onPressed: () async {
+            try {
+              final result = await ApiService.createTask(
+                widget.patientId,
+                task,
+              );
+              // Optionally check result for success/failure here
+              context.go('/patient-tasks',
+                  extra: {
+                    'patientId': widget.patientId,
+                    'patientName': widget.patientName,
+                  });
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to create task: $e')),
+              );
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.indigo,

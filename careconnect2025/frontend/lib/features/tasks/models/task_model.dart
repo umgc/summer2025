@@ -52,7 +52,11 @@ class Task {
       frequency: json['frequency'],
       interval: json['taskInterval'],
       count: json['doCount'],
-      daysOfWeek: json['daysOfWeek'] != null ? jsonDecode(json['daysOfWeek']) : null
+      daysOfWeek: json['daysOfWeek'] != null
+          ? (json['daysOfWeek'] is String
+              ? List<bool>.from(jsonDecode(json['daysOfWeek']))
+              : List<bool>.from(json['daysOfWeek']))
+          : null
     );
   }
 

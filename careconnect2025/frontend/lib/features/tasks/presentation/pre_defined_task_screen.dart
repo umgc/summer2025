@@ -276,16 +276,28 @@ class _PreDefinedTaskScreenState extends State<PreDefinedTaskScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(8.0),
         child: ElevatedButton(
-          onPressed: () {
-            final result = ApiService.createTask(
-              widget.patientId,
-              task,
-            );
-            context.go('/patient-tasks',
-                extra: {
-                  'patientId': widget.patientId,
-                  'patientName': widget.patientName,
-                });
+          onPressed: () async {
+            try {
+              final result = await ApiService.createTask(
+                widget.patientId,
+                task,
+              );
+              if (result != null) {
+                context.go('/patient-tasks',
+                    extra: {
+                      'patientId': widget.patientId,
+                      'patientName': widget.patientName,
+                    });
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Failed to create task.')),
+                );
+              }
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: $e')),
+              );
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.indigo,

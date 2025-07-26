@@ -108,7 +108,11 @@ class _AssignTaskScreenState extends State<AssignTaskScreen> {
                             return Card(
                               margin: const EdgeInsets.symmetric(vertical: 5),
                               child: ListTile(
-                                leading: Icon(template.icon.icon, size: 40, color: Colors.indigo),
+                                leading: Icon(
+                                  template.icon?.icon ?? Icons.assignment,
+                                  size: 40,
+                                  color: Colors.indigo,
+                                ),
                                 title: Text(template.name),
                                 subtitle: Text(template.description),
                                 trailing: const Icon(Icons.arrow_forward_ios),

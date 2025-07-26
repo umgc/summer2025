@@ -56,6 +56,9 @@ class _CommonDrawerState extends State<CommonDrawer> {
         (user.role.toUpperCase() == 'CAREGIVER' ||
             user.role.toUpperCase() == 'FAMILY_LINK' ||
             user.role.toUpperCase() == 'ADMIN');
+    final isPatient =
+        user != null &&
+            (user.role.toUpperCase() == 'PATIENT');
 
     return Drawer(
       child: ListView(
@@ -164,6 +167,22 @@ class _CommonDrawerState extends State<CommonDrawer> {
             ),
           ],
 
+          if (isPatient) ...[
+            // Healthcare Notes
+            _buildDrawerItem(
+              context,
+              icon: Icons.notes,
+              title: 'Healthcare Notes',
+              route: '/healthcare-notes',
+              isActive: widget.currentRoute == '/healthcare-notes',
+              onTap: () {
+                Navigator.pop(context);
+                final userId = user?.id ?? 1;
+                context.go('/healthcare-notes?patientUserId=$userId');
+              },
+            ),
+          ],
+
           // Analytics removed as requested
           _buildDrawerItem(
             context,
@@ -193,22 +212,6 @@ class _CommonDrawerState extends State<CommonDrawer> {
             title: 'Wearables',
             route: '/wearables',
             isActive: widget.currentRoute == '/wearables',
-          ),
-
-          _buildDrawerItem(
-            context,
-            icon: Icons.home_outlined,
-            title: 'Home Monitoring',
-            route: '/home-monitoring',
-            isActive: widget.currentRoute == '/home-monitoring',
-          ),
-
-          _buildDrawerItem(
-            context,
-            icon: Icons.devices,
-            title: 'Smart Devices',
-            route: '/smart-devices',
-            isActive: widget.currentRoute == '/smart-devices',
           ),
 
           _buildDrawerItem(
