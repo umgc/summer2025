@@ -500,10 +500,10 @@ final GoRouter appRouter = GoRouter(
       path: '/smart-devices',
       builder: (_, __) => const SmartDevicesScreen(),
     ),
-   /* GoRoute(
+    GoRoute(
       path: '/medication',
       builder: (_, __) => const MedicationManagementScreen(),
-    ),*/
+    ),
     GoRoute(
       path: '/profile-settings',
       builder: (_, __) => const ProfileSettingsPage(),
