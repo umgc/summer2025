@@ -35,7 +35,7 @@ module "s3_internal" {
   default_tags            = var.default_tags
   cc_internal_bucket_name = "cc-internal-file-storage-${var.primary_region}"
   cc_vpc_id               = module.vpc.vpc_id
-  cc_app_role_arn         = module.iam.cc_app_role_arn
+  cc_app_role_arn         = module.iam.cc_app_role_info.arn
 }
 locals {
   params_keys = toset([for k, v in var.cc_ssm_params : k])
@@ -59,7 +59,7 @@ module "amplify" {
   source          = "./modules/amplify"
   default_tags    = var.default_tags
   primary_region  = var.primary_region
-  cc_app_role_arn = module.iam.cc_app_role_arn
+  cc_app_role_arn = module.iam.cc_app_role_info.arn
 }
 
 # To be reviewed and updated - This module needs a domain name to be set up properly
@@ -86,13 +86,13 @@ module "evb" {
   count = 0
   source                                    = "./modules/eventbridge"
   default_tags                              = var.default_tags
-  cc_app_role_arn                           = module.iam.cc_app_role_arn
+  cc_app_role_arn                           = module.iam.cc_app_role_info.arn
 }
 
 ##### This module will be used for CI/CD soon ######
 module "sfn_sm" {
   count = 0
   source          = "./modules/stepfunction"
-  cc_app_role_arn = module.iam.cc_app_role_arn
+  cc_app_role_arn = module.iam.cc_app_role_info.arn
   default_tags    = var.default_tags
 }

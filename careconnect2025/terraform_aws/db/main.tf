@@ -58,5 +58,5 @@ module "ssm" {
   source      = "./modules/ssm"
   default_tags = var.default_tags
   db_params   = local.db_params
-  cc_app_role_name = data.terraform_remote_state.cc_common_state.outputs.cc_api_gw_role.name
+  cc_app_role_name = data.terraform_remote_state.cc_common_state.outputs.cc_app_role_info.name
 }

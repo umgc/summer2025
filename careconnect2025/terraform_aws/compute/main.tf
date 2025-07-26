@@ -50,7 +50,7 @@ resource "aws_lambda_function" "cc_main_backend_lambda" {
   description   = "Main backend Lambda function(Compute) for CareConnect"
   handler       = "com.careconnect.CcLambdaHandler::handleRequest"
   runtime       = "java17"
-  role          = data.terraform_remote_state.cc_common_state.outputs.cc_app_role_arn
+  role          = data.terraform_remote_state.cc_common_state.outputs.cc_app_role_info.arn
   memory_size   = 2048
   timeout       = 30
   s3_bucket     = var.iac_cc_s3_bucket_name
