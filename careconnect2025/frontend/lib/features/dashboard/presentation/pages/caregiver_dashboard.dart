@@ -1,6 +1,14 @@
+import 'dart:convert';
+
+import 'package:care_connect_app/providers/user_provider.dart';
+import 'package:care_connect_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../widgets/ai_chat.dart';
+import '../../../social/presentation/pages/main_feed_screen.dart';
 import '../../models/patient_model.dart';
 import 'package:provider/provider.dart';
 import 'package:care_connect_app/providers/user_provider.dart';
@@ -491,75 +499,78 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     );
   }
 
-  Widget _buildContentBasedOnState() {
-    if (loading) {
-      return const Center(child: CircularProgressIndicator());
-    } else if (error != null) {
-      return _buildErrorState();
-    } else if (patients.isEmpty) {
-      return _buildEmptyStateContent();
-    } else {
-      return _buildPatientListContent();
-    }
-  }
-
-  Widget _buildErrorState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Error Loading Patients',
-              style: AppTheme.headingSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error!,
-              style: AppTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: fetchPatients,
-              style: AppTheme.primaryButtonStyle,
-              child: const Text('Try Again'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyStateContent() {
-    // Use responsive utils for width calculation
-    final isMobile = context.isMobile;
-
-    // Create a container with responsive width
-    return Center(
-      child: Container(
-        width: context.responsiveValue(
-          mobile: MediaQuery.of(context).size.width * 0.85,
-          tablet: 400.0,
-        ),
-        padding: const EdgeInsets.all(24),
-        decoration: !isMobile
-            ? BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    spreadRadius: 1,
+          return Drawer(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                DrawerHeader(
+                  decoration: BoxDecoration(color: Colors.blue.shade700),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const CircleAvatar(
+                        radius: 28,
+                        backgroundColor: Colors.white,
+                        child: Icon(Icons.person, size: 30),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        user?.name ?? 'User Name',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        isFamilyMember ? 'Family Member' : 'Caregiver',
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.dashboard),
+                  title: const Text('Dashboard'),
+                  onTap: () => Navigator.pop(context),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.emoji_events),
+                  title: const Text('Gamification'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/gamification');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.emoji_events),
+                  title: const Text('Subscription Management'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/subscription-management');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.people),
+                  title: Text(isFamilyMember ? 'My Patients' : 'Patients'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (isFamilyMember) {
+                      context.go('/family-patients');
+                    } else {
+                      context.go('/patients');
+                    }
+                  },
+                ),
+                // Only show these options for caregivers
+                if (!isFamilyMember) ...[
+                  ListTile(
+                    leading: const Icon(Icons.person_add),
+                    title: const Text('Register Patient'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.go('/register/patient');
+                    },
                   ),
                 ],
               )

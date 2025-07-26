@@ -37,6 +37,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -50,6 +51,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Service
 public class AuthService {
+
+    @Autowired
+    private GamificationService gamificationService;
 
     @Autowired
     private UserRepository userRepository;
@@ -279,6 +283,28 @@ public LoginResponse loginV2(LoginRequest req,
     if (!user.isActive())
         throw new AuthenticationException("Account suspended");
 
+    /* ---------------- Gamification: First Login & 5-Day Streak ---------------- */
+    gamificationService.unlockAchievement(user.getId(), "First Login", 50);
+
+    LocalDate today = LocalDate.now();
+    LocalDate lastLogin = user.getLastLoginDate();
+    int streak = user.getLoginStreak();
+
+    if (lastLogin != null && lastLogin.plusDays(1).equals(today)) {
+        streak++;
+    } else if (lastLogin == null || !lastLogin.equals(today)) {
+        streak = 1;
+    }
+
+    user.setLastLoginDate(today);
+    user.setLoginStreak(streak);
+    userRepository.save(user);
+
+    if (streak == 5) {
+        gamificationService.unlockAchievement(user.getId(), "5-Day Streak", 100);
+    }
+
+
     /* ---------------- Resolve profile info ------------------------------ */
     Long patientId   = null;
     Long caregiverId = null;
@@ -341,6 +367,28 @@ public LoginResponse loginV2(LoginRequest req,
         // Skip password validation for OAuth users
         if (!user.isActive())
             throw new AuthenticationException("Account suspended");
+
+        /* ---------------- Gamification: First Login & 5-Day Streak ---------------- */
+
+        gamificationService.unlockAchievement(user.getId(), "First Login", 50);
+
+        LocalDate today = LocalDate.now();
+        LocalDate lastLogin = user.getLastLoginDate();
+        int streak = user.getLoginStreak();
+
+        if (lastLogin != null && lastLogin.plusDays(1).equals(today)) {
+            streak++;
+        } else if (lastLogin == null || !lastLogin.equals(today)) {
+            streak = 1;
+        }
+
+        user.setLastLoginDate(today);
+        user.setLoginStreak(streak);
+        userRepository.save(user);
+
+        if (streak == 5) {
+            gamificationService.unlockAchievement(user.getId(), "5-Day Streak", 100);
+        }
 
         /* ---------------- Resolve profile info ------------------------------ */
         Long patientId   = null;

@@ -46,4 +46,22 @@ class GamificationService {
     final error = jsonDecode(res.body);
     throw Exception(error['error'] ?? 'Failed to load all achievements');
   }
+
+  static Future<void> addXP(int userId, int amount) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
+
+    final response = await http.post(
+      Uri.parse('${ApiConstants.gamification}/award-xp'),
+      headers: headers,
+      body: jsonEncode({
+        'userId': userId,
+        'amount': amount,
+      }),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to award XP: ${response.body}');
+    }
+  }
 }
