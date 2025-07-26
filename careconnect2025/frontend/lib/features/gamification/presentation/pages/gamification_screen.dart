@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'achievement_detail_screen.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
 
 class GamificationScreen extends StatefulWidget {
   const GamificationScreen({super.key});
@@ -55,11 +56,6 @@ class _GamificationScreenState extends State<GamificationScreen> {
     _prefs = await SharedPreferences.getInstance();
     userId =
         int.tryParse(_prefs.getString('userId') ?? '') ?? 1;
-
-    // Show confetti for first login reward
-    final hasReceivedFirstLoginReward =
-        _prefs.getBool('first_login_reward_given') ?? false;
-
 
     previousAchievementCount = _prefs.getInt('achievement_count') ?? 0;
     await loadGamificationData();
@@ -114,16 +110,17 @@ class _GamificationScreenState extends State<GamificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue.shade900,
-        title: const Text(
-          'Care Connect',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        actions: [
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Achievements',
+        additionalActions: [
           IconButton(
-            icon: const Icon(Icons.emoji_events, color: Colors.white),
+            icon: const Icon(Icons.emoji_events),
             onPressed: () {
               Navigator.push(
                 context,
@@ -136,8 +133,8 @@ class _GamificationScreenState extends State<GamificationScreen> {
           ),
         ],
       ),
-      drawer: CommonDrawer(currentRoute: '/gamification'),
-      backgroundColor: Colors.white,
+      drawer: const CommonDrawer(currentRoute: '/gamification'),
+      backgroundColor: colorScheme.background,
       body: Stack(
         children: [
           isLoading
@@ -151,33 +148,31 @@ class _GamificationScreenState extends State<GamificationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 10),
-                      const Text(
+                      Text(
                         'Gamification',
-                        style: TextStyle(
-                          fontSize: 28,
+                        style: textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.indigo,
+                          color: colorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: 30),
-                      const Icon(Icons.shield, size: 80, color: Colors.indigo),
+                      Icon(Icons.shield, size: 80, color: colorScheme.primary),
                       const SizedBox(height: 12),
                       Text(
                         'Level $level',
-                        style: const TextStyle(
+                        style: textTheme.titleMedium?.copyWith(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.indigo,
+                          color: colorScheme.primary,
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Text(
                           dailyMessage,
-                          style: const TextStyle(
-                            fontSize: 16,
+                         style: textTheme.bodyMedium?.copyWith(
                             fontStyle: FontStyle.italic,
-                            color: Colors.black87,
+                            color: colorScheme.onBackground,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -185,8 +180,8 @@ class _GamificationScreenState extends State<GamificationScreen> {
                       const SizedBox(height: 10),
                       LinearProgressIndicator(
                         value: (xp % xpTarget) / xpTarget,
-                        backgroundColor: Colors.grey.shade300,
-                        color: Colors.blue.shade900,
+                        backgroundColor: colorScheme.surfaceVariant,
+                        color: colorScheme.primary,
                         minHeight: 10,
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -195,21 +190,20 @@ class _GamificationScreenState extends State<GamificationScreen> {
                         alignment: Alignment.centerRight,
                         child: Text(
                           '$xp / $xpTarget XP',
-                          style: const TextStyle(
+                          style: textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
-                            color: Colors.indigo,
+                            color: colorScheme.primary,
                           ),
                         ),
                       ),
                       const SizedBox(height: 30),
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'Achievements',
-                          style: TextStyle(
-                            fontSize: 22,
+                          style: textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.indigo,
+                            color: colorScheme.primary,
                           ),
                         ),
                       ),
@@ -235,8 +229,8 @@ class _GamificationScreenState extends State<GamificationScreen> {
                         icon: const Icon(Icons.leaderboard),
                         label: const Text("View Leaderboard"),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-                          foregroundColor: Colors.white,
+                          backgroundColor: colorScheme.secondary,
+                          foregroundColor: colorScheme.onSecondary,
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -271,7 +265,7 @@ class _GamificationScreenState extends State<GamificationScreen> {
             MaterialPageRoute(
               builder: (_) => AchievementDetailScreen(
                 achievements: allAchievements,
-              ), // ✅ This must include the `unlocked` key
+              ),
             ),
           );
         },
@@ -280,10 +274,9 @@ class _GamificationScreenState extends State<GamificationScreen> {
             Expanded(
               child: Text(
                 achievement['title'] ?? 'Unnamed Achievement',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w500,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                 fontWeight: FontWeight.w500,
+                 color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
