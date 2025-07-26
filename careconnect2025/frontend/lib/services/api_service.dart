@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:care_connect_app/features/tasks/models/task_model.dart';
+
 import '../config/env_constant.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -14,6 +16,7 @@ class ApiConstants {
   static final String friends = '$_host/v1/api/friends';
   static final String analytics = '$_host/v1/api/analytics';
   static final String baseUrl = '$_host/v1/api/';
+  static final String tasks = '$_host/v1/api/tasks';
   static final String familyMembers = '$_host/v1/api/family-members';
   static final String patient = '$_host/v1/api/patient';
   static final String patients = '$_host/v1/api/patients';
@@ -268,6 +271,83 @@ class ApiService {
     final url = Uri.parse('${ApiConstants.friends}/list/$userId');
     return await _httpClient
         .get(url, headers: headers)
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // ========================
+  // TASK METHODS
+  // ========================
+  
+  // Get patient tasks
+  static Future<http.Response> getPatientTasks(int patientId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient.get(
+      Uri.parse(
+        '${ApiConstants.tasks}/patient/$patientId',
+      ),
+      headers: headers,
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Delete a task by task ID
+  static Future<http.Response> deleteTask(int taskId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .delete(
+      Uri.parse('${ApiConstants.tasks}/$taskId'),
+      headers: headers,
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Edit a task by task ID
+  static Future<http.Response> editTask(
+      int taskId,
+      Map<String, dynamic> taskData,
+      ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
+
+    return await _httpClient
+        .put(
+      Uri.parse('${ApiConstants.tasks}/$taskId'),
+      headers: headers,
+      body: jsonEncode(taskData),
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Get task templates
+  static Future<http.Response> getTaskTemplates(int patientId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .get(
+      Uri.parse('${ApiConstants.baseUrl}templates/all'), // get all for now
+      headers: headers,
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+  static Future<http.Response> getTaskTemplate(int templateId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .get(
+      Uri.parse('${ApiConstants.baseUrl}templates/$templateId'),
+      headers: headers,
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+  // Create a task
+  static Future<http.Response> createTask(int patientId, Task task) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
+
+    return await _httpClient
+        .post(
+      Uri.parse('${ApiConstants.tasks}/patient/$patientId'),
+      headers: headers,
+      body: jsonEncode(task),
+    )
         .timeout(const Duration(seconds: 30));
   }
 

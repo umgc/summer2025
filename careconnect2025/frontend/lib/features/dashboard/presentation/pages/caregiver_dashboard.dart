@@ -523,7 +523,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                       // Responsive button layout
                                       LayoutBuilder(
                                         builder: (context, constraints) {
-                                          // If width is too small, use 2x2 grid
+                                          // If width is too small, use 2x3 grid
                                           if (constraints.maxWidth < 380) {
                                             return Column(
                                               children: [
@@ -581,7 +581,6 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                                         },
                                                       ),
                                                     ),
-
                                                     const SizedBox(width: 8),
                                                     Expanded(
                                                       child: _dashboardButton(
@@ -598,6 +597,23 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                                                 ),
                                                               ),
                                                             ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: _dashboardButton(
+                                                        context,
+                                                        Icons.task_outlined,
+                                                        'View Tasks',
+                                                        () {
+                                                          context.go(
+                                                            '/patient-tasks?patientId=${patient.id}',
+                                                          );
+                                                        },
                                                       ),
                                                     ),
                                                   ],
@@ -637,6 +653,19 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                                         ),
                                                   ),
                                                 ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                      child: _dashboardButton(
+                                                        context,
+                                                        Icons.task_outlined,
+                                                        'View Tasks',
+                                                        () {
+                                                          context.go(
+                                                            '/patient-tasks?patientId=${patient.id}&patientName=${patient.firstName} ${patient.lastName}',
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
                                                 const SizedBox(width: 6),
                                                 Expanded(
                                                   child: _dashboardButton(
