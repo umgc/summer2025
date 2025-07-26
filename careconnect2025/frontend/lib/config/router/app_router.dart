@@ -184,7 +184,28 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(path: '/add-patient', builder: (_, __) => const AddPatientScreen()),
     GoRoute(path: '/speech-to-text', builder: (_, __) => SpeechToTextFile()),
-    GoRoute(path: '/healthcare-notes', builder: (_, __) => HealthcareNotes()),
+    GoRoute(
+      path: '/healthcare-notes',
+      builder: (context, state) {
+        final patientIdStr = state.uri.queryParameters['patientUserId'];
+
+        if (patientIdStr == null) {
+           return const Scaffold(
+             body: Center(child: Text('No patientUserId provided in the URL.')),
+           );
+         }
+
+        final patientId = patientIdStr != null
+            ? int.tryParse(patientIdStr)
+            : null;
+
+        if (patientId == null) {
+          return Scaffold(body: Center(child: Text('Invalid patientUserId.')));
+        }
+
+        return HealthcareNotes(patientUserId: patientId); // Pass patientId if provided
+      },
+    ),
     GoRoute(path: '/voice-commands', builder: (_, __) => VoiceCommandAI()),
     GoRoute(
       path: '/social-feed',

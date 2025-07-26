@@ -1,35 +1,37 @@
 import 'package:flutter/material.dart';
 
 class CancelScreen extends StatelessWidget {
+  const CancelScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("CarConnect"),
+        title: const Text("CareConnect"),
         centerTitle: true,
-        backgroundColor: Colors.indigo,
+        backgroundColor: const Color(0xFF14366E),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cancel, color: Colors.red, size: 60),
-            SizedBox(height: 20),
-            Text(
+            const Icon(Icons.cancel, color: Colors.red, size: 60),
+            const SizedBox(height: 20),
+            const Text(
               "SOS Request Cancelled",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
-            Text("Your caregiver has not been alerted."),
-            SizedBox(height: 30),
+            const SizedBox(height: 10),
+            const Text("Your caregiver has not been alerted."),
+            const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
+                backgroundColor: const Color(0xFF14366E),
                 foregroundColor: Colors.white,
               ),
-              child: Text("Back"),
-            )
+              child: const Text("Back"),
+            ),
           ],
         ),
       ),

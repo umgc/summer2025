@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../../providers/user_provider.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 import '../model/friend_dto.dart';
 import 'chat_room_screen.dart';
 
@@ -64,7 +66,8 @@ class _MyFriendsScreenState extends State<MyFriendsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("My Friends")),
+      appBar: AppBarHelper.createAppBar(context, title: 'My Friends'),
+      drawer: CommonDrawer(currentRoute: '/my_friends'),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : friends.isEmpty

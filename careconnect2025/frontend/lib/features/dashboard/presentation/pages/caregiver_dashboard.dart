@@ -557,6 +557,17 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                                     Expanded(
                                                       child: _dashboardButton(
                                                         context,
+                                                        Icons.notes,
+                                                        'Healthcare Notes',
+                                                            () => context.go(
+                                                          '/healthcare-notes?patientUserId=${patient.userId}',
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Expanded(
+                                                      child: _dashboardButton(
+                                                        context,
                                                         Icons.view_list,
                                                         'View Logs',
                                                         () =>
@@ -630,6 +641,17 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                                       '/analytics?patientId=${patient.id}',
                                                     ),
                                                     isAnalytics: true,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: _dashboardButton(
+                                                    context,
+                                                    Icons.notes,
+                                                    'Healthcare Notes',
+                                                        () => context.go(
+                                                          '/healthcare-notes?patientUserId=${patient.userId}',
+                                                    ),
                                                   ),
                                                 ),
                                                 const SizedBox(width: 6),

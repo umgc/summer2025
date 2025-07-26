@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:care_connect_app/services/api_service.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 
 class MoodWellnessCheckIn extends StatefulWidget {
   const MoodWellnessCheckIn({super.key});
@@ -112,14 +114,11 @@ class _MoodWellnessCheckInState extends State<MoodWellnessCheckIn> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Mood & Wellness Check-In',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.blue.shade900,
-        iconTheme: const IconThemeData(color: Colors.white),
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Mood & Wellness Check-In',
       ),
+      drawer: CommonDrawer(currentRoute: '/mood_wellness'),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

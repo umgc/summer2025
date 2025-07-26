@@ -3,11 +3,6 @@ variable "primary_region" {
   default     = "us-east-1"
 }
 
-variable "core_task_env_vars" {
-  type    = list(map(string))
-  default = []
-}
-
 variable "default_tags" {
   type = map(any)
   default = {
