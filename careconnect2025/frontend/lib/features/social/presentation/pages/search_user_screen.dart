@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:care_connect_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import '../../../../providers/user_provider.dart';
 import '../model/search_user_dto.dart';
 
@@ -79,13 +79,10 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Search Users'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Search Users',
         ),
-      ),
       body: Column(
         children: [
           Padding(
