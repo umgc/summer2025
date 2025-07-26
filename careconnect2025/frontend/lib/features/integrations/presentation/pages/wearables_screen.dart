@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:health/health.dart';
 import 'package:fitbitter/fitbitter.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
 
 import 'add_devices_screen.dart';
 
@@ -531,21 +533,19 @@ class _WearablesScreenState extends State<WearablesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Wearables'),
+      drawer: const CommonDrawer(currentRoute: '/wearables'),
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Wearables',
         centerTitle: true,
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-        actions: [
+        additionalActions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _refreshData,
           ),
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              _navigateToAddDevice();
-            },
+            onPressed: _navigateToAddDevice,
           ),
         ],
       ),
@@ -566,25 +566,25 @@ class _WearablesScreenState extends State<WearablesScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: Colors.indigo.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.watch,
               size: 60,
-              color: Colors.indigo,
+              color: Theme.of(context).primaryColor,
             ),
           ),
 
           const SizedBox(height: 32),
 
           // Title
-          const Text(
+          Text(
             'No Wearables Connected',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.indigo,
+              color: Theme.of(context).primaryColor,
             ),
           ),
 
@@ -594,11 +594,7 @@ class _WearablesScreenState extends State<WearablesScreen> {
           const Text(
             'Connect wearable devices to track your patient\'s health data in real-time.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              height: 1.4,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.4),
           ),
 
           const SizedBox(height: 40),
@@ -610,17 +606,20 @@ class _WearablesScreenState extends State<WearablesScreen> {
               onPressed: () {
                 _navigateToAddDevice();
               },
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
+              icon: Icon(
+                Icons.add,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+              label: Text(
                 'Add Your First Device',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
+                backgroundColor: Theme.of(context).primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -643,10 +642,7 @@ class _WearablesScreenState extends State<WearablesScreen> {
                 children: [
                   const Text(
                     'Supported Devices',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
 
@@ -674,22 +670,15 @@ class _WearablesScreenState extends State<WearablesScreen> {
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 28,
-          ),
+          child: Icon(icon, color: color, size: 28),
         ),
         const SizedBox(height: 8),
         Text(
           name,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
       ],
     );
@@ -832,7 +821,7 @@ class _WearablesScreenState extends State<WearablesScreen> {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: dataColor.withOpacity(0.1),
+              color: dataColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -859,7 +848,7 @@ class _WearablesScreenState extends State<WearablesScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: dataColor.withOpacity(0.1),
+                        color: dataColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -944,7 +933,7 @@ class _WearablesScreenState extends State<WearablesScreen> {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: deviceColor.withOpacity(0.1),
+                color: deviceColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -989,7 +978,7 @@ class _WearablesScreenState extends State<WearablesScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Text(
@@ -1009,7 +998,7 @@ class _WearablesScreenState extends State<WearablesScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(

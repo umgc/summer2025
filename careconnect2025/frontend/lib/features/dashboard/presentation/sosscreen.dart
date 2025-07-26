@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class SosScreen extends StatelessWidget {
+  const SosScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,7 +31,7 @@ class SosScreen extends StatelessWidget {
                 foregroundColor: Colors.white,
               ),
               child: Text("Back"),
-            )
+            ),
           ],
         ),
       ),
