@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../widgets/ai_chat.dart';
+import '../../../social/presentation/pages/main_feed_screen.dart';
 import '../../models/patient_model.dart';
 
 class CaregiverDashboard extends StatefulWidget {
@@ -226,6 +227,18 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                   onTap: () {
                     Navigator.pop(context);
                     context.go('/gamification');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.feed),
+                  title: const Text('Social Feed'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    final userId = Provider.of<UserProvider>(context, listen: false).user?.id ?? 0;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => MainFeedScreen(userId: userId)),
+                    );
                   },
                 ),
                 ListTile(

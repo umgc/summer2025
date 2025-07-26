@@ -1,17 +1,15 @@
 import 'dart:convert';
 
 import 'package:care_connect_app/services/api_service.dart';
-import 'package:care_connect_app/widgets/app_bar_helper.dart';
-import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
 
+import '../../../../providers/user_provider.dart';
 import '../model/search_user_dto.dart';
 
 
 class SearchUserScreen extends StatefulWidget {
-  final int userId;
-  const SearchUserScreen({super.key, required this.userId});
+  const SearchUserScreen({super.key});
 
   @override
   State<SearchUserScreen> createState() => _SearchUserScreenState();
@@ -19,39 +17,16 @@ class SearchUserScreen extends StatefulWidget {
 
 class _SearchUserScreenState extends State<SearchUserScreen> {
   final TextEditingController _controller = TextEditingController();
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-
   List<SearchUserDto> results = [];
   bool isLoading = false;
-  int? _userId;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUserId();
-  }
-
-  Future<void> _loadUserId() async {
-    final idStr = await _secureStorage.read(key: 'userId');
-    if (idStr != null) {
-      setState(() {
-        _userId = int.tryParse(idStr);
-      });
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('User ID not found')));
-    }
-  }
-
-  Future<void> searchUsers() async {
-    if (_userId == null) return;
+  Future<void> searchUsers(int currentUserId) async {
 
     setState(() => isLoading = true);
     try {
       final response = await ApiService.searchUsers(
         _controller.text.trim(),
-        _userId!,
+        currentUserId,
       );
 
       if (response.statusCode == 200) {
@@ -74,9 +49,9 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     setState(() => isLoading = false);
   }
 
-  Future<void> sendRequest(int toUserId) async {
+  Future<void> sendRequest(int fromUserId, int toUserId) async {
     try {
-      final response = await ApiService.sendFriendRequest(_userId!, toUserId);
+      final response = await ApiService.sendFriendRequest(fromUserId, toUserId);
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(
           context,
@@ -95,9 +70,22 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context).user;
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Search Users')),
+        body: const Center(child: Text('User not logged in')),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBarHelper.createAppBar(context, title: 'Search Users'),
-      drawer: const CommonDrawer(currentRoute: '/search-users'),
+      appBar: AppBar(
+        title: const Text('Search Users'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Column(
         children: [
           Padding(
@@ -108,7 +96,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                 labelText: 'Search by name or email',
                 suffixIcon: IconButton(
                   icon: Icon(Icons.search),
-                  onPressed: searchUsers,
+                  onPressed: () => searchUsers(user.id),
                 ),
               ),
             ),
@@ -119,12 +107,12 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                 : ListView.builder(
                     itemCount: results.length,
                     itemBuilder: (context, index) {
-                      final user = results[index];
+                      final searchUser = results[index];
                       return ListTile(
-                        title: Text(user.name),
-                        subtitle: Text(user.email),
+                        title: Text(searchUser.name),
+                        subtitle: Text(searchUser.email),
                         trailing: ElevatedButton(
-                          onPressed: () => sendRequest(user.id),
+                          onPressed: () => sendRequest(user.id, searchUser.id),
                           child: Text('Add'),
                         ),
                       );

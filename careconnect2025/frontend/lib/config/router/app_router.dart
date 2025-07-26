@@ -26,7 +26,6 @@ import '../../features/calls/presentation/pages/mobile_web_call.dart';
 import '../../features/dashboard/presentation/pages/caregiver_dashboard.dart';
 //import '../../features/dashboard/presentation/pages/edit_patient.dart';
 import '../../features/dashboard/presentation/pages/patient_dashboard.dart';
-import '../../features/gamification/presentation/pages/caregiver_gamification_landingpage.dart';
 import '../../features/gamification/presentation/pages/gamification_screen.dart';
 import '../../features/onboarding/presentation/pages/patient_registration.dart';
 import '../../features/payments/models/package_model.dart';
@@ -255,10 +254,6 @@ final GoRouter appRouter = GoRouter(
       builder: (_, __) => const GamificationScreen(),
     ),
     GoRoute(
-      path: '/caregiver-gamification',
-      builder: (_, __) => CaregiverGamificationLandingScreen(),
-    ),
-    GoRoute(
       path: '/stripe-checkout',
       builder: (context, state) {
         final pkg = state.extra as PackageModel;
@@ -484,10 +479,10 @@ final GoRouter appRouter = GoRouter(
       path: '/smart-devices',
       builder: (_, __) => const SmartDevicesScreen(),
     ),
-    GoRoute(
+   /* GoRoute(
       path: '/medication',
       builder: (_, __) => const MedicationManagementScreen(),
-    ),
+    ),*/
     GoRoute(
       path: '/profile-settings',
       builder: (_, __) => const ProfileSettingsPage(),

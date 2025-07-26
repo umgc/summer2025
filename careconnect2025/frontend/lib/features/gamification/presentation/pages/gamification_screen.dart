@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:care_connect_app/services/gamification_service.dart';
+import 'leaderboard_screen.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'achievement_detail_screen.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 
 class GamificationScreen extends StatefulWidget {
   const GamificationScreen({super.key});
@@ -11,6 +13,14 @@ class GamificationScreen extends StatefulWidget {
   @override
   State<GamificationScreen> createState() => _GamificationScreenState();
 }
+
+final List<String> motivationalMessages = [
+  "You're doing great — keep going! 💪",
+  "Small steps every day lead to big results.",
+  "Believe in yourself and all that you are.",
+  "Progress, not perfection.",
+  "One day at a time — you got this!",
+];
 
 class _GamificationScreenState extends State<GamificationScreen> {
   int level = 1;
@@ -34,13 +44,26 @@ class _GamificationScreenState extends State<GamificationScreen> {
     initializePrefsAndLoad();
   }
 
+  late String dailyMessage;
+
+  void pickDailyMessage() {
+    final dayIndex = DateTime.now().day % motivationalMessages.length;
+    dailyMessage = motivationalMessages[dayIndex];
+  }
+
   Future<void> initializePrefsAndLoad() async {
     _prefs = await SharedPreferences.getInstance();
     userId =
-        int.tryParse(_prefs.getString('userId') ?? '') ??
-        1; // <-- Get dynamic userId here
+        int.tryParse(_prefs.getString('userId') ?? '') ?? 1;
+
+    // Show confetti for first login reward
+    final hasReceivedFirstLoginReward =
+        _prefs.getBool('first_login_reward_given') ?? false;
+
+
     previousAchievementCount = _prefs.getInt('achievement_count') ?? 0;
     await loadGamificationData();
+    pickDailyMessage();
   }
 
   @override
@@ -61,14 +84,20 @@ class _GamificationScreenState extends State<GamificationScreen> {
         previousAchievementCount = earned.length;
         await _prefs.setInt('achievement_count', earned.length);
       }
+      print("Earned Achievements: $earned");
+      print("All Achievements: $all");
 
       List<Map<String, dynamic>> merged = (all).map<Map<String, dynamic>>((a) {
         final match = earned.firstWhere(
-          (e) => e['title']?.toString().trim() == a['title']?.toString().trim(),
-          orElse: () => {},
+              (e) =>
+          (e['achievement']?['title']?.toString().trim().toLowerCase() ?? '') ==
+              (a['title']?.toString().trim().toLowerCase() ?? ''),
+          orElse: () => null,
         );
         return {...a, 'unlocked': match != null};
       }).toList();
+      print("Earned Achievements: $earned");
+      print("All Achievements: $all");
 
       setState(() {
         level = progress['level'];
@@ -107,6 +136,7 @@ class _GamificationScreenState extends State<GamificationScreen> {
           ),
         ],
       ),
+      drawer: CommonDrawer(currentRoute: '/gamification'),
       backgroundColor: Colors.white,
       body: Stack(
         children: [
@@ -140,9 +170,21 @@ class _GamificationScreenState extends State<GamificationScreen> {
                           color: Colors.indigo,
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          dailyMessage,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.black87,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                       const SizedBox(height: 10),
                       LinearProgressIndicator(
-                        value: xp / xpTarget,
+                        value: (xp % xpTarget) / xpTarget,
                         backgroundColor: Colors.grey.shade300,
                         color: Colors.blue.shade900,
                         minHeight: 10,
@@ -174,13 +216,30 @@ class _GamificationScreenState extends State<GamificationScreen> {
                       const SizedBox(height: 20),
                       Expanded(
                         child: ListView.builder(
-                          itemCount: allAchievements.length,
+                          itemCount: allAchievements.where((a) => a['unlocked'] == true).length,
                           itemBuilder: (context, index) {
-                            final achievement = allAchievements[index];
+                            final unlockedAchievements = allAchievements.where((a) => a['unlocked'] == true).toList();
+                            final achievement = unlockedAchievements[index];
                             return buildAchievement(achievement);
                           },
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
+                          );
+                        },
+                        icon: const Icon(Icons.leaderboard),
+                        label: const Text("View Leaderboard"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),

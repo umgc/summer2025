@@ -18,6 +18,9 @@
         private final UserRepository userRepository;
 
         @Autowired
+        private GamificationService gamificationService;
+
+        @Autowired
         public FeedService(PostRepository postRepository, CommentRepository commentRepository, UserRepository userRepository) {
             this.postRepository = postRepository;
             this.commentRepository = commentRepository;
@@ -31,7 +34,14 @@
             post.setContent(content);
             post.setCreatedAt(LocalDateTime.now());
             post.setImageUrl(imageUrl);  // ✅ Assign uploaded image path
-            return postRepository.save(post);
+            Post savedPost = postRepository.save(post);
+
+            long totalPosts = postRepository.countByUserId(userId);
+            if (totalPosts == 1) {
+                gamificationService.unlockAchievement(userId, "First Post Created", 50);
+            }
+
+            return savedPost;
         }
 
         // Fetch all posts globally

@@ -6,45 +6,44 @@ import 'package:care_connect_app/services/api_service.dart';
 import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+
+import '../../../../providers/user_provider.dart';
 import '../model/friend_request_dto.dart';
 
 class FriendRequestsScreen extends StatefulWidget {
-  final int userId;
-  const FriendRequestsScreen({super.key, required this.userId});
+  const FriendRequestsScreen({super.key});
 
   @override
   State<FriendRequestsScreen> createState() => _FriendRequestsScreenState();
 }
 
 class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   int? _userId;
 
   List<FriendRequestDto> requests = [];
   bool isLoading = true;
 
   @override
-  void initState() {
-    super.initState();
-    _loadUserIdAndRequests();
-  }
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-  Future<void> _loadUserIdAndRequests() async {
-    final userIdString = await _secureStorage.read(
-      key: 'userId',
-    ); //Read from secure storage
-    if (userIdString != null) {
-      setState(
-        () => _userId = int.tryParse(userIdString),
-      ); //Parse and save to state
-      fetchRequests(); //Continue fetching now that userId is available
-    } else {
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('User ID not found')));
+    if (_userId == null) {
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not logged in')),
+        );
+        setState(() => isLoading = false);
+        return;
+      }
+
+      setState(() {
+        _userId = user.id;
+      });
+
+      fetchRequests();
     }
   }
 
@@ -121,10 +120,13 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBarHelper.createAppBar(
-        context,
-        title: 'Friend Requests',
-        additionalActions: [
+      appBar: AppBar(
+        title: const Text('Friend Requests'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
           IconButton(
             icon: const Icon(Icons.group),
             tooltip: 'My Friends',
@@ -137,7 +139,6 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
           ),
         ],
       ),
-      drawer: CommonDrawer(currentRoute: '/friend_requests'),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : requests.isEmpty
