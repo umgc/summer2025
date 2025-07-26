@@ -46,6 +46,7 @@ class Patient {
   final Address? address;
   final int? linkId; // Added to track the relationship link ID
   final String linkStatus; // Added to track active/suspended status
+  final int userId; //Added to query healthcare notes
 
   Patient({
     required this.id,
@@ -59,6 +60,7 @@ class Patient {
     this.address,
     this.linkId,
     this.linkStatus = 'ACTIVE',
+    required this.userId,
   });
 
   // Getter for calculating the patient's age from the 'dob' field
@@ -104,6 +106,22 @@ class Patient {
         '⚠️ Warning: Patient object missing id and patientId fields: ${patientData.keys.toList()}',
       );
       id = 0;
+    }
+
+    // User ID of patient
+    int userId;
+    if (patientData.containsKey('user') &&
+        patientData['user'] is Map<String, dynamic> &&
+        patientData['user']['id'] is int) {
+      // Try to use user.id if available
+      userId = patientData['user']['id'];
+      print('Collected User Id: $id');
+    } else {
+      // Default value with debug log
+      print(
+        '⚠️ Warning: Patient object missing id and patientId fields: ${patientData.keys.toList()}',
+      );
+      userId = 0;
     }
 
     // Extract link ID and status if available
@@ -170,11 +188,12 @@ class Patient {
           : null,
       linkId: linkId,
       linkStatus: linkStatus,
+      userId: userId,
     );
   }
 
   @override
   String toString() {
-    return 'Patient{id: $id, firstName: $firstName, lastName: $lastName, email: $email, phone: $phone, dob: $dob, relationship: $relationship, linkId: $linkId, linkStatus: $linkStatus}';
+    return 'Patient{id: $id, firstName: $firstName, lastName: $lastName, email: $email, phone: $phone, dob: $dob, relationship: $relationship, linkId: $linkId, linkStatus: $linkStatus, userId: $userId}';
   }
 }
