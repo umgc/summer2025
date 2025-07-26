@@ -8,20 +8,17 @@ output "main_api_id" {
 output "cc_api_gw_role" {
   value = module.iam.cc_api_gw_role
 }
-output "db_endpoint" {
-  value = module.rds.cc_db_endpoint
-}
-output "db_port" {
-  value = module.rds.cc_db_port
-}
-output "db_name" {
-  value = module.rds.cc_db_name
-}
-output "cc_app_role_arn" {
-  value = module.iam.cc_app_role_arn
+output "cc_app_role_info" {
+  value = module.iam.cc_app_role_info
 }
 output "cc_compute_sg_id" {
   value = module.vpc.cc_compute_sg_id
+}
+output "cc_rds_sg_id" {
+  value = module.vpc.cc_rds_sg_id
+}
+output "cc_main_sbn_group_name" {
+  value = module.vpc.cc_main_sbn_group_name
 }
 output "cc_sbn_ids" {
   value = module.vpc.cc_subnet_ids
