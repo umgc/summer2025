@@ -15,8 +15,20 @@ public class AchievementInitializer {
     @PostConstruct
     public void initAchievements() {
         try {
-            createAchievementIfNotExists("Verified Email", "Awarded for verifying your email.", "verified-icon.png");
             createAchievementIfNotExists("First Login", "Awarded for logging in for the first time.", "login-icon.png");
+            createAchievementIfNotExists(
+                    "Made a Friend",
+                    "Awarded for adding your first friend.",
+                    "friend-icon.png"
+            );
+            createAchievementIfNotExists(
+                    "Added Family Member",
+                    "Awarded for adding your first family member.",
+                    "family-icon.png"
+            );
+            createAchievementIfNotExists("First Post Created", "Awarded for creating your first post.", "post-icon.png");
+            createAchievementIfNotExists("5-Day Streak", "Awarded for logging in 5 days in a row.", "streak-icon.png");
+
         } catch (Exception e) {
             // Log the error but don't fail application startup
             System.err.println("Failed to initialize achievements: " + e.getMessage());

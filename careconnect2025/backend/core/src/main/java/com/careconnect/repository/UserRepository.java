@@ -1,5 +1,6 @@
     package com.careconnect.repository;
 
+    import com.careconnect.dto.LeaderboardEntry;
     import com.careconnect.model.User;
     import org.springframework.data.jpa.repository.JpaRepository;
     import org.springframework.data.jpa.repository.Query;
@@ -25,5 +26,19 @@
         """)
         List<Long> findConfirmedFriendIds(@Param("userId") Long userId);
 
+        @Query("""
+        SELECT new com.careconnect.dto.LeaderboardEntry(
+            u.id,
+            u.name,
+            xp.xp,
+            xp.level,
+            u.profileImageUrl
+        )
+        FROM User u
+        JOIN XPProgress xp ON xp.userId = u.id
+        WHERE u.leaderboardOptIn = true
+        ORDER BY xp.xp DESC
+        """)
+        List<LeaderboardEntry> findLeaderboard();
 
     }

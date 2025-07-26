@@ -26,9 +26,8 @@ public class GamificationService {
         this.userAchievementRepository = userAchievementRepository;
     }
 
-    // XP level threshold (simple static rule: every 100 XP = 1 level)
     private int calculateLevel(int xp) {
-        return xp / 100 + 1;
+        return xp / 50 + 1;
     }
 
     public XPProgress awardXp(Long userId, int amount) {

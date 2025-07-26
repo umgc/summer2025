@@ -1,7 +1,8 @@
 import 'package:care_connect_app/services/api_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
 
+import '../../../../providers/user_provider.dart';
 import '../model/conversation_preview_dto.dart';
 import 'chat_room_screen.dart';
 import 'my_friend_screen.dart';
@@ -15,26 +16,27 @@ class ChatInboxScreen extends StatefulWidget {
 }
 
 class _ChatInboxScreenState extends State<ChatInboxScreen> {
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   int? _userId;
   List<ConversationPreviewDto> inbox = [];
   bool isLoading = true;
+  bool _initialized = false;
 
   @override
-  void initState() {
-    super.initState();
-    _loadUserId();
-  }
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-  Future<void> _loadUserId() async {
-    final userIdString = await _secureStorage.read(key: 'userId');
-    if (userIdString != null) {
-      setState(() => _userId = int.tryParse(userIdString));
+    if (!_initialized) {
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not logged in')),
+        );
+        return;
+      }
+
+      _userId = user.id;
       fetchInbox();
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('User ID not found')));
+      _initialized = true;
     }
   }
 
