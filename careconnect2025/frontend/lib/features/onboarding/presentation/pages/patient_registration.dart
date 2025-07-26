@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:care_connect_app/services/api_service.dart';
 import 'package:care_connect_app/providers/user_provider.dart';
 import '../../models/address_model.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:care_connect_app/config/router/app_router.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/config/theme/app_theme.dart';
 
 class PatientRegistrationPage extends StatefulWidget {
   final int? caregiverId;
@@ -45,6 +46,219 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
 
   // Step 2: Emergency Contact & Relationship
   final _relationshipController = TextEditingController();
+  final _passwordController =
+    TextEditingController(); // Used for validation only, not sent to backend
+
+  // Focus nodes for all fields
+  final _firstNameFocus = FocusNode();
+  final _lastNameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+  final _dobFocus = FocusNode();
+  final _addressLine1Focus = FocusNode();
+  final _cityFocus = FocusNode();
+  final _stateFocus = FocusNode();
+  final _zipFocus = FocusNode();
+  final _addressPhoneFocus = FocusNode();
+  final _relationshipFocus = FocusNode();
+
+  // Field validation status tracking
+  final Map<String, bool> _fieldValidStatus = {
+    // Personal Info
+    'firstName': false,
+    'lastName': false,
+    'email': false,
+    'phone': false,
+    'dob': false,
+
+    // Address Info
+    'addressLine1': false,
+    'city': false,
+    'state': false,
+    'zip': false,
+    'addressPhone': false,
+
+    // Emergency Contact
+    'relationship': false,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Set up focus listeners to validate fields when focus changes
+    _setupFocusListeners();
+  }
+
+  void _setupFocusListeners() {
+    // Personal Info
+    _firstNameFocus.addListener(() {
+      if (!_firstNameFocus.hasFocus) {
+        _validateAndUpdate('firstName', _firstNameController.text);
+      }
+    });
+
+    _lastNameFocus.addListener(() {
+      if (!_lastNameFocus.hasFocus) {
+        _validateAndUpdate('lastName', _lastNameController.text);
+      }
+    });
+
+    _emailFocus.addListener(() {
+      if (!_emailFocus.hasFocus) {
+        _validateAndUpdate('email', _emailController.text);
+      }
+    });
+
+    _phoneFocus.addListener(() {
+      if (!_phoneFocus.hasFocus) {
+        _validateAndUpdate('phone', _phoneController.text);
+      }
+    });
+
+    _dobFocus.addListener(() {
+      if (!_dobFocus.hasFocus) {
+        _validateAndUpdate('dob', _dobController.text);
+      }
+    });
+
+    // Address Info
+    _addressLine1Focus.addListener(() {
+      if (!_addressLine1Focus.hasFocus) {
+        _validateAndUpdate('addressLine1', _addressLine1Controller.text);
+      }
+    });
+
+    _cityFocus.addListener(() {
+      if (!_cityFocus.hasFocus) {
+        _validateAndUpdate('city', _cityController.text);
+      }
+    });
+
+    _stateFocus.addListener(() {
+      if (!_stateFocus.hasFocus) {
+        _validateAndUpdate('state', _stateController.text);
+      }
+    });
+
+    _zipFocus.addListener(() {
+      if (!_zipFocus.hasFocus) {
+        _validateAndUpdate('zip', _zipController.text);
+      }
+    });
+
+    _addressPhoneFocus.addListener(() {
+      if (!_addressPhoneFocus.hasFocus) {
+        _validateAndUpdate('addressPhone', _addressPhoneController.text);
+      }
+    });
+
+    // Emergency Contact
+    _relationshipFocus.addListener(() {
+      if (!_relationshipFocus.hasFocus) {
+        _validateAndUpdate('relationship', _relationshipController.text);
+      }
+    });
+  }
+
+  // Validate and update field status
+  void _validateAndUpdate(String field, String value) {
+    String? validationResult;
+
+    switch (field) {
+      case 'firstName':
+      case 'lastName':
+        validationResult = _validateTextOnly(
+          value,
+          field.replaceAll('Name', ' name'),
+        );
+        break;
+      case 'email':
+        validationResult = _validateEmail(value);
+        break;
+      case 'phone':
+      case 'addressPhone':
+        validationResult = value.isEmpty ? 'Please enter a phone number' : null;
+        break;
+      case 'dob':
+        validationResult = value.isEmpty ? 'Please enter date of birth' : null;
+        break;
+      case 'addressLine1':
+        validationResult = value.isEmpty ? 'Please enter address line 1' : null;
+        break;
+      case 'city':
+      case 'state':
+        validationResult = _validateTextOnly(value, field);
+        break;
+      case 'zip':
+        validationResult = value.isEmpty ? 'Please enter ZIP code' : null;
+        break;
+      case 'relationship':
+        validationResult = value.isEmpty ? 'Please specify relationship' : null;
+        break;
+    }
+
+    setState(() {
+      _fieldValidStatus[field] = validationResult == null;
+    });
+  }
+
+  // Validation helpers
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter an email address';
+    }
+    if (!value.contains('@')) {
+      return 'Please enter a valid email address';
+    }
+    return null;
+  }
+
+  // Password validation function kept for reference but not currently used
+  // as password handling is done on the backend
+  /*
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter a password';
+    }
+    if (value.length < 9) {
+      return 'Password must be at least 9 characters';
+    }
+    if (!RegExp(r'[a-z]').hasMatch(value)) {
+      return 'Password must contain a lowercase letter';
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(value)) {
+      return 'Password must contain an uppercase letter';
+    }
+    if (!RegExp(r'[0-9]').hasMatch(value)) {
+      return 'Password must contain a number';
+    }
+    if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
+      return 'Password must contain a special character';
+    }
+    return null;
+  }
+
+  String? _validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please confirm your password';
+    }
+    if (value != _passwordController.text) {
+      return 'Passwords do not match';
+    }
+    return null;
+  }
+  */
+
+  String? _validateTextOnly(String? value, String fieldName) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter $fieldName';
+    }
+    if (RegExp(r'[0-9]').hasMatch(value)) {
+      return '$fieldName should not contain numbers';
+    }
+    return null;
+  }
 
   @override
   void dispose() {
@@ -52,7 +266,7 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
-    // _passwordController.dispose(); // Commented out - handled on backend
+    _passwordController.dispose();
     _phoneController.dispose();
     _dobController.dispose();
 
@@ -67,110 +281,125 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
     // Relationship controller
     _relationshipController.dispose();
 
+    // Dispose focus nodes
+    _firstNameFocus.dispose();
+    _lastNameFocus.dispose();
+    _emailFocus.dispose();
+    _phoneFocus.dispose();
+    _dobFocus.dispose();
+    _addressLine1Focus.dispose();
+    _cityFocus.dispose();
+    _stateFocus.dispose();
+    _zipFocus.dispose();
+    _addressPhoneFocus.dispose();
+    _relationshipFocus.dispose();
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          'Register New Patient',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: const Color(0xFF14366E),
-        iconTheme: const IconThemeData(color: Colors.white),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBarHelper.createAppBar(
+        context,
+        title: 'Register New Patient',
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard/caregiver'),
+          onPressed: () => navigateToDashboard(context),
         ),
+        automaticallyImplyLeading: false,
       ),
-      body: Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF14366E),
-            primary: const Color(0xFF14366E),
-          ),
-        ),
-        child: Stepper(
-          currentStep: _currentStep,
-          onStepTapped: (step) {
-            if (step < _currentStep) {
-              setState(() => _currentStep = step);
-            }
-          },
-          controlsBuilder: (context, details) {
-            return Row(
-              children: [
-                if (details.stepIndex < 2)
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : () => _nextStep(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF14366E),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+        body: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: Stepper(
+              currentStep: _currentStep,
+              onStepTapped: (step) {
+                if (step < _currentStep) {
+                  setState(() => _currentStep = step);
+                }
+              },
+              controlsBuilder: (context, details) {
+                return Row(
+                    children: [
+                    if (details.stepIndex < 2)
+                ElevatedButton(
+                  onPressed: _isLoading ? null : () => _nextStep(),
+                  style: Theme.of(context).elevatedButtonTheme.style
+                      ?.copyWith(
+                    backgroundColor: MaterialStateProperty.all(
+                      Theme.of(context).colorScheme.primary,
                     ),
-                    child: const Text('Next'),
-                  )
-                else
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : () => _registerPatient(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade700,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                    foregroundColor: MaterialStateProperty.all(
+                      Theme.of(context).colorScheme.onPrimary,
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                        : const Text('Register Patient'),
                   ),
+                  child: const Text('Next'),
+                )
+                else
+                ElevatedButton(
+                onPressed: _isLoading ? null : () => _registerPatient(),
+                style: Theme.of(context).elevatedButtonTheme.style
+                    ?.copyWith(
+                backgroundColor: MaterialStateProperty.all(
+                Theme.of(context).colorScheme.secondary,
+                ),
+                foregroundColor: MaterialStateProperty.all(
+                Theme.of(context).colorScheme.onSecondary,
+                ),
+                ),
+                child: _isLoading
+                ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                Colors.white,
+                ),
+                ),
+                )
+                    : const Text('Register Patient'),
+                    ),
                 const SizedBox(width: 8),
                 if (details.stepIndex > 0)
-                  TextButton(
-                    onPressed: _isLoading ? null : () => _previousStep(),
-                    child: const Text('Back'),
-                  ),
+                TextButton(
+                onPressed: _isLoading ? null : () => _previousStep(),
+                child: const Text('Back'),
+                    ),
+                    ],
+                );
+              },
+              steps: [
+                Step(
+                  title: const Text('Personal Information'),
+                  content: _buildPersonalInfoStep(),
+                  isActive: _currentStep >= 0,
+                  state: _currentStep > 0
+                      ? StepState.complete
+                      : StepState.indexed,
+                ),
+                Step(
+                  title: const Text('Address Information'),
+                  content: _buildAddressStep(),
+                  isActive: _currentStep >= 1,
+                  state: _currentStep > 1
+                      ? StepState.complete
+                      : _currentStep == 1
+                      ? StepState.indexed
+                      : StepState.disabled,
+                ),
+                Step(
+                  title: const Text('Relationship'),
+                  content: _buildRelationshipStep(),
+                  isActive: _currentStep >= 2,
+                  state: _currentStep == 2
+                      ? StepState.indexed
+                      : StepState.disabled,
+                ),
               ],
-            );
-          },
-          steps: [
-            Step(
-              title: const Text('Personal Information'),
-              content: _buildPersonalInfoStep(),
-              isActive: _currentStep >= 0,
-              state: _currentStep > 0 ? StepState.complete : StepState.indexed,
             ),
-            Step(
-              title: const Text('Address Information'),
-              content: _buildAddressStep(),
-              isActive: _currentStep >= 1,
-              state: _currentStep > 1
-                  ? StepState.complete
-                  : _currentStep == 1
-                  ? StepState.indexed
-                  : StepState.disabled,
-            ),
-            Step(
-              title: const Text('Relationship'),
-              content: _buildRelationshipStep(),
-              isActive: _currentStep >= 2,
-              state: _currentStep == 2 ? StepState.indexed : StepState.disabled,
-            ),
-          ],
         ),
       ),
     );
@@ -186,44 +415,33 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
               Expanded(
                 child: TextFormField(
                   controller: _firstNameController,
-                  decoration: InputDecoration(
-                    labelText: 'First Name *',
-                    labelStyle: const TextStyle(color: Color(0xFF14366E)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF14366E)),
-                    ),
+                  focusNode: _firstNameFocus,
+                  decoration: AppTheme.inputDecoration('First Name *').copyWith(
+                    errorText:
+                    _firstNameController.text.isNotEmpty &&
+                        !_fieldValidStatus['firstName']!
+                        ? 'Please enter valid first name (no numbers)'
+                        : null,
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter first name';
-                    }
-                    return null;
-                  },
+                  validator: (value) => _validateTextOnly(value, 'first name'),
+                  // Only validate when form is submitted
+                  autovalidateMode: AutovalidateMode.disabled,
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: TextFormField(
                   controller: _lastNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Last Name *',
-                    labelStyle: const TextStyle(color: Color(0xFF14366E)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF14366E)),
-                    ),
+                  focusNode: _lastNameFocus,
+                  decoration: AppTheme.inputDecoration('Last Name *').copyWith(
+                    errorText:
+                    _lastNameController.text.isNotEmpty &&
+                        !_fieldValidStatus['lastName']!
+                        ? 'Please enter valid last name (no numbers)'
+                        : null,
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter last name';
-                    }
-                    return null;
-                  },
+                  validator: (value) => _validateTextOnly(value, 'last name'),
+                  autovalidateMode: AutovalidateMode.disabled,
                 ),
               ),
             ],
@@ -231,27 +449,19 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _emailController,
-            decoration: InputDecoration(
-              labelText: 'Email Address *',
-              labelStyle: const TextStyle(color: Color(0xFF14366E)),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF14366E)),
-              ),
+            focusNode: _emailFocus,
+            decoration: AppTheme.inputDecoration('Email Address *').copyWith(
               prefixIcon: const Icon(Icons.email),
+              helperText: 'Must contain @ symbol (e.g., name@example.com)',
+              errorText:
+              _emailController.text.isNotEmpty &&
+                  !_fieldValidStatus['email']!
+                  ? _validateEmail(_emailController.text)
+                  : null,
             ),
             keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter email address';
-              }
-              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                return 'Please enter a valid email address';
-              }
-              return null;
-            },
+            validator: _validateEmail,
+            autovalidateMode: AutovalidateMode.disabled,
           ),
           const SizedBox(height: 16),
           // Password field commented out - handled on backend
@@ -282,16 +492,14 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
           // const SizedBox(height: 16),
           TextFormField(
             controller: _phoneController,
-            decoration: InputDecoration(
-              labelText: 'Phone Number *',
-              labelStyle: const TextStyle(color: Color(0xFF14366E)),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF14366E)),
-              ),
+            decoration: AppTheme.inputDecoration('Phone Number *').copyWith(
               prefixIcon: const Icon(Icons.phone),
+              helperText: 'Enter a valid phone number',
+              errorText:
+              _phoneController.text.isNotEmpty &&
+                  !_fieldValidStatus['phone']!
+                  ? 'Please enter a valid phone number'
+                  : null,
             ),
             keyboardType: TextInputType.phone,
             validator: (value) {
@@ -300,21 +508,18 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
               }
               return null;
             },
+            autovalidateMode: AutovalidateMode.onUserInteraction,
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: _dobController,
-            decoration: InputDecoration(
-              labelText: 'Date of Birth *',
-              labelStyle: const TextStyle(color: Color(0xFF14366E)),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF14366E)),
-              ),
+            decoration: AppTheme.inputDecoration('Date of Birth *').copyWith(
               prefixIcon: const Icon(Icons.calendar_today),
               hintText: 'MM/DD/YYYY',
+              errorText:
+              _dobController.text.isNotEmpty && !_fieldValidStatus['dob']!
+                  ? 'Please enter a valid date of birth'
+                  : null,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -322,6 +527,7 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
               }
               return null;
             },
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             onTap: () async {
               final date = await showDatePicker(
                 context: context,
@@ -349,17 +555,9 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
         children: [
           TextFormField(
             controller: _addressLine1Controller,
-            decoration: InputDecoration(
-              labelText: 'Address Line 1 *',
-              labelStyle: const TextStyle(color: Color(0xFF14366E)),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF14366E)),
-              ),
-              hintText: 'Street address, P.O. box',
-            ),
+            decoration: AppTheme.inputDecoration(
+              'Address Line 1 *',
+            ).copyWith(hintText: 'Street address, P.O. box'),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter address line 1';
@@ -370,15 +568,7 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _addressLine2Controller,
-            decoration: InputDecoration(
-              labelText: 'Address Line 2 (Optional)',
-              labelStyle: const TextStyle(color: Color(0xFF14366E)),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF14366E)),
-              ),
+            decoration: AppTheme.inputDecoration('Address Line 2').copyWith(
               hintText: 'Apartment, suite, unit, building, floor, etc.',
             ),
           ),
@@ -389,45 +579,21 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
                 flex: 2,
                 child: TextFormField(
                   controller: _cityController,
-                  decoration: InputDecoration(
-                    labelText: 'City *',
-                    labelStyle: const TextStyle(color: Color(0xFF14366E)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF14366E)),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter city';
-                    }
-                    return null;
-                  },
+                  decoration: AppTheme.inputDecoration(
+                    'City *',
+                  ).copyWith(helperText: 'Text only, no numbers'),
+                  validator: (value) => _validateTextOnly(value, 'city'),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: TextFormField(
                   controller: _stateController,
-                  decoration: InputDecoration(
-                    labelText: 'State *',
-                    labelStyle: const TextStyle(color: Color(0xFF14366E)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF14366E)),
-                    ),
+                  decoration: AppTheme.inputDecoration('State *').copyWith(
+                    helperText: 'Text only, no numbers',
                     hintText: 'VA',
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter state';
-                    }
-                    return null;
-                  },
+                  validator: (value) => _validateTextOnly(value, 'state'),
                 ),
               ),
             ],
@@ -438,16 +604,7 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
               Expanded(
                 child: TextFormField(
                   controller: _zipController,
-                  decoration: InputDecoration(
-                    labelText: 'ZIP Code *',
-                    labelStyle: const TextStyle(color: Color(0xFF14366E)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF14366E)),
-                    ),
-                  ),
+                  decoration: AppTheme.inputDecoration('ZIP Code *'),
                   keyboardType: TextInputType.number,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -461,17 +618,9 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
               Expanded(
                 child: TextFormField(
                   controller: _addressPhoneController,
-                  decoration: InputDecoration(
-                    labelText: 'Address Phone *',
-                    labelStyle: const TextStyle(color: Color(0xFF14366E)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF14366E)),
-                    ),
-                    hintText: 'Home/Work phone',
-                  ),
+                  decoration: AppTheme.inputDecoration(
+                    'Address Phone *',
+                  ).copyWith(hintText: 'Home/Work phone'),
                   keyboardType: TextInputType.phone,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -495,15 +644,8 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
         children: [
           TextFormField(
             controller: _relationshipController,
-            decoration: InputDecoration(
-              labelText: 'Relationship to Patient *',
-              labelStyle: const TextStyle(color: Color(0xFF14366E)),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF14366E)),
-              ),
+            decoration: AppTheme.inputDecoration('Relationship to Patient *')
+                .copyWith(
               hintText: 'e.g., Parent, Spouse, Child, Daughter, Son, etc.',
             ),
             validator: (value) {
@@ -571,6 +713,35 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
       if (_currentStep < 2) {
         setState(() => _currentStep++);
       }
+    } else {
+      // Display error message and mark validation fields
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please complete all required fields correctly before continuing',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: AppTheme.error,
+          duration: Duration(seconds: 3),
+        ),
+      );
+
+      // For each step, validate the appropriate fields
+      if (_currentStep == 0) {
+        _validateAndUpdate('firstName', _firstNameController.text);
+        _validateAndUpdate('lastName', _lastNameController.text);
+        _validateAndUpdate('email', _emailController.text);
+        _validateAndUpdate('phone', _phoneController.text);
+        _validateAndUpdate('dob', _dobController.text);
+      } else if (_currentStep == 1) {
+        _validateAndUpdate('addressLine1', _addressLine1Controller.text);
+        _validateAndUpdate('city', _cityController.text);
+        _validateAndUpdate('state', _stateController.text);
+        _validateAndUpdate('zip', _zipController.text);
+        _validateAndUpdate('addressPhone', _addressPhoneController.text);
+      } else if (_currentStep == 2) {
+        _validateAndUpdate('relationship', _relationshipController.text);
+      }
     }
   }
 
@@ -581,7 +752,22 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
   }
 
   Future<void> _registerPatient() async {
-    if (!_formKeys[_currentStep].currentState!.validate()) return;
+    if (!_formKeys[_currentStep].currentState!.validate()) {
+      // Display error message and validate relationship field
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please complete all required fields correctly before registering',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: AppTheme.error,
+          duration: Duration(seconds: 3),
+        ),
+      );
+
+      _validateAndUpdate('relationship', _relationshipController.text);
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -635,7 +821,7 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
               backgroundColor: Colors.green,
             ),
           );
-          context.go('/dashboard/caregiver');
+          navigateToDashboard(context);
         }
       } else {
         final errorData = jsonDecode(response.body);
