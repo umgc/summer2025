@@ -29,6 +29,7 @@ dependencies:
   flutter_tts: ^4.2.3
   video_player: ^2.8.3
   jwt_decoder: ^2.0.1
+  
 
 
   
