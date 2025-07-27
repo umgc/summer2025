@@ -72,7 +72,7 @@ void replace(List<NodeBlock> newState) {
     _redoStack.clear();
   }
 
-  /// Optional: clear all
+  /// clear all
   void clear() {
     state = [];
     _undoStack.clear();
