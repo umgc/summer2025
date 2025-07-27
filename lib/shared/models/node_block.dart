@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart'; // For Offset
+import 'package:flutter/material.dart'; 
 
 class NodeBlock {
   final String id;
@@ -11,7 +11,8 @@ class NodeBlock {
   final String? lessonType; // 'Text', 'Image', 'Video'
   final String? lessonContent; // Text content, image URL, or video URL
   final String? estimatedTime; // Estimated time to complete lesson
-
+  final String? lessonImage;
+  final String? lessonVideo;
   // Quiz Node properties
   final String? quizTitle;
   final String? passingScore;
@@ -37,7 +38,7 @@ class NodeBlock {
   final String? eventAnswer; // Answer for pop quizzes in events
   final int? randomTriggerChance; // Percentage (0-100) for random events
 
-  // NEW: Add description field
+ 
   final String? description;
 
   NodeBlock({
@@ -48,6 +49,8 @@ class NodeBlock {
     this.parentId,
     this.lessonType,
     this.lessonContent,
+    this.lessonImage,
+    this.lessonVideo,
     this.estimatedTime,
     this.quizTitle,
     this.passingScore,
@@ -64,7 +67,7 @@ class NodeBlock {
     this.eventContent,
     this.eventAnswer,
     this.randomTriggerChance,
-    this.description, // Initialize the new field
+    this.description, 
   });
 
   // copyWith method to facilitate immutable updates
@@ -76,6 +79,8 @@ class NodeBlock {
     String? parentId,
     String? lessonType,
     String? lessonContent,
+    String? lessonImage,
+    String? lessonVideo,
     String? estimatedTime,
     String? quizTitle,
     String? passingScore,
@@ -92,7 +97,7 @@ class NodeBlock {
     String? eventContent,
     String? eventAnswer,
     int? randomTriggerChance,
-    String? description, // Add to copyWith
+    String? description, 
   }) {
     return NodeBlock(
       id: id ?? this.id,
@@ -102,6 +107,8 @@ class NodeBlock {
       parentId: parentId ?? this.parentId,
       lessonType: lessonType ?? this.lessonType,
       lessonContent: lessonContent ?? this.lessonContent,
+       lessonImage: lessonImage ?? this.lessonImage,
+        lessonVideo: lessonVideo ?? this.lessonVideo,
       estimatedTime: estimatedTime ?? this.estimatedTime,
       quizTitle: quizTitle ?? this.quizTitle,
       passingScore: passingScore ?? this.passingScore,
@@ -118,7 +125,7 @@ class NodeBlock {
       eventContent: eventContent ?? this.eventContent,
       eventAnswer: eventAnswer ?? this.eventAnswer,
       randomTriggerChance: randomTriggerChance ?? this.randomTriggerChance,
-      description: description ?? this.description, // Update here
+      description: description ?? this.description, 
     );
   }
 
@@ -132,6 +139,8 @@ class NodeBlock {
       'parentId': parentId,
       'lessonType': lessonType,
       'lessonContent': lessonContent,
+      'lessonImage': lessonImage,
+      'lessonVideo': lessonVideo,
       'estimatedTime': estimatedTime,
       'quizTitle': quizTitle,
       'passingScore': passingScore,
@@ -148,23 +157,26 @@ class NodeBlock {
       'eventContent': eventContent,
       'eventAnswer': eventAnswer,
       'randomTriggerChance': randomTriggerChance,
-      'description': description, // Add to JSON
+      'description': description, 
     };
   }
 
-  // fromJson factory for deserialization
+  // fromJson for deserialization
   factory NodeBlock.fromJson(Map<String, dynamic> json) {
     return NodeBlock(
       id: json['id'] as String,
       offset: Offset(
-        (json['offset'] as Map<String, dynamic>)['dx'] as double, // Ensure casting to Map<String, dynamic>
-        (json['offset'] as Map<String, dynamic>)['dy'] as double, // Ensure casting to Map<String, dynamic>
+        (json['offset'] as Map<String, dynamic>)['dx'] as double, 
+        (json['offset'] as Map<String, dynamic>)['dy'] as double, 
       ),
       type: json['type'] as String,
       title: json['title'] as String,
       parentId: json['parentId'] as String?,
       lessonType: json['lessonType'] as String?,
       lessonContent: json['lessonContent'] as String?,
+      lessonImage: json['lessonImage'] as String?,
+      lessonVideo: json['lessonVideo'] as String?,
+
       estimatedTime: json['estimatedTime'] as String?,
       quizTitle: json['quizTitle'] as String?,
       passingScore: json['passingScore'] as String?,
@@ -183,7 +195,7 @@ class NodeBlock {
       eventContent: json['eventContent'] as String?,
       eventAnswer: json['eventAnswer'] as String?,
       randomTriggerChance: json['randomTriggerChance'] as int?,
-      description: json['description'] as String?, // Read from JSON
+      description: json['description'] as String?, 
     );
   }
 }
