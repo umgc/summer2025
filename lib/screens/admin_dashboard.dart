@@ -68,7 +68,7 @@ class AdminDashboardScreen extends StatelessWidget {
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            // TODO: integrate Cognito change password
+                            
                             Navigator.of(context).pop();
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Password change requested')),
@@ -192,7 +192,7 @@ class AdminDashboardScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.build),
             title: const Text("Scenario Builder"),
-            onTap: () => router.push('/builder'),
+            onTap: () => router.push('/scenario'),
           ),
           ListTile(
             leading: const Icon(Icons.smart_toy),
@@ -271,7 +271,7 @@ class AdminDashboardScreen extends StatelessWidget {
                 iconColor: Colors.black,
                 leading: const Icon(Icons.analytics),
                 title: const Text("KPI Dashboard"),
-                onTap: () => router.push('/kpi'),
+                onTap: () => router.push('/Kpi'),
               ),
               const Divider(color: Colors.white),
             

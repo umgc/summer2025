@@ -68,7 +68,7 @@ class DashboardScreen extends StatelessWidget {
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            // TODO: integrate Cognito change password
+                           
                             Navigator.of(context).pop();
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Password change requested')),
