@@ -192,15 +192,6 @@ class _CommonDrawerState extends State<CommonDrawer> {
             isActive: widget.currentRoute == '/gamification',
           ),
 
-          // Healthcare Notes
-          _buildDrawerItem(
-            context,
-            icon: Icons.notes,
-            title: 'Healthcare Notes',
-            route: '/healthcare-notes',
-            isActive: widget.currentRoute == '/healthcare-notes',
-          ),
-
           _buildDrawerItem(
             context,
             icon: Icons.people_alt,
@@ -221,22 +212,6 @@ class _CommonDrawerState extends State<CommonDrawer> {
             title: 'Wearables',
             route: '/wearables',
             isActive: widget.currentRoute == '/wearables',
-          ),
-
-          _buildDrawerItem(
-            context,
-            icon: Icons.home_outlined,
-            title: 'Home Monitoring',
-            route: '/home-monitoring',
-            isActive: widget.currentRoute == '/home-monitoring',
-          ),
-
-          _buildDrawerItem(
-            context,
-            icon: Icons.devices,
-            title: 'Smart Devices',
-            route: '/smart-devices',
-            isActive: widget.currentRoute == '/smart-devices',
           ),
 
           _buildDrawerItem(

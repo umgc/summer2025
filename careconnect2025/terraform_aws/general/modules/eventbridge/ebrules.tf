@@ -1,29 +1,36 @@
-resource "aws_cloudwatch_event_rule" "ecr_image_push_rule" {
-  name        = "ecr-image-push-rule"
-  description = "Event rule for ECR image push events"
-  event_pattern = jsonencode({
-    source      = ["aws.ecr"]
-    detail-type = ["ECR Image Action"]
-    detail = {
-      action-type       = ["PUSH"]
-      result            = ["SUCCESS"]
-      "repository-name" = ["${var.core_erc_repo_name}"]
-    }
-  })
-  tags = merge(var.default_tags, { Name : "core-ecr-image-push-rule" })
-}
-resource "aws_cloudwatch_event_target" "ecr_image_push_target" {
-  rule     = aws_cloudwatch_event_rule.ecr_image_push_rule.name
-  arn      = var.cc_trigger_ecs_task_sfn_state_machine_arn
-  role_arn = var.cc_app_role_arn
-  input = jsonencode({
-    "taskDefinition" : var.cc_core_task_definition_name,
-    "serviceName" : var.cc_core_service_name,
-    "clusterName" : var.cc_core_cluster_name,
-  })
-  target_id = "ECRImagePushTarget"
-  retry_policy {
-    maximum_event_age_in_seconds = 90
-    maximum_retry_attempts       = 5
-  }
-}
+
+/* 
+       These resources are commented out as they are not currently in use.
+       We will use them in the future for CI/CD processes, specifically to trigger Amplify deployments
+       when build artifacts are uploaded to S3.
+ */
+
+
+
+# resource "aws_cloudwatch_event_rule" "cc_ui_artifact_uploaded" {
+#   name        = "s3-build-artifact-uploaded"
+#   description = "Trigger Amplify deployment when build artifact is uploaded to S3"
+
+#   event_pattern = jsonencode({
+#     source = ["aws.s3"]
+#     detail = {
+#       bucket = {
+#         name = ["cc-iac-us-east-1-641592448579"]
+#       }
+#       object = {
+#         key = [{
+#           prefix = "cc-ui-builds/"
+#           suffix = ".zip"
+#         }]
+#       }
+#       reason = ["PutObject"]
+#     }
+#   })
+# }
+
+# resource "aws_cloudwatch_event_target" "trigger_amplify_deployment" {
+#   rule      = aws_cloudwatch_event_rule.cc_ui_artifact_uploaded.name
+#   target_id = "TriggerAmplifyDeployment"
+#   arn       = var.amplify_deployment_flow.arn
+#   role_arn  = var.cc_app_role_arn
+# }

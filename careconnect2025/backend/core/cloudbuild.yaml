@@ -1,0 +1,74 @@
+steps:
+# Build the container image
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+  - 'build'
+  - '-t'
+  - 'us-east1-docker.pkg.dev/$PROJECT_ID/careconnect/backend:$COMMIT_SHA'
+  - '-t'
+  - 'us-east1-docker.pkg.dev/$PROJECT_ID/careconnect/backend:latest'
+  - '.'
+  
+# Push the container image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+  - 'push'
+  - '--all-tags'
+  - 'us-east1-docker.pkg.dev/$PROJECT_ID/careconnect/backend'
+
+# Deploy to Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'gcloud'
+  args:
+  - 'run'
+  - 'deploy'
+  - 'careconnect-backend'
+  - '--image'
+  - 'us-east1-docker.pkg.dev/$PROJECT_ID/careconnect/backend:$COMMIT_SHA'
+  - '--region'
+  - 'us-east1'
+  - '--platform'
+  - 'managed'
+  - '--service-account'
+  - 'deployer@$PROJECT_ID.iam.gserviceaccount.com'
+  - '--allow-unauthenticated'
+  - '--port'
+  - '8080'
+  - '--memory'
+  - '2Gi'
+  - '--cpu'
+  - '1'
+  - '--min-instances'
+  - '1'
+  - '--max-instances'
+  - '10'
+  - '--concurrency'
+  - '100'
+  - '--timeout'
+  - '300'
+  - '--set-env-vars'
+  - 'SPRING_PROFILES_ACTIVE=gcp,GCP_PROJECT_ID=$PROJECT_ID,FRONTEND_BASE_URL=https://care-connect-develop.d26kqsucj1bwc1.amplifyapp.com,BACKEND_BASE_URL=https://careconnect-backend-663999888931.us-east1.run.app,CORS_ALLOWED_ORIGINS=https://care-connect-develop.d26kqsucj1bwc1.amplifyapp.com'
+  - '--set-secrets'
+  - 'JWT_SECRET=careconnect-secrets:jwt-secret:latest,SMTP_USERNAME=careconnect-secrets:smtp-username:latest,SMTP_PASSWORD=careconnect-secrets:smtp-password:latest,GOOGLE_CLIENT_ID=careconnect-secrets:google-client-id:latest,GOOGLE_CLIENT_SECRET=careconnect-secrets:google-client-secret:latest,STRIPE_SECRET_KEY=careconnect-secrets:stripe-secret-key:latest'
+
+# Optional: Update traffic to 100% on the new revision
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'gcloud'
+  args:
+  - 'run'
+  - 'services'
+  - 'update-traffic'
+  - 'careconnect-backend'
+  - '--to-latest'
+  - '--region'
+  - 'us-east1'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  substitution_option: 'ALLOW_LOOSE'
+  
+substitutions:
+  _SERVICE_NAME: careconnect-backend
+  _REGION: us-east1
+
+timeout: '1200s'

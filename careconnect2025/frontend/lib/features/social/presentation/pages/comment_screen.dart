@@ -1,14 +1,17 @@
 import 'dart:convert';
-import 'package:care_connect_app/widgets/app_bar_helper.dart';
-import 'package:care_connect_app/widgets/common_drawer.dart';
 
 import 'package:care_connect_app/config/env_constant.dart';
 import 'package:care_connect_app/services/api_service.dart';
 import 'package:flutter/material.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
+import '../../../../providers/user_provider.dart';
 import '../model/comment_dto.dart';
+
 class CommentScreen extends StatefulWidget {
   final int postId;
 
@@ -25,10 +28,34 @@ class _CommentScreenState extends State<CommentScreen> {
   bool isLoading = true;
   bool isSubmitting = false;
 
+  int? _userId;
+  String? _username;
+
   @override
   void initState() {
     super.initState();
-    fetchComments();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_userId == null) {
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not logged in')),
+        );
+        return;
+      }
+
+      setState(() {
+        _userId = user.id;
+        _username = user.name;
+      });
+
+      fetchComments();
+    }
   }
 
   Future<void> fetchComments() async {
@@ -39,9 +66,6 @@ class _CommentScreenState extends State<CommentScreen> {
     try {
       final headers = await ApiService.getAuthHeaders();
       final response = await http.get(Uri.parse(url), headers: headers);
-
-      print('Comments GET status: ${response.statusCode}');
-      print('Comments GET body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -56,21 +80,16 @@ class _CommentScreenState extends State<CommentScreen> {
       }
     } catch (e) {
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
     }
   }
 
   Future<void> submitComment() async {
-    final storage = FlutterSecureStorage();
-    final userId = await storage.read(key: 'userId');
-    final username = await storage.read(key: 'name');
-    print('DEBUG — Loaded username from secure storage: $username');
-
-    if (userId == null || _commentController.text.trim().isEmpty) {
+    if (_userId == null || _username == null || _commentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User ID missing or comment empty')),
+        const SnackBar(content: Text('User not loaded or comment empty')),
       );
       return;
     }
@@ -82,8 +101,8 @@ class _CommentScreenState extends State<CommentScreen> {
     headers['Content-Type'] = 'application/json';
 
     final body = jsonEncode({
-      'userId': int.parse(userId),
-      'username': username,
+      'userId': _userId,
+      'username': _username,
       'content': _commentController.text.trim(),
     });
 
@@ -95,8 +114,6 @@ class _CommentScreenState extends State<CommentScreen> {
 
     setState(() => isSubmitting = false);
 
-    print('Submit comment status: ${response.statusCode}');
-    print('Submit comment body: ${response.body}');
 
     if (response.statusCode == 201) {
       _commentController.clear();
@@ -130,7 +147,7 @@ class _CommentScreenState extends State<CommentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBarHelper.createAppBar(context, title: 'Comments'),
-      drawer: const CommonDrawer(currentRoute: '/comments'),
+      drawer: CommonDrawer(currentRoute: '/comments'),
       body: Column(
         children: [
           Expanded(
