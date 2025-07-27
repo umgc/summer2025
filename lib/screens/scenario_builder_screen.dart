@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import '../state/scenario_provider.dart';
 import '../shared/models/node_block.dart';
-import 'dart:typed_data'; // Required for FilePicker.platform.saveFile bytes
+import 'dart:typed_data'; 
 
 class ScenarioBuilderScreen extends ConsumerStatefulWidget {
   final String initialDomain;
@@ -19,7 +19,7 @@ class ScenarioBuilderScreen extends ConsumerStatefulWidget {
 }
 
 class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
-  // the chosen Subject (domain) from the dropdown
+  
   String? selectedDomain;
   List<NodeBlock> _generatedBlocks = [];
 
@@ -151,6 +151,10 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
     ],
   };
 
+
+
+
+
   /// Returns a random event for the given domain.
   /// If no specific events are defined for the domain, returns a generic event.
   Map<String, String> getRandomEventForDomain(String domain) {
@@ -281,6 +285,8 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                                   .updateNode(
                                     currentBlock.copyWith(
                                       lessonContent: result.files.single.path!,
+                                      lessonImage: result.files.single.path!,
+                                     
                                     ),
                                   );
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -360,7 +366,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                         initialValue: currentBlock.timeLimit ?? '',
                         onChanged: (val) => ref
                             .read(scenarioProvider.notifier)
-                            .updateNode(currentBlock.copyWith(timeLimit: val)),
+                            .updateNode(currentBlock.copyWith(estimatedTime: val)),
                         decoration: const InputDecoration(
                           labelText: 'Time Limit (minutes)',
                         ),
@@ -692,7 +698,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
     }
   }
 
-  // _buildNodeCard is included for completeness and context
+  
   Widget _buildNodeCard(NodeBlock block, bool isDragging) {
     final cardContent = Card(
       elevation: isDragging ? 10 : 2,
@@ -796,7 +802,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                     child: Image.asset(
                       domainImages[selectedDomain]!,
                       fit: BoxFit
-                          .cover, // or BoxFit.contain depending on the effect you want
+                          .cover, 
                       width: double.infinity,
                     ),
                   ),
@@ -903,7 +909,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
 
               try {
                 final response = await dio.post(
-                  'http://localhost:8080/api/v1/scenario/save', // ✅ Change to your actual endpoint
+                  'http://localhost:8080/api/v1/scenario/save', 
                   data: blocks.map((block) => block.toJson()).toList(),
                   options: Options(
                     headers: {'Content-Type': 'application/json'},
@@ -932,7 +938,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
           ),
 
           //end Save change by Beth
-          // --- NEW/MODIFIED: Export to JSON functionality ---
+          
           IconButton(
             icon: const Icon(Icons.download),
             tooltip: 'Export Scenario to JSON',
@@ -948,13 +954,13 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                   'domain': selectedDomain,
                   'nodes' : scenarioJsonList,
                 };
-                // Pretty-print the JSON for readability and download
+                
                 final String jsonString = const JsonEncoder.withIndent('  ')
                     .convert(exportMap);
 
-                // Suggest a default filename
+                // default filename
                 String defaultFileName = 'scenario_export.json';
-                // You might want to derive a more meaningful name here, e.g., from the scenario's first node's title or the selected domain.
+               
                 if (selectedDomain?.isNotEmpty ?? false) {
                   final safe = selectedDomain!.replaceAll(' ', '_').toLowerCase();
                   defaultFileName = '${safe}_scenario.json';
@@ -962,13 +968,12 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                   defaultFileName = '${blocks.first.title.replaceAll(' ', '_').toLowerCase()}_scenario.json';
                 }
 
-                // Use file_picker to save the file
-                // On web, this will trigger a download. On desktop, it will open a save dialog.
+                
                 final String? filePath = await FilePicker.platform.saveFile(
                   fileName: defaultFileName,
                   type: FileType.custom,
                   allowedExtensions: ['json'],
-                  bytes: Uint8List.fromList(jsonString.codeUnits), // Provide content as bytes
+                  bytes: Uint8List.fromList(jsonString.codeUnits), 
                 );
 
                 if (filePath != null) {
@@ -976,20 +981,20 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                     SnackBar(content: Text('Scenario exported to: $filePath')),
                   );
                 } else {
-                  // User cancelled the save operation
+                  
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Scenario export cancelled.')),
                   );
                 }
               } catch (e) {
-                // Catch any errors during the export process
+               
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error exporting scenario: $e')),
                 );
               }
             },
           ),
-          // --- END NEW/MODIFIED: Export to JSON functionality ---
+          
           //Beth
          IconButton(
             icon: const Icon(Icons.flash_on),
@@ -1072,7 +1077,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
           ),
 
           //Beth end
-          // --- MODIFIED: Load Scenario functionality ---
+          
           IconButton(
             icon: const Icon(Icons.folder_open),
             tooltip: 'Load Scenario',
@@ -1092,11 +1097,11 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                     throw Exception("Expected JSON array at the top level");
                   }
 
-                  // CORRECTED: Use NodeBlock.fromJson to properly deserialize
+                  
                   final loadedBlocks = (parsedJson)
                       .map((e) => NodeBlock.fromJson(e as Map<String, dynamic>))
                       .toList()
-                      .cast<NodeBlock>(); // Explicit cast for safety
+                      .cast<NodeBlock>(); 
 
                   ref.read(scenarioProvider.notifier).replace(loadedBlocks);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1110,7 +1115,7 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
               }
             },
           ),
-          // --- END MODIFIED: Load Scenario functionality ---
+          
         ],
       ),
       drawer: isMobile ? _buildSidebar(context, isMobile) : null,
@@ -1119,34 +1124,34 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
           if (!isMobile) _buildSidebar(context, isMobile),
           Expanded(
             child: DragTarget<String>(
-              // This DragTarget accepts String (for new nodes from sidebar)
+              
               onAcceptWithDetails: (details) {
                 final renderBox = context.findRenderObject() as RenderBox;
                 final offset = renderBox.globalToLocal(details.offset);
-                _addNode(details.data, offset); // This adds a new node
+                _addNode(details.data, offset); 
               },
               builder: (context, candidate, rejected) {
                 return Stack(
                   children: [
                     CustomPaint(
-                      painter: _ConnectionPainter(blocks), // Pass all blocks
+                      painter: _ConnectionPainter(blocks), 
                       child: Container(),
                     ),
                     ...blocks.map(
                       (block) => Positioned(
                         left: block.offset.dx,
                         top: block.offset.dy,
-                        // MODIFIED: Draggable for existing nodes
+                       
                         child: Draggable<NodeBlock>(
-                          // Draggable now takes NodeBlock as data
-                          data: block, // Pass the entire NodeBlock as data
+                          
+                          data: block, 
                           feedback: Material(
                             color: Colors.transparent,
                             child: _buildNodeCard(block,
-                                true), // Use _buildNodeCard for visual feedback
+                                true), 
                           ),
                           onDragEnd: (details) {
-                            // Use onDragEnd for final position update
+                           
                             final renderBox =
                                 context.findRenderObject() as RenderBox;
                             final localOffset =
@@ -1157,9 +1162,9 @@ class _ScenarioBuilderScreenState extends ConsumerState<ScenarioBuilderScreen> {
                                 .updateNode(block.copyWith(offset: localOffset));
                           },
                           child: _buildNodeCard(
-                              block, false), // Use _buildNodeCard here
+                              block, false), 
                         ),
-                        // END MODIFIED
+                        
                       ),
                     ),
                   ],
@@ -1186,23 +1191,22 @@ class _ConnectionPainter extends CustomPainter {
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
-    // A map to quickly look up nodes by ID
+    
     final Map<String, NodeBlock> nodeMap = {
       for (var block in blocks) block.id: block
     };
 
-    // Iterate through all blocks to draw connections
+    
     for (var block in blocks) {
-      // Only draw a connection if the block has a parentId
+      
       if (block.parentId != null) {
         final parentNode = nodeMap[block.parentId];
         if (parentNode != null) {
-          // Calculate the center of each node for drawing connections
-          // Assuming node width 150, height 100 for connection points
+         
           const nodeWidth = 100.0;
           const nodeHeight = 50.0;
 
-          // Connect from the bottom-center of the parent to the top-center of the child
+         
           final Offset parentBottomCenter = parentNode.offset + const Offset(nodeWidth / 2, nodeHeight);
           final Offset childTopCenter = block.offset + const Offset(nodeWidth / 2, 0);
 
@@ -1214,12 +1218,12 @@ class _ConnectionPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    // Repaint if the list of blocks changes (e.g., nodes are added, removed, or moved)
+    
     return (oldDelegate as _ConnectionPainter).blocks != blocks;
   }
 }
 
-// Extension to allow .firstWhereOrNull (often built into newer Flutter/Dart versions)
+
 extension IterableExt<T> on Iterable<T> {
   T? firstWhereOrNull(bool Function(T element) test) {
     for (var element in this) {

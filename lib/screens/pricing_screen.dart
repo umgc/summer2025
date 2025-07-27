@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; // Import go_router for navigation
+import 'package:go_router/go_router.dart'; 
 import 'contact_screen.dart';
 
 class PricingScreen extends StatelessWidget {
@@ -108,7 +108,7 @@ class PricingScreen extends StatelessWidget {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  // Navigate to the ContactScreen using GoRouter
+                  
                   context.go('/contact');
                 },
                 style: ElevatedButton.styleFrom(
@@ -136,7 +136,7 @@ class PricingScreen extends StatelessWidget {
     required String price,
     required List<String> features,
     bool highlight = false,
-    required BuildContext context, // Added to get the get started btns to work
+    required BuildContext context, 
   }) {
     return Card(
       elevation: highlight ? 8 : 2,
@@ -192,7 +192,7 @@ class PricingScreen extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                context.go('/signUp'); // Navigate to the registration page
+                context.go('/signUp'); 
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: highlight

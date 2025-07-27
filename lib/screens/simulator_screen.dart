@@ -6,6 +6,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../state/scenario_provider.dart';
 import '../shared/models/node_block.dart';
+import 'dart:async';
+import '/services/ai_services.dart';
+import 'package:video_player/video_player.dart';
+
 
 class SimulatorScreen extends ConsumerStatefulWidget {
   const SimulatorScreen({super.key});
@@ -15,7 +19,12 @@ class SimulatorScreen extends ConsumerStatefulWidget {
 }
 
 class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
+  DateTime? _simulationStartTime;
+
   String? _selectedDomain;
+int _totalQuizQuestions = 0;
+int _correctQuizAnswers = 0;
+
   final Map<String, String> domainImages = {
     'Oil & Gas': 'assets/images/oil-pumps.jpg',
     'IT Project Management': 'assets/images/it_management_background.jpg',
@@ -24,6 +33,11 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
     'Government': 'assets/images/government_background.jpg',
     'Finance': 'assets/images/finance_background.jpg',
   };
+Timer? _countdownTimer;
+int? _remainingSeconds;
+
+
+
 
   double _scale = 1.0;
   NodeBlock? currentNode;
@@ -36,6 +50,11 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
   void _zoomOut() => setState(() => _scale = (_scale - 0.1).clamp(0.3, 3.0));
 
   void _startSimulation(List<NodeBlock> blocks) {
+    _simulationStartTime = DateTime.now();
+
+    _totalQuizQuestions = 0;
+    _correctQuizAnswers = 0;
+
     if (blocks.isEmpty) return;
     final startNode = blocks.firstWhere(
       (b) => b.type.toLowerCase() == "start",
@@ -49,10 +68,10 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
     _processCurrentNode(blocks);
   }
 
-  // MODIFIED: _continueSimulation to handle event probability
+
   void _continueSimulation(List<NodeBlock> blocks) {
     if (currentNode == null) {
-      _endSimulation(); // If no current node, just end
+      _endSimulation(); 
       return;
     }
 
@@ -62,7 +81,7 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
     // Determine the next node to potentially move to
     int nextIndex = currentIndex + 1;
 
-    // Loop to find the *actual* next node, skipping non-triggered events
+    // Loop to find the next node, skipping non-triggered events
     while (nextIndex < blocks.length) {
       final potentialNextNode = blocks[nextIndex];
 
@@ -80,61 +99,113 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
             currentQuestionIndex = null;
           });
           _processCurrentNode(blocks); // Process the newly set current node
-          return; // Exit the loop, we found our next node
+          return; // Exit the loop
         } else {
-          // Event *should not* trigger, skip it and check the next one
+        
           print('  Event "${potentialNextNode.title}" skipped.');
           nextIndex++; // Move to the node after this skipped event
         }
       } else {
-        // Not an event node, so it's the next valid node in the sequence
+        // Not an event node, so it's the next valid node 
         setState(() {
           currentNode = potentialNextNode;
           currentQuestionIndex = null;
         });
         _processCurrentNode(blocks); // Process the newly set current node
-        return; // Exit the loop, we found our next node
+        return; // Exit the loop
       }
     }
 
-    // If the loop finishes, it means we've reached the end of the scenario
+   
     _endSimulation();
   }
 
   void _processCurrentNode(List<NodeBlock> blocks) {
-    if (currentNode == null) return;
+  if (currentNode == null) return;
 
-    // You can add logic here that should run every time a new node becomes active.
-    // For example, if you want to immediately move past a "Start" or "End" node
-    // or display a message specific to the node type.
+  // Stop timer
+  _countdownTimer?.cancel();
+  _remainingSeconds = null;
 
-    // For now, let's let the user press 'Continue' for all non-quiz/decision nodes.
-    // This method is primarily a placeholder for more complex node-specific logic
-    // that you might add later (e.g., auto-advancing past simple informational nodes).
+  final timeString = currentNode!.estimatedTime;
+  if (timeString != null && timeString.isNotEmpty) {
+    final minutes = int.tryParse(timeString);
+    if (minutes != null && minutes > 0) {
+      setState(() {
+        _remainingSeconds = minutes * 60;
+      });
+
+      _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (_remainingSeconds == null || _remainingSeconds! <= 0) {
+          timer.cancel();
+          return;
+        }
+        setState(() {
+          _remainingSeconds = _remainingSeconds! - 1;
+        });
+      });
+    }
   }
+}
 
-  void _endSimulation() { // <--- ADD THIS NEW METHOD
-    setState(() {
-      simulating = false;
-      currentNode = null;
-      currentQuestionIndex = null;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Simulation complete.")),
-    );
-  }
+String _formatTime(int totalSeconds) {
+  final minutes = totalSeconds ~/ 60;
+  final seconds = totalSeconds % 60;
+  return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+}
 
-  void _clearCanvas() {
-    ref.read(scenarioProvider.notifier).clear();
-    setState(() {
-      simulating = false;
-      currentNode = null;
-      currentQuestionIndex = null;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Canvas cleared')),
-    );
-  }
+
+
+void _endSimulation() {
+  _countdownTimer?.cancel();
+
+  final scoreText = _totalQuizQuestions > 0
+      ? "You got $_correctQuizAnswers out of $_totalQuizQuestions correct."
+      : "Simulation complete. No quiz questions were answered.";
+
+  final duration = _simulationStartTime != null
+      ? DateTime.now().difference(_simulationStartTime!)
+      : Duration.zero;
+
+  setState(() {
+    simulating = false;
+    currentNode = null;
+    currentQuestionIndex = null;
+    _remainingSeconds = null;
+  });
+
+  // Navigate to KPI dashboard with result data
+  context.push('/Kpi', extra: {
+    'correct': _correctQuizAnswers,
+    'total': _totalQuizQuestions,
+    'duration': duration,
+  });
+
+  
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(scoreText)),
+  );
+}
+
+
+
+ void _clearCanvas() {
+  _totalQuizQuestions = 0;
+  _correctQuizAnswers = 0;
+
+  _countdownTimer?.cancel();
+  setState(() {
+    simulating = false;
+    currentNode = null;
+    currentQuestionIndex = null;
+    _remainingSeconds = null;
+  });
+  ref.read(scenarioProvider.notifier).clear();
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Canvas cleared')),
+  );
+}
+
 
   Future<void> _loadSimulation() async {
     try {
@@ -160,31 +231,7 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
         final loadedBlocks = nodes
             .map<NodeBlock>((e) => NodeBlock.fromJson(e as Map<String, dynamic>))
             .toList();
-        // final loadedBlocks = nodes.map<NodeBlock>((e) => NodeBlock(
-        //       id: e['id'],
-        //       offset: Offset(
-        //         (e['offset']['dx'] as num).toDouble(),
-        //         (e['offset']['dy'] as num).toDouble(),
-        //       ),
-        //       title: e['title'],
-        //       type: e['type'],
-        //       description: e['description'],
-        //       welcomeMessage: e['welcomeMessage'],
-        //       lessonType: e['lessonType'],
-        //       lessonContent: e['lessonContent'],
-        //       estimatedTime: e['estimatedTime'],
-        //       quizTitle: e['quizTitle'],
-        //       passingScore: e['passingScore'],
-        //       timeLimit: e['timeLimit'],
-        //       conditionExpression: e['conditionExpression'],
-        //       truePathLabel: e['truePathLabel'],
-        //       falsePathLabel: e['falsePathLabel'],
-        //       checkpointTitle: e['checkpointTitle'],
-        //       checkpointNote: e['checkpointNote'],
-        //       questions: (e['questions'] as List?)
-        //           ?.map((q) => (q as Map).cast<String, String>())
-        //           .toList(),
-        //     )).toList();
+      
 
         setState(() {
           _selectedDomain = domain;
@@ -322,71 +369,127 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
     );
   }
 
-  Widget _buildNodeDetail(NodeBlock node) {
-    return Container(
-      color: Colors.deepPurple.shade50,
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("${node.type} Node", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            _buildNodeFields(node),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    if (node.type.toLowerCase() != "quiz") {
-                      _continueSimulation(ref.read(scenarioProvider));
-                    }
-                  },
-                  icon: const Icon(Icons.arrow_forward),
-                  label: const Text("Continue"),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text("Generated Dialog"),
-                        content: const Text("Ai generated dialog content."),
-                        actions: [
-                          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close"))
-                        ],
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.chat),
-                  label: const Text("Generate Dialog"),
-                ),
-              ],
-            )
-          ],
+ Widget _buildNodeDetail(NodeBlock node) {
+  return Container(
+    color: Colors.deepPurple.shade50,
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    child: SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("${node.type} Node", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          if (_remainingSeconds != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                "Time Remaining: ${_formatTime(_remainingSeconds!)}",
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
+              ),
+            ),
+          _buildNodeFields(node),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  if (node.type.toLowerCase() != "quiz") {
+                    _continueSimulation(ref.read(scenarioProvider));
+                  }
+                },
+                icon: const Icon(Icons.arrow_forward),
+                label: const Text("Continue"),
+              ),
+              const SizedBox(width: 12),
+         ElevatedButton.icon(
+  onPressed: () async {
+    final content = currentNode?.lessonContent ?? '';
+    if (content.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No lesson content to explain.")),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        title: Text("Generating..."),
+        content: SizedBox(
+          height: 60,
+          child: Center(child: CircularProgressIndicator()),
         ),
       ),
     );
-  }
 
-  Widget _buildNodeFields(NodeBlock node) {
-    // leave quiz question display alone
-    if (node.type.toLowerCase() == "quiz" && node.questions != null && node.questions!.isNotEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Quiz Title: ${node.quizTitle ?? 'N/A'}"),
-          const SizedBox(height: 8),
-          Text(
-            "Question: ${node.questions![currentQuestionIndex ?? 0]['question']}",
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ],
+    try {
+      final explanation = await AiService.explainLesson(content);
+      Navigator.pop(context); // Close loading dialog
+
+   showDialog(
+  context: context,
+  builder: (_) => AlertDialog(
+    title: const Text("AI Explanation"),
+    content: SizedBox(
+      height: 300, 
+      child: SingleChildScrollView(
+        child: Text(explanation),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text("Close"),
+      ),
+    ],
+  ),
+);
+
+    } catch (e) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
       );
     }
-    // for all other types show every field
+  },
+  icon: const Icon(Icons.chat),
+  label: const Text("Generate Dialog"),
+),
+
+            ],
+          )
+        ],
+      ),
+    ),
+  );
+}
+
+
+  Widget _buildNodeFields(NodeBlock node) {
+   
+   if (node.type.toLowerCase() == "quiz" &&
+    node.questions != null &&
+    node.questions!.isNotEmpty) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      
+      Text("Quiz Title: ${node.quizTitle ?? 'N/A'}"),
+      const SizedBox(height: 8),
+      Text(
+        "Question: ${node.questions![currentQuestionIndex ?? 0]['question']}",
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+    ],
+  );
+}
+
+  if (node.lessonType == "Video" && node.lessonContent != null) {
+    return _VideoPlayerWidget(videoUrl: node.lessonContent!);
+  }
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -394,6 +497,19 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
         if (node.description != null) Text("Description: ${node.description}"),
         if (node.welcomeMessage != null) Text("Welcome Message: ${node.welcomeMessage}"),
         if (node.lessonType != null) Text("Lesson Type: ${node.lessonType}"),
+          if (node.lessonContent != null && node.lessonType == "Image")
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Image.network(
+            node.lessonImage!,
+            height: 400,
+            width: 400,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) =>
+                const Text("Could not load image."),
+          ),
+        ),
+  
         if (node.lessonContent != null) Text("Lesson Content: ${node.lessonContent}"),
         if (node.estimatedTime != null) Text("Estimated Time: ${node.estimatedTime}"),
         if (node.conditionExpression != null) Text("Condition: ${node.conditionExpression}"),
@@ -401,50 +517,56 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
         if (node.falsePathLabel != null) Text("False Path Label: ${node.falsePathLabel}"),
         if (node.checkpointTitle != null) Text("Checkpoint Title: ${node.checkpointTitle}"),
         if (node.checkpointNote != null) Text("Checkpoint Note: ${node.checkpointNote}"),
+        
+
+
       ],
     );
   }
 
-  Widget _buildCanvas(List<NodeBlock> blocks, Size canvasSize) {
-    return InteractiveViewer(
-      minScale: 0.3,
-      maxScale: 3.0,
-      panEnabled: true,
-      scaleEnabled: false,
-      child: Transform.scale(
-        scale: _scale,
-        alignment: Alignment.center,
-        child: SizedBox(
-          width: canvasSize.width,
-          height: canvasSize.height,
-          child: Stack(
-            children: [
-              CustomPaint(painter: _ConnectionPainter(blocks), child: Container()),
-              ...blocks.map((block) => Positioned(
-                    left: block.offset.dx,
-                    top: block.offset.dy,
-                    child: Card(
-                      color: currentNode?.id == block.id ? Colors.orange : Colors.deepPurple,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(block.type,
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            Text(block.title,
-                                style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                          ],
-                        ),
+ Widget _buildCanvas(List<NodeBlock> blocks, Size canvasSize) {
+  if (simulating) return const SizedBox.shrink(); // Hide canvas during simulation
+
+  return InteractiveViewer(
+    minScale: 0.3,
+    maxScale: 3.0,
+    panEnabled: true,
+    scaleEnabled: false,
+    child: Transform.scale(
+      scale: _scale,
+      alignment: Alignment.center,
+      child: SizedBox(
+        width: canvasSize.width,
+        height: canvasSize.height,
+        child: Stack(
+          children: [
+            CustomPaint(painter: _ConnectionPainter(blocks), child: Container()),
+            ...blocks.map((block) => Positioned(
+                  left: block.offset.dx,
+                  top: block.offset.dy,
+                  child: Card(
+                    color: currentNode?.id == block.id ? Colors.orange : Colors.deepPurple,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(block.type,
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          Text(block.title,
+                              style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                        ],
                       ),
                     ),
-                  )),
-            ],
-          ),
+                  ),
+                )),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _buildZoomButtons() {
     return Align(
@@ -471,35 +593,100 @@ class _SimulatorScreenState extends ConsumerState<SimulatorScreen> {
   }
 
   void _handleTraineeResponse(List<NodeBlock> blocks) {
-    final response = _responseController.text.trim();
-    if (simulating && currentNode != null) {
-      if (currentNode!.type.toLowerCase() == "quiz" &&
-          currentNode!.questions != null &&
-          currentNode!.questions!.isNotEmpty) {
-        final currentQ = currentNode!.questions![currentQuestionIndex ?? 0];
-        final answer = currentQ['answer']?.toLowerCase() ?? "";
-        if (response.toLowerCase() == answer) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Correct!")));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Incorrect, correct was: $answer")));
-        }
-        if ((currentQuestionIndex ?? 0) + 1 < currentNode!.questions!.length) {
-          setState(() {
-            currentQuestionIndex = (currentQuestionIndex ?? 0) + 1;
-          });
-        } else {
-          _continueSimulation(blocks);
-        }
-      } else if (currentNode!.type.toLowerCase() == "decision") {
-        _continueSimulation(blocks);
+  final response = _responseController.text.trim();
+
+  if (simulating && currentNode != null) {
+    final node = currentNode!;
+    final type = node.type.toLowerCase();
+
+    if (type == "quiz" &&
+        node.questions != null &&
+        node.questions!.isNotEmpty) {
+
+      final index = currentQuestionIndex ?? 0;
+      final currentQ = node.questions![index];
+      final correctAnswer = currentQ['answer']?.toLowerCase() ?? "";
+
+      _totalQuizQuestions += 1;
+
+      if (response.toLowerCase() == correctAnswer) {
+        _correctQuizAnswers += 1;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Correct!")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Incorrect. Correct answer: $correctAnswer")),
+        );
+      }
+
+      if (index + 1 < node.questions!.length) {
+        setState(() {
+          currentQuestionIndex = index + 1;
+        });
       } else {
         _continueSimulation(blocks);
       }
-      _responseController.clear();
+
+    } else if (type == "decision") {
+      _continueSimulation(blocks);
+    } else {
+      _continueSimulation(blocks);
     }
+
+    _responseController.clear();
   }
 }
+
+}
+
+
+
+class _VideoPlayerWidget extends StatefulWidget {
+  final String videoUrl;
+
+  const _VideoPlayerWidget({required this.videoUrl});
+
+  @override
+  State<_VideoPlayerWidget> createState() => _VideoPlayerWidgetState();
+}
+
+class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+  late VideoPlayerController _controller;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.network(widget.videoUrl)
+      ..initialize().then((_) {
+        setState(() {
+          _initialized = true;
+        });
+        _controller.play();
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_initialized) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return AspectRatio(
+      aspectRatio: _controller.value.aspectRatio,
+      child: VideoPlayer(_controller),
+    );
+  }
+}
+
+
+
 
 class _ConnectionPainter extends CustomPainter {
   final List<NodeBlock> blocks;

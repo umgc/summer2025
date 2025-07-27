@@ -70,7 +70,7 @@ class HomeScreen extends StatelessWidget {
         const SizedBox(width: 8),
         ElevatedButton(
           onPressed: () {
-            // Using context.go() for consistency with GoRouter
+           
             context.go('/signUp');
           },
           style: ElevatedButton.styleFrom(
@@ -93,16 +93,16 @@ class HomeScreen extends StatelessWidget {
         onPressed: () {
           switch (title) {
             case 'Features':
-              context.go('/features'); // Using context.go() for consistency
+              context.go('/features'); 
               break;
             case 'Pricing':
-              context.go('/pricing'); // Using context.go() for consistency
+              context.go('/pricing'); 
               break;
             case 'About':
-              context.go('/about'); // Using context.go() for consistency
+              context.go('/about'); 
               break;
             case 'Contact':
-              context.go('/contact'); // Using context.go() for consistency
+              context.go('/contact'); 
               break;
           }
         },
@@ -163,7 +163,7 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: () {
-                        // Using context.go() for consistency with GoRouter
+                        
                         context.go('/signUp');
                       },
                       icon: const Icon(Icons.arrow_forward),
@@ -233,7 +233,7 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(height: 32),
                       ElevatedButton.icon(
                         onPressed: () {
-                          // Using context.go() for consistency with GoRouter
+                          
                           context.go('/signUp');
                         },
                         icon: const Icon(Icons.arrow_forward),
@@ -271,7 +271,7 @@ class HomeScreen extends StatelessWidget {
             color: const Color(0xFFF0F0EF),
             child: _buildTestimonialSection(),
           ),
-          _buildFooter(context), // FIX: Pass context here
+          _buildFooter(context), 
         ],
       ),
     );
@@ -442,7 +442,7 @@ class HomeScreen extends StatelessWidget {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: Colors.white, // Ensure card has a background color
+      color: Colors.white, 
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -476,7 +476,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // MODIFIED: _buildFooter now accepts BuildContext
+  
   Widget _buildFooter(BuildContext context) {
     return Container(
       color: const Color(0xFF1E293B),
@@ -517,7 +517,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // Removed 'const' from TextButton and its child Text widgets
+                   
                     TextButton(
                       onPressed: () => context.go('/about'),
                       child: const Text(

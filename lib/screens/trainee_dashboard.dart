@@ -68,7 +68,7 @@ class TraineeDashboardScreen extends StatelessWidget {
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            // TODO: integrate Cognito change password
+                            
                             Navigator.of(context).pop();
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Password change requested')),
@@ -93,7 +93,7 @@ class TraineeDashboardScreen extends StatelessWidget {
                             value: notificationsEnabled,
                             onChanged: (val) {
                               setState(() => notificationsEnabled = val);
-                              // TODO: persist this toggle
+                             
                             },
                           ),
                           actions: [
