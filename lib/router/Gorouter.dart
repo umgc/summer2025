@@ -23,13 +23,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final path = state.uri.path;
 
-      // Allow public pages
+      
       const publicPaths = ['/login', '/signUp', '/reset-password', '/confirm'];
       if (publicPaths.contains(path)) {
         return null;
       }
 
-      // Not logged in
+      
       if (token == null) {
         return '/login';
       }
@@ -45,7 +45,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/unauthorized';
       }
 
-      return null; // Allow navigation
+      return null; 
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const HomeScreen()),

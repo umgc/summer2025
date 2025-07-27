@@ -34,11 +34,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         '/signUp',
         '/confirm',
         '/reset-password',
-        '/pricing', // Added to allow access without login if desired
-        '/contact', // Added to allow access without login if desired
-        '/about', // NEW: Added /about to allow access without login
-        '/features', // NEW: Added /features to allow access without login
-        '/privacy-policy', // Assuming this should also be public
+        '/pricing', 
+        '/contact', 
+        '/about', 
+        '/features', 
+        '/privacy-policy', 
       ].contains(path);
 
       // Not logged in and trying to access a protected route
@@ -49,7 +49,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Logged in but trying to access wrong dashboard
       if (token != null) {
         if (path == '/' || isAuthPage) {
-          // 👇 Redirect to role-based dashboard
+          // Redirect to role-based dashboard
           if (role == 'Admin') return '/admin';
           if (role == 'Designer') return '/designer';
           if (role == 'Trainee') return '/trainee';
@@ -60,7 +60,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (path == '/trainee' && role != 'Trainee') return '/unauthorized';
       }
 
-      return null; // allow
+      return null; 
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
@@ -85,17 +85,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             const ScenarioBuilderScreen(initialDomain: 'Healthcare'),
       ),
-      // Added route for PricingScreen
+      
       GoRoute(
         path: '/pricing',
         builder: (context, state) => const PricingScreen(),
       ),
-      // Added route for ContactScreen
+      
       GoRoute(
         path: '/contact',
         builder: (context, state) => const ContactScreen(),
       ),
-      // NEW: Added routes for AboutScreen and FeaturesScreen
+      
       GoRoute(path: '/about', builder: (context, state) => const AboutScreen()),
       GoRoute(
         path: '/features',
