@@ -43,13 +43,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final token = response['token']!;
       final role = response['role']!;
 
-      // Set providers BEFORE navigation
+      
       ref.read(jwtTokenProvider.notifier).state = token;
       ref.read(userRoleProvider.notifier).state = role;
 
       
 
-      // 🎯 Route based on role manually
+      
       if (role == 'Admin') {
         context.go('/admin');
       } else if (role == 'Designer') {
