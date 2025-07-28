@@ -92,8 +92,8 @@ public class User {
     public LocalDate getLastLoginDate() {
         return lastLoginDate;
     }
-    public int getLoginStreak() {
-        return loginStreak != null ? loginStreak : 0;
+    public Integer getLoginStreak() {
+        return loginStreak;
     }
     public Boolean getLeaderboardOptIn() {
         return leaderboardOptIn;
@@ -114,7 +114,7 @@ public class User {
     public void setLastLoginDate(LocalDate lastLoginDate) {
         this.lastLoginDate = lastLoginDate;
     }
-    public void setLoginStreak(int loginStreak) {
+    public void setLoginStreak(Integer loginStreak) {
         this.loginStreak = loginStreak;
     }
     public void setLeaderboardOptIn(Boolean leaderboardOptIn) {
