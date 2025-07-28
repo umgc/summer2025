@@ -139,7 +139,7 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Closer Connections. Better Care',
+                    'Closer Connections. Better Care.',
                     style: TextStyle(fontSize: 14, color: Colors.black54),
                   ),
                   const SizedBox(height: 40),
