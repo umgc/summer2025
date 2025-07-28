@@ -1,45 +1,40 @@
-//import 'package:care_connect_app/features/dashboard/presentation/pages/archive_patient.dart';
-//import 'package:care_connect_app/features/dashboard/presentation/pages/invite_family_member.dart';
-//import 'package:care_connect_app/features/dashboard/presentation/pages/media_upload.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/home_monitoring_screen.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/medication_management.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/smart_devices.dart';
 import 'package:care_connect_app/features/integrations/presentation/pages/wearables_screen.dart';
 import 'package:care_connect_app/features/calls/presentation/pages/jitsi_meeting_screen.dart';
-import 'package:care_connect_app/features/notes/healthcare_notes.dart';
 import 'package:care_connect_app/features/profile/presentation/pages/profile_settings_page.dart';
-import 'package:care_connect_app/features/ai/presentation/pages/speech_to_text.dart';
+import 'package:care_connect_app/pages/profile_page.dart';
+import 'package:care_connect_app/pages/settings_page.dart';
+import 'package:care_connect_app/pages/ai_configuration_page.dart';
+import 'package:care_connect_app/pages/file_management_page.dart';
+import 'package:care_connect_app/widgets/hybrid_video_call_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:care_connect_app/config/theme/app_theme.dart';
-import 'package:care_connect_app/widgets/app_bar_helper.dart';
-import 'package:provider/provider.dart';
 
-import '../../features/ai/presentation/pages/voice_command_ai.dart';
-import '../../features/analytics/analytics_page.dart';
+import '../../features/welcome/presentation/pages/welcome_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/oauth_callback_page.dart';
-import '../../features/auth/presentation/pages/password_reset_page.dart';
-import '../../features/auth/presentation/pages/reset_password_screen.dart'; // ADD THIS IMPORT
-import '../../features/auth/presentation/pages/sign_up_screen.dart';
-import '../../features/calls/presentation/pages/mobile_web_call.dart';
 import '../../features/dashboard/presentation/pages/caregiver_dashboard.dart';
-//import '../../features/dashboard/presentation/pages/edit_patient.dart';
 import '../../features/dashboard/presentation/pages/patient_dashboard.dart';
-import '../../features/gamification/presentation/pages/gamification_screen.dart';
 import '../../features/onboarding/presentation/pages/patient_registration.dart';
-import '../../features/payments/models/package_model.dart';
-import '../../features/payments/presentation/pages/payment_cancel_page.dart';
-import '../../features/payments/presentation/pages/payment_success_page.dart';
+import '../../features/auth/presentation/pages/sign_up_screen.dart';
 import '../../features/payments/presentation/pages/select_package_page.dart';
 import '../../features/payments/presentation/pages/subscription_management_page.dart';
 import '../../features/dashboard/presentation/pages/add_patient_screen.dart';
-import '../../features/payments/presentation/pages/stripe_checkout_page.dart';
-import '../../features/payments/presentation/pages/subscription_management_page.dart';
+import '../../features/auth/presentation/pages/password_reset_page.dart';
+import '../../features/auth/presentation/pages/reset_password_screen.dart'; // ADD THIS IMPORT
+import '../../features/payments/models/package_model.dart';
 import '../../features/social/presentation/pages/main_feed_screen.dart';
-import '../../features/welcome/presentation/pages/welcome_page.dart';
+import '../../features/gamification/presentation/pages/caregiver_gamification_landingpage.dart';
+import '../../features/gamification/presentation/pages/gamification_screen.dart';
+import '../../features/payments/presentation/pages/stripe_checkout_page.dart';
+import '../../features/analytics/analytics_page.dart';
+import '../../features/payments/presentation/pages/payment_success_page.dart';
+import '../../features/payments/presentation/pages/payment_cancel_page.dart';
 import '../../features/dashboard/presentation/pages/patient_status_page.dart';
 import '../../providers/user_provider.dart';
+import 'package:provider/provider.dart';
 
 /// Helper function to navigate to the appropriate dashboard based on user role
 void navigateToDashboard(BuildContext context, {String? role}) {
@@ -48,8 +43,7 @@ void navigateToDashboard(BuildContext context, {String? role}) {
 
   if (userRole == null) {
     // If no role is found, redirect to login with the last known userType if available
-    final lastUserType =
-        userProvider.user != null && userProvider.user!.role != null
+    final lastUserType = userProvider.user != null
         ? userProvider.user!.role.toLowerCase()
         : 'patient';
     context.go('/login', extra: {'userType': lastUserType});
@@ -63,8 +57,6 @@ final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(path: '/', builder: (_, __) => const WelcomePage()),
-    // GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
-    // GoRoute(path: '/signup', builder: (_, __) => const SignUpScreen()),
     GoRoute(
       path: '/login',
       builder: (context, state) {
@@ -114,7 +106,7 @@ final GoRouter appRouter = GoRouter(
           case 'ADMIN':
             return const CaregiverDashboard();
           default:
-            // Unknown role, redirect to login
+          // Unknown role, redirect to login
             WidgetsBinding.instance.addPostFrameCallback((_) {
               context.go('/login');
             });
@@ -183,21 +175,16 @@ final GoRouter appRouter = GoRouter(
       builder: (_, __) => const PatientRegistrationPage(),
     ),
     GoRoute(path: '/add-patient', builder: (_, __) => const AddPatientScreen()),
-    GoRoute(path: '/speech-to-text', builder: (_, __) => SpeechToTextFile()),
-    GoRoute(path: '/healthcare-notes', builder: (_, __) => HealthcareNotes()),
-    GoRoute(path: '/voice-commands', builder: (_, __) => VoiceCommandAI()),
     GoRoute(
       path: '/social-feed',
       builder: (context, state) {
         final userIdStr = state.uri.queryParameters['userId'];
-        final userId = userIdStr != null ? int.tryParse(userIdStr) ?? -1 : -1;
-
-        return MainFeedScreen(userId: userId);
+        final userId = userIdStr != null ? int.tryParse(userIdStr) : 1;
+        return MainFeedScreen(userId: userId ?? 1);
       },
     ),
     GoRoute(
       path: '/select-package',
-      // builder: (_, __) => const SelectPackagePage(),
       builder: (context, state) {
         final userProvider = Provider.of<UserProvider>(context, listen: false);
         final user = userProvider.user;
@@ -257,7 +244,6 @@ final GoRouter appRouter = GoRouter(
       path: '/stripe-checkout',
       builder: (context, state) {
         final pkg = state.extra as PackageModel;
-        // return StripeCheckoutPage(package: pkg);
         // Get userId and stripeCustomerId from query parameters if available
         final userId = state.uri.queryParameters['userId'];
         final stripeCustomerId = state.uri.queryParameters['stripeCustomerId'];
@@ -334,11 +320,6 @@ final GoRouter appRouter = GoRouter(
       path: '/analytics',
       builder: (context, state) {
         final patientIdStr = state.uri.queryParameters['patientId'];
-        // if (patientIdStr == null) {
-        //   return const Scaffold(
-        //     body: Center(child: Text('No patientId provided in the URL.')),
-        //   );
-        // }
         if (patientIdStr == null || int.tryParse(patientIdStr) == null) {
           // Instead of showing an error screen, redirect back to dashboard
           final userProvider = Provider.of<UserProvider>(
@@ -369,12 +350,12 @@ final GoRouter appRouter = GoRouter(
             body: const Center(child: CircularProgressIndicator()),
           );
         }
+
         final patientId = int.tryParse(patientIdStr);
         if (patientId == null) {
-          // return const Scaffold(
-          //   body: Center(child: Text('Invalid patientId.')),
-          // );
-          return Scaffold(body: Center(child: Text('Invalid patientId.')));
+          return const Scaffold(
+            body: Center(child: Text('Invalid patientId.')),
+          );
         }
         return AnalyticsPage(patientId: patientId);
       },
@@ -467,10 +448,7 @@ final GoRouter appRouter = GoRouter(
         return JitsiMeetingScreen(roomName: roomName);
       },
     ),
-    GoRoute(
-      path: '/wearables',
-      builder: (_, __) => const WearablesScreen(),
-    ),
+    GoRoute(path: '/wearables', builder: (_, __) => const WearablesScreen()),
     GoRoute(
       path: '/home-monitoring',
       builder: (_, __) => const HomeMonitoringScreen(),
@@ -486,6 +464,22 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/profile-settings',
       builder: (_, __) => const ProfileSettingsPage(),
+    ),
+    GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
+    GoRoute(path: '/settings', builder: (_, __) => const SettingsPage()),
+    GoRoute(
+      path: '/file-management',
+      builder: (_, __) => const FileManagementPage(),
+    ),
+    GoRoute(
+      path: '/ai-configuration',
+      builder: (_, __) => const AIConfigurationPage(),
+    ),
+
+    // Video Call Test Route
+    GoRoute(
+      path: '/video-call-test',
+      builder: (_, __) => const VideoCallTestPage(),
     ),
 
     // Handle routes from legacy menus
@@ -520,46 +514,6 @@ final GoRouter appRouter = GoRouter(
       redirect: (context, state) {
         return '/dashboard?tab=emergency';
       },
-    ),
-
-    /*GoRoute(
-      path: '/edit',
-      builder: (context, state) {
-        final patientId = state.uri.queryParameters['patientId'] ?? '';
-        return EditScreen(linkId: patientId);
-      },
-    ),*/
-    /*GoRoute(
-      path: '/archive',
-      builder: (_, __) => const ArchiveScreen(linkId: ''),
-    ),*/
-
-    /*GoRoute(
-      path: '/invite_Family_Member',
-      builder: (_, __) => const InviteFamilyMemberScreen(),
-    ),*/
-
-    //GoRoute(path: '/MediaScreen', builder: (_, __) => const MediaScreen()),
-    GoRoute(
-      path: '/mobile-web-call',
-      builder: (context, state) {
-        // Retrieve the query parameters
-        final patientName =
-            state.uri.queryParameters['patientName'] ?? 'Unknown';
-        final roomId = state.uri.queryParameters['roomId'] ?? 'Unknown';
-
-        // Return the CallScreen widget and pass the parameters
-        return CallScreen(
-          patientName: patientName,
-          roomId: roomId,
-          isCaller: true, // Adjust this flag as needed
-        );
-      },
-    ),
-
-    GoRoute(
-      path: '/subscription-management',
-      builder: (context, state) => const SubscriptionManagementPage(),
     ),
   ],
 );

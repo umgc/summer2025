@@ -9,7 +9,8 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../../providers/user_provider.dart';
-import '../model/post_with_comment_count_dto.dart';
+import '../model/PostWithCommentCountDto.dart';
+
 
 class NewPostScreen extends StatefulWidget {
   const NewPostScreen({super.key});
@@ -19,7 +20,6 @@ class NewPostScreen extends StatefulWidget {
 }
 
 class _NewPostScreenState extends State<NewPostScreen> {
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   final TextEditingController _contentController = TextEditingController();
   File? _selectedImage;
   bool isPosting = false;

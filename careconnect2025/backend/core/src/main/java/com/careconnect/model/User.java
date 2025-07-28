@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Builder;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "users")
@@ -33,6 +34,15 @@ public class User {
 
     @Column(name = "password_hash")
     private String passwordHash;
+
+    @Column(name = "last_login_date")
+    private LocalDate lastLoginDate;
+
+    @Column(name = "login_streak")
+    private int loginStreak;
+
+    @Column(name = "leaderboard_opt_in", nullable = false)
+    private Boolean leaderboardOptIn = true;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -79,7 +89,16 @@ public class User {
     public String getStatus() { return status; }
     public String getProfileImageUrl() { return profileImageUrl; }
     public String getStripeCustomerId() { return stripeCustomerId; }
-    
+    public LocalDate getLastLoginDate() {
+        return lastLoginDate;
+    }
+    public int getLoginStreak() {
+        return loginStreak;
+    }
+    public Boolean getLeaderboardOptIn() {
+        return leaderboardOptIn;
+    }
+
     // Additional setters for compatibility
     public void setId(Long id) { this.id = id; }
     public void setName(String name) { this.name = name; }
@@ -92,4 +111,13 @@ public class User {
     public void setStatus(String status) { this.status = status; }
     public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
     public void setStripeCustomerId(String stripeCustomerId) { this.stripeCustomerId = stripeCustomerId; }
+    public void setLastLoginDate(LocalDate lastLoginDate) {
+        this.lastLoginDate = lastLoginDate;
+    }
+    public void setLoginStreak(int loginStreak) {
+        this.loginStreak = loginStreak;
+    }
+    public void setLeaderboardOptIn(Boolean leaderboardOptIn) {
+        this.leaderboardOptIn = leaderboardOptIn;
+    }
 }

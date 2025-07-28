@@ -1,14 +1,6 @@
-import 'dart:convert';
-
-import 'package:care_connect_app/providers/user_provider.dart';
-import 'package:care_connect_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../../../widgets/ai_chat.dart';
-import '../../../social/presentation/pages/main_feed_screen.dart';
+import 'dart:convert';
 import '../../models/patient_model.dart';
 import 'package:provider/provider.dart';
 import 'package:care_connect_app/providers/user_provider.dart';
@@ -180,7 +172,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                 // Always set relationship from link if present
                 patientJson['relationship'] =
                     patientJson['relationship'] ??
-                    (link['relationship'] ?? 'Patient');
+                        (link['relationship'] ?? 'Patient');
               }
             } else {
               patientJson = Map<String, dynamic>.from(json);
@@ -333,8 +325,8 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
 
     return summaryItems.isNotEmpty
         ? summaryItems
-              .take(2)
-              .join(', ') // Show max 2 vitals to avoid overcrowding
+        .take(2)
+        .join(', ') // Show max 2 vitals to avoid overcrowding
         : 'Vitals monitoring active';
   }
 
@@ -361,8 +353,8 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           if (numValue < 95) return '⚠️';
           break;
         case 'bloodPressure':
-          // For blood pressure, we'll just show checkmark for now
-          // As it's typically in format "120/80"
+        // For blood pressure, we'll just show checkmark for now
+        // As it's typically in format "120/80"
           return '✓';
       }
     } catch (e) {
@@ -378,10 +370,10 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     try {
       // Check subscription access for caregivers before initiating call
       final canUseVideoCalls =
-          await SubscriptionService.checkPremiumAccessWithDialog(
-            context,
-            isVideoCall ? 'Video Calls' : 'Voice Calls',
-          );
+      await SubscriptionService.checkPremiumAccessWithDialog(
+        context,
+        isVideoCall ? 'Video Calls' : 'Voice Calls',
+      );
 
       if (!canUseVideoCalls) {
         return; // User doesn't have premium access, dialog was shown
@@ -472,108 +464,105 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           : 'Caregiver Dashboard',
       appBarActions: isLargeScreen
           ? [
-              CallNotificationStatusIndicator(
-                isInitialized: _callNotificationInitialized,
+        CallNotificationStatusIndicator(
+          isInitialized: _callNotificationInitialized,
+        ),
+        const SizedBox(width: 12),
+        IconButton(
+          icon: const Icon(Icons.help_outline),
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Help documentation coming soon'),
               ),
-              const SizedBox(width: 12),
-              IconButton(
-                icon: const Icon(Icons.help_outline),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Help documentation coming soon'),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(width: 8),
-            ]
+            );
+          },
+        ),
+        const SizedBox(width: 8),
+      ]
           : [
-              CallNotificationStatusIndicator(
-                isInitialized: _callNotificationInitialized,
-              ),
-              const SizedBox(width: 8),
-            ],
+        CallNotificationStatusIndicator(
+          isInitialized: _callNotificationInitialized,
+        ),
+        const SizedBox(width: 8),
+      ],
       currentRoute: '/dashboard',
       body: _buildMainContent(),
     );
   }
 
-          return Drawer(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(color: Colors.blue.shade700),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const CircleAvatar(
-                        radius: 28,
-                        backgroundColor: Colors.white,
-                        child: Icon(Icons.person, size: 30),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        user?.name ?? 'User Name',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        isFamilyMember ? 'Family Member' : 'Caregiver',
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.dashboard),
-                  title: const Text('Dashboard'),
-                  onTap: () => Navigator.pop(context),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.emoji_events),
-                  title: const Text('Gamification'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/gamification');
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.emoji_events),
-                  title: const Text('Subscription Management'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/subscription-management');
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.people),
-                  title: Text(isFamilyMember ? 'My Patients' : 'Patients'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    if (isFamilyMember) {
-                      context.go('/family-patients');
-                    } else {
-                      context.go('/patients');
-                    }
-                  },
-                ),
-                // Only show these options for caregivers
-                if (!isFamilyMember) ...[
-                  ListTile(
-                    leading: const Icon(Icons.person_add),
-                    title: const Text('Register Patient'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.go('/register/patient');
-                    },
-                  ),
-                ],
-              )
+  Widget _buildContentBasedOnState() {
+    if (loading) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (error != null) {
+      return _buildErrorState();
+    } else if (patients.isEmpty) {
+      return _buildEmptyStateContent();
+    } else {
+      return _buildPatientListContent();
+    }
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Error Loading Patients',
+              style: AppTheme.headingSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error!,
+              style: AppTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: fetchPatients,
+              style: AppTheme.primaryButtonStyle,
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyStateContent() {
+    // Use responsive utils for width calculation
+    final isMobile = context.isMobile;
+
+    // Create a container with responsive width
+    return Center(
+      child: Container(
+        width: context.responsiveValue(
+          mobile: MediaQuery.of(context).size.width * 0.85,
+          tablet: 400.0,
+        ),
+        padding: const EdgeInsets.all(24),
+        decoration: !isMobile
+            ? BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              spreadRadius: 1,
+            ),
+          ],
+        )
             : null,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -672,19 +661,19 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           context.isDesktopOrLarger
               ? _buildResponsivePatientGrid(horizontalMargin)
               : SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalMargin,
-                    0,
-                    horizontalMargin,
-                    16,
-                  ),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final patient = patients[index];
-                      return _buildPatientCard(patient);
-                    }, childCount: patients.length),
-                  ),
-                ),
+            padding: EdgeInsets.fromLTRB(
+              horizontalMargin,
+              0,
+              horizontalMargin,
+              16,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final patient = patients[index];
+                return _buildPatientCard(patient);
+              }, childCount: patients.length),
+            ),
+          ),
         ],
       ),
     );
@@ -698,7 +687,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     // Ensure we have at least 1 column and limit to 2 columns max for wider patient cards
     if (crossAxisCount > 2) {
       crossAxisCount =
-          2; // Limit to 2 columns max for patient cards to make them wider
+      2; // Limit to 2 columns max for patient cards to make them wider
     }
 
     return SliverPadding(
@@ -839,10 +828,10 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                     currentUserId: widget.caregiverId
                                         .toString(),
                                     currentUserName:
-                                        caregiverName ?? 'Caregiver',
+                                    caregiverName ?? 'Caregiver',
                                     recipientId: patient.id.toString(),
                                     recipientName:
-                                        '${patient.firstName} ${patient.lastName}',
+                                    '${patient.firstName} ${patient.lastName}',
                                   ),
                                 ),
                               );
@@ -897,7 +886,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                   builder: (context) => PatientMedicalNotesPage(
                                     patientId: patient.id,
                                     patientName:
-                                        '${patient.firstName} ${patient.lastName}',
+                                    '${patient.firstName} ${patient.lastName}',
                                   ),
                                 ),
                               );
@@ -1081,9 +1070,9 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                           return;
                         }
                         final response =
-                            await ApiService.suspendCaregiverPatientLink(
-                              linkId,
-                            );
+                        await ApiService.suspendCaregiverPatientLink(
+                          linkId,
+                        );
                         if (response.statusCode == 200) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -1140,9 +1129,9 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                           return;
                         }
                         final response =
-                            await ApiService.reactivateCaregiverPatientLink(
-                              linkId,
-                            );
+                        await ApiService.reactivateCaregiverPatientLink(
+                          linkId,
+                        );
                         if (response.statusCode == 200) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

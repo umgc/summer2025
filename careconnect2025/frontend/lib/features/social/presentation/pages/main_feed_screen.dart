@@ -11,7 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import '../model/post_with_comment_count_dto.dart';
+import '../model/PostWithCommentCountDto.dart';
 
 import 'chat_inbox_screen.dart';
 import 'comment_screen.dart';
