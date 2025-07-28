@@ -1,53 +1,3 @@
-resource "aws_iam_role" "ecs_exe_task_execution" {
-  name = "cc-ecs-exe-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
-  tags = merge(var.default_tags, { Name : "cc-ecs-exe-role" })
-}
-
-resource "aws_iam_policy" "ecs_execution_policy" {
-  name        = "cc-ecs-execution-policy"
-  description = "Policy for ECS task execution"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "logs:CreateLogGroup"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_execution_attach_policy" {
-  role       = aws_iam_role.ecs_exe_task_execution.name
-  policy_arn = aws_iam_policy.ecs_execution_policy.arn
-}
-
 resource "aws_iam_role" "cc_app_role" {
   name = "CCAPPROLE"
 
@@ -56,9 +6,12 @@ resource "aws_iam_role" "cc_app_role" {
     Statement = [{
       Effect = "Allow"
       Principal = {
-        Service = ["ecs-tasks.amazonaws.com",
+        Service = [
           "events.amazonaws.com",
-        "states.amazonaws.com"]
+          "states.amazonaws.com",
+          "lambda.amazonaws.com",
+          "apigateway.amazonaws.com",
+        ]
       }
       Action = "sts:AssumeRole"
     }]
@@ -103,8 +56,7 @@ resource "aws_iam_policy" "cc_app_role_policy" {
           "ssm:GetParam*",
           "ssm:PutParameter",
         ]
-        Resource = ["${var.main_rds_user_param_arn}",
-        "${var.main_rds_pass_param_arn}"]
+        Resource = var.only_compute_required_ssm_parameters
       },
       {
         Sid    = "AccessCloudWatchLogs",
@@ -113,17 +65,6 @@ resource "aws_iam_policy" "cc_app_role_policy" {
           "logs:*"
         ]
         Resource = ["*"]
-      },
-      {
-        Sid    = "StepFunctionAccess",
-        Effect = "Allow"
-        Action = [
-          "ecs:DescribeTaskDefinition",
-          "ecs:RegisterTaskDefinition",
-          "ecs:UpdateService",
-          "ecr:DescribeImages"
-        ],
-        Resource = "*"
       },
       {
         Sid    = "AllowEvtBridgeOnSfn"
@@ -142,9 +83,29 @@ resource "aws_iam_policy" "cc_app_role_policy" {
           "iam:PassRole"
         ],
         Resource = [
-          "${aws_iam_role.cc_app_role.arn}",
-          "${aws_iam_role.ecs_exe_task_execution.arn}"
+          "${aws_iam_role.cc_app_role.arn}"
         ]
+      },
+      {
+        Sid    = "LambdaGeneralAccess"
+        Effect = "Allow"
+        Action = [
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:CreateNetworkInterface",
+          "ec2:DeleteNetworkInterface",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeVpcs",
+          "xray:GetTrace*",
+          "xray:BatchGetTraces",
+          "iam:GetPolicy",
+          "iam:ListPolicies",
+          "iam:GetPolicyVersion",
+          "iam:ListAttachedRolePolicies",
+          "iam:ListRoles",
+          "iam:GetRole"
+        ]
+        Resource = "*"
       }
     ]
   })
