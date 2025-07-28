@@ -1,21 +1,14 @@
 variable "default_tags" {
   type = map(string)
 }
-variable "rds_username" {
-  description = "RDS database username"
-  type        = string
-  sensitive   = true
+
+variable "params_keys" {
+  description = "Set of keys of parameters to be created in SSM"
+  type        = set(string)
+  default     = []
 }
-variable "rds_password" {
-  description = "RDS database password"
-  type        = string
-  sensitive   = true
-}
-variable "rds_user_param_name" {
-  description = "RDS database username parameter name"
-  type        = string
-}
-variable "rds_pass_param_name" {
-  description = "RDS database password parameter name"
-  type        = string
+variable "cc_sensitive_params" {
+  description = "List of secure SSM parameters to be created"
+  type        = map(string)
+  default     = {}
 }

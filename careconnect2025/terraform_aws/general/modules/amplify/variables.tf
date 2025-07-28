@@ -7,7 +7,7 @@ variable "primary_region" {
 variable "github_repo" {
   description = "GitHub repo HTTPS URL (e.g., https://github.com/umgc/summer2025)"
   type        = string
-  default = "https://github.com/umgc/summer2025"
+  default     = "https://github.com/umgc/summer2025"
 }
 variable "github_branch" {
   description = "The branch name to connect to Amplify"
@@ -15,5 +15,5 @@ variable "github_branch" {
 }
 variable "cc_app_role_arn" {
   type        = string
-  description = "The ECS task role ARN that the task/Spring Boot will use to access AWS services"
+  description = "The compute role ARN to access AWS services"
 }

@@ -57,33 +57,36 @@ terraform apply -var-file=general.tfvars
     ```
 3. **DO NOT USE** `terraform destroy` command or else the AWS resources will be **deleted**. Unless you really what to tear down the resources you created.
 
+4. **Useful comands**
+  ```sh
+  terraform state rm module.main_api.aws_apigatewayv2_vpc_link.cc_api_vpc_link # To remove a resource from a state. It would still exists in AWS. Be mindfull of cost.
+  ```
+
 
 
 ### Variable file sample
+*** This one below is just as an example
+
 `general.tfvars`
 ``` 
 
-rds_user_param_name = "cc-rds-username"
-rds_pass_param_name = "cc-rds-password"
+domain_name = "care-connect-develop.d26kqsucj1bwc1.amplifyapp.com"
 
-rds_username = "ccrdsadmin"
-rds_password = "mynonsecretpassword"
-
-core_task_env_vars = [
-  {
-    "name"  = "RDS_USER_PARAM_NAME"
-    "value" = "cc-rds-username"
-    }, {
-    "name"  = "RDS_PASS_PARAM_NAME"
-    "value" = "cc-rds-password"
-    }, {
-    "name"  = "AWS_REGION"
-    "value" = "us-east-1"
-    }, {
-    "name"  = "task_role_arn"
-    "value" = "arn:aws:iam::641592448579:role/CCAPPROLE" # Replace with actual task role ARN
-  }
-]
+cc_ssm_params = {
+  HIBERNATE_DDL_AUTO            = "update"
+  JWT_EXPIRATION                = "10800000"
+  MAIL_HOST                     = "smtp.sendgrid.net"
+  MAIL_PORT                     = "587"
+  MAIL_SMTP_AUTH                = "true"
+  MAIL_SMTP_STARTTLS            = "true"
+  GOOGLE_SCOPE                  = "openid,email,profile"
+  GOOGLE_REDIRECT_URI           = "{baseUrl}/login/oauth2/code/google"
+  GOOGLE_AUTH_URI               = "https://accounts.google.com/o/oauth2/v2/auth"
+  GOOGLE_TOKEN_URI              = "https://oauth2.googleapis.com/token"
+  GOOGLE_USERINFO_URI           = "https://www.googleapis.com/oauth2/v3/userinfo"
+  FITBIT_CLIENT_ID     = "your_fitbit_client_id_here"
+  FITBIT_CLIENT_SECRET = "your_fitbit_client_secret_here"
+}
 
 ```
 Save this file inside of the general folder and use it as an argument in the command lines as above.
