@@ -4,6 +4,10 @@ import 'package:care_connect_app/features/integrations/presentation/pages/smart_
 import 'package:care_connect_app/features/integrations/presentation/pages/wearables_screen.dart';
 import 'package:care_connect_app/features/calls/presentation/pages/jitsi_meeting_screen.dart';
 import 'package:care_connect_app/features/profile/presentation/pages/profile_settings_page.dart';
+import 'package:care_connect_app/features/tasks/presentation/assign_task_screen.dart';
+import 'package:care_connect_app/features/tasks/presentation/custom_task_screen.dart';
+import 'package:care_connect_app/features/tasks/presentation/pre_defined_task_screen.dart';
+import 'package:care_connect_app/features/tasks/presentation/tasks_screen.dart';
 import 'package:care_connect_app/pages/profile_page.dart';
 import 'package:care_connect_app/pages/settings_page.dart';
 import 'package:care_connect_app/pages/ai_configuration_page.dart';
@@ -517,6 +521,45 @@ final GoRouter appRouter = GoRouter(
       path: '/sos',
       redirect: (context, state) {
         return '/dashboard?tab=emergency';
+      },
+    ),
+    GoRoute(
+      path: '/patient-tasks',
+      builder: (context, state) {
+        final patientIdStr = state.uri.queryParameters['patientId'];
+        final patientId = int.tryParse(patientIdStr ?? '0') ?? 0;
+        final patientName = state.uri.queryParameters['patientName'] ?? 'Name Not Found';
+      // Return the Tasks widget with the patientId
+        return TasksScreen(patientId: patientId, patientName: patientName);
+      },
+    ),
+    GoRoute(
+      path: '/assign-task',
+      builder: (context, state) {
+        final patientIdStr = state.uri.queryParameters['patientId'];
+        final patientId = int.tryParse(patientIdStr ?? '0') ?? 0;
+        final patientName = state.uri.queryParameters['patientName'] ?? 'Name Not Found';
+        return AssignTaskScreen(patientId: patientId, patientName: patientName);
+      },
+    ),
+    GoRoute(
+      path: '/custom-task-scheduling',
+      builder: (context, state) {
+        final patientIdStr = state.uri.queryParameters['patientId'];
+        final patientId = int.tryParse(patientIdStr ?? '0') ?? 0;
+        final patientName = state.uri.queryParameters['patientName'] ?? 'Name Not Found';
+        return CustomTaskScreen(patientId: patientId, patientName: patientName);
+      },
+    ),
+    GoRoute(
+      path: '/pre-defined-task',
+      builder: (context, state) {
+        final patientIdStr = state.uri.queryParameters['patientId'];
+        final patientId = int.tryParse(patientIdStr ?? '0') ?? 0;
+        final templateIdStr = state.uri.queryParameters['templateId'];
+        final templateId = int.tryParse(templateIdStr ?? '0') ?? 0;
+        final patientName = state.uri.queryParameters['patientName'] ?? 'Name Not Found';
+        return PreDefinedTaskScreen(patientId: patientId, templateId: templateId, patientName: patientName);
       },
     ),
   ],
