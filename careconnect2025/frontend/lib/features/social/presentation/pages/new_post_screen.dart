@@ -1,14 +1,19 @@
-import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'dart:convert';
+
+import 'package:care_connect_app/config/env_constant.dart';
 import 'package:care_connect_app/services/api_service.dart';
-import 'package:care_connect_app/services/session_manager.dart';
-import 'package:care_connect_app/widgets/app_bar_helper.dart';
-import 'package:care_connect_app/widgets/common_drawer.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+
+import '../../../../providers/user_provider.dart';
+import '../model/PostWithCommentCountDto.dart';
+
 
 class NewPostScreen extends StatefulWidget {
-  final int userId;
-  const NewPostScreen({super.key, required this.userId});
+  const NewPostScreen({super.key});
 
   @override
   State<NewPostScreen> createState() => _NewPostScreenState();
@@ -27,8 +32,9 @@ class _NewPostScreenState extends State<NewPostScreen> {
     }
   }
 
-  Future<void> submitPost() async {
+  Future<void> submitPost(int userId) async {
     final content = _contentController.text.trim();
+
     if (content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Post content cannot be empty')),
@@ -36,44 +42,72 @@ class _NewPostScreenState extends State<NewPostScreen> {
       return;
     }
 
-    // Call restoreSession() here to ensure the session cookie is restored
-    final session = SessionManager();
-    await session.restoreSession(); // This will restore the session cookie
-
     setState(() => isPosting = true);
     try {
-      final response = await ApiService.createPost(
-        widget.userId,
-        content,
-        _selectedImage,
-      );
+      final uri = Uri.parse('${getBackendBaseUrl()}/v1/api/feed/create');
+      final headers = await ApiService.getAuthHeaders();
 
-      // Debugging lines
+      final request = http.MultipartRequest('POST', uri)
+        ..headers.addAll(headers)
+        ..fields['userId'] = userId.toString()
+        ..fields['content'] = content;
+
+      if (_selectedImage != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'image',
+          _selectedImage!.path,
+        ));
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
       print('Create post status: ${response.statusCode}');
       print('Create post body: ${response.body}');
 
       setState(() => isPosting = false);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Navigator.pop(context, true);
+        final json = jsonDecode(response.body);
+        final newPost = PostWithCommentCountDto.fromJson(json);
+        Navigator.pop(context, newPost);
       } else {
         ScaffoldMessenger.of(
-          context,
+          context
         ).showSnackBar(SnackBar(content: Text('Error: ${response.body}')));
       }
     } catch (e) {
       setState(() => isPosting = false);
       ScaffoldMessenger.of(
-        context,
+        context
       ).showSnackBar(SnackBar(content: Text('Exception: ${e.toString()}')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context).user;
+
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Create New Post'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: const Center(child: Text('User not logged in')),
+      );
+    }
     return Scaffold(
-      appBar: AppBarHelper.createAppBar(context, title: 'Create New Post'),
-      drawer: const CommonDrawer(currentRoute: '/new_post'),
+      appBar: AppBar(
+        title: const Text('Create New Post'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -86,23 +120,9 @@ class _NewPostScreenState extends State<NewPostScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 10),
-            if (_selectedImage != null) ...[
-              Image.file(_selectedImage!, height: 150),
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () => setState(() => _selectedImage = null),
-                child: const Text('Remove Photo'),
-              ),
-            ],
-            ElevatedButton.icon(
-              onPressed: pickImage,
-              icon: const Icon(Icons.photo),
-              label: const Text('Upload Photo'),
-            ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: isPosting ? null : submitPost,
+              onPressed: isPosting ? null : () => submitPost(user.id),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade900,
               ),

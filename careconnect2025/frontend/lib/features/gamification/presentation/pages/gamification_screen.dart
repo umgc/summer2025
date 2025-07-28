@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:care_connect_app/services/gamification_service.dart';
+import 'leaderboard_screen.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +14,14 @@ class GamificationScreen extends StatefulWidget {
   @override
   State<GamificationScreen> createState() => _GamificationScreenState();
 }
+
+final List<String> motivationalMessages = [
+  "You're doing great — keep going! 💪",
+  "Small steps every day lead to big results.",
+  "Believe in yourself and all that you are.",
+  "Progress, not perfection.",
+  "One day at a time — you got this!",
+];
 
 class _GamificationScreenState extends State<GamificationScreen> {
   int level = 1;
@@ -36,13 +45,21 @@ class _GamificationScreenState extends State<GamificationScreen> {
     initializePrefsAndLoad();
   }
 
+  late String dailyMessage;
+
+  void pickDailyMessage() {
+    final dayIndex = DateTime.now().day % motivationalMessages.length;
+    dailyMessage = motivationalMessages[dayIndex];
+  }
+
   Future<void> initializePrefsAndLoad() async {
     _prefs = await SharedPreferences.getInstance();
     userId =
-        int.tryParse(_prefs.getString('userId') ?? '') ??
-        1; // <-- Get dynamic userId here
+        int.tryParse(_prefs.getString('userId') ?? '') ?? 1;
+
     previousAchievementCount = _prefs.getInt('achievement_count') ?? 0;
     await loadGamificationData();
+    pickDailyMessage();
   }
 
   @override
@@ -63,14 +80,20 @@ class _GamificationScreenState extends State<GamificationScreen> {
         previousAchievementCount = earned.length;
         await _prefs.setInt('achievement_count', earned.length);
       }
+      print("Earned Achievements: $earned");
+      print("All Achievements: $all");
 
       List<Map<String, dynamic>> merged = (all).map<Map<String, dynamic>>((a) {
         final match = earned.firstWhere(
-          (e) => e['title']?.toString().trim() == a['title']?.toString().trim(),
-          orElse: () => {},
+              (e) =>
+          (e['achievement']?['title']?.toString().trim().toLowerCase() ?? '') ==
+              (a['title']?.toString().trim().toLowerCase() ?? ''),
+          orElse: () => null,
         );
         return {...a, 'unlocked': match != null};
       }).toList();
+      print("Earned Achievements: $earned");
+      print("All Achievements: $all");
 
       setState(() {
         level = progress['level'];
@@ -87,6 +110,10 @@ class _GamificationScreenState extends State<GamificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Scaffold(
       appBar: AppBarHelper.createAppBar(
         context,
@@ -107,7 +134,7 @@ class _GamificationScreenState extends State<GamificationScreen> {
         ],
       ),
       drawer: const CommonDrawer(currentRoute: '/gamification'),
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.background,
       body: Stack(
         children: [
           isLoading
@@ -121,30 +148,40 @@ class _GamificationScreenState extends State<GamificationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 10),
-                      const Text(
+                      Text(
                         'Gamification',
-                        style: TextStyle(
-                          fontSize: 28,
+                        style: textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.indigo,
+                          color: colorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: 30),
-                      const Icon(Icons.shield, size: 80, color: Colors.indigo),
+                      Icon(Icons.shield, size: 80, color: colorScheme.primary),
                       const SizedBox(height: 12),
                       Text(
                         'Level $level',
-                        style: const TextStyle(
+                        style: textTheme.titleMedium?.copyWith(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.indigo,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          dailyMessage,
+                         style: textTheme.bodyMedium?.copyWith(
+                            fontStyle: FontStyle.italic,
+                            color: colorScheme.onBackground,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
                       const SizedBox(height: 10),
                       LinearProgressIndicator(
-                        value: xp / xpTarget,
-                        backgroundColor: Colors.grey.shade300,
-                        color: Colors.blue.shade900,
+                        value: (xp % xpTarget) / xpTarget,
+                        backgroundColor: colorScheme.surfaceVariant,
+                        color: colorScheme.primary,
                         minHeight: 10,
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -153,34 +190,50 @@ class _GamificationScreenState extends State<GamificationScreen> {
                         alignment: Alignment.centerRight,
                         child: Text(
                           '$xp / $xpTarget XP',
-                          style: const TextStyle(
+                          style: textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
-                            color: Colors.indigo,
+                            color: colorScheme.primary,
                           ),
                         ),
                       ),
                       const SizedBox(height: 30),
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'Achievements',
-                          style: TextStyle(
-                            fontSize: 22,
+                          style: textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.indigo,
+                            color: colorScheme.primary,
                           ),
                         ),
                       ),
                       const SizedBox(height: 20),
                       Expanded(
                         child: ListView.builder(
-                          itemCount: allAchievements.length,
+                          itemCount: allAchievements.where((a) => a['unlocked'] == true).length,
                           itemBuilder: (context, index) {
-                            final achievement = allAchievements[index];
+                            final unlockedAchievements = allAchievements.where((a) => a['unlocked'] == true).toList();
+                            final achievement = unlockedAchievements[index];
                             return buildAchievement(achievement);
                           },
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
+                          );
+                        },
+                        icon: const Icon(Icons.leaderboard),
+                        label: const Text("View Leaderboard"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.secondary,
+                          foregroundColor: colorScheme.onSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -212,7 +265,7 @@ class _GamificationScreenState extends State<GamificationScreen> {
             MaterialPageRoute(
               builder: (_) => AchievementDetailScreen(
                 achievements: allAchievements,
-              ), // ✅ This must include the `unlocked` key
+              ),
             ),
           );
         },
@@ -221,10 +274,9 @@ class _GamificationScreenState extends State<GamificationScreen> {
             Expanded(
               child: Text(
                 achievement['title'] ?? 'Unnamed Achievement',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontWeight: FontWeight.w500,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                 fontWeight: FontWeight.w500,
+                 color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),

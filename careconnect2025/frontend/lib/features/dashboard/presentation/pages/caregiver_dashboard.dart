@@ -172,7 +172,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                 // Always set relationship from link if present
                 patientJson['relationship'] =
                     patientJson['relationship'] ??
-                    (link['relationship'] ?? 'Patient');
+                        (link['relationship'] ?? 'Patient');
               }
             } else {
               patientJson = Map<String, dynamic>.from(json);
@@ -325,8 +325,8 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
 
     return summaryItems.isNotEmpty
         ? summaryItems
-              .take(2)
-              .join(', ') // Show max 2 vitals to avoid overcrowding
+        .take(2)
+        .join(', ') // Show max 2 vitals to avoid overcrowding
         : 'Vitals monitoring active';
   }
 
@@ -353,8 +353,8 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           if (numValue < 95) return '⚠️';
           break;
         case 'bloodPressure':
-          // For blood pressure, we'll just show checkmark for now
-          // As it's typically in format "120/80"
+        // For blood pressure, we'll just show checkmark for now
+        // As it's typically in format "120/80"
           return '✓';
       }
     } catch (e) {
@@ -370,10 +370,10 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     try {
       // Check subscription access for caregivers before initiating call
       final canUseVideoCalls =
-          await SubscriptionService.checkPremiumAccessWithDialog(
-            context,
-            isVideoCall ? 'Video Calls' : 'Voice Calls',
-          );
+      await SubscriptionService.checkPremiumAccessWithDialog(
+        context,
+        isVideoCall ? 'Video Calls' : 'Voice Calls',
+      );
 
       if (!canUseVideoCalls) {
         return; // User doesn't have premium access, dialog was shown
@@ -464,28 +464,28 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           : 'Caregiver Dashboard',
       appBarActions: isLargeScreen
           ? [
-              CallNotificationStatusIndicator(
-                isInitialized: _callNotificationInitialized,
+        CallNotificationStatusIndicator(
+          isInitialized: _callNotificationInitialized,
+        ),
+        const SizedBox(width: 12),
+        IconButton(
+          icon: const Icon(Icons.help_outline),
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Help documentation coming soon'),
               ),
-              const SizedBox(width: 12),
-              IconButton(
-                icon: const Icon(Icons.help_outline),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Help documentation coming soon'),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(width: 8),
-            ]
+            );
+          },
+        ),
+        const SizedBox(width: 8),
+      ]
           : [
-              CallNotificationStatusIndicator(
-                isInitialized: _callNotificationInitialized,
-              ),
-              const SizedBox(width: 8),
-            ],
+        CallNotificationStatusIndicator(
+          isInitialized: _callNotificationInitialized,
+        ),
+        const SizedBox(width: 8),
+      ],
       currentRoute: '/dashboard',
       body: _buildMainContent(),
     );
@@ -553,16 +553,16 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
         padding: const EdgeInsets.all(24),
         decoration: !isMobile
             ? BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    spreadRadius: 1,
-                  ),
-                ],
-              )
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              spreadRadius: 1,
+            ),
+          ],
+        )
             : null,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -661,19 +661,19 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           context.isDesktopOrLarger
               ? _buildResponsivePatientGrid(horizontalMargin)
               : SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalMargin,
-                    0,
-                    horizontalMargin,
-                    16,
-                  ),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final patient = patients[index];
-                      return _buildPatientCard(patient);
-                    }, childCount: patients.length),
-                  ),
-                ),
+            padding: EdgeInsets.fromLTRB(
+              horizontalMargin,
+              0,
+              horizontalMargin,
+              16,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final patient = patients[index];
+                return _buildPatientCard(patient);
+              }, childCount: patients.length),
+            ),
+          ),
         ],
       ),
     );
@@ -687,7 +687,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     // Ensure we have at least 1 column and limit to 2 columns max for wider patient cards
     if (crossAxisCount > 2) {
       crossAxisCount =
-          2; // Limit to 2 columns max for patient cards to make them wider
+      2; // Limit to 2 columns max for patient cards to make them wider
     }
 
     return SliverPadding(
@@ -828,10 +828,10 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                     currentUserId: widget.caregiverId
                                         .toString(),
                                     currentUserName:
-                                        caregiverName ?? 'Caregiver',
+                                    caregiverName ?? 'Caregiver',
                                     recipientId: patient.id.toString(),
                                     recipientName:
-                                        '${patient.firstName} ${patient.lastName}',
+                                    '${patient.firstName} ${patient.lastName}',
                                   ),
                                 ),
                               );
@@ -886,7 +886,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                   builder: (context) => PatientMedicalNotesPage(
                                     patientId: patient.id,
                                     patientName:
-                                        '${patient.firstName} ${patient.lastName}',
+                                    '${patient.firstName} ${patient.lastName}',
                                   ),
                                 ),
                               );
@@ -1070,9 +1070,9 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                           return;
                         }
                         final response =
-                            await ApiService.suspendCaregiverPatientLink(
-                              linkId,
-                            );
+                        await ApiService.suspendCaregiverPatientLink(
+                          linkId,
+                        );
                         if (response.statusCode == 200) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -1129,9 +1129,9 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                           return;
                         }
                         final response =
-                            await ApiService.reactivateCaregiverPatientLink(
-                              linkId,
-                            );
+                        await ApiService.reactivateCaregiverPatientLink(
+                          linkId,
+                        );
                         if (response.statusCode == 200) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

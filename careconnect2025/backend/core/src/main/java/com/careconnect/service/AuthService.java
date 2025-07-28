@@ -37,6 +37,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -50,6 +51,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Service
 public class AuthService {
+
+    @Autowired
+    private GamificationService gamificationService;
 
     @Autowired
     private UserRepository userRepository;
@@ -279,6 +283,14 @@ public LoginResponse loginV2(LoginRequest req,
     if (!user.isActive())
         throw new AuthenticationException("Account suspended");
 
+    /* ---------------- Gamification: First Login & 5-Day Streak ---------------- */
+    gamificationService.unlockAchievement(user.getId(), "First Login", 50);
+
+    handleLoginStreak(user);
+    userRepository.save(user);
+
+
+
     /* ---------------- Resolve profile info ------------------------------ */
     Long patientId   = null;
     Long caregiverId = null;
@@ -341,6 +353,15 @@ public LoginResponse loginV2(LoginRequest req,
         // Skip password validation for OAuth users
         if (!user.isActive())
             throw new AuthenticationException("Account suspended");
+
+        /* ---------------- Gamification: First Login & 5-Day Streak ---------------- */
+
+        gamificationService.unlockAchievement(user.getId(), "First Login", 50);
+
+        handleLoginStreak(user);
+
+        userRepository.save(user);
+
 
         /* ---------------- Resolve profile info ------------------------------ */
         Long patientId   = null;
@@ -628,4 +649,23 @@ public LoginResponse loginV2(LoginRequest req,
     private String generateSecureState() {
         return UUID.randomUUID().toString();
     }
+
+    private void handleLoginStreak(User user) {
+        LocalDate today = LocalDate.now();
+        LocalDate lastLogin = user.getLastLoginDate();
+        Integer streak = user.getLoginStreak();
+
+        if (streak == null || lastLogin == null || !lastLogin.plusDays(1).equals(today)) {
+            user.setLoginStreak(1);
+        } else {
+            user.setLoginStreak(streak + 1);
+        }
+
+        user.setLastLoginDate(today);
+
+        if (user.getLoginStreak() == 5) {
+            gamificationService.unlockAchievement(user.getId(), "5-Day Streak", 100);
+        }
+    }
+
 }
