@@ -58,6 +58,12 @@ jobs:
               echo "Waiting for MySQL..."
               sleep 2
             done
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: AKIAZKYPD2ZB74YL5WVG
+          aws-secret-access-key: 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
+          aws-region: us-east-1
       - name: Build with Maven
         working-directory: ./careconnect2025/backend/core
         shell: bash
