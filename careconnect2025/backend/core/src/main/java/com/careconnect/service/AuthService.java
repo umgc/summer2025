@@ -286,27 +286,9 @@ public LoginResponse loginV2(LoginRequest req,
     /* ---------------- Gamification: First Login & 5-Day Streak ---------------- */
     gamificationService.unlockAchievement(user.getId(), "First Login", 50);
 
-    LocalDate today = LocalDate.now();
-    LocalDate lastLogin = user.getLastLoginDate();
-    Integer streak = user.getLoginStreak();
-
-    if (streak == null || lastLogin == null || !lastLogin.plusDays(1).equals(today)) {
-        user.setLoginStreak(1);
-    } else {
-        user.setLoginStreak(streak + 1);
-    }
-
-    if (lastLogin == null || !lastLogin.equals(today)) {
-        user.setLastLoginDate(today);
-    }
-
-    user.setLastLoginDate(today);
-    user.setLoginStreak(streak);
+    handleLoginStreak(user);
     userRepository.save(user);
 
-    if (streak == 5) {
-        gamificationService.unlockAchievement(user.getId(), "5-Day Streak", 100);
-    }
 
 
     /* ---------------- Resolve profile info ------------------------------ */
@@ -376,28 +358,10 @@ public LoginResponse loginV2(LoginRequest req,
 
         gamificationService.unlockAchievement(user.getId(), "First Login", 50);
 
-        LocalDate today = LocalDate.now();
-        LocalDate lastLogin = user.getLastLoginDate();
-        Integer streak = user.getLoginStreak();
+        handleLoginStreak(user);
 
-
-        if (streak == null || lastLogin == null || !lastLogin.plusDays(1).equals(today)) {
-            user.setLoginStreak(1);
-        } else {
-            user.setLoginStreak(streak + 1);
-        }
-
-        if (lastLogin == null || !lastLogin.equals(today)) {
-            user.setLastLoginDate(today);
-        }
-
-        user.setLastLoginDate(today);
-        user.setLoginStreak(streak);
         userRepository.save(user);
 
-        if (streak == 5) {
-            gamificationService.unlockAchievement(user.getId(), "5-Day Streak", 100);
-        }
 
         /* ---------------- Resolve profile info ------------------------------ */
         Long patientId   = null;
@@ -685,4 +649,23 @@ public LoginResponse loginV2(LoginRequest req,
     private String generateSecureState() {
         return UUID.randomUUID().toString();
     }
+
+    private void handleLoginStreak(User user) {
+        LocalDate today = LocalDate.now();
+        LocalDate lastLogin = user.getLastLoginDate();
+        Integer streak = user.getLoginStreak();
+
+        if (streak == null || lastLogin == null || !lastLogin.plusDays(1).equals(today)) {
+            user.setLoginStreak(1);
+        } else {
+            user.setLoginStreak(streak + 1);
+        }
+
+        user.setLastLoginDate(today);
+
+        if (user.getLoginStreak() == 5) {
+            gamificationService.unlockAchievement(user.getId(), "5-Day Streak", 100);
+        }
+    }
+
 }

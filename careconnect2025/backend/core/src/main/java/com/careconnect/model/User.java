@@ -93,7 +93,7 @@ public class User {
         return lastLoginDate;
     }
     public int getLoginStreak() {
-        return loginStreak;
+        return loginStreak != null ? loginStreak : 0;
     }
     public Boolean getLeaderboardOptIn() {
         return leaderboardOptIn;
