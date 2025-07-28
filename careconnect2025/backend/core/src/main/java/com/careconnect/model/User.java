@@ -22,6 +22,10 @@ public class User {
 
     private String name;
 
+    // Split name into first and last name for better usability
+    private String firstName;
+    private String lastName;
+
     @Column(unique = true, nullable = false)
     private String email;
 
