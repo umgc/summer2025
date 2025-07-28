@@ -1,8 +1,34 @@
-# CareConnect CORE Backend App
+# **CareConnect CORE Backend App**
 This is the first backend app after the prototype of CareConnect that is ready for testing. 
 This README will help you set it up on your local computer.
 
-## Context of those instructions
+## **Table Of Contents**
+<!-- TOC -->
+* [**CareConnect CORE Backend App**](#careconnect-core-backend-app)
+  * [**Table Of Contents**](#table-of-contents)
+  * [Context of most of those instructions](#context-of-most-of-those-instructions)
+  * [Prerequisite](#prerequisite)
+  * [Quick Setup (Recommended)](#quick-setup-recommended)
+    * [1. Environment Configuration](#1-environment-configuration)
+    * [2. Start the Application](#2-start-the-application)
+      * [Linux/macOS](#linuxmacos)
+      * [Windows](#windows)
+  * [Alternative Setup (IDE Configuration)](#alternative-setup-ide-configuration)
+  * [Features Included](#features-included)
+    * [🔔 Firebase Push Notifications](#-firebase-push-notifications)
+    * [🔐 Authentication & Security](#-authentication--security)
+    * [🏥 Healthcare Features](#-healthcare-features)
+    * [📧 Multi-Provider Email Support](#-multi-provider-email-support)
+    * [💳 Payment Integration](#-payment-integration)
+    * [🤖 AI Integration](#-ai-integration)
+    * [☁️ Cloud Storage](#-cloud-storage)
+  * [API Documentation](#api-documentation)
+  * [Optional Tools](#optional-tools)
+  * [Support](#support)
+  * [Deployment on AWS](#deployment-on-aws)
+<!-- TOC -->
+
+## Context of most of those instructions
 
 - They are generate based on a Linux (Ubuntu) VM.
 - Intellij IDEA was used (You can get a student license through UMGC)
@@ -54,7 +80,6 @@ load-env.bat mvn spring-boot:run
 ```
 
 ## Alternative Setup (IDE Configuration)
-## Alternative Setup (IDE Configuration)
 
 If you prefer to use your IDE's run configuration instead of the `.env` approach:
 
@@ -82,27 +107,32 @@ If you prefer to use your IDE's run configuration instead of the `.env` approach
         - Click on the last button of the `Environment Variables` field. You should see a screen like below, fill it out line by line.
                 ![Add Environment Variables with GUI](_readme/Add_Variable_w_GUI.png)
 
-## Run the Spring Boot Backend App
+3. Add AWS Secret and Region (Configure AWS CLI)
 
-### Using Environment Scripts (Recommended)
-```bash
-# Linux/macOS
-./load-env.sh mvn spring-boot:run
+   There are multiples way you can do that.<br/>
+   You need to have `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` setup in your environment variables. You can also do that in the IDE or make it global in your System Environment variable.
+   Go to for more details [Configure your AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) - to make it simple we suggest you to use environment variables [here is the sub link](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html).
 
-# Windows  
-load-env.bat mvn spring-boot:run
-```
+4. Retrieving properties from SSM Parameter Store
 
-### Traditional Method
-On your terminal
-```bash
-cd careconnect2025/backend/core     # Navigate into the backend folder
-# Open in IntelliJ IDEA or your preferred Java IDE.
-# OR build with Maven:
-./mvnw spring-boot:run              # For Linux/Mac
-mvnw spring-boot:run                # For Windows
-# OR use IntelliJ "Run" button
-```
+   This configuration is more for AWS deployment. 
+    - When you are deploying on AWS make your property equal the full name of the Parameter you define in Parameter store.<br/>
+        ```
+        JDBC_URI=JDBC_URI
+        DB_USER=DB_USER
+        DB_PASSWORD=DB_PASSWORD
+        SECURITY_JWT_SECRET=SEC_JWT_SECRET
+        ...
+        ```
+    - On your local computer: You can leave full value of the property from your local because if the `ParameterStoreService` cannot retrieve the parameter it would return the initial value your provided.
+        ```
+        JDBC_URI=jdbc:mysql://localhost:3306/careconnect
+        DB_USER=root
+        DB_PASSWORD=root
+        SECURITY_JWT_SECRET=your_jwt_secret
+        ...
+        ```
+
 
 ## Features Included
 
@@ -167,19 +197,31 @@ For credentials, setup help, or onboarding, contact your team lead or project ma
 
 
 ## Deployment on AWS
-This can be done after create the infrastructure resources using the Terraform scripts. Follow the README(s) for more on the Terraform scripts.
-<br/>Those commands are provided on AWS ECR as well. 
+This can be done after creating the infrastructure resources using the Terraform scripts. Follow the README(s) for more on the Terraform scripts. 
 
-1. Install Docker on your computer. Jump to step 2 if you already have docker.
-2. Install and Configure your AWS Cli. Jump to step 3 if you have done that already.
-3. Create a .env file in the same directory of the DOckerfile. Add all the required environment variables with the their value on one single line each. Format: `VARIALBLE=VALUE`. Those variables would be the same as what you would use in the run configirations explained above.
-4. Run these commands: 
+1. Install and Configure your AWS Cli. Jump to step 2 if you have done that already.
+2. Build the project and upload the zip file to AWS S3. 
+   ```
+   aws s3 cp target/careconnect-backend-0.0.1-SNAPSHOT-lambda-package.zip s3://<S3_BUCKET_NAME>/cc-backend-jars/careconnect-backend-0.0.1-SNAPSHOT-lambda-package.zip --sse aws:kms
+    ```
+
+3. If this the first deployment and initial resource creation. Once the file is uploaded use the Terraform compute application's scripts to create the Lambda.<br/>
+The Terraform compute app will create the Lambda with the S3 file, create a new Lambda version, create the API Gateway integration with the Lambda version.
+
+4. If this is a subsequent deployment, you can use these commands to update the function and create a new version. 
+   <br/>You might still need to go to the console to complete the API Gateway integration update, or once the zip is in S3 you can skip those commands and do the rest on the Console.
+    <br>Ideally an automated flow will be provided, and you won't need to do anything after the file is upload to S3.
 ```sh
-aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin 641592448579.dkr.ecr.us-east-1.amazonaws.com # To authenticate to ECR
+# This is to update the function. Please replace your <S3_BUCKET_NAME>.
+aws lambda update-function-code --function-name cc_main_backend \
+    --s3-bucket <S3_BUCKET_NAME> --s3-key cc-backend-jars/careconnect-backend-0.0.1-SNAPSHOT-lambda-package.zip
 
-sudo docker build -t cc_core_ecr . # To build the image in your local
+# This is to publish a new version for the lambda after the code is updated.  Please update the description to be meaningful to your version.
+aws lambda publish-version --function-name cc_main_backend --description "M3 Deployment"
 
-sudo docker tag cc_core_ecr:latest 641592448579.dkr.ecr.us-east-1.amazonaws.com/cc_core_ecr:latest # To create a new tag of the created image (Duplicate it with a new tag[name])
-
-sudo docker push 641592448579.dkr.ecr.us-east-1.amazonaws.com/cc_core_ecr:latest # To push the image to AWS ECR
+# This is to update the API Gateway Integration. Please replace the <API Id>, <INTEGRATION_ID>, <AWS_ACCOUNT_ID> and <VERSION_NUMBER>.
+aws apigatewayv2 update-integration \
+    --api-id <API_DI> \
+    --integration-id <INTEGRATION_ID> \
+    --integration-uri arn:aws:lambda:us-east-1:<AWS_ACCOUNT_ID>:function:cc_main_backend:<VERSION_NUMBER>
 ```
