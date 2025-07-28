@@ -288,12 +288,16 @@ public LoginResponse loginV2(LoginRequest req,
 
     LocalDate today = LocalDate.now();
     LocalDate lastLogin = user.getLastLoginDate();
-    int streak = user.getLoginStreak();
+    Integer streak = user.getLoginStreak();
 
-    if (lastLogin != null && lastLogin.plusDays(1).equals(today)) {
-        streak++;
-    } else if (lastLogin == null || !lastLogin.equals(today)) {
-        streak = 1;
+    if (streak == null || lastLogin == null || !lastLogin.plusDays(1).equals(today)) {
+        user.setLoginStreak(1);
+    } else {
+        user.setLoginStreak(streak + 1);
+    }
+
+    if (lastLogin == null || !lastLogin.equals(today)) {
+        user.setLastLoginDate(today);
     }
 
     user.setLastLoginDate(today);
@@ -374,12 +378,17 @@ public LoginResponse loginV2(LoginRequest req,
 
         LocalDate today = LocalDate.now();
         LocalDate lastLogin = user.getLastLoginDate();
-        int streak = user.getLoginStreak();
+        Integer streak = user.getLoginStreak();
 
-        if (lastLogin != null && lastLogin.plusDays(1).equals(today)) {
-            streak++;
-        } else if (lastLogin == null || !lastLogin.equals(today)) {
-            streak = 1;
+
+        if (streak == null || lastLogin == null || !lastLogin.plusDays(1).equals(today)) {
+            user.setLoginStreak(1);
+        } else {
+            user.setLoginStreak(streak + 1);
+        }
+
+        if (lastLogin == null || !lastLogin.equals(today)) {
+            user.setLastLoginDate(today);
         }
 
         user.setLastLoginDate(today);
