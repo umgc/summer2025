@@ -395,101 +395,111 @@ class _FileManagementPageState extends State<FileManagementPage>
   }
 
   Widget _buildUploadTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Quick Upload Buttons
-          QuickUploadButtons(
-            onUploadSuccess: (response) {
-              _loadFiles();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('File uploaded: ${response.originalFilename}'),
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-
-          // File Upload Widget
-          FileUploadWidget(
-            onUploadSuccess: (response) {
-              _loadFiles();
-            },
-            onUploadError: (error) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(error),
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-
-          /*
-          // Manual Text Entry Upload
-          ManualTextEntryCard(
-            onSave: (fileName, fileBytes) async {
-              // await _uploadManualTextFile(fileName, fileBytes);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Manual entry uploaded: $fileName.txt'),
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
-                ),
-              );
-              _loadFiles();
-            },
-          ),
-          const SizedBox(height: 24),
-
-           */
-
-          /*
-          // Speech to Text Upload
-          SpeechToTextCard(
-            onSave: (fileName, fileBytes) async {
-              // await _saveRecognizedTextFile(fileName, fileBytes);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Speech-to-text file: $fileName.txt saved'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-              _loadFiles();  // Refresh the list after saving
-            },
-          ),
-
-           */
-          const SizedBox(height: 16),
-
-          // Info/Instruction Card
-          Card(
-            color: Theme.of(context).colorScheme.surface,
-            elevation: 0,
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'To upload a file, you can use Quick Upload, select a file, manually enter text, or record speech-to-text. All uploads will appear in your files list.',
-                      style: Theme.of(context).textTheme.bodyMedium,
+    return Container(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('File Upload', style: AppTheme.headingMedium),
+            const SizedBox(height: 24),
+            // Upload Instructions Card
+            Card(
+              color: Theme.of(context).colorScheme.surface,
+              elevation: 0,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Use Quick Upload for fast uploads, Manual Text Entry for notes, or Speech-to-Text to convert voice into text files.',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            // Quick Upload Section
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: QuickUploadButtons(
+                  onUploadSuccess: (response) {
+                    _loadFiles();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('File uploaded: ${response.originalFilename}'),
+                        backgroundColor: Theme.of(context).colorScheme.secondary,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // File Upload Section
+            FileUploadWidget(
+              onUploadSuccess: (response) {
+                _loadFiles(); // Refresh the files list
+              },
+              onUploadError: (error) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(error),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+            // Manual Text Entry Section
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: ManualTextEntryCard(
+                  onSave: (fileName, fileBytes) async {
+                    // await _uploadManualTextFile(fileName, fileBytes);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Manual entry uploaded: $fileName.txt'),
+                        backgroundColor: Theme.of(context).colorScheme.secondary,
+                      ),
+                    );
+                    _loadFiles();
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Speech to Text Section
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: SpeechToTextCard(
+                  onSave: (fileName, fileBytes) async {
+                    // await _saveRecognizedTextFile(fileName, fileBytes);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Speech-to-text file saved'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    _loadFiles();
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
