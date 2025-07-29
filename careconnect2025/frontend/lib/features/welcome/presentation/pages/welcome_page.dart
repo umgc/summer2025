@@ -236,7 +236,7 @@ class WelcomePage extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Closer Connections. Better Care',
+                              'Closer Connections. Better Care.',
                               style: TextStyle(
                                 fontSize: isMobile ? 16 : 18,
                                 color: theme.colorScheme.onSurface.withAlpha(

@@ -127,7 +127,7 @@ class _PasswordResetConfirmScreenState
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Closer Connections. Better Care',
+                  'Closer Connections. Better Care.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppTheme.textSecondary,
                   ),
