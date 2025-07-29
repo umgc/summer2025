@@ -1099,22 +1099,22 @@ return response;
 
 // Get list of files from saved S3 storage
 Future<http.Response> getUserFilesByCategory(
-int userId) async {
-try {
-final headers = await AuthTokenManager.getAuthHeaders();
+  int userId) async {
+  try {
+  final headers = await AuthTokenManager.getAuthHeaders();
 
-final uri = Uri.parse(
-'${ApiConstants.baseUrl}files/users/$userId/list',
-);
+  final uri = Uri.parse(
+  '${ApiConstants.baseUrl}files/users/$userId/list',
+  );
 
-return await _httpClient.get(
-uri,
-headers: headers,
-).timeout(
-const Duration(seconds: 10),
-onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
-);
-} catch (e) {
-return http.Response(jsonEncode({'error': e.toString()}), 500);
-}
+  return await _httpClient.get(
+  uri,
+  headers: headers,
+  ).timeout(
+  const Duration(seconds: 10),
+  onTimeout: () => http.Response('{"error": "Request timeout"}', 408),
+  );
+  } catch (e) {
+  return http.Response(jsonEncode({'error': e.toString()}), 500);
+  }
 }
