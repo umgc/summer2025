@@ -1,6 +1,6 @@
-output "rds_username_param" {
-  value = aws_ssm_parameter.rds_username_param
-}
-output "rds_password_param" {
-  value = aws_ssm_parameter.rds_password_param
+output "sensitive_params" {
+  value = {
+    for key in var.params_keys : key => aws_ssm_parameter.cc_sensitive_env_variables[key]
+  }
+  sensitive = true
 }

@@ -24,6 +24,7 @@ class ApiConstants {
   static final String files = '$_host/v1/api/files';
   static final String connectionRequests = '$_host/v1/api/connection-requests';
   static final String subscriptions = '$_host/v1/api/subscriptions';
+  static final String tasks = '$_host/v1/api/tasks';
 
   // AI Services endpoints
   static final String aiChat = '$_host/v1/api/ai-chat';
@@ -921,6 +922,137 @@ class ApiService {
       print('Error getting profile picture URL: $e');
       return null;
     }
+  }
+
+  // ========================
+  // MESSAGING METHODS
+  // ========================
+
+  static Future<http.Response> sendMessage({
+    required int senderId,
+    required int receiverId,
+    required String content,
+  }) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    final body = jsonEncode({
+      'senderId': senderId,
+      'receiverId': receiverId,
+      'content': content,
+    });
+
+    return await _httpClient
+        .post(
+      Uri.parse('${ApiConstants.baseUrl}messages/send'),
+      headers: headers,
+      body: body,
+    )
+        .timeout(const Duration(seconds: 15));
+  }
+
+  static Future<List<dynamic>> getConversation({
+    required int user1,
+    required int user2,
+  }) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    final url = Uri.parse(
+      '${ApiConstants.baseUrl}messages/conversation?user1=$user1&user2=$user2',
+    );
+
+    final response = await _httpClient.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load conversation');
+    }
+  }
+
+  static Future<List<dynamic>> getInbox(int userId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    final url = Uri.parse('${ApiConstants.baseUrl}messages/inbox/$userId');
+
+    final response = await _httpClient.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load inbox');
+    }
+  }
+
+  // ========================
+  // TASK METHODS
+  // ========================
+
+  // Get patient tasks
+  static Future<http.Response> getPatientTasks(int patientId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient.get(
+      Uri.parse(
+        '${ApiConstants.tasks}/patient/$patientId',
+      ),
+      headers: headers,
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Delete a task by task ID
+  static Future<http.Response> deleteTask(int taskId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .delete(
+      Uri.parse('${ApiConstants.tasks}/$taskId'),
+      headers: headers,
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Edit a task by task ID
+  static Future<http.Response> editTask(
+      int taskId,
+      Map<String, dynamic> taskData,
+      ) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
+
+    return await _httpClient
+        .put(
+      Uri.parse('${ApiConstants.tasks}/$taskId'),
+      headers: headers,
+      body: jsonEncode(taskData),
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+
+  // Get task templates
+  static Future<http.Response> getTaskTemplates(int patientId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .get(
+      Uri.parse('${ApiConstants.baseUrl}templates/all'), // get all for now
+      headers: headers,
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+  static Future<http.Response> getTaskTemplate(int templateId) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    return await _httpClient
+        .get(
+      Uri.parse('${ApiConstants.baseUrl}templates/$templateId'),
+      headers: headers,
+    )
+        .timeout(const Duration(seconds: 30));
+  }
+  // Create a task
+  static Future<http.Response> createTask(int patientId, String task) async {
+    final headers = await AuthTokenManager.getAuthHeaders();
+    headers['Content-Type'] = 'application/json';
+
+    return await _httpClient
+        .post(
+      Uri.parse('${ApiConstants.tasks}/patient/$patientId'),
+      headers: headers,
+      body: task,
+    )
+        .timeout(const Duration(seconds: 30));
   }
 }
 
