@@ -52,6 +52,7 @@ module "iam" {
   default_tags                         = var.default_tags
   primary_region                       = var.primary_region
   cc_internal_bucket_arn               = module.s3_internal.internal_s3_bucket.arn
+  cc_applify_app_id                    = module.amplify.amplify_app_id
   only_compute_required_ssm_parameters = [for p in module.ssm.sensitive_params : p.arn]
 }
 
@@ -64,7 +65,7 @@ module "amplify" {
 
 # To be reviewed and updated - This module needs a domain name to be set up properly
 module "ses" {
-  count = 0
+  count          = 0
   source         = "./modules/ses"
   default_tags   = var.default_tags
   primary_region = var.primary_region
@@ -73,25 +74,28 @@ module "ses" {
 
 ### This will be moved to the terraform compute app
 module "main_api" {
-  source                 = "./modules/api"
-  cc_main_api_role_arn   = module.iam.cc_api_gw_role.arn
-  cc_vpc_id              = module.vpc.vpc_id
-  cc_main_api_sg_id      = module.vpc.cc_main_api_sg_id
-  cc_main_sbn_ids        = module.vpc.cc_subnet_ids
-  default_tags           = var.default_tags
+  source               = "./modules/api"
+  cc_main_api_role_arn = module.iam.cc_api_gw_role.arn
+  cc_vpc_id            = module.vpc.vpc_id
+  cc_main_api_sg_id    = module.vpc.cc_main_api_sg_id
+  cc_main_sbn_ids      = module.vpc.cc_subnet_ids
+  default_tags         = var.default_tags
 }
 
 ##### This module will be used for CI/CD soon ######
 module "evb" {
-  count = 0
-  source                                    = "./modules/eventbridge"
-  default_tags                              = var.default_tags
-  cc_app_role_arn                           = module.iam.cc_app_role_info.arn
+  source                   = "./modules/eventbridge"
+  default_tags             = var.default_tags
+  cc_app_role_arn          = module.iam.cc_app_role_info.arn
+  cc_iac_bucket_name       = var.cc_iac_bucket_name
+  cc_frontend_build_prefix = var.cc_frontend_build_prefix
+  cc_aplify_app_id         = module.amplify.amplify_app_id
+  cc_frontend_branch_name  = module.amplify.amplify_branch_name
+  cc_stm_arn               = module.sfn_sm.cc_deployment_sfn_arn
 }
 
 ##### This module will be used for CI/CD soon ######
 module "sfn_sm" {
-  count = 0
   source          = "./modules/stepfunction"
   cc_app_role_arn = module.iam.cc_app_role_info.arn
   default_tags    = var.default_tags

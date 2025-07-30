@@ -12,3 +12,7 @@ variable "only_compute_required_ssm_parameters" {
   description = "List of SSM parameters required for the main Lambda function"
   type        = list(string)
 }
+variable "cc_applify_app_id" {
+  description = "The Amplify App ID for the frontend application"
+  type        = string
+}

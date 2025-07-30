@@ -21,3 +21,14 @@ variable "cc_ssm_params" {
   description = "List of secure SSM parameters to be created"
   type        = map(string)
 }
+
+variable "cc_iac_bucket_name" {
+  description = "The name of the S3 bucket used for Care Connect infrastructure as code"
+  type        = string
+  default     = "cc-iac-us-east-1-641592448579"
+}
+variable "cc_frontend_build_prefix" {
+  description = "The prefix for the frontend build files in S3"
+  type        = string
+  default     = "cc-frontend-builds"
+}

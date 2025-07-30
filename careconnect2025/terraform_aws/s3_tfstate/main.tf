@@ -15,7 +15,6 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "backend_bucket" {
   bucket        = "${var.iac_bucket_name}-${data.aws_caller_identity.current.account_id}"
-  force_destroy = true
   tags          = merge(var.default_tags, { Name = "cc-iac-bucket" })
 }
 
@@ -33,4 +32,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "backend_state_cry
       sse_algorithm = "AES256"
     }
   }
+}
+
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  bucket      = aws_s3_bucket.backend_bucket.bucket
+  eventbridge = true
 }

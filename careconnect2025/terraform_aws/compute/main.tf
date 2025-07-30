@@ -125,3 +125,13 @@ resource "aws_apigatewayv2_route" "cc_api_main_proxy" {
   route_key = "ANY /{proxy+}"
   target    = "integrations/${aws_apigatewayv2_integration.main.id}"
 }
+
+module "deployment" {
+  source = "./modules/deployment"
+  default_tags = var.default_tags
+  cc_app_role_arn = data.terraform_remote_state.cc_common_state.outputs.cc_app_role
+  cc_iac_bucket_name = var.iac_cc_s3_bucket_name
+  cc_main_backend_build_prefix = var.cc_main_backend_build_prefix
+  cc_lamnda_function_name = aws_lambda_function.cc_main_backend_lambda.function_name
+  cc_main_api_id = data.terraform_remote_state.cc_common_state.outputs.main_api_id
+}

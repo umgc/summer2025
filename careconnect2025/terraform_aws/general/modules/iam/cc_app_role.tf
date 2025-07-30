@@ -87,6 +87,12 @@ resource "aws_iam_policy" "cc_app_role_policy" {
         ]
       },
       {
+        Sid      = "AllowAmplifyStartDeployment",
+        Effect   = "Allow",
+        Action   = "amplify:StartDeployment",
+        Resource = "arn:aws:amplify:*:${data.aws_caller_identity.caller.account_id}:apps/${var.cc_applify_app_id}/branches/*"
+      },
+      {
         Sid    = "LambdaGeneralAccess"
         Effect = "Allow"
         Action = [
@@ -114,4 +120,9 @@ resource "aws_iam_policy" "cc_app_role_policy" {
 resource "aws_iam_role_policy_attachment" "cc_app_role_policy_attach" {
   role       = aws_iam_role.cc_app_role.name
   policy_arn = aws_iam_policy.cc_app_role_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "cc_app_role_api_gw_policy_attach" {
+  role       = aws_iam_role.cc_app_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator"
 }
