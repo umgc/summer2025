@@ -267,7 +267,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     // Start connection process immediately
     try {
       if (platformId == 'fitbit') {
-        _debugFitbitConfiguration();
         await _connectToFitbitReal();
       } else if (platformId == 'apple_health') {
         await _connectToAppleHealthReal();
@@ -540,10 +539,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[50],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -961,7 +956,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
 
           // Retry connection
           if (selectedPlatform == 'fitbit') {
-            _debugFitbitConfiguration();
             _connectToFitbitReal();
           } else if (selectedPlatform == 'apple_health') {
             _connectToAppleHealthReal();
@@ -974,31 +968,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     return null;
   }
 
-  void _debugFitbitConfiguration() {
-    print('FITBIT CONFIGURATION DEBUG');
-    print('Current Platform: ${Platform.operatingSystem}');
-    print('Client ID: $fitbitClientId');
-    print('Client Secret: ${fitbitClientSecret.length} characters');
-    print('Redirect URI: $redirectUri');
-    print('Callback URL Scheme: http');
-    print('');
-    print('URI Breakdown:');
-    final uri = Uri.parse(redirectUri);
-    print('  - Scheme: ${uri.scheme}');
-    print('  - Host: ${uri.host}');
-    print('  - Port: ${uri.port}');
-    print('  - Path: ${uri.path}');
-  }
-
   Future<void> _connectToFitbitReal() async {
     try {
-      print('ENHANCED FITBIT DEBUG');
-      print('Client ID: $fitbitClientId');
-      print('Client Secret: ${fitbitClientSecret.substring(0, 10)}...');
-      print('Redirect URI: $redirectUri');
-      print('Callback Scheme: careconnect');
-
-      print('Starting authorization...');
 
       FitbitCredentials? fitbitCredentials = await FitbitConnector.authorize(
         clientID: fitbitClientId,
@@ -1007,29 +978,11 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         callbackUrlScheme: 'care-connect',
       );
 
-      print('Authorization method completed');
-      print('Credentials received: ${fitbitCredentials != null}');
-
       if (fitbitCredentials != null) {
-        print('Credentials object exists');
 
         String accessToken = fitbitCredentials.fitbitAccessToken;
         String? refreshToken = fitbitCredentials.fitbitRefreshToken;
         String userID = fitbitCredentials.userID; // Get the userID
-
-        print(
-          'Access Token: ${accessToken.isNotEmpty ? accessToken.substring(0, 10) + "..." : "EMPTY!"}',
-        );
-        print(
-          'Refresh Token: ${refreshToken?.isNotEmpty == true ? refreshToken!.substring(0, 10) + "..." : "EMPTY!"}',
-        );
-        print('User ID: $userID');
-        print('Access Token Length: ${accessToken.length}');
-
-        print('Credentials properties:');
-        print('   - fitbitAccessToken: ${accessToken.isNotEmpty}');
-        print('   - fitbitRefreshToken: ${refreshToken?.isNotEmpty == true}');
-        print('   - userID: ${userID.isNotEmpty}');
 
         if (accessToken.isNotEmpty && userID.isNotEmpty) {
           print('Valid access token and userID received');
@@ -1057,18 +1010,10 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
             'Failed to get access token or userID - one or both are empty',
           );
         }
-      } else {
-        print('Credentials object is null');
-        print('This usually means:');
-        print('   1. User cancelled authorization');
-        print('   2. Redirect URI mismatch');
-        print('   3. Client ID/Secret incorrect');
-        print('   4. Deep link not handled properly');
+      } else {;
         throw Exception('Authorization was cancelled or failed');
       }
     } catch (e) {
-      print('Fitbit connection error: $e');
-      print('Error type: ${e.runtimeType}');
 
       setState(() {
         isConnecting = false;

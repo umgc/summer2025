@@ -188,12 +188,12 @@ class _MedicationManagementScreenState
                   label: Text(
                     'Enter NDC Code',
                     style: TextStyle(
-                      color: Colors.indigo,
+                      color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  style: AppTheme.secondaryButtonStyle.copyWith(
+                  style: AppTheme.primaryButtonStyle.copyWith(
                     padding: MaterialStateProperty.all(
                       const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -213,12 +213,12 @@ class _MedicationManagementScreenState
                   label: Text(
                     'Add Medication Manually',
                     style: TextStyle(
-                      color: Colors.grey,
+                      color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  style: AppTheme.secondaryButtonStyle.copyWith(
+                  style: AppTheme.primaryButtonStyle.copyWith(
                     padding: MaterialStateProperty.all(
                       const EdgeInsets.symmetric(vertical: 16),
                     ),
