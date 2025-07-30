@@ -19,29 +19,40 @@ public class PatientAIConfigDTO {
     @NotNull(message = "AI provider is required")
     private AIProvider aiProvider;
     
-    private String openaiModel;
-    private String deepseekModel;
-    
+    @Builder.Default
+    private String openaiModel = "gpt-4";
+    @Builder.Default
+    private String deepseekModel = "deepseek-chat";
+
     @Min(value = 100, message = "Max tokens must be at least 100")
     @Max(value = 8000, message = "Max tokens cannot exceed 8000")
-    private Integer maxTokens;
-    
+    @Builder.Default
+    private Integer maxTokens = 2000;
+
     @DecimalMin(value = "0.0", message = "Temperature must be between 0.0 and 2.0")
     @DecimalMax(value = "2.0", message = "Temperature must be between 0.0 and 2.0")
-    private Double temperature;
-    
+    @Builder.Default
+    private Double temperature = 0.7;
+
     @Min(value = 5, message = "Conversation history limit must be at least 5")
     @Max(value = 100, message = "Conversation history limit cannot exceed 100")
-    private Integer conversationHistoryLimit;
-    
+    @Builder.Default
+    private Integer conversationHistoryLimit = 20;
+
     // Default context inclusion preferences
-    private Boolean includeVitalsByDefault;
-    private Boolean includeMedicationsByDefault;
-    private Boolean includeNotesByDefault;
-    private Boolean includeMoodPainLogsByDefault;
-    private Boolean includeAllergiesByDefault;
-    
-    private Boolean isActive;
-    
+    @Builder.Default
+    private Boolean includeVitalsByDefault = true;
+    @Builder.Default
+    private Boolean includeMedicationsByDefault = true;
+    @Builder.Default
+    private Boolean includeNotesByDefault = true;
+    @Builder.Default
+    private Boolean includeMoodPainLogsByDefault = true;
+    @Builder.Default
+    private Boolean includeAllergiesByDefault = true;
+
+    @Builder.Default
+    private Boolean isActive = true;
+
     private String systemPrompt;
 }

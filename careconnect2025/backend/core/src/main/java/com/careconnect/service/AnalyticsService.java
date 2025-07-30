@@ -43,52 +43,33 @@ public class AnalyticsService {
 
     // MOCK: Replace real DB logic with static mock data for all patients
     public DashboardDTO getDashboard(Long patientId, Period period) {
-        // Original implementation commented out for later use
-        
-        Instant to   = Instant.now();
+        // Original DB-based implementation restored
+        Instant to = Instant.now();
         Instant from = to.minus(period);
-
-        SummaryMetric agg = summaryRepo
-        .findTopByPatient_UserIdAndPeriodStartAndPeriodEndOrderByCreatedAtDesc(
-            patientId, from, to
-        );
-
+        SummaryMetric agg = summaryRepo.findTopByPatient_UserIdAndPeriodStartAndPeriodEndOrderByCreatedAtDesc(patientId, from, to);
         double adherence;
         double avgHr;
-
-        try{
-
-        if (agg != null &&
-            agg.getGeneratedAt().isAfter(Instant.now().minus(Period.ofDays(1)))) {
-
+        if (agg != null && agg.getGeneratedAt().isAfter(Instant.now().minus(Period.ofDays(1)))) {
             adherence = agg.getAdherenceRate();
-            avgHr     = agg.getAvgHeartRate();
-
+            avgHr = agg.getAvgHeartRate();
         } else {
             long completed = symptomRepo.countCompleted(patientId, from, to);
-            long total     = symptomRepo.countTotal(patientId, from, to);
-            adherence      = total == 0 ? 0 : (completed * 100.0) / total;
-
-            Double hr = wearableRepo.avgForPeriod(
-                    patientId, WearableMetric.MetricType.HEART_RATE, from, to);
+            long total = symptomRepo.countTotal(patientId, from, to);
+            adherence = total == 0 ? 0 : (completed * 100.0) / total;
+            Double hr = wearableRepo.avgForPeriod(patientId, WearableMetric.MetricType.HEART_RATE, from, to);
             avgHr = hr == null ? 0 : hr;
         }
-
-        double avgSpo2   = avgOrZero(patientId, WearableMetric.MetricType.SPO2,             from, to);
-        double avgSys    = avgOrZero(patientId, WearableMetric.MetricType.BLOOD_PRESSURE_SYS, from, to);
-        double avgDia    = avgOrZero(patientId, WearableMetric.MetricType.BLOOD_PRESSURE_DIA, from, to);
-        double avgWeight = avgOrZero(patientId, WearableMetric.MetricType.WEIGHT,            from, to);
-
-        // Get mood and pain analytics
+        double avgSpo2 = avgOrZero(patientId, WearableMetric.MetricType.SPO2, from, to);
+        double avgSys = avgOrZero(patientId, WearableMetric.MetricType.BLOOD_PRESSURE_SYS, from, to);
+        double avgDia = avgOrZero(patientId, WearableMetric.MetricType.BLOOD_PRESSURE_DIA, from, to);
+        double avgWeight = avgOrZero(patientId, WearableMetric.MetricType.WEIGHT, from, to);
         Patient patient = getPatientById(patientId);
         LocalDateTime fromLdt = LocalDateTime.ofInstant(from, ZoneOffset.UTC);
         LocalDateTime toLdt = LocalDateTime.ofInstant(to, ZoneOffset.UTC);
-        
         Double avgMood = moodPainLogRepo.avgMoodByPatientAndTimestampBetween(patient, fromLdt, toLdt);
         Double avgPain = moodPainLogRepo.avgPainByPatientAndTimestampBetween(patient, fromLdt, toLdt);
         Integer moodEntries = moodPainLogRepo.countMoodEntriesByPatientAndTimestampBetween(patient, fromLdt, toLdt);
         Integer painEntries = moodPainLogRepo.countPainEntriesByPatientAndTimestampBetween(patient, fromLdt, toLdt);
-
         return DashboardDTO.builder()
                 .periodStart(from)
                 .periodEnd(to)
@@ -103,65 +84,29 @@ public class AnalyticsService {
                 .moodEntries(moodEntries != null ? moodEntries : 0)
                 .painEntries(painEntries != null ? painEntries : 0)
                 .build();
-        
-    } catch (Exception e) {
-            return DashboardDTO.builder()
-                .periodStart(Instant.now().minus(period))
-                .periodEnd(Instant.now())
-                .adherenceRate(0.0)
-                .avgHeartRate(0.0)
-                .avgSpo2(0.0)
-                .avgSystolic(0.0)
-                .avgDiastolic(0.0)
-                .avgWeight(0.0)
-                .avgMood(0.0)
-                .avgPain(0.0)
-                .moodEntries(0)
-                .painEntries(0)
-                .build();
-        }
     }
 
     /* ---------------- Vitals series ---------------- */
 
     // MOCK: Replace real DB logic with static mock data for all patients
     public List<VitalSampleDTO> getVitals(Long patientId, Period period) {
-        // Original implementation commented out for later use
-        try{
-        Instant to = Instant.parse("2025-06-27T08:00:00Z");
+        // Original DB-based implementation restored
+        Instant to = Instant.now();
         Instant from = to.minus(period);
-
-        // Get wearable metrics
         List<WearableMetric> wearableMetrics = wearableRepo.findByPatient_IdAndRecordedAtBetween(patientId, from, to);
-        
-        // Get mood and pain data
         Patient patient = getPatientById(patientId);
         LocalDateTime fromLdt = LocalDateTime.ofInstant(from, ZoneOffset.UTC);
         LocalDateTime toLdt = LocalDateTime.ofInstant(to, ZoneOffset.UTC);
         List<com.careconnect.model.MoodPainLog> moodPainLogs = moodPainLogRepo.findByPatientAndTimestampBetween(patient, fromLdt, toLdt);
-
-        // Group wearable metrics by timestamp
-        Map<Instant, List<WearableMetric>> wearableByTime = wearableMetrics.stream()
-                .collect(Collectors.groupingBy(WearableMetric::getRecordedAt));
-        
-        // Group mood/pain logs by timestamp (convert LocalDateTime to Instant)
-        Map<Instant, List<com.careconnect.model.MoodPainLog>> moodPainByTime = moodPainLogs.stream()
-                .collect(Collectors.groupingBy(log -> log.getTimestamp().atZone(ZoneOffset.UTC).toInstant()));
-
-        // Get all unique timestamps
+        Map<Instant, List<WearableMetric>> wearableByTime = wearableMetrics.stream().collect(Collectors.groupingBy(WearableMetric::getRecordedAt));
+        Map<Instant, List<com.careconnect.model.MoodPainLog>> moodPainByTime = moodPainLogs.stream().collect(Collectors.groupingBy(log -> log.getTimestamp().atZone(ZoneOffset.UTC).toInstant()));
         Set<Instant> allTimestamps = new HashSet<>();
         allTimestamps.addAll(wearableByTime.keySet());
         allTimestamps.addAll(moodPainByTime.keySet());
-
         return allTimestamps.stream()
-                .map(timestamp -> toDTO(patientId, timestamp, 
-                    wearableByTime.getOrDefault(timestamp, Collections.emptyList()),
-                    moodPainByTime.getOrDefault(timestamp, Collections.emptyList())))
+                .map(timestamp -> toDTO(patientId, timestamp, wearableByTime.getOrDefault(timestamp, Collections.emptyList()), moodPainByTime.getOrDefault(timestamp, Collections.emptyList())))
                 .sorted(Comparator.comparing(VitalSampleDTO::timestamp))
                 .toList();
-        } catch (Exception e) {
-            return Collections.emptyList();
-        } 
     }
 
     /* ---------------- Exports ---------------- */
