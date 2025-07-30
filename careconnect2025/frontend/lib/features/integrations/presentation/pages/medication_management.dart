@@ -20,6 +20,8 @@ class _MedicationManagementScreenState
     extends State<MedicationManagementScreen> {
   List<Map<String, dynamic>> medications = [];
   bool isLoading = true;
+  static const String _fdaApiBaseUrl = 'https://api.fda.gov/drug/ndc.json?search=product_ndc:';
+  static const String _fdaApiSuffix = '&limit=1';
 
   @override
   void initState() {
@@ -1097,9 +1099,7 @@ class _MedicationManagementScreenState
     final cleanCode = code.trim();
 
     try {
-      final uri = Uri.parse(
-          'https://api.fda.gov/drug/ndc.json?search=product_ndc:"$cleanCode"&limit=1'
-      );
+      final uri = Uri.parse('$_fdaApiBaseUrl"$cleanCode"$_fdaApiSuffix');
 
       final response = await http.get(uri);
 
