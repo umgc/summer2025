@@ -30,13 +30,13 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .sessionManagement(sm -> sm
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // .httpBasic(basic -> basic
-            //     .authenticationEntryPoint((req, res, e) ->
-            //         res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Basic Authentication Required")))
-            // .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-            // .exceptionHandling(ex -> ex
-            //     .authenticationEntryPoint((req, res, e) ->
-            //         res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")))
+            .httpBasic(basic -> basic
+                .authenticationEntryPoint((req, res, e) ->
+                    res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Basic Authentication Required")))
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((req, res, e) ->
+                    res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")))
             .authorizeHttpRequests(auth -> auth
                 /* ---------- Swagger/OpenAPI documentation - MUST BE FIRST --------------- */
                 .requestMatchers(
