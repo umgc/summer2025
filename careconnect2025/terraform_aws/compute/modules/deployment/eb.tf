@@ -6,7 +6,7 @@ resource "aws_cloudwatch_event_rule" "s3_backend_drop_rule" {
     detail = {
       reason = ["PutObject"]
       bucket       = {
-        name = "${var.cc_iac_bucket_name}"
+        name = ["${var.cc_iac_bucket_name}"]
       }
       object            = {
         key = [{
@@ -32,7 +32,7 @@ resource "aws_cloudwatch_event_target" "backend_build_drop_target" {
       "flow"    : "lambda",
       "bucket"  : "<bucket>",
       "key"     : "<key>",
-      "lambda"  : "${var.cc_lamnda_function_name}"
+      "lambda"  : "${var.cc_lamnda_function_name}",
       "apigwid" : "${var.cc_main_api_id}"
     }
     EOF
