@@ -21,7 +21,11 @@ variable "cc_main_api_id" {
   type        = string
   description = "The API Gateway ID for the main backend"  
 }
-variable "cc_frontend_build_prefix" {
+variable "cc_deployment_sfn_arn" {
   type        = string
-  description = "The prefix for the frontend build files in S3"  
+  description = "The ARN of the Step Function state machine for deployment"  
+}
+variable "api_integration_id" {
+  type = string
+  description = "The ID of the API Gateway integration for the main backend"
 }

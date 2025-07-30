@@ -134,4 +134,6 @@ module "deployment" {
   cc_main_backend_build_prefix = var.cc_main_backend_build_prefix
   cc_lamnda_function_name = aws_lambda_function.cc_main_backend_lambda.function_name
   cc_main_api_id = data.terraform_remote_state.cc_common_state.outputs.main_api_id
+  cc_deployment_sfn_arn = data.terraform_remote_state.cc_common_state.outputs.cc_deployment_sfn_arn
+  api_integration_id = aws_apigatewayv2_integration.main.id
 }

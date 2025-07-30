@@ -25,3 +25,8 @@ variable "cors_allowed_list" {
   type        = string
   default     = "http://localhost:*,http://127.0.0.1:*"
 }
+variable "cc_main_backend_build_prefix" {
+  description = "Prefix for the main backend build files in S3"
+  type        = string
+  default     = "cc-backend-builds"
+}

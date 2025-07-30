@@ -31,11 +31,11 @@ resource "aws_cloudwatch_event_target" "frontend_drop_target" {
     }
     input_template = <<-EOF
     {
-      "flow": "ui",
-      "bucket": "<bucket>",
-      "key": "<key>",
-      "amplifyAppId": "${var.cc_aplify_app_id}",
-      "branchName": "${var.cc_frontend_branch_name}"
+      "flow"            : "ui",
+      "bucket"          : "<bucket>",
+      "key"             : "<key>",
+      "amplifyAppId"    : "${var.cc_aplify_app_id}",
+      "branchName"      : "${var.cc_frontend_branch_name}"
     }
     EOF
   }

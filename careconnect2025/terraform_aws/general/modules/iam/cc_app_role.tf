@@ -11,6 +11,7 @@ resource "aws_iam_role" "cc_app_role" {
           "states.amazonaws.com",
           "lambda.amazonaws.com",
           "apigateway.amazonaws.com",
+          "amplify.amazonaws.com"
         ]
       }
       Action = "sts:AssumeRole"
