@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
@@ -34,6 +36,58 @@ enum FileCategory {
   final String displayName;
   final String icon;
 }
+
+class FileCategoryDropdown extends StatefulWidget {
+  const FileCategoryDropdown({super.key, this.allowedCategories});
+
+  final List<FileCategory>? allowedCategories;
+
+  @override
+  State<FileCategoryDropdown> createState() => _FileCategoryDropdownState();
+}
+
+class _FileCategoryDropdownState extends State<FileCategoryDropdown> {
+  late List<FileCategory> _availableCategories;
+  FileCategory? _selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    _availableCategories = widget.allowedCategories != null &&
+        widget.allowedCategories!.isNotEmpty
+        ? widget.allowedCategories!
+        : FileCategory.values;
+
+    // Initialize selectedCategory
+    if (_availableCategories.isNotEmpty) {
+      _selectedCategory = _availableCategories.first;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_availableCategories.isEmpty) {
+      return const Text('No categories available.');
+    }
+
+    return DropdownButtonFormField<FileCategory>(
+      items: _availableCategories.map((category) {
+        return DropdownMenuItem<FileCategory>(
+          value: category,
+          child: Text('${category.icon} ${category.displayName}'),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedCategory = value;
+        });
+      },
+      value: _selectedCategory,
+      decoration: const InputDecoration(labelText: 'Select Category'),
+    );
+  }
+}
+
 
 /// File query parameters for advanced filtering
 class FileQueryParams {

@@ -1,11 +1,18 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../core/services/api_service.dart';
+import '../services/api_service.dart' as ApiService;
+import '../services/auth_token_manager.dart';
 import '../services/comprehensive_file_service.dart';
 import '../services/enhanced_file_service.dart';
 import '../providers/user_provider.dart';
 import '../config/theme/app_theme.dart';
 import '../widgets/file_upload_widget.dart';
 import '../widgets/common_drawer.dart';
+import '../widgets/manual_text_entry_upload.dart';
+import '../widgets/speech_to_text_widget.dart';
 
 /// Comprehensive file management page
 class FileManagementPage extends StatefulWidget {
@@ -24,6 +31,8 @@ class _FileManagementPageState extends State<FileManagementPage>
   String _searchQuery = '';
   FileCategory? _selectedCategory;
   final TextEditingController _searchController = TextEditingController();
+  bool _isPatient = false;
+  bool _isCaregiver = false;
 
   @override
   void initState() {
@@ -386,64 +395,111 @@ class _FileManagementPageState extends State<FileManagementPage>
   }
 
   Widget _buildUploadTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Quick upload buttons
-          QuickUploadButtons(
-            onUploadSuccess: (response) {
-              _loadFiles(); // Refresh the files list
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('File uploaded: ${response.originalFilename}'),
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-
-          // Full upload widget with improved feedback
-          FileUploadWidget(
-            onUploadSuccess: (response) {
-              _loadFiles(); // Refresh the files list
-            },
-            onUploadError: (error) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(error),
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          // Upload instructions and warning
-          Card(
-            color: Theme.of(context).colorScheme.surface,
-            elevation: 0,
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'To upload a file, select a category and choose a file. The upload button will be enabled when ready.',
-                      style: Theme.of(context).textTheme.bodyMedium,
+    return Container(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('File Upload', style: AppTheme.headingMedium),
+            const SizedBox(height: 24),
+            // Upload Instructions Card
+            Card(
+              color: Theme.of(context).colorScheme.surface,
+              elevation: 0,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Use Quick Upload for fast uploads, Manual Text Entry for notes, or Speech-to-Text to convert voice into text files.',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            // Quick Upload Section
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: QuickUploadButtons(
+                  onUploadSuccess: (response) {
+                    _loadFiles();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('File uploaded: ${response.originalFilename}'),
+                        backgroundColor: Theme.of(context).colorScheme.secondary,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // File Upload Section
+            FileUploadWidget(
+              onUploadSuccess: (response) {
+                _loadFiles(); // Refresh the files list
+              },
+              onUploadError: (error) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(error),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+            // Manual Text Entry Section
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: ManualTextEntryCard(
+                  onSave: (fileName, fileBytes) async {
+                    // await _uploadManualTextFile(fileName, fileBytes);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Manual entry uploaded: $fileName.txt'),
+                        backgroundColor: Theme.of(context).colorScheme.secondary,
+                      ),
+                    );
+                    _loadFiles();
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Speech to Text Section
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: SpeechToTextCard(
+                  onSave: (fileName, fileBytes) async {
+                    // await _saveRecognizedTextFile(fileName, fileBytes);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Speech-to-text file saved'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    _loadFiles();
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -711,3 +767,91 @@ class _FileManagementPageState extends State<FileManagementPage>
     return '${date.day}/${date.month}/${date.year}';
   }
 }
+
+/*
+Future<void> _uploadManualTextFile(String fileName, List<int> fileBytes) async {
+  final userSession = await AuthTokenManager.getUserSession();
+  if (userSession == null || userSession['id'] == null) {
+    throw Exception('User session not found');
+  }
+
+  final userRole = userSession['role'] as String? ?? '';
+
+  setState(() {
+    _isPatient = userRole.toUpperCase() == 'PATIENT';
+    _isCaregiver =
+        userRole.toUpperCase() == 'CAREGIVER' ||
+            userRole.toUpperCase() == 'FAMILY_LINK' ||
+            userRole.toUpperCase() == 'ADMIN';
+  });
+
+  try {
+    final userSession = await AuthTokenManager.getUserSession();
+    int? profileId;
+
+    if (_isPatient) {
+      profileId = userSession?['id'] as int?;
+    } else if (_isCaregiver) {
+      profileId = widget.patientUserId;
+    }
+
+    if (profileId == null) {
+      throw Exception("Profile ID not found for the current user role");
+    }
+
+    final response = await ApiService.uploadUserFileFromBytes(
+      userId: profileId,
+      fileBytes: Uint8List.fromList(fileBytes),
+      fileName: '$fileName.txt',
+      category: 'manualTextEntry',
+      role: _isPatient ? 'PATIENT' : 'CAREGIVER',
+    );
+
+    if (response.statusCode == 200) {
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('File Saved'),
+          content: Text('File: $fileName.txt has been uploaded successfully.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Close'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Error'),
+          content: Text('Failed to upload file: $fileName.txt.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Close'),
+            ),
+          ],
+        ),
+      );
+    }
+  } catch (e) {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text('Error uploading file: $fileName.txt.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+ */
+
+

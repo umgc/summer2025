@@ -32,4 +32,11 @@ public class Payment {
     private String stripeSessionId;
     private String stripePaymentIntentId;
     private String stripeInvoiceId;
+    public void setAmountCents(Integer amountCents) { this.amountCents = amountCents; }
+    public void setStripeSessionId(String stripeSessionId) { this.stripeSessionId = stripeSessionId; }
+    public void setStripePaymentIntentId(String stripePaymentIntentId) { this.stripePaymentIntentId = stripePaymentIntentId; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }

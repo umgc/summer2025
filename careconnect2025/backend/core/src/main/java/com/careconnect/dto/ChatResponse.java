@@ -37,6 +37,7 @@ public class ChatResponse {
     private Boolean approachingTokenLimit;
     
     // Error handling
+    @Builder.Default
     private Boolean success = true;
     private String errorMessage;
     private String errorCode;

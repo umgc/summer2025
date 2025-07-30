@@ -5,6 +5,7 @@ import com.careconnect.service.MedicalDataAnonymizer.AnonymizationLevel;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.util.List;
+import com.careconnect.dto.UploadedFileDTO;
 
 @Getter
 @Setter
@@ -16,6 +17,21 @@ public class ChatRequest {
     @NotBlank(message = "Message content is required")
     @Size(max = 5000, message = "Message content cannot exceed 5000 characters")
     private String message;
+    // Explicit getters and setters for compatibility
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+    public String getConversationId() { return conversationId; }
+    public void setConversationId(String conversationId) { this.conversationId = conversationId; }
+    public Long getPatientId() { return patientId; }
+    public void setPatientId(Long patientId) { this.patientId = patientId; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public ChatConversation.ChatType getChatType() { return chatType; }
+    public void setChatType(ChatConversation.ChatType chatType) { this.chatType = chatType; }
+    public String getPreferredModel() { return preferredModel; }
+    public void setPreferredModel(String preferredModel) { this.preferredModel = preferredModel; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
     
     private String conversationId; // Optional - will create new if not provided
     
@@ -43,6 +59,9 @@ public class ChatRequest {
     // Additional context
     private List<String> additionalContext;
     
+
+    private List<UploadedFileDTO> uploadedFiles; // Optional: uploaded files passed in the request
+
     private String title; // Optional conversation title
     
     // Privacy and anonymization settings
@@ -61,6 +80,7 @@ public class ChatRequest {
     private Integer dataRetentionDays; // Override default retention
     
     // Convenience methods for boolean checks
+    public Double getTemperature() { return temperature; }
     public boolean isIncludeVitals() {
         return includeVitals != null ? includeVitals : false;
     }

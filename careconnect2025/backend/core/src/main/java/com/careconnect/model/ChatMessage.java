@@ -27,6 +27,27 @@ public class ChatMessage {
     
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
+    // Explicit getters and setters for compatibility
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public ChatConversation getConversation() { return conversation; }
+    public void setConversation(ChatConversation conversation) { this.conversation = conversation; }
+    public MessageType getMessageType() { return messageType; }
+    public void setMessageType(MessageType messageType) { this.messageType = messageType; }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+    public Integer getTokensUsed() { return tokensUsed; }
+    public void setTokensUsed(Integer tokensUsed) { this.tokensUsed = tokensUsed; }
+    public Long getProcessingTimeMs() { return processingTimeMs; }
+    public void setProcessingTimeMs(Long processingTimeMs) { this.processingTimeMs = processingTimeMs; }
+    public Double getTemperatureUsed() { return temperatureUsed; }
+    public void setTemperatureUsed(Double temperatureUsed) { this.temperatureUsed = temperatureUsed; }
+    public String getContextIncluded() { return contextIncluded; }
+    public void setContextIncluded(String contextIncluded) { this.contextIncluded = contextIncluded; }
+    public String getAiModelUsed() { return aiModelUsed; }
+    public void setAiModelUsed(String aiModelUsed) { this.aiModelUsed = aiModelUsed; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     
     @Column(name = "tokens_used")
     private Integer tokensUsed;
