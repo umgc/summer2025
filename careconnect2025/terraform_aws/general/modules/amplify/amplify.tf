@@ -1,7 +1,7 @@
 # Amplify app
 resource "aws_amplify_app" "amplify" {
-  name                = "careconnect"
-  platform            = "WEB"
+  name     = "careconnect"
+  platform = "WEB"
   # Disable for now to test deploying Amplify without GitHub account
   # repository          = var.github_repo
   iam_service_role_arn = var.cc_app_role_arn

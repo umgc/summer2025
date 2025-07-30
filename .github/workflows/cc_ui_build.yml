@@ -1,0 +1,77 @@
+name: CC - Build UI
+description: Build the UI code of CC
+
+on:
+    workflow_dispatch: ~
+    push:
+        branches:
+        - 'care-connect**'
+        paths:
+        - '**frontend/**'
+    pull_request:
+        branches:
+        - 'care-connect**'
+        paths:
+        - '**frontend/**'
+        
+
+jobs:
+  build-and-deploy:
+    environment: cc_aws
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.32.5' 
+
+    - name: Install dependencies
+      working-directory: ./careconnect2025/frontend
+      run: flutter pub get
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+    
+    - name: Retrieve secrets from Parameter Store
+      working-directory: ./careconnect2025/frontend
+      run: |
+        # Create .env file with secrets from Parameter Store
+        echo "# Environment variables from Parameter Store" > .env
+        aws ssm get-parameters-by-path \
+              --path "/cc-ui/" \
+              --with-decryption \
+              --recursive \
+              --query "Parameters[*].[Name,Value]" \
+              --output text | while read name value; do
+                key=$(basename "$name" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+                echo "$key=$value" >> .env
+              done
+            ls -ail
+              
+        
+    - name: Build Flutter Web
+      working-directory: ./careconnect2025/frontend
+      run: flutter build web --base-href "/"
+    
+    - name: Set Build Zip Name
+      run: |
+        echo "ZIP_NAME=cc-web-${GITHUB_SHA::7}-$(date +%Y%m%d%HH%M).zip" >> $GITHUB_ENV
+
+    - name: Zip Web Build
+      working-directory: ./careconnect2025/frontend
+      run: |
+        cd build/web
+        zip -r "../$ZIP_NAME" .
+
+    - name: Upload to S3
+      working-directory: ./careconnect2025/frontend
+      run: |
+        aws s3 cp build/$ZIP_NAME s3://cc-iac-us-east-1-641592448579/cc-frontend-builds/$ZIP_NAME
