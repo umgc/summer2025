@@ -1,3 +1,4 @@
+    // ...existing code...
 package com.careconnect.service;
 
 import com.careconnect.dto.PatientAIConfigDTO;
@@ -12,14 +13,43 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class PatientAIConfigService {
+    // ...existing code...
+    public PatientAIConfig convertDTOToEntity(PatientAIConfigDTO dto) {
+        return convertToEntity(dto);
+    }
     
     private final PatientAIConfigRepository patientAIConfigRepository;
     
     public PatientAIConfigDTO getPatientAIConfig(Long patientId) {
         PatientAIConfig config = patientAIConfigRepository.findByPatientIdAndIsActiveTrue(patientId)
-                .orElseThrow(() -> new IllegalArgumentException("AI configuration not found for patient"));
+                .orElseGet(() -> {
+                    log.info("No AI configuration found for patient {}. Creating default configuration.", patientId);
+                    return createDefaultConfig(patientId);
+                });
         
         return convertToDTO(config);
+    }
+    
+    @Transactional
+    private PatientAIConfig createDefaultConfig(Long patientId) {
+        PatientAIConfig defaultConfig = PatientAIConfig.builder()
+                .patientId(patientId)
+                .preferredAiProvider(PatientAIConfig.AIProvider.OPENAI)
+                .openaiModel("gpt-4")
+                .deepseekModel("deepseek-chat")
+                .maxTokens(2000)
+                .temperature(0.7)
+                .conversationHistoryLimit(20)
+                .includeVitalsByDefault(true)
+                .includeMedicationsByDefault(true)
+                .includeNotesByDefault(true)
+                .includeMoodPainByDefault(true)
+                .includeAllergiesByDefault(true)
+                .isActive(true)
+                .systemPrompt("You are a helpful AI assistant specialized in healthcare. Provide accurate, empathetic responses while ensuring patient safety and privacy.")
+                .build();
+                
+        return patientAIConfigRepository.save(defaultConfig);
     }
     
     @Transactional
@@ -79,16 +109,16 @@ public class PatientAIConfigService {
         return PatientAIConfig.builder()
                 .patientId(dto.getPatientId())
                 .preferredAiProvider(dto.getAiProvider())
-                .openaiModel(dto.getOpenaiModel())
-                .deepseekModel(dto.getDeepseekModel())
-                .maxTokens(dto.getMaxTokens())
-                .temperature(dto.getTemperature())
-                .conversationHistoryLimit(dto.getConversationHistoryLimit())
-                .includeVitalsByDefault(dto.getIncludeVitalsByDefault())
-                .includeMedicationsByDefault(dto.getIncludeMedicationsByDefault())
-                .includeNotesByDefault(dto.getIncludeNotesByDefault())
-                .includeMoodPainByDefault(dto.getIncludeMoodPainLogsByDefault())
-                .includeAllergiesByDefault(dto.getIncludeAllergiesByDefault())
+                .openaiModel(dto.getOpenaiModel() != null ? dto.getOpenaiModel() : "gpt-4")
+                .deepseekModel(dto.getDeepseekModel() != null ? dto.getDeepseekModel() : "deepseek-chat")
+                .maxTokens(dto.getMaxTokens() != null ? dto.getMaxTokens() : 2000)
+                .temperature(dto.getTemperature() != null ? dto.getTemperature() : 0.7)
+                .conversationHistoryLimit(dto.getConversationHistoryLimit() != null ? dto.getConversationHistoryLimit() : 20)
+                .includeVitalsByDefault(dto.getIncludeVitalsByDefault() != null ? dto.getIncludeVitalsByDefault() : true)
+                .includeMedicationsByDefault(dto.getIncludeMedicationsByDefault() != null ? dto.getIncludeMedicationsByDefault() : true)
+                .includeNotesByDefault(dto.getIncludeNotesByDefault() != null ? dto.getIncludeNotesByDefault() : true)
+                .includeMoodPainByDefault(dto.getIncludeMoodPainLogsByDefault() != null ? dto.getIncludeMoodPainLogsByDefault() : true)
+                .includeAllergiesByDefault(dto.getIncludeAllergiesByDefault() != null ? dto.getIncludeAllergiesByDefault() : true)
                 .isActive(dto.getIsActive() != null ? dto.getIsActive() : true)
                 .systemPrompt(dto.getSystemPrompt())
                 .build();
@@ -96,19 +126,17 @@ public class PatientAIConfigService {
     
     private void updateConfigFromDTO(PatientAIConfig config, PatientAIConfigDTO dto) {
         config.setPreferredAiProvider(dto.getAiProvider());
-        config.setOpenaiModel(dto.getOpenaiModel());
-        config.setDeepseekModel(dto.getDeepseekModel());
-        config.setMaxTokens(dto.getMaxTokens());
-        config.setTemperature(dto.getTemperature());
-        config.setConversationHistoryLimit(dto.getConversationHistoryLimit());
-        config.setIncludeVitalsByDefault(dto.getIncludeVitalsByDefault());
-        config.setIncludeMedicationsByDefault(dto.getIncludeMedicationsByDefault());
-        config.setIncludeNotesByDefault(dto.getIncludeNotesByDefault());
-        config.setIncludeMoodPainByDefault(dto.getIncludeMoodPainLogsByDefault());
-        config.setIncludeAllergiesByDefault(dto.getIncludeAllergiesByDefault());
+        config.setOpenaiModel(dto.getOpenaiModel() != null ? dto.getOpenaiModel() : "gpt-4");
+        config.setDeepseekModel(dto.getDeepseekModel() != null ? dto.getDeepseekModel() : "deepseek-chat");
+        config.setMaxTokens(dto.getMaxTokens() != null ? dto.getMaxTokens() : 2000);
+        config.setTemperature(dto.getTemperature() != null ? dto.getTemperature() : 0.7);
+        config.setConversationHistoryLimit(dto.getConversationHistoryLimit() != null ? dto.getConversationHistoryLimit() : 20);
+        config.setIncludeVitalsByDefault(dto.getIncludeVitalsByDefault() != null ? dto.getIncludeVitalsByDefault() : true);
+        config.setIncludeMedicationsByDefault(dto.getIncludeMedicationsByDefault() != null ? dto.getIncludeMedicationsByDefault() : true);
+        config.setIncludeNotesByDefault(dto.getIncludeNotesByDefault() != null ? dto.getIncludeNotesByDefault() : true);
+        config.setIncludeMoodPainByDefault(dto.getIncludeMoodPainLogsByDefault() != null ? dto.getIncludeMoodPainLogsByDefault() : true);
+        config.setIncludeAllergiesByDefault(dto.getIncludeAllergiesByDefault() != null ? dto.getIncludeAllergiesByDefault() : true);
         config.setSystemPrompt(dto.getSystemPrompt());
-        if (dto.getIsActive() != null) {
-            config.setIsActive(dto.getIsActive());
-        }
+        config.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
     }
 }

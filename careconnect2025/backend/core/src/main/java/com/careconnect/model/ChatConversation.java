@@ -20,6 +20,29 @@ public class ChatConversation {
     
     @Column(name = "conversation_id", unique = true, nullable = false)
     private String conversationId; // UUID for namespace isolation
+    // Explicit getters and setters for compatibility
+    public String getConversationId() { return conversationId; }
+    public void setConversationId(String conversationId) { this.conversationId = conversationId; }
+    public Long getPatientId() { return patientId; }
+    public void setPatientId(Long patientId) { this.patientId = patientId; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public ChatType getChatType() { return chatType; }
+    public void setChatType(ChatType chatType) { this.chatType = chatType; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+    public PatientAIConfig.AIProvider getAiProviderUsed() { return aiProviderUsed; }
+    public void setAiProviderUsed(PatientAIConfig.AIProvider aiProviderUsed) { this.aiProviderUsed = aiProviderUsed; }
+    public String getAiModelUsed() { return aiModelUsed; }
+    public void setAiModelUsed(String aiModelUsed) { this.aiModelUsed = aiModelUsed; }
+    public Integer getTotalTokensUsed() { return totalTokensUsed; }
+    public void setTotalTokensUsed(Integer totalTokensUsed) { this.totalTokensUsed = totalTokensUsed; }
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
     
     @Column(name = "patient_id", nullable = false)
     private Long patientId;
@@ -42,9 +65,11 @@ public class ChatConversation {
     private String aiModelUsed;
     
     @Column(name = "total_tokens_used")
+    @Builder.Default
     private Integer totalTokensUsed = 0;
     
     @Column(name = "is_active")
+    @Builder.Default
     private Boolean isActive = true;
     
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -4,6 +4,7 @@ import com.careconnect.dto.FirebaseNotificationRequest;
 import com.careconnect.dto.NotificationResponse;
 import com.careconnect.model.DeviceToken;
 import com.careconnect.service.FirebaseNotificationService;
+import com.careconnect.websocket.NotificationWebSocketHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -25,9 +26,31 @@ import java.util.concurrent.CompletableFuture;
 @SecurityRequirement(name = "Bearer Authentication")
 @ConditionalOnProperty(name = "firebase.enabled", havingValue = "true", matchIfMissing = true)
 public class NotificationController {
-    
+
     @Autowired(required = false)
     private FirebaseNotificationService notificationService;
+
+    @Autowired
+    private NotificationWebSocketHandler notificationWebSocketHandler;
+    /**
+     * Send a WebSocket notification to a specific user
+     */
+    @PostMapping("/ws/send-to-user/{userId}")
+    @Operation(
+        summary = "Send WebSocket notification to user",
+        description = "Send a WebSocket notification to a specific userId (user must be connected via WebSocket and registered)"
+    )
+    public ResponseEntity<Map<String, String>> sendWebSocketNotificationToUser(
+            @PathVariable String userId,
+            @RequestBody Map<String, String> body) {
+        String message = body.getOrDefault("message", "");
+        boolean sent = notificationWebSocketHandler.sendNotificationToUser(userId, message);
+        if (sent) {
+            return ResponseEntity.ok(Map.of("message", "WebSocket notification sent to user " + userId));
+        } else {
+            return ResponseEntity.status(404).body(Map.of("error", "No active WebSocket session for user " + userId));
+        }
+    }
     
     @PostMapping("/send")
     @Operation(
