@@ -315,7 +315,7 @@ class _FileUploadDemoState extends State<FileUploadDemo> {
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
-          '${file.categoryDisplayName} • ${_formatFileSize(file.fileSize)} • ${_formatDate(file.createdAt)}',
+          '${file.categoryDisplayName} • ${_formatFileSize(file.fileSize)}',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         trailing: PopupMenuButton<String>(

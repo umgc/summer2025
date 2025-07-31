@@ -183,6 +183,7 @@ class _ProfilePictureWidgetState extends State<ProfilePictureWidget> {
                 ownerType: '',
                 createdAt: DateTime.now(),
                 updatedAt: DateTime.now(),
+                fileName: ''
               ),
             );
           }

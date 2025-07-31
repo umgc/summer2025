@@ -570,7 +570,7 @@ class _EnhancedPatientNotesWidgetState
                 overflow: TextOverflow.ellipsis,
               ),
             Text(
-              '${_formatFileSize(file.fileSize)} • ${_formatDate(file.createdAt)}',
+              '${_formatFileSize(file.fileSize)}}',
               style: TextStyle(color: Colors.grey[500], fontSize: 12),
             ),
           ],
