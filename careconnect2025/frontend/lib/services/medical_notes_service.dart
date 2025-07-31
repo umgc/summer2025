@@ -54,7 +54,7 @@ class PatientNote {
       fileName: fileDto.originalFilename,
       fileUrl: fileDto.downloadUrl ?? fileDto.fileUrl ?? '',
       uploadedBy: 'User ${fileDto.ownerId}',
-      uploadDate: fileDto.createdAt,
+      uploadDate: fileDto.createdAt ?? DateTime.now(),
       category: _mapCategoryToLegacy(fileDto.fileCategory),
       noteType: fileDto.categoryDisplayName,
       patientId: fileDto.patientId ?? 0,
