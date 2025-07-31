@@ -74,6 +74,7 @@ jobs:
           CORS_ALLOWED_LIST: ${{secrets.CORS_ALLOWED_LIST}}
           DB_PASSWORD: root
           DB_USER: root
+          JDBC_URI: jdbc:mysql://127.0.0.1:3306/testdb
           EMAIL_PROVIDER: ${{secrets.EMAIL_PROVIDER}}
           FITBIT_CLIENT_ID: ${{secrets.FITBIT_CLIENT_ID}}
           FITBIT_CLIENT_SECRET: ${{secrets.FITBIT_CLIENT_SECRET}}
@@ -86,7 +87,6 @@ jobs:
           GOOGLE_SCOPE: ${{secrets.GOOGLE_SCOPE}}
           GOOGLE_TOKEN_URI: ${{secrets.GOOGLE_TOKEN_URI}}
           GOOGLE_USERINFO_URI: ${{secrets.GOOGLE_USERINFO_URI}}
-          JDBC_URI: jdbc:mysql://127.0.0.1:3306/testdb
           JWT_EXPIRATION: ${{secrets.JWT_EXPIRATION}}
           LOGGING_LEVEL: ${{secrets.LOGGING_LEVEL}}
           MAIL_HOST: ${{secrets.MAIL_HOST}}
@@ -98,7 +98,6 @@ jobs:
           OPENAI_API_KEY: ${{secrets.OPENAI_API_KEY}}
           SECURITY_JWT_SECRET: ${{secrets.SECURITY_JWT_SECRET}}
           SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
-          SPRING_JPA_SHOW_SQL: ${{secrets.SPRING_JPA_SHOW_SQL}}
           STRIPE_SECRET_KEY: ${{secrets.STRIPE_SECRET_KEY}}
           STRIPE_WEBHOOK_SIGNING_SECRET: ${{secrets.STRIPE_WEBHOOK_SIGNING_SECRET}}
       
