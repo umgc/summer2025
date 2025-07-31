@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as path;
 import 'api_service.dart';
 import 'auth_token_manager.dart';
 import 'enhanced_file_service.dart';
@@ -25,7 +27,7 @@ enum FileCategory {
 
   // AI & Communication
   aiChatUpload('AI_CHAT_UPLOAD', 'AI Chat File', '🤖'),
-  generalDocument('OTHER_DOCUMENT', 'General Document', '📄'),
+  generalDocument('documents', 'General Document', '📄'),
 
   // Data Management
   healthDataImport('HEALTH_DATA_IMPORT', 'Health Data Import', '📊'),
@@ -421,7 +423,7 @@ class ComprehensiveFileService {
 
       final response = await http
           .get(
-            Uri.parse('${ApiConstants.files}/users/$userId$queryString'),
+            Uri.parse('${ApiConstants.files}/users/$userId/list'),
             headers: headers,
           )
           .timeout(const Duration(seconds: 30));
@@ -429,7 +431,7 @@ class ComprehensiveFileService {
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         final List<dynamic> files =
-            responseData['data'] ?? responseData['content'] ?? [];
+            responseData['files'] ?? responseData['content'] ?? [];
         return files.map((json) => UserFileDTO.fromJson(json)).toList();
       } else {
         final errorData = json.decode(response.body);
@@ -438,6 +440,37 @@ class ComprehensiveFileService {
     } catch (e) {
       print('❌ Error getting user files: $e');
       return [];
+    }
+  }
+
+  /// Get All Files for a User
+  static Future<UserFileDTO?> getAllUserFiles1(
+      int userId, {
+        FileQueryParams? params,
+      }) async {
+    try {
+      List<String> allFiles = [];
+      final headers = await AuthTokenManager.getAuthHeaders();
+      final queryString = params?.toQueryString() ?? '';
+
+      final response = await http
+          .get(
+        Uri.parse('${ApiConstants.files}/users/$userId/list'),
+        headers: headers,
+      )
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        print('Response data returned: $responseData');
+        return UserFileDTO.fromJson(responseData);
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to get user files');
+      }
+    } catch (e) {
+      print('❌ Error getting user files: $e');
+      return null;
     }
   }
 
@@ -587,8 +620,10 @@ class ComprehensiveFileService {
   }) async {
     try {
       final headers = await AuthTokenManager.getAuthHeaders();
-      headers.remove('Content-Type'); // Will be set by multipart request
+      // Remove Content-Type as it will be set by multipart request
+      headers.remove('Content-Type');
 
+      // Use users endpoint for file uploads
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('${ApiConstants.files}$endpoint'),
@@ -607,34 +642,26 @@ class ComprehensiveFileService {
         filename: file.path.split('/').last,
       );
 
+      // Add form fields
       request.files.add(multipartFile);
-
-      // Add fields
       request.fields['category'] = category;
-      if (description != null) {
-        request.fields['description'] = description;
-      }
-      if (additionalFields != null) {
-        request.fields.addAll(additionalFields);
-      }
 
       print('📤 Uploading to: ${request.url}');
       print('📤 Category: $category');
       print('📤 File: ${file.path.split('/').last}');
 
+      // Send the request
       var streamedResponse = await request.send().timeout(
-        const Duration(minutes: 2),
+        const Duration(seconds: 30),
       );
       var response = await http.Response.fromStream(streamedResponse);
 
       print('📥 Response status: ${response.statusCode}');
       print('📥 Response body: ${response.body}');
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
-        return FileUploadResponse.fromJson(
-          responseData['data'] ?? responseData,
-        );
+        return FileUploadResponse.fromJson(responseData['data']);
       } else {
         final errorData = json.decode(response.body);
         throw Exception(errorData['error'] ?? 'Failed to upload file');
@@ -673,11 +700,25 @@ class ComprehensiveFileService {
         case FileCategory.insuranceDoc:
           final result = await FilePicker.platform.pickFiles(
             type: FileType.custom,
-            allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
+            allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'txt'],
             allowMultiple: false,
           );
+
           if (result == null || result.files.isEmpty) return null;
-          return File(result.files.first.path!);
+
+          if (kIsWeb) {
+            // On Web version: Use bytes and filename
+            Uint8List? fileBytes = result.files.single.bytes;
+            String fileName = result.files.single.name;
+
+            if (fileBytes != null) {
+              File a = File(result.files.first.path!);
+              return File(result.files.first.path!);
+            } else {
+              print('No file bytes found.');
+              return null;
+            }
+          }
 
         default:
           final result = await FilePicker.platform.pickFiles(
@@ -685,12 +726,81 @@ class ComprehensiveFileService {
             allowMultiple: false,
           );
           if (result == null || result.files.isEmpty) return null;
-          return File(result.files.first.path!);
+          if (kIsWeb) {
+            // On Web: Use bytes and filename
+            Uint8List? fileBytes = result.files.single.bytes;
+            String fileName = result.files.single.name;
+
+            if (fileBytes != null) {
+              return File(result.files.first.path!);
+            } else {
+              print('No file bytes found.');
+              return null;
+            }
+          }
       }
     } catch (e) {
       print('❌ Error picking file for category ${category.displayName}: $e');
       return null;
     }
+    return null;
+  }
+
+  /// Get file picker for specific category
+  static Future<(Uint8List, String)?> pickFileForCategoryWeb(FileCategory category) async {
+    try {
+      switch (category) {
+        case FileCategory.profilePicture:
+        case FileCategory.prescription:
+        case FileCategory.medicalReport:
+        case FileCategory.labResult:
+        case FileCategory.clinicalNotes:
+        case FileCategory.insuranceDoc:
+          final result = await FilePicker.platform.pickFiles(
+            type: FileType.custom,
+            allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'txt'],
+            allowMultiple: false,
+          );
+
+          if (result == null || result.files.isEmpty) return null;
+
+          if (kIsWeb) {
+            // On Web: Use bytes and filename
+            Uint8List? fileBytes = result.files.single.bytes;
+            String fileName = result.files.single.name;
+
+            if (fileBytes != null) {
+              return (fileBytes, fileName);
+            } else {
+              print('No file bytes found.');
+              return null;
+            }
+          }
+
+        default:
+          final result = await FilePicker.platform.pickFiles(
+            type: FileType.any,
+            allowMultiple: false,
+          );
+          if (result == null || result.files.isEmpty) return null;
+          if (kIsWeb) {
+            // On Web: Use bytes and filename
+            Uint8List? fileBytes = result.files.single.bytes;
+            String fileName = result.files.single.name;
+
+            if (fileBytes != null) {
+              return (fileBytes, fileName);
+            } else {
+              print('No file bytes found.');
+              return null;
+            }
+          }
+      }
+    } catch (e) {
+      print('❌ Error picking file for category ${category.displayName}: $e');
+      return null;
+    }
+    return null;
   }
 
   /// Validate file for category
@@ -714,7 +824,8 @@ class ComprehensiveFileService {
         return fileName.endsWith('.jpg') ||
             fileName.endsWith('.jpeg') ||
             fileName.endsWith('.png') ||
-            fileName.endsWith('.pdf');
+            fileName.endsWith('.pdf') ||
+            fileName.endsWith('.txt');
 
       case FileCategory.medicalReport:
       case FileCategory.labResult:
@@ -724,7 +835,8 @@ class ComprehensiveFileService {
             fileName.endsWith('.docx') ||
             fileName.endsWith('.jpg') ||
             fileName.endsWith('.jpeg') ||
-            fileName.endsWith('.png');
+            fileName.endsWith('.png') ||
+            fileName.endsWith('.txt');
 
       default:
         return true; // Allow any file type for other categories
