@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 public class FamilyMemberService {
 
     private static final Logger log = LoggerFactory.getLogger(FamilyMemberService.class);
-
+    private final GamificationService gamificationService;
     private final FamilyMemberRepository familyMemberRepository;
     private final FamilyMemberLinkRepository familyMemberLinkRepository;
     private final UserRepository userRepository;
@@ -36,14 +36,15 @@ public class FamilyMemberService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final AnalyticsService analyticsService;
-    
+
     public FamilyMemberService(FamilyMemberRepository familyMemberRepository,
                                FamilyMemberLinkRepository familyMemberLinkRepository,
                                UserRepository userRepository,
                                PatientRepository patientRepository,
                                PasswordEncoder passwordEncoder,
                                EmailService emailService,
-                               AnalyticsService analyticsService) {
+                               AnalyticsService analyticsService,
+                               GamificationService gamificationService) {
         this.familyMemberRepository = familyMemberRepository;
         this.familyMemberLinkRepository = familyMemberLinkRepository;
         this.userRepository = userRepository;
@@ -51,6 +52,7 @@ public class FamilyMemberService {
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.analyticsService = analyticsService;
+        this.gamificationService = gamificationService;
         
         log.debug("FamilyMemberService initialized - passwordEncoder is null: {}", passwordEncoder == null);
     }
@@ -126,6 +128,18 @@ public class FamilyMemberService {
             );
             
             log.debug("Sent access granted email to existing family member: {}", familyUser.getEmail());
+
+            boolean isFirstLink = familyMemberLinkRepository
+                    .findActiveFamilyMembersByPatient(patientUser.getId(), LocalDateTime.now())
+                    .size() == 1;
+
+            if (isFirstLink) {
+                gamificationService.unlockAchievement(
+                        patientUser.getId(),
+                        "Added Family Member",
+                        20
+                );
+            }
             
             return toFamilyMemberLinkResponse(link);
         }

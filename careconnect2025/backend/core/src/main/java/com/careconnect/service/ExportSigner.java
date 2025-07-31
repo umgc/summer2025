@@ -5,7 +5,9 @@ import java.time.Duration;
 import org.springframework.stereotype.Service;
 
 import com.careconnect.dto.ExportLinkDTO;
+import lombok.Builder;
 
+@Builder
 @Service
 public class ExportSigner {
     private static final Duration TTL = Duration.ofHours(1);

@@ -2,10 +2,7 @@ package com.careconnect.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
@@ -15,58 +12,55 @@ import java.util.Map;
 @Service
 public class OpenAIService {
     
-    private final WebClient webClient;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
     
     @Value("${openai.api.key:}")
     private String apiKey;
     
     @Value("${openai.api.url:https://api.openai.com/v1}")
     private String apiUrl;
-    
-    public OpenAIService() {
-        this.webClient = WebClient.builder()
-                .baseUrl(apiUrl)
-                .build();
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public OpenAIService(com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
     
-    public Mono<OpenAIResponse> sendChatRequest(OpenAIChatRequest request) {
+    public OpenAIResponse sendChatRequest(OpenAIChatRequest request) {
         if (apiKey == null || apiKey.trim().isEmpty()) {
-            return Mono.error(new IllegalStateException("OpenAI API key is not configured"));
+            throw new IllegalStateException("OpenAI API key is not configured");
         }
-        
-        log.info("Sending chat request to OpenAI with model: {}", request.getModel());
-        
-        return webClient.post()
-                .uri("/chat/completions")
-                .header("Authorization", "Bearer " + apiKey)
-                .header("Content-Type", "application/json")
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(OpenAIResponse.class)
-                .timeout(Duration.ofSeconds(30))
-                .doOnSuccess(response -> log.info("OpenAI request successful. Tokens used: {}", 
-                    response.getUsage() != null ? response.getUsage().getTotalTokens() : "unknown"))
-                .doOnError(WebClientResponseException.class, ex -> 
-                    log.error("OpenAI API error: {} - {}", ex.getStatusCode(), ex.getResponseBodyAsString()))
-                .onErrorMap(WebClientResponseException.class, ex -> 
-                    new OpenAIException("OpenAI API error: " + ex.getMessage(), ex));
+
+        try {
+            // Reset any legacy maxTokens field if present via reflection (defensive)
+            try {
+                java.lang.reflect.Field legacyField = request.getClass().getDeclaredField("maxTokens");
+                legacyField.setAccessible(true);
+                legacyField.set(request, null);
+            } catch (NoSuchFieldException ignore) {}
+            String jsonPayload = objectMapper.writeValueAsString(request);
+        } catch (Exception e) {
+        }
+
+        throw new UnsupportedOperationException("Synchronous OpenAI call not yet implemented");
     }
     
     // DTO Classes
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     public static class OpenAIChatRequest {
         private String model;
         private List<Message> messages;
         private Double temperature;
-        private Integer maxTokens;
+        @com.fasterxml.jackson.annotation.JsonProperty("max_tokens")
+        private Integer max_tokens;
         private Boolean stream = false;
-        
-        public OpenAIChatRequest(String model, List<Message> messages, Double temperature, Integer maxTokens) {
+
+        public OpenAIChatRequest(String model, List<Message> messages, Double temperature, Integer max_tokens) {
             this.model = model;
             this.messages = messages;
             this.temperature = temperature;
-            this.maxTokens = maxTokens;
+            this.max_tokens = max_tokens;
         }
-        
+
         // Getters and setters
         public String getModel() { return model; }
         public void setModel(String model) { this.model = model; }
@@ -74,8 +68,8 @@ public class OpenAIService {
         public void setMessages(List<Message> messages) { this.messages = messages; }
         public Double getTemperature() { return temperature; }
         public void setTemperature(Double temperature) { this.temperature = temperature; }
-        public Integer getMaxTokens() { return maxTokens; }
-        public void setMaxTokens(Integer maxTokens) { this.maxTokens = maxTokens; }
+        public Integer getMax_tokens() { return max_tokens; }
+        public void setMax_tokens(Integer max_tokens) { this.max_tokens = max_tokens; }
         public Boolean getStream() { return stream; }
         public void setStream(Boolean stream) { this.stream = stream; }
     }
@@ -135,7 +129,7 @@ public class OpenAIService {
         private Integer promptTokens;
         private Integer completionTokens;
         private Integer totalTokens;
-        
+
         public Integer getPromptTokens() { return promptTokens; }
         public void setPromptTokens(Integer promptTokens) { this.promptTokens = promptTokens; }
         public Integer getCompletionTokens() { return completionTokens; }

@@ -101,7 +101,7 @@ STRIPE_PUBLISHABLE_KEY=test_key
       await tester.pumpWidget(const MaterialApp(home: WelcomePage()));
 
       expect(find.text('CareConnect'), findsOneWidget);
-      expect(find.text('Closer Connections. Better Care'), findsOneWidget);
+      expect(find.text('Closer Connections. Better Care.'), findsOneWidget);
       expect(find.text('Welcome to CareConnect!'), findsOneWidget);
       expect(find.text('Patient/Care Receiver'), findsOneWidget);
       expect(find.text('Care-Giver'), findsOneWidget);

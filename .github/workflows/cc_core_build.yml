@@ -155,4 +155,4 @@ jobs:
 
       - name: Upload to S3
         run: |
-          aws s3 cp cc-core-b-for-lambda-v${{ github.run_number }}.zip s3://cc-iac-us-east-1-${{secrets.AWS_ACCOUNT_ID}}/cc-backend-builds/cc-core-b-for-lambda-v${{ github.run_number }}.zip
+          aws s3 cp cc-core-b-for-lambda-v${{ github.run_number }}.zip s3://cc-iac-us-east-1-641592448579/cc-backend-builds/cc-core-b-for-lambda-v${{ github.run_number }}.zip

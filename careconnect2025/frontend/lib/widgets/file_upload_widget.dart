@@ -40,8 +40,9 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.defaultCategory;
+    final categories = _availableCategories;
   }
+
 
   @override
   void dispose() {
@@ -49,14 +50,23 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
     super.dispose();
   }
 
-  List<FileCategory> get _availableCategories {
-    if (widget.allowedCategories != null) {
+  List<FileCategory> get _availableCategories1 {
+    if (widget.allowedCategories != null && widget.allowedCategories!.isNotEmpty) {
       return widget.allowedCategories!;
     }
 
-    // Return all categories by default
-    return FileCategory.values;
+    // Return an empty list instead of null to avoid crashing UI
+    return [];
   }
+
+  List<FileCategory> get _availableCategories {
+    if (widget.allowedCategories != null && widget.allowedCategories!.isNotEmpty) {
+      return widget.allowedCategories!;
+    } else {
+      return FileCategory.values;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +90,7 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
               _buildDescriptionField(),
               const SizedBox(height: 16),
             ],
+            const SizedBox(height: 16),
             _buildUploadButton(),
             if (_isUploading) ...[
               const SizedBox(height: 16),
@@ -107,50 +118,36 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
   }
 
   Widget _buildCategorySelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'File Category',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<FileCategory>(
-          value: _selectedCategory,
-          decoration: InputDecoration(
-            labelText: 'Select category',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-          ),
-          items: _availableCategories.map((category) {
-            return DropdownMenuItem(
-              value: category,
-              child: Row(
-                children: [
-                  Text(category.icon),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(category.displayName)),
-                ],
-              ),
-            );
-          }).toList(),
-          onChanged: (FileCategory? newValue) {
-            setState(() {
-              _selectedCategory = newValue;
-              _selectedFile = null; // Reset file when category changes
-            });
-          },
-          validator: (value) {
-            if (value == null) {
-              return 'Please select a file category';
-            }
-            return null;
-          },
-        ),
-      ],
+    final categories = _availableCategories;
+
+    if (categories.isEmpty) {
+      return const Text('No categories available.');
+    }
+
+    return DropdownButtonFormField<FileCategory>(
+      items: categories.map((category) {
+        return DropdownMenuItem<FileCategory>(
+          value: category,
+          child: Text('${category.icon} ${category.displayName}'),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedCategory = value;
+        });
+      },
+      validator: (value) {
+        if (value == null) {
+          return 'Please select a file category';
+        }
+        return null;
+      },
+      value: _selectedCategory,  // Starts as null!
+      hint: const Text('Select Category'),  // This shows when value is null
+      decoration: InputDecoration(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
     );
   }
 
@@ -564,7 +561,7 @@ class QuickUploadButtons extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Quick Upload', style: AppTheme.headingSmall),
+        const Text('Quick File Upload', style: AppTheme.headingSmall),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,

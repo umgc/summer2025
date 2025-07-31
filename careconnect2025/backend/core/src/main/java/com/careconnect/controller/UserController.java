@@ -18,6 +18,7 @@ import java.util.Map;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -178,6 +179,33 @@ public class UserController {
                 .toList();
 
         return ResponseEntity.ok(response);
+    }
+    @PutMapping("/{userId}/leaderboard-opt-in")
+    public ResponseEntity<?> toggleLeaderboardOptIn(
+            @PathVariable Long userId,
+            @RequestBody Map<String, Boolean> body) {
+
+        Boolean optIn = body.get("optIn");
+        if (optIn == null) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Missing 'optIn' in request body."));
+        }
+
+        Optional<User> userOpt = userRepo.findById(userId);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Collections.singletonMap("error", "User not found."));
+        }
+
+        User user = userOpt.get();
+        user.setLeaderboardOptIn(optIn);
+        userRepo.save(user);
+
+        return ResponseEntity.ok(Collections.singletonMap("message", "Leaderboard opt-in status updated."));
+    }
+
+    @GetMapping("/leaderboard")
+    public ResponseEntity<List<com.careconnect.dto.LeaderboardEntry>> getLeaderboard() {
+        List<com.careconnect.dto.LeaderboardEntry> leaderboard = userRepo.findLeaderboard();
+        return ResponseEntity.ok(leaderboard);
     }
 
     @GetMapping("/check-email")

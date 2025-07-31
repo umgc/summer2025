@@ -232,7 +232,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Closer Connections. Better Care',
+                    'Closer Connections. Better Care.',
                     style: AppTheme.bodyMedium.copyWith(
                       color: AppTheme.textSecondary,
                       fontSize: 16,

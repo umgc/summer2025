@@ -110,7 +110,7 @@ final GoRouter appRouter = GoRouter(
           case 'ADMIN':
             return const CaregiverDashboard();
           default:
-            // Unknown role, redirect to login
+          // Unknown role, redirect to login
             WidgetsBinding.instance.addPostFrameCallback((_) {
               context.go('/login');
             });
@@ -243,10 +243,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/gamification',
       builder: (_, __) => const GamificationScreen(),
-    ),
-    GoRoute(
-      path: '/caregiver-gamification',
-      builder: (_, __) => CaregiverGamificationLandingScreen(),
     ),
     GoRoute(
       path: '/stripe-checkout',
