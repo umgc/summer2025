@@ -36,9 +36,9 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-access-key-id: AKIAZKYPD2ZB74YL5WVG
+        aws-secret-access-key: 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
+        aws-region: us-east-1
     
     - name: Retrieve secrets from Parameter Store
       working-directory: ./careconnect2025/frontend
@@ -59,7 +59,7 @@ jobs:
         
     - name: Build Flutter Web
       working-directory: ./careconnect2025/frontend
-      run: flutter build web --base-href "/"
+      run: flutter build web --base-href "/" --no-tree-shake-icons
     
     - name: Set Build Zip Name
       run: |

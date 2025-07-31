@@ -19,6 +19,14 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @RequiredArgsConstructor
 public class CareConnectWebSocketHandler extends TextWebSocketHandler {
+    // Helper to get display name for a user
+    private String getUserDisplayName(User user) {
+        if (user.getName() != null && !user.getName().isEmpty()) {
+            return user.getName();
+        }
+        return user.getEmail();
+    }
+
 
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
@@ -45,11 +53,14 @@ public class CareConnectWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         try {
-            Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
+            Map<String, Object> payload = objectMapper.readValue(
+                message.getPayload(),
+                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}
+            );
             String type = (String) payload.get("type");
-            
+
             log.info("Received CareConnect WebSocket message: {} from session: {}", type, session.getId());
-            
+
             switch (type) {
                 case "authenticate":
                     handleAuthentication(session, payload);
@@ -162,14 +173,19 @@ public class CareConnectWebSocketHandler extends TextWebSocketHandler {
             Map<String, Object> notification = Map.of(
                 "type", "ai-chat-response",
                 "fromUserId", user.getId(),
-                "fromUserName", user.getFirstName() + " " + user.getLastName(),
+                "fromUserName", getUserDisplayName(user),
                 "conversationId", conversationId,
                 "message", chatMessage,
                 "timestamp", System.currentTimeMillis()
             );
-            
-            targetSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(notification)));
-            log.info("AI chat notification sent from {} to {}", user.getEmail(), targetUserId);
+            try {
+                targetSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(notification)));
+                log.info("AI chat notification sent from {} to {}", user.getEmail(), targetUserId);
+            } catch (Exception e) {
+                log.error("Failed to send AI chat notification to {}: {}", targetUserId, e.getMessage());
+            }
+        } else {
+            log.warn("Target user {} not connected for AI chat notification", targetUserId);
         }
     }
 
@@ -185,7 +201,7 @@ public class CareConnectWebSocketHandler extends TextWebSocketHandler {
         Map<String, Object> notification = Map.of(
             "type", "mood-pain-log-updated",
             "patientId", user.getId(),
-            "patientName", user.getFirstName() + " " + user.getLastName(),
+            "patientName", getUserDisplayName(user),
             "moodValue", payload.get("moodValue"),
             "painValue", payload.get("painValue"),
             "timestamp", System.currentTimeMillis()
@@ -237,7 +253,7 @@ public class CareConnectWebSocketHandler extends TextWebSocketHandler {
         Map<String, Object> alert = Map.of(
             "type", "vital-signs-alert",
             "patientId", user.getId(),
-            "patientName", user.getFirstName() + " " + user.getLastName(),
+            "patientName", getUserDisplayName(user),
             "alertType", alertType,
             "message", alertMessage,
             "severity", severity,
@@ -263,14 +279,19 @@ public class CareConnectWebSocketHandler extends TextWebSocketHandler {
             Map<String, Object> request = Map.of(
                 "type", "family-member-request",
                 "fromUserId", user.getId(),
-                "fromUserName", user.getFirstName() + " " + user.getLastName(),
+                "fromUserName", getUserDisplayName(user),
                 "fromUserEmail", user.getEmail(),
                 "requestType", requestType,
                 "timestamp", System.currentTimeMillis()
             );
-            
-            patientSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(request)));
-            log.info("Family member request sent from {} to patient {}", user.getEmail(), targetPatientId);
+            try {
+                patientSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(request)));
+                log.info("Family member request sent from {} to patient {}", user.getEmail(), targetPatientId);
+            } catch (Exception e) {
+                log.error("Failed to send family member request to patient {}: {}", targetPatientId, e.getMessage());
+            }
+        } else {
+            log.warn("Patient {} not connected for family member request", targetPatientId);
         }
     }
 
@@ -321,25 +342,27 @@ public class CareConnectWebSocketHandler extends TextWebSocketHandler {
                 session.sendMessage(new TextMessage(objectMapper.writeValueAsString(update)));
                 log.info("Real-time update sent to user {}: {}", userId, update.get("type"));
             } catch (Exception e) {
-                log.error("Failed to send real-time update to user {}", userId, e);
+                log.error("Failed to send real-time update to user {}: {}", userId, e.getMessage());
             }
         } else {
-            log.debug("User {} not connected for real-time update: {}", userId, update.get("type"));
+            log.warn("User {} not connected for real-time update: {}", userId, update.get("type"));
         }
     }
 
     // Broadcast to all connected users (admin feature)
     public void broadcastToAllUsers(Map<String, Object> message) {
-        userSessions.values().forEach(session -> {
+        int sentCount = 0;
+        for (WebSocketSession session : userSessions.values()) {
             if (session.isOpen()) {
                 try {
                     session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
+                    sentCount++;
                 } catch (Exception e) {
-                    log.error("Failed to broadcast message to session {}", session.getId(), e);
+                    log.error("Failed to broadcast message to session {}: {}", session.getId(), e.getMessage());
                 }
             }
-        });
-        log.info("Broadcast message sent to {} users: {}", userSessions.size(), message.get("type"));
+        }
+        log.info("Broadcast message sent to {} users: {}", sentCount, message.get("type"));
     }
 
     // Get online users count

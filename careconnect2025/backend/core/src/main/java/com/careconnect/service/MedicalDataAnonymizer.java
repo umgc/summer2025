@@ -8,9 +8,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+
 @Service
-@Slf4j
 public class MedicalDataAnonymizer {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MedicalDataAnonymizer.class);
     
     private final Map<String, String> pseudonymMapping = new ConcurrentHashMap<>();
     private final SecureRandom random = new SecureRandom();
