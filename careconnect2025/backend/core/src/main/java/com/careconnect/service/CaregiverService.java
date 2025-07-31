@@ -23,6 +23,7 @@ import com.careconnect.security.Role;
 import com.careconnect.dto.ProfessionalInfoDto;
 import com.careconnect.dto.AddressDto;
 import com.careconnect.dto.PatientWithLinkDto;
+import com.careconnect.dto.PatientSummaryDTO;
 import com.careconnect.model.Address;
 import com.careconnect.model.Plan;
 import com.careconnect.model.Subscription;
@@ -131,21 +132,27 @@ public List<PatientWithLinkDto> getPatientsByCaregiver(Long caregiverId, String 
                     Optional<Patient> patientOpt = patientRepository.findByUser(userOpt.get());
                     if (patientOpt.isPresent()) {
                         Patient patient = patientOpt.get();
-                        
-                        // Apply filters
                         if (email != null && !email.isEmpty() && 
                            (patient.getEmail() == null || !patient.getEmail().equalsIgnoreCase(email))) {
                             return null;
                         }
-                        
                         if (name != null && !name.isEmpty() && 
                            !(patient.getFirstName() + " " + patient.getLastName())
                            .toLowerCase().contains(name.toLowerCase())) {
                             return null;
                         }
-                        
-                        // Return combined data
-                        return new PatientWithLinkDto(patient, link);
+                        PatientSummaryDTO summary = PatientSummaryDTO.builder()
+                            .id(patient.getId())
+                            .firstName(patient.getFirstName())
+                            .lastName(patient.getLastName())
+                            .email(patient.getEmail())
+                            .phone(patient.getPhone())
+                            .dob(patient.getDob())
+                            .gender(patient.getGender())
+                            .address(patient.getAddress())
+                            .relationship(patient.getRelationship())
+                            .build();
+                        return new PatientWithLinkDto(summary, link);
                     }
                 }
                 return null;
@@ -210,6 +217,7 @@ public Patient registerPatient(PatientRegistration reg) {
             .address(addr)
             .user(savedUser) // Use the saved user with ID
             .relationship(reg.getRelationship())
+            .gender(reg.getGender())
             .build();
 
     try {
@@ -347,6 +355,7 @@ public Patient registerPatient(PatientRegistration reg) {
                 .address(addr)
                 .user(user)
                 .caregiverType(caregiverType)
+                .gender(reg.getGender())
                 .build();
 
         try {
@@ -480,7 +489,18 @@ public PatientWithLinkDto getPatientWithLinkById(Long caregiverId, Long patientI
         throw new AppException(HttpStatus.FORBIDDEN, "Caregiver has no active link to this patient");
     }
     
-    // Return combined data
-    return new PatientWithLinkDto(patient, linkOpt.get());
+    // Build summary DTO for consistent API response
+    PatientSummaryDTO summary = PatientSummaryDTO.builder()
+        .id(patient.getId())
+        .firstName(patient.getFirstName())
+        .lastName(patient.getLastName())
+        .email(patient.getEmail())
+        .phone(patient.getPhone())
+        .dob(patient.getDob())
+        .gender(patient.getGender())
+        .address(patient.getAddress())
+        .relationship(patient.getRelationship())
+        .build();
+    return new PatientWithLinkDto(summary, linkOpt.get());
 }
 }

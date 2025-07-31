@@ -7,6 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'package:care_connect_app/config/theme/app_theme.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 class MedicationManagementScreen extends StatefulWidget {
   const MedicationManagementScreen({super.key});
@@ -67,6 +72,110 @@ class _MedicationManagementScreenState
     }
   }
 
+  bool _isDuplicateMedication(String brandName, String? genericName, {String? excludeId}) {
+    return medications.any((med) =>
+    med['id'] != excludeId &&
+        (med['brandName']?.toLowerCase() == brandName.toLowerCase() ||
+            (genericName != null &&
+                med['genericName']?.toLowerCase() == genericName.toLowerCase()))
+    );
+  }
+
+  Future<void> _generateAndSharePDF() async {
+    try {
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(32),
+          build: (pw.Context context) {
+            return [
+              pw.Header(
+                level: 0,
+                child: pw.Text(
+                  'Medication List',
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+              pw.SizedBox(height: 20),
+              pw.Text(
+                'Generated on: ${DateTime.now().toString().split('.')[0]}',
+                style: const pw.TextStyle(fontSize: 12),
+              ),
+              pw.Text(
+                'Total medications: ${medications.length}',
+                style: const pw.TextStyle(fontSize: 12),
+              ),
+              pw.SizedBox(height: 20),
+              ...medications.map((med) => _buildMedicationPDFEntry(med)),
+            ];
+          },
+        ),
+      );
+
+      final output = await getTemporaryDirectory();
+      final file = File('${output.path}/medications_list.pdf');
+      await file.writeAsBytes(await pdf.save());
+
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'Medication List',
+        subject: 'Patient Medication List',
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error generating PDF. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  pw.Widget _buildMedicationPDFEntry(Map<String, dynamic> med) {
+    return pw.Container(
+      margin: const pw.EdgeInsets.only(bottom: 20),
+      padding: const pw.EdgeInsets.all(16),
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: PdfColors.grey300),
+        borderRadius: pw.BorderRadius.circular(8),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            med['brandName'] ?? 'Unknown Medication',
+            style: pw.TextStyle(
+              fontSize: 16,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+          pw.SizedBox(height: 8),
+          if (med['genericName'] != null && med['genericName'] != 'Not specified')
+            pw.Text('Generic: ${med['genericName']}'),
+          if (med['strength'] != null && med['strength'] != 'Not specified')
+            pw.Text('Strength: ${med['strength']}'),
+          if (med['dosage']?.isNotEmpty == true)
+            pw.Text('Dosage: ${med['dosage']}'),
+          if (med['frequency']?.isNotEmpty == true)
+            pw.Text('Frequency: ${med['frequency']}'),
+          if (med['timeToTake']?.isNotEmpty == true)
+            pw.Text('Time to take: ${med['timeToTake']}'),
+          if (med['takeWith']?.isNotEmpty == true)
+            pw.Text('Take with: ${med['takeWith']}'),
+          if (med['doNotTakeWith']?.isNotEmpty == true)
+            pw.Text('Do not take with: ${med['doNotTakeWith']}'),
+          if (med['startDate'] != null || med['endDate'] != null)
+            pw.Text('Duration: ${_formatDateRange(med['startDate'], med['endDate'])}'),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -97,6 +206,12 @@ class _MedicationManagementScreenState
         title: 'Medication Management',
         centerTitle: true,
         additionalActions: [
+          if (medications.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.share),
+              tooltip: 'Share medication list',
+              onPressed: _generateAndSharePDF,
+            ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
@@ -263,9 +378,18 @@ class _MedicationManagementScreenState
                   ),
                 ],
               ),
-              IconButton(
-                onPressed: _navigateToAddMedication,
-                icon: const Icon(Icons.add_circle, color: Colors.indigo, size: 32),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: _generateAndSharePDF,
+                    icon: const Icon(Icons.share, color: Colors.indigo, size: 28),
+                    tooltip: 'Share medication list',
+                  ),
+                  IconButton(
+                    onPressed: _navigateToAddMedication,
+                    icon: const Icon(Icons.add_circle, color: Colors.indigo, size: 32),
+                  ),
+                ],
               ),
             ],
           ),
@@ -321,10 +445,25 @@ class _MedicationManagementScreenState
                             'Dosage: ${medication['dosage']} - ${medication['frequency'] ?? 'As needed'}',
                             style: const TextStyle(fontSize: 12, color: Colors.blue),
                           ),
+                        if (medication['timeToTake']?.isNotEmpty == true)
+                          Text(
+                            'Time to take: ${medication['timeToTake']}',
+                            style: const TextStyle(fontSize: 12, color: Colors.orange),
+                          ),
+                        if (medication['takeWith']?.isNotEmpty == true)
+                          Text(
+                            'Take with: ${medication['takeWith']}',
+                            style: const TextStyle(fontSize: 12, color: Colors.green),
+                          ),
+                        if (medication['doNotTakeWith']?.isNotEmpty == true)
+                          Text(
+                            'Do not take with: ${medication['doNotTakeWith']}',
+                            style: const TextStyle(fontSize: 12, color: Colors.red),
+                          ),
                         if (medication['startDate'] != null || medication['endDate'] != null)
                           Text(
                             'Duration: ${_formatDateRange(medication['startDate'], medication['endDate'])}',
-                            style: const TextStyle(fontSize: 12, color: Colors.green),
+                            style: const TextStyle(fontSize: 12, color: Colors.purple),
                           ),
                       ],
                     ),
@@ -443,7 +582,15 @@ class _MedicationManagementScreenState
       Navigator.pop(context);
 
       if (medicationData != null) {
-        _showMedicationDetails(medicationData);
+        // Check for duplicates before showing details
+        if (_isDuplicateMedication(
+          medicationData['brandName'],
+          medicationData['genericName'],
+        )) {
+          _showDuplicateWarning(medicationData);
+        } else {
+          _showMedicationDetails(medicationData);
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -468,6 +615,34 @@ class _MedicationManagementScreenState
         ),
       );
     }
+  }
+
+  void _showDuplicateWarning(Map<String, dynamic> medicationData) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Duplicate Medication Warning'),
+          content: Text(
+            'A medication with the name "${medicationData['brandName']}" or similar generic name is already in the list. Do you want to add it anyway?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _showMedicationDetails(medicationData);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('Add Anyway', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _enterMedicationCode() {
@@ -548,7 +723,15 @@ class _MedicationManagementScreenState
                       Navigator.pop(context);
 
                       if (medicationData != null) {
-                        _showMedicationDetails(medicationData);
+                        // Check for duplicates
+                        if (_isDuplicateMedication(
+                          medicationData['brandName'],
+                          medicationData['genericName'],
+                        )) {
+                          _showDuplicateWarning(medicationData);
+                        } else {
+                          _showMedicationDetails(medicationData);
+                        }
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -600,6 +783,9 @@ class _MedicationManagementScreenState
       'ndc': TextEditingController(),
       'dosage': TextEditingController(),
       'frequency': TextEditingController(),
+      'timeToTake': TextEditingController(),
+      'takeWith': TextEditingController(),
+      'doNotTakeWith': TextEditingController(),
     };
 
     DateTime? startDate;
@@ -678,6 +864,33 @@ class _MedicationManagementScreenState
                       decoration: const InputDecoration(
                         labelText: 'Frequency (e.g., Twice daily)',
                         border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['timeToTake']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Time to Take (e.g., 8:00 PM)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.access_time),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['takeWith']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Take With (e.g., milk, food)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.local_dining),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['doNotTakeWith']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Do Not Take With (e.g., alcohol, other meds)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.warning),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -777,6 +990,16 @@ class _MedicationManagementScreenState
                       return;
                     }
 
+                    // Check for duplicates
+                    if (_isDuplicateMedication(
+                      controllers['brandName']!.text.trim(),
+                      controllers['genericName']!.text.trim().isEmpty ? null : controllers['genericName']!.text.trim(),
+                    )) {
+                      Navigator.pop(context);
+                      _showDuplicateWarningManual(controllers, startDate, endDate);
+                      return;
+                    }
+
                     final medicationData = {
                       'id': DateTime.now().millisecondsSinceEpoch.toString(),
                       'brandName': controllers['brandName']!.text.trim(),
@@ -797,6 +1020,9 @@ class _MedicationManagementScreenState
                           : controllers['ndc']!.text.trim(),
                       'dosage': controllers['dosage']!.text.trim(),
                       'frequency': controllers['frequency']!.text.trim(),
+                      'timeToTake': controllers['timeToTake']!.text.trim(),
+                      'takeWith': controllers['takeWith']!.text.trim(),
+                      'doNotTakeWith': controllers['doNotTakeWith']!.text.trim(),
                       'startDate': startDate?.toIso8601String(),
                       'endDate': endDate?.toIso8601String(),
                       'addedAt': DateTime.now().toIso8601String(),
@@ -817,6 +1043,67 @@ class _MedicationManagementScreenState
     );
   }
 
+  void _showDuplicateWarningManual(
+      Map<String, TextEditingController> controllers,
+      DateTime? startDate,
+      DateTime? endDate,
+      ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Duplicate Medication Warning'),
+          content: Text(
+            'A medication with the name "${controllers['brandName']!.text.trim()}" or similar generic name is already in the list. Do you want to add it anyway?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final medicationData = {
+                  'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                  'brandName': controllers['brandName']!.text.trim(),
+                  'genericName': controllers['genericName']!.text.trim().isEmpty
+                      ? 'Not specified'
+                      : controllers['genericName']!.text.trim(),
+                  'strength': controllers['strength']!.text.trim().isEmpty
+                      ? 'Not specified'
+                      : controllers['strength']!.text.trim(),
+                  'dosageForm': controllers['dosageForm']!.text.trim().isEmpty
+                      ? 'Not specified'
+                      : controllers['dosageForm']!.text.trim(),
+                  'manufacturer': controllers['manufacturer']!.text.trim().isEmpty
+                      ? 'Not specified'
+                      : controllers['manufacturer']!.text.trim(),
+                  'ndc': controllers['ndc']!.text.trim().isEmpty
+                      ? 'Manual Entry'
+                      : controllers['ndc']!.text.trim(),
+                  'dosage': controllers['dosage']!.text.trim(),
+                  'frequency': controllers['frequency']!.text.trim(),
+                  'timeToTake': controllers['timeToTake']!.text.trim(),
+                  'takeWith': controllers['takeWith']!.text.trim(),
+                  'doNotTakeWith': controllers['doNotTakeWith']!.text.trim(),
+                  'startDate': startDate?.toIso8601String(),
+                  'endDate': endDate?.toIso8601String(),
+                  'addedAt': DateTime.now().toIso8601String(),
+                  'isManualEntry': true,
+                };
+
+                Navigator.pop(context);
+                _addMedicationToList(medicationData);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('Add Anyway', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _editMedication(int index) {
     final medication = medications[index];
     final Map<String, TextEditingController> controllers = {
@@ -827,6 +1114,9 @@ class _MedicationManagementScreenState
       'manufacturer': TextEditingController(text: medication['manufacturer'] ?? ''),
       'dosage': TextEditingController(text: medication['dosage'] ?? ''),
       'frequency': TextEditingController(text: medication['frequency'] ?? ''),
+      'timeToTake': TextEditingController(text: medication['timeToTake'] ?? ''),
+      'takeWith': TextEditingController(text: medication['takeWith'] ?? ''),
+      'doNotTakeWith': TextEditingController(text: medication['doNotTakeWith'] ?? ''),
     };
 
     DateTime? startDate = medication['startDate'] != null
@@ -900,6 +1190,33 @@ class _MedicationManagementScreenState
                       decoration: const InputDecoration(
                         labelText: 'Frequency',
                         border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['timeToTake']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Time to Take (e.g., 8:00 PM)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.access_time),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['takeWith']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Take With (e.g., milk, food)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.local_dining),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controllers['doNotTakeWith']!,
+                      decoration: const InputDecoration(
+                        labelText: 'Do Not Take With (e.g., alcohol, other meds)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.warning),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1021,6 +1338,21 @@ class _MedicationManagementScreenState
                       return;
                     }
 
+                    // Check for duplicates (excluding current medication)
+                    if (_isDuplicateMedication(
+                      controllers['brandName']!.text.trim(),
+                      controllers['genericName']!.text.trim().isEmpty ? null : controllers['genericName']!.text.trim(),
+                      excludeId: medication['id'],
+                    )) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('A medication with this name already exists'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                      return;
+                    }
+
                     setState(() {
                       medications[index] = {
                         ...medication,
@@ -1031,6 +1363,9 @@ class _MedicationManagementScreenState
                         'manufacturer': controllers['manufacturer']!.text.trim(),
                         'dosage': controllers['dosage']!.text.trim(),
                         'frequency': controllers['frequency']!.text.trim(),
+                        'timeToTake': controllers['timeToTake']!.text.trim(),
+                        'takeWith': controllers['takeWith']!.text.trim(),
+                        'doNotTakeWith': controllers['doNotTakeWith']!.text.trim(),
                         'startDate': startDate?.toIso8601String(),
                         'endDate': endDate?.toIso8601String(),
                         'lastModified': DateTime.now().toIso8601String(),
@@ -1149,6 +1484,9 @@ class _MedicationManagementScreenState
         'activeIngredients': result['active_ingredients'] ?? [],
         'dosage': '',
         'frequency': '',
+        'timeToTake': '',
+        'takeWith': '',
+        'doNotTakeWith': '',
         'startDate': null,
         'endDate': null,
         'addedAt': DateTime.now().toIso8601String(),
@@ -1164,6 +1502,9 @@ class _MedicationManagementScreenState
     DateTime? endDate;
     final dosageController = TextEditingController();
     final frequencyController = TextEditingController();
+    final timeToTakeController = TextEditingController();
+    final takeWithController = TextEditingController();
+    final doNotTakeWithController = TextEditingController();
 
     showDialog(
       context: context,
@@ -1207,6 +1548,36 @@ class _MedicationManagementScreenState
                       decoration: const InputDecoration(
                         labelText: 'Frequency (e.g., Twice daily)',
                         border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    TextField(
+                      controller: timeToTakeController,
+                      decoration: const InputDecoration(
+                        labelText: 'Time to Take (e.g., 8:00 PM)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.access_time),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    TextField(
+                      controller: takeWithController,
+                      decoration: const InputDecoration(
+                        labelText: 'Take With (e.g., milk, food)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.local_dining),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    TextField(
+                      controller: doNotTakeWithController,
+                      decoration: const InputDecoration(
+                        labelText: 'Do Not Take With (e.g., alcohol, other meds)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.warning),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1303,6 +1674,9 @@ class _MedicationManagementScreenState
                       ...medicationData,
                       'dosage': dosageController.text.trim(),
                       'frequency': frequencyController.text.trim(),
+                      'timeToTake': timeToTakeController.text.trim(),
+                      'takeWith': takeWithController.text.trim(),
+                      'doNotTakeWith': doNotTakeWithController.text.trim(),
                       'startDate': startDate?.toIso8601String(),
                       'endDate': endDate?.toIso8601String(),
                     };

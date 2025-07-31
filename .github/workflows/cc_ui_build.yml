@@ -59,7 +59,7 @@ jobs:
         
     - name: Build Flutter Web
       working-directory: ./careconnect2025/frontend
-      run: flutter build web --base-href "/"
+      run: flutter build web --base-href "/" --no-tree-shake-icons
     
     - name: Set Build Zip Name
       run: |
