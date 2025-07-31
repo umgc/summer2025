@@ -10,7 +10,7 @@ class Template {
   final int? count;
   final List<bool>? daysOfWeek;
   final TimeOfDay? timeOfDay;
-  final Icon icon;
+  final int iconCode; // <-- store codePoint, not Icon
   final List<Notification_dto>? notifications;
 
   Template({
@@ -22,7 +22,7 @@ class Template {
     this.count,
     this.daysOfWeek,
     this.timeOfDay,
-    this.icon = const Icon(Icons.task),
+    this.iconCode = 0xe057, // default: Icons.task
     this.notifications,
   });
 
@@ -42,16 +42,14 @@ class Template {
       id: json['id'],
       name: json['name'],
       description: json['description'],
-      frequency: json['frequency'] != null ? json['frequency'] as String : null,
-      interval: json['taskInterval'] != null ? json['taskInterval'] as int : null,
-      count: json['doCount'] != null ? json['doCount'] as int : null,
-      daysOfWeek: (json['daysOfWeek'] != null
+      frequency: json['frequency'],
+      interval: json['taskInterval'],
+      count: json['doCount'],
+      daysOfWeek: json['daysOfWeek'] != null
           ? (json['daysOfWeek'] as List).map((e) => e as bool).toList()
-          : null),
+          : null,
       timeOfDay: recTime,
-      icon: json['icon'] != null
-          ? Icon(IconData(json['icon'], fontFamily: 'MaterialIcons'))
-          : const Icon(Icons.task),
+      iconCode: json['icon'] ?? 0xe057, // <-- store codePoint
       notifications: (json['notifications'] != null
           ? (json['notifications'] as List)
               .map((n) => Notification_dto.fromJson(n))
@@ -59,6 +57,7 @@ class Template {
           : null),
     );
   }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -71,7 +70,7 @@ class Template {
       'timeOfDay': timeOfDay != null
           ? '${timeOfDay!.hour}:${timeOfDay!.minute}'
           : null,
-      'icon': icon.icon!.codePoint,
+      'icon': iconCode, // <-- store codePoint
       'notifications': notifications?.map((n) => n.toJson()).toList(),
     };
   }

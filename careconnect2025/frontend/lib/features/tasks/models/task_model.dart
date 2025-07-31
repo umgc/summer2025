@@ -43,8 +43,12 @@ class Task {
       date: DateTime.parse(json['date']),
       timeOfDay: json['timeOfDay'] != null
           ? TimeOfDay(
-              hour: json['timeOfDay']['hour'],
-              minute: json['timeOfDay']['minute'],
+              hour: json['timeOfDay'] is String
+                  ? int.parse(json['timeOfDay'].split(':')[0])
+                  : json['timeOfDay']['hour'],
+              minute: json['timeOfDay'] is String
+                  ? int.parse(json['timeOfDay'].split(':')[1])
+                  : json['timeOfDay']['minute'],
             )
           : null,
       userId: json['assignedTo'],
@@ -75,13 +79,17 @@ class Task {
           ? "${timeOfDay!.hour}:${timeOfDay!.minute}"
           : null,
       'isCompleted': isComplete,
-      // 'notifications': null,
+      'notifications': null,
       'frequency': frequency,
       'taskInterval': interval,
       'doCount': count,
       'daysOfWeek': jsonEncode(daysOfWeek),
       'taskType': taskType,
     };
+  }
+
+  bool isValid() {
+    return name.isNotEmpty && description.isNotEmpty && date != null;
   }
 }
 
