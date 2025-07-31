@@ -245,7 +245,7 @@ CREATE TABLE achievement (
 );
 
 -- Earned achievements
-CREATE TABLE user_achievement (
+CREATE TABLE user_achievements (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     achievement_id BIGINT NOT NULL,

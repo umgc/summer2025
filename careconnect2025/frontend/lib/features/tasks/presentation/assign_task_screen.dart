@@ -109,7 +109,7 @@ class _AssignTaskScreenState extends State<AssignTaskScreen> {
                               margin: const EdgeInsets.symmetric(vertical: 5),
                               child: ListTile(
                                 leading: Icon(
-                                  template.icon?.icon ?? Icons.assignment,
+                                  IconData(template.iconCode, fontFamily: 'MaterialIcons'),
                                   size: 40,
                                   color: Colors.indigo,
                                 ),
