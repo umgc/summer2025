@@ -51,7 +51,7 @@ public class FileController {
     private final CaregiverService caregiverService;
     private final PatientService patientService;
     
-    @Value("${app.file.storage.use-s3:false}")
+    @Value("${app.file.storage.use-s3:true}")
     private boolean useS3ForLegacyEndpoints;
 
     // ==================== NEW DATABASE-FIRST ENDPOINTS ====================
@@ -294,17 +294,17 @@ public class FileController {
         }
     }
     
-    // ==================== LEGACY S3 ENDPOINTS (BACKWARD COMPATIBILITY) ====================
+    // ==================== S3 ENDPOINTS ====================
 
     @PostMapping("/users/{userId}/upload")
-    @Operation(summary = "[LEGACY] Upload file for user", description = "Legacy S3-based file upload (maintained for backward compatibility)")
+    @Operation(summary = "Upload file for user", description = "S3-based file upload (maintained for backward compatibility)")
     public ResponseEntity<?> uploadFileLegacy(
             @PathVariable Long userId,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "category", defaultValue = "documents") String category) {
         
         try {
-            log.info("Legacy upload request for user ID: {}, category: {}", userId, category);
+            log.info("Upload request for user ID: {}, category: {}", userId, category);
             
             // Get user details from database
             User user = userRepository.findById(userId)
@@ -326,17 +326,10 @@ public class FileController {
             // Use S3 or database based on configuration
             String filePath;
             String fileUrl;
-            
-            if (useS3ForLegacyEndpoints) {
-                filePath = s3StorageService.uploadFile(file, userId, userType, category);
-                fileUrl = s3StorageService.getFileUrl(filePath);
-            } else {
-                // Use the new database service but return legacy response format
-                FileUploadResponse response = fileManagementService.uploadFile(
-                        file, userId, userType, category, "Legacy upload", null);
-                filePath = "db://files/" + response.getFileId();
-                fileUrl = response.getFileUrl();
-            }
+
+            filePath = s3StorageService.uploadFile(file, userId, userType, category);
+            fileUrl = s3StorageService.getFileUrl(filePath);
+
             
             log.info("File uploaded successfully: {} for user: {} ({})", filePath, userId, userType);
             
@@ -357,110 +350,103 @@ public class FileController {
         }
     }
 
-    @GetMapping("/users/{userId}/download")
-    @Operation(summary = "[LEGACY] Download file", description = "Legacy S3-based file download")
-    public ResponseEntity<?> downloadFileLegacy(
+    @GetMapping("/users/{userId}/download/{*filePath}")
+    @Operation(summary = "Download file", description = "S3-based file download")
+    public ResponseEntity<byte[]> downloadFile(
             @PathVariable Long userId,
-            @RequestParam String filePath) {
-        
+            @PathVariable String filePath) {
         try {
-            log.info("Legacy download request - User: {}, FilePath: {}", userId, filePath);
-            
-            byte[] fileContent;
-            if (filePath.startsWith("db://")) {
-                // Extract file ID from database path
-                String fileIdStr = filePath.substring(filePath.lastIndexOf("/") + 1);
-                Long fileId = Long.parseLong(fileIdStr);
-                fileContent = fileManagementService.downloadFile(fileId);
-            } else {
-                fileContent = s3StorageService.download(filePath);
+            // Verify user exists and get their role
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+
+            String userType = user.getRole().name().toLowerCase();
+
+            // Verify file belongs to this user
+            String userPrefix = userType + "_" + userId;
+            // Removing the leading slash
+            filePath = filePath.substring(1);
+            if (!filePath.startsWith(userPrefix)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            
-            String filename = filePath.substring(filePath.lastIndexOf("/") + 1);
-            
+
+            byte[] fileContent = s3StorageService.download(filePath);
+
             return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .header("Content-Disposition", "attachment; filename=\"" + extractFileName(filePath) + "\"")
                     .body(fileContent);
-                    
+
         } catch (Exception e) {
-            log.error("Legacy file download failed - User: {}, Path: {}", userId, filePath, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "File download failed: " + e.getMessage()));
+            log.error("File download failed for user {}, path: {}", userId, filePath, e);
+            return ResponseEntity.notFound().build();
         }
     }
 
-    @DeleteMapping("/users/{userId}/delete")
-    @Operation(summary = "[LEGACY] Delete file", description = "Legacy S3-based file deletion")
-    public ResponseEntity<?> deleteFileLegacy(
+    @DeleteMapping("/users/{userId}/delete/{*filePath}")
+    public ResponseEntity<?> deleteFile(
             @PathVariable Long userId,
-            @RequestParam String filePath) {
-        
+            @PathVariable String filePath) {
         try {
-            log.info("Legacy delete request - User: {}, FilePath: {}", userId, filePath);
-            
-            if (filePath.startsWith("db://")) {
-                // Extract file ID from database path
-                String fileIdStr = filePath.substring(filePath.lastIndexOf("/") + 1);
-                Long fileId = Long.parseLong(fileIdStr);
-                fileManagementService.deleteFile(fileId, userId);
-            } else {
-                s3StorageService.deleteFile(filePath);
+            // Verify user exists and get their role
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+
+            String userType = user.getRole().name().toLowerCase();
+
+            // Verify file belongs to this user
+            String userPrefix = userType + "_" + userId;
+            // Removing the leading slash
+            filePath = filePath.substring(1);
+            if (!filePath.startsWith(userPrefix)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "Access denied"));
             }
-            
-            return ResponseEntity.ok(Map.of(
-                "message", "File deleted successfully",
-                "filePath", filePath,
-                "userId", userId
-            ));
-            
+
+            s3StorageService.deleteFile(filePath);
+
+            return ResponseEntity.ok(Map.of("message", "File deleted successfully"));
+
         } catch (Exception e) {
-            log.error("Legacy file deletion failed - User: {}, Path: {}", userId, filePath, e);
+            log.error("File deletion failed for user {}, path: {}", userId, filePath, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "File deletion failed: " + e.getMessage()));
+                    .body(Map.of("error", "File deletion failed"));
         }
     }
 
     @GetMapping("/users/{userId}/list")
-    @Operation(summary = "[LEGACY] List user files", description = "Legacy S3-based file listing")
-    public ResponseEntity<?> listUserFilesLegacy(
+    @Operation(summary = "List user files", description = "S3-based file listing")
+    public ResponseEntity<?> listUserFiles(
             @PathVariable Long userId,
             @RequestParam(value = "category", required = false) String category) {
-        
         try {
-            log.info("Legacy list request - User: {}, Category: {}", userId, category);
-            
-            // Get user details
+            // Verify user exists and get their role
             User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+                    .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+
             String userType = user.getRole().name();
-            
-            List<UserFileDTO> files;
-            if (useS3ForLegacyEndpoints) {
-                // Use S3 service (would need to implement this method in S3StorageService)
-                files = Collections.emptyList(); // Placeholder - S3 doesn't have this method yet
-            } else {
-                files = fileManagementService.listUserFiles(userId, userType, category);
-            }
-            
+
+            List<UserFileDTO> files = s3StorageService.listUserFilesDto(userId, userType);
+
             // Filter by category if specified
             if (category != null && !category.isEmpty()) {
                 files = files.stream()
-                        .filter(file -> category.equalsIgnoreCase(file.getFileCategory()))
-                        .collect(Collectors.toList());
+                        .filter(file -> file.getS3FullKey().contains("/" + category.toLowerCase() + "/"))
+                        .toList();
             }
-            
+
             return ResponseEntity.ok(Map.of(
-                "files", files,
-                "count", files.size(),
-                "userId", userId,
-                "category", category != null ? category : "all"
+                    "files", files,
+                    "count", files.size(),
+                    "userId", userId,
+                    "userType", userType,
+                    "userRole", user.getRole().name(),
+                    "category", category != null ? category : "all"
             ));
-            
+
         } catch (Exception e) {
-            log.error("Legacy file listing failed for user {}: {}", userId, e.getMessage(), e);
+            log.error("Failed to list files for user {}: {}", userId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "File listing failed: " + e.getMessage()));
+                    .body(Map.of("error", "Failed to list files"));
         }
     }
 
@@ -553,5 +539,10 @@ public class FileController {
             case FAMILY_MEMBER -> List.of("profile", "documents", "authorization");
             default -> List.of("documents");
         };
+    }
+
+    private String extractFileName(String filePath) {
+        String[] parts = filePath.split("/");
+        return parts[parts.length - 1];
     }
 }

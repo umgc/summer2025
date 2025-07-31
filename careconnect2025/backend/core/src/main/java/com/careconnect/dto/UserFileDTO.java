@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Builder
 public class UserFileDTO {
     private Long id;
+    private String s3FullKey;
     private String filename;
     private String originalFilename;
     private String contentType;

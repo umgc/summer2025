@@ -10,7 +10,8 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
 @Configuration
-@EnableWebSocket
+// Cannot work on AWS Lambda now. We will use profile make it dynamic for local test vs lambda deployments.
+//@EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
 
     @Autowired
