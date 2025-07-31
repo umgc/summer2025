@@ -2,13 +2,13 @@ resource "aws_cloudwatch_event_rule" "s3_backend_drop_rule" {
   name        = "s3-backend-drop-rule"
   description = "Capture events for backend build file uploaded to S3"
   event_pattern = jsonencode({
-    source      = ["aws.s3"]
+    source = ["aws.s3"]
     detail = {
-      reason = ["PutObject"]
-      bucket       = {
+      reason = ["PutObject", "CompleteMultipartUpload", "CopyObject"]
+      bucket = {
         name = ["${var.cc_iac_bucket_name}"]
       }
-      object            = {
+      object = {
         key = [{
           "prefix" = "${var.cc_main_backend_build_prefix}"
         }]
@@ -48,28 +48,32 @@ resource "aws_cloudwatch_event_rule" "lambda_updated_rule" {
   description = "Capture events for Lambda function state changes"
   event_pattern = jsonencode({
     source      = ["aws.lambda"]
-    detail-type = ["Lambda Function State Change"]
+    detail-type = ["AWS API Call via CloudTrail"]
     detail = {
-      functionName = ["${var.cc_lamnda_function_name}"]  # Specify your function name
-      state        = ["Active"]
-      # Only trigger for versioned functions (not $LATEST)
-      version = [{
-        "anything-but": "$LATEST"
-      }]
+      eventSource = ["lambda.amazonaws.com"]
+      requestParameters = {
+        functionName = ["${var.cc_lamnda_function_name}"] # Replace with your function name
+      }
+      responseElements = {
+        state = ["Active"]
+        version = [{
+          "numeric" : [">", 0]
+        }]
+      }
     }
   })
   tags = merge(var.default_tags, { Name : "lambda-version-published-rule" })
 }
 
 resource "aws_cloudwatch_event_target" "update_apigw_target" {
-  rule     = aws_cloudwatch_event_rule.s3_backend_drop_rule.name
+  rule     = aws_cloudwatch_event_rule.lambda_updated_rule.name
   arn      = var.cc_deployment_sfn_arn
   role_arn = var.cc_app_role_arn
   input_transformer {
     input_paths = {
       functionName = "$.detail.functionName"
-      functionArn    = "$.detail.functionArn"
-      version = "$.detail.version"
+      functionArn  = "$.detail.functionArn"
+      version      = "$.detail.version"
     }
     input_template = <<-EOF
     {
@@ -77,7 +81,7 @@ resource "aws_cloudwatch_event_target" "update_apigw_target" {
       "functionArn"   : "<functionArn>",
       "functionName"  : "<functionName>",
       "version"       : "<version>",
-      "integrationId" : "${var.api_integration_id}",
+      "integrationId" : "${var.cc_api_integration_id}",
       "apigwid"       : "${var.cc_main_api_id}"
     }
     EOF

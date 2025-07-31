@@ -28,5 +28,5 @@ variable "cors_allowed_list" {
 variable "cc_main_backend_build_prefix" {
   description = "Prefix for the main backend build files in S3"
   type        = string
-  default     = "cc-backend-builds"
+  default     = "cc-backend-builds/"
 }

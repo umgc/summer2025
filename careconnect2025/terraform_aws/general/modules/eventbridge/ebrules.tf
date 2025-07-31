@@ -6,7 +6,7 @@ resource "aws_cloudwatch_event_rule" "s3_frontend_drop_rule" {
   event_pattern = jsonencode({
     source = ["aws.s3"]
     detail = {
-      reason = ["PutObject"]
+      reason = ["PutObject", "CompleteMultipartUpload", "CopyObject"]
       bucket = {
         name = ["${var.cc_iac_bucket_name}"]
       }

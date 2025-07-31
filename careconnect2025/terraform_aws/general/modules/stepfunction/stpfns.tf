@@ -151,6 +151,24 @@ resource "aws_sfn_state_machine" "cc_deploy_sfn_state_machine" {
       Fail = {
         Type = "Fail"
       }
+      # ,
+      # NotifyDeploymentSuccess = {
+      #   Type     = "Task"
+      #   Resource = "arn:aws:states:::sns:publish"
+      #   Parameters = {
+      #     TopicArn = var.sns_topic_arn
+      #     Subject  = "✅ Deployment done"
+      #     "Message.$" = "States.JsonToString({
+      #       \"functionName\": $.processedEvent.functionName,
+      #       \"version\": $.processedEvent.newVersion,
+      #       \"functionArn\": $.processedEvent.functionArn,
+      #       \"apiId\": var.http_api_id,
+      #       \"deploymentTime\": $.processedEvent.eventTime
+      #       \"finalState\": $.functionStatus.Configuration.State
+      #     })"
+      #   }
+      #   End = true
+      # }
     }
   })
 

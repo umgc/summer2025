@@ -30,5 +30,5 @@ variable "cc_iac_bucket_name" {
 variable "cc_frontend_build_prefix" {
   description = "The prefix for the frontend build files in S3"
   type        = string
-  default     = "cc-frontend-builds"
+  default     = "cc-frontend-builds/"
 }
