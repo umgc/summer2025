@@ -1,4 +1,5 @@
 package com.careconnect.controller;
+import com.careconnect.dto.PostWithCommentCountDto;
 import org.springframework.beans.factory.annotation.Value;
 import com.careconnect.model.Post;
 import com.careconnect.service.FeedService;
@@ -29,7 +30,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/feed")
+@RequestMapping("/v1/api/feed")
 @Tag(name = "Feed", description = "Social feed management endpoints for posts and content sharing")
 @SecurityRequirement(name = "JWT Authentication")
 public class FeedController {
@@ -54,18 +55,7 @@ public class FeedController {
             description = "Global feed retrieved successfully",
             content = @Content(
                 mediaType = "application/json",
-                schema = @Schema(implementation = Post.class, type = "array"),
-                examples = @ExampleObject(value = """
-                    [
-                        {
-                            "id": 1,
-                            "userId": 123,
-                            "content": "Had a great therapy session today!",
-                            "imageUrl": "/uploads/image123.jpg",
-                            "createdAt": "2025-01-15T10:30:00Z"
-                        }
-                    ]
-                    """)
+                    schema = @Schema(implementation = PostWithCommentCountDto.class, type = "array")
             )
         ),
         @ApiResponse(
@@ -82,23 +72,15 @@ public class FeedController {
         )
     })
     public ResponseEntity<?> getGlobalFeed() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
-
-        List<Post> posts = feedService.getAllPosts();
+        List<PostWithCommentCountDto> posts = feedService.getAllPostsWithCommentCount();
         return ResponseEntity.ok(posts);
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserFeed(@PathVariable Long userId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
         
-        // Get user from JWT token (email is the subject)
+        // Get user from JWT token (email is the subject).
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
@@ -114,18 +96,30 @@ public class FeedController {
         return ResponseEntity.ok(posts);
     }
 
+    @GetMapping("/friends-feed")
+    public ResponseEntity<?> getFriendsFeed() {
+        // (Updated) Removed manual authentication check
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
+        }
+
+        List<PostWithCommentCountDto> posts = feedService.getPostsByUserAndFriends(user.getId());
+        return ResponseEntity.ok(posts);
+    }
+
     @PostMapping(value = "/create", consumes = "multipart/form-data")
     public ResponseEntity<?> createPost(
             @RequestParam("userId") Long userId,
             @RequestParam("content") String content,
             @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
         
         // Get user from JWT token (email is the subject)
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
@@ -165,6 +159,20 @@ public class FeedController {
             }
 
             Post post = feedService.createPost(userId, content, imageUrl);
+
+            String username = user.getName() != null && !user.getName().isEmpty() ? user.getName() : user.getEmail();
+            int commentCount = 0; // New post, so always 0
+
+            PostWithCommentCountDto dto = new PostWithCommentCountDto(
+                    post.getId(),
+                    post.getUserId(),
+                    post.getContent(),
+                    post.getImageUrl(),
+                    post.getCreatedAt(),
+                    commentCount,
+                    username
+            );
+
             return ResponseEntity.status(HttpStatus.CREATED).body(post);
 
         } catch (IOException e) {

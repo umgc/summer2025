@@ -31,13 +31,15 @@
         @Query("""
         SELECT new com.careconnect.dto.LeaderboardEntry(
             u.id,
-            u.name,
+            p.lastName,
+            p.firstName,
             xp.xp,
             xp.level,
             u.profileImageUrl
         )
         FROM User u
         JOIN XPProgress xp ON xp.userId = u.id
+        JOIN Patient p ON p.user.id = u.id
         WHERE u.leaderboardOptIn = true
         ORDER BY xp.xp DESC
         """)
