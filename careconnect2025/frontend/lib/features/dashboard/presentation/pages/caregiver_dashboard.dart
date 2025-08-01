@@ -325,8 +325,8 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
 
     return summaryItems.isNotEmpty
         ? summaryItems
-        .take(2)
-        .join(', ') // Show max 2 vitals to avoid overcrowding
+              .take(2)
+              .join(', ') // Show max 2 vitals to avoid overcrowding
         : 'Vitals monitoring active';
   }
 
@@ -353,8 +353,8 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           if (numValue < 95) return '⚠️';
           break;
         case 'bloodPressure':
-        // For blood pressure, we'll just show checkmark for now
-        // As it's typically in format "120/80"
+          // For blood pressure, we'll just show checkmark for now
+          // As it's typically in format "120/80"
           return '✓';
       }
     } catch (e) {
@@ -370,10 +370,10 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     try {
       // Check subscription access for caregivers before initiating call
       final canUseVideoCalls =
-      await SubscriptionService.checkPremiumAccessWithDialog(
-        context,
-        isVideoCall ? 'Video Calls' : 'Voice Calls',
-      );
+          await SubscriptionService.checkPremiumAccessWithDialog(
+            context,
+            isVideoCall ? 'Video Calls' : 'Voice Calls',
+          );
 
       if (!canUseVideoCalls) {
         return; // User doesn't have premium access, dialog was shown
@@ -464,28 +464,28 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           : 'Caregiver Dashboard',
       appBarActions: isLargeScreen
           ? [
-        CallNotificationStatusIndicator(
-          isInitialized: _callNotificationInitialized,
-        ),
-        const SizedBox(width: 12),
-        IconButton(
-          icon: const Icon(Icons.help_outline),
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Help documentation coming soon'),
+              CallNotificationStatusIndicator(
+                isInitialized: _callNotificationInitialized,
               ),
-            );
-          },
-        ),
-        const SizedBox(width: 8),
-      ]
+              const SizedBox(width: 12),
+              IconButton(
+                icon: const Icon(Icons.help_outline),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Help documentation coming soon'),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+            ]
           : [
-        CallNotificationStatusIndicator(
-          isInitialized: _callNotificationInitialized,
-        ),
-        const SizedBox(width: 8),
-      ],
+              CallNotificationStatusIndicator(
+                isInitialized: _callNotificationInitialized,
+              ),
+              const SizedBox(width: 8),
+            ],
       currentRoute: '/dashboard',
       body: _buildMainContent(),
     );
@@ -553,16 +553,16 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
         padding: const EdgeInsets.all(24),
         decoration: !isMobile
             ? BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              spreadRadius: 1,
-            ),
-          ],
-        )
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ],
+              )
             : null,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -661,19 +661,19 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           context.isDesktopOrLarger
               ? _buildResponsivePatientGrid(horizontalMargin)
               : SliverPadding(
-            padding: EdgeInsets.fromLTRB(
-              horizontalMargin,
-              0,
-              horizontalMargin,
-              16,
-            ),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final patient = patients[index];
-                return _buildPatientCard(patient);
-              }, childCount: patients.length),
-            ),
-          ),
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalMargin,
+                    0,
+                    horizontalMargin,
+                    16,
+                  ),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final patient = patients[index];
+                      return _buildPatientCard(patient);
+                    }, childCount: patients.length),
+                  ),
+                ),
         ],
       ),
     );
@@ -687,7 +687,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     // Ensure we have at least 1 column and limit to 2 columns max for wider patient cards
     if (crossAxisCount > 2) {
       crossAxisCount =
-      2; // Limit to 2 columns max for patient cards to make them wider
+          2; // Limit to 2 columns max for patient cards to make them wider
     }
 
     return SliverPadding(
@@ -764,7 +764,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     );
 
     // Set a wider max width for desktop/tablet
-    double maxCardWidth = context.isDesktopOrLarger ? 520.0 : double.infinity;
+    double maxCardWidth = context.isDesktopOrLarger ? 800.0 : 1400.0;
 
     return Card(
       margin: isGridView ? EdgeInsets.zero : const EdgeInsets.only(bottom: 16),
@@ -815,12 +815,14 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildActionButton(
-                            icon: Icons.message,
-                            label: 'Message',
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildActionButton(
+                              icon: Icons.message,
+                              label: 'Message',
                             onPressed: () async {
                               final result = await Navigator.of(context).push(
                                 MaterialPageRoute(
@@ -828,10 +830,10 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                     currentUserId: widget.caregiverId
                                         .toString(),
                                     currentUserName:
-                                    caregiverName ?? 'Caregiver',
+                                        caregiverName ?? 'Caregiver',
                                     recipientId: patient.id.toString(),
                                     recipientName:
-                                    '${patient.firstName} ${patient.lastName}',
+                                        '${patient.firstName} ${patient.lastName}',
                                   ),
                                 ),
                               );
@@ -886,14 +888,14 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                   builder: (context) => PatientMedicalNotesPage(
                                     patientId: patient.id,
                                     patientName:
-                                    '${patient.firstName} ${patient.lastName}',
+                                        '${patient.firstName} ${patient.lastName}',
                                   ),
                                 ),
                               );
                             },
                           ),
                         ],
-                      ),
+                      ),),
                       const SizedBox(height: 4),
                       Row(
                         children: [
@@ -903,18 +905,16 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                             color: Theme.of(context).hintColor,
                           ),
                           const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              patient.dob.isNotEmpty
-                                  ? 'Age ${_calculateAgeFromDob(patient.dob)}'
-                                  : 'Age not specified',
-                              style: AppTheme.bodyMedium.copyWith(
-                                color: Theme.of(context).hintColor,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                          Text(
+                            patient.dob.isNotEmpty
+                                ? 'Age ${_calculateAgeFromDob(patient.dob)}'
+                                : 'Age not specified',
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: Theme.of(context).hintColor,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -927,18 +927,16 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                             color: Theme.of(context).hintColor,
                           ),
                           const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              patient.gender?.isNotEmpty == true
-                                  ? patient.gender!
-                                  : 'Gender not specified',
-                              style: AppTheme.bodyMedium.copyWith(
-                                color: Theme.of(context).hintColor,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                          Text(
+                            patient.gender?.isNotEmpty == true
+                                ? patient.gender!
+                                : 'Gender not specified',
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: Theme.of(context).hintColor,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -951,8 +949,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                             color: Theme.of(context).hintColor,
                           ),
                           const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
+                          Text(
                               patient.relationship.isNotEmpty
                                   ? patient.relationship
                                   : 'Patient',
@@ -962,7 +959,6 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -974,19 +970,17 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                             color: Theme.of(context).hintColor,
                           ),
                           const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              patient.allergies?.isNotEmpty == true
-                                  ? 'Allergies: ${patient.allergies!.join(', ')}'
-                                  : 'No allergies listed',
-                              style: AppTheme.bodyMedium.copyWith(
-                                color: Theme.of(context).hintColor,
+                          Text(
+                            patient.allergies?.isNotEmpty == true
+                                ? 'Allergies: ${patient.allergies!.join(', ')}'
+                                : 'No allergies listed',
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: Theme.of(context).hintColor,
                                 fontSize: 14,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -998,17 +992,15 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                           const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              _getVitalConditionsSummary(patient),
-                              style: AppTheme.bodyMedium.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                          Text(
+                            _getVitalConditionsSummary(patient),
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),

@@ -8,6 +8,7 @@ import lombok.*;
 @Entity
 @Table(name = "templates")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Template {

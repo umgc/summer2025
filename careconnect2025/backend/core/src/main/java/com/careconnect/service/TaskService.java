@@ -1,33 +1,21 @@
 package com.careconnect.service;
 
-import com.careconnect.model.Caregiver;
 import com.careconnect.model.Patient;
 import com.careconnect.model.Task;
 import com.careconnect.dto.TaskDto;
-import com.careconnect.dto.CaregiverRegistration;
-import com.careconnect.dto.PatientRegistration;
-import com.careconnect.dto.CaregiverPatientLinkResponse;
-import com.careconnect.exception.RegistrationException;
 import com.careconnect.exception.AppException;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.careconnect.model.User;
-import com.careconnect.model.ProfessionalInfo;
-import com.careconnect.security.JwtTokenProvider;
-import com.careconnect.security.Role;
-import com.careconnect.dto.ProfessionalInfoDto;
-import com.careconnect.dto.AddressDto;
-import com.careconnect.model.Address;
 import com.careconnect.repository.*;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.HttpStatus;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
@@ -48,11 +36,7 @@ public class TaskService {
 
     public List<Task> getTasksByPatient(Long patientId) {
         Optional<List<Task>> tasksOpt = taskRepository.findByPatientId(patientId);
-        if (tasksOpt.isPresent()) {
-            return tasksOpt.get();
-        } else {
-            throw new AppException(HttpStatus.NOT_FOUND, "Tasks not found");
-        }
+        return tasksOpt.orElseGet(ArrayList::new);
     }
     
     public Task createTask(Long patientId, TaskDto task) {
@@ -106,13 +90,22 @@ public class TaskService {
         return taskRepository.save(existingTask);   
     }
 
-    public void deleteTask(Long taskId) {
+    public boolean deleteTask(Long taskId) {
         Task task = getTaskById(taskId);
         taskRepository.delete(task);
+        return true;
     }
 
     public boolean existsById(Long taskId) {
         return taskRepository.findById(taskId).isPresent();
+    }
+
+    public List<Task> getAllTasks() {
+        List<Task> tasks = taskRepository.findAll();
+        if (tasks.isEmpty()) {
+            throw new AppException(HttpStatus.NOT_FOUND, "No tasks found");
+        }
+        return tasks;
     }
 
     // Additional methods for TaskService can be added here

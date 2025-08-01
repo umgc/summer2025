@@ -1,6 +1,7 @@
 package com.careconnect.service;
 
 import com.careconnect.dto.S3Props;
+import com.careconnect.dto.UserFileDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,9 +13,13 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -61,10 +66,10 @@ public class S3StorageService implements StorageService {
             log.info("DEBUG: Access Key starts with: {}...",
                     props.getAccessKey() != null ? props.getAccessKey().substring(0, 8) : "NULL");
 
-            String fileName = generateFileName(file.getOriginalFilename(), userId, userType, category);
-            String fullPath = buildFilePath(userId, userType, category, fileName);
+//            String fileName = generateFileName(file.getOriginalFilename(), userId, userType, category);
+            String fullPath = buildFilePath(userId, userType, category, file.getOriginalFilename());
 
-            log.info("DEBUG: Generated filename: {}", fileName);
+            log.info("DEBUG: Generated filename: {}", file.getOriginalFilename());
             log.info("DEBUG: Full S3 path: {}", fullPath);
 
             PutObjectResponse resp = s3.putObject(
@@ -158,6 +163,39 @@ public class S3StorageService implements StorageService {
 
             List<String> files = response.contents().stream()
                     .map(S3Object::key)
+                    .toList();
+
+            log.info("DEBUG: Found {} files for user {}", files.size(), userId);
+            return files;
+        } catch (Exception e) {
+            log.error("Failed to list files for user: {}", userId, e);
+            throw new RuntimeException("Failed to list user files", e);
+        }
+    }
+
+    public List<UserFileDTO> listUserFilesDto(Long userId, String userType) {
+        try {
+            String prefix = userType.toLowerCase() + "_" + userId + "/";
+            log.info("DEBUG: Listing files for user DTO - Bucket: {}, Prefix: {}", props.getBucket(), prefix);
+
+            ListObjectsV2Response response = s3.listObjectsV2(
+                    ListObjectsV2Request.builder()
+                            .bucket(props.getBucket())
+                            .prefix(prefix)
+                            .build()
+            );
+
+            List<UserFileDTO> files = response.contents().stream()
+                    .map(
+                            object -> UserFileDTO.builder()
+                                    .s3FullKey(object.key())
+                                    .filename(object.key().substring(object.key().lastIndexOf("/") + 1))
+                                    .fileCategory(object.key().split("/")[1])
+                                    .fileUrl(getFileUrl(object.key()))
+                                    .fileSize(object.size())
+                                    .updatedAt(LocalDateTime.ofInstant(object.lastModified(), ZoneId.systemDefault()))
+                                    .build()
+                    )
                     .toList();
 
             log.info("DEBUG: Found {} files for user {}", files.size(), userId);

@@ -194,15 +194,14 @@ public Patient registerPatient(PatientRegistration reg) {
     String encodedPassword = encoder.encode(password);
 
     // Create and save the user first to ensure we have an ID
-    User user = User.builder()
-            .email(reg.getEmail())
-            .password(encodedPassword)
-            .passwordHash(encodedPassword)
-            .role(Role.PATIENT)
-            .isVerified(false)
-            .verificationToken(passwordSetupToken)
-            .createdAt(new java.sql.Timestamp(System.currentTimeMillis()))
-            .build();
+    User user = new User();
+    user.setEmail(reg.getEmail());
+    user.setPassword(encodedPassword);
+    user.setPasswordHash(encodedPassword);
+    user.setIsVerified(false);
+    user.setRole(Role.PATIENT);
+    user.setVerificationToken(passwordSetupToken);
+    user.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
     
     User savedUser = users.save(user); // Save user first to get ID
 

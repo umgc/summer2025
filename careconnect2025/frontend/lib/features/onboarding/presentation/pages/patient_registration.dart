@@ -560,9 +560,9 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
                   : null,
             ),
             items: const [
-              DropdownMenuItem(value: 'male', child: Text('Male')),
-              DropdownMenuItem(value: 'female', child: Text('Female')),
-              DropdownMenuItem(value: 'other', child: Text('Other')),
+              DropdownMenuItem(value: 'MALE', child: Text('Male')),
+              DropdownMenuItem(value: 'FEMALE', child: Text('Female')),
+              DropdownMenuItem(value: 'OTHER', child: Text('Other')),
               DropdownMenuItem(
                 value: 'prefer_not_to_say',
                 child: Text('Prefer not to say'),
@@ -840,7 +840,7 @@ class _PatientRegistrationPageState extends State<PatientRegistrationPage> {
         'email': _emailController.text.trim(),
         // 'password': _passwordController.text.trim(), // Removed - handled on backend
         'phone': _phoneController.text.trim(),
-        'gender': _selectedGender, // Add gender field
+        'gender': _selectedGender?.toUpperCase(), // Add gender field
         'address': address.toJson(), // Use the Address model's toJson method
         'caregiverId': caregiverId,
         'relationship': _relationshipController.text.trim(),

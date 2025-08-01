@@ -1,10 +1,7 @@
-import 'dart:typed_data';
-
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import '../core/services/api_service.dart';
-import '../services/api_service.dart' as ApiService;
-import '../services/auth_token_manager.dart';
 import '../services/comprehensive_file_service.dart';
 import '../services/enhanced_file_service.dart';
 import '../providers/user_provider.dart';
@@ -31,8 +28,7 @@ class _FileManagementPageState extends State<FileManagementPage>
   String _searchQuery = '';
   FileCategory? _selectedCategory;
   final TextEditingController _searchController = TextEditingController();
-  bool _isPatient = false;
-  bool _isCaregiver = false;
+  int? _userId;
 
   @override
   void initState() {
@@ -66,7 +62,11 @@ class _FileManagementPageState extends State<FileManagementPage>
       setState(() {
         _allFiles = files;
         _filteredFiles = files;
+        _userId = user.id;
         _isLoading = false;
+        print(
+          'DEBUG: Category set as: $_selectedCategory, Files set as: $files',
+        );
       });
     } catch (e) {
       setState(() {
@@ -292,6 +292,30 @@ class _FileManagementPageState extends State<FileManagementPage>
   }
 
   Widget _buildFileCard(UserFileDTO file) {
+    // File Name Only
+    // Get index of last dot
+    int dotIndex = file.fileName.lastIndexOf('.');
+
+    // Extract filename without extension
+    String baseName = (dotIndex != -1)
+        ? file.fileName.substring(0, dotIndex)
+        : file.fileName;  // If no dot found, return full filename
+
+    // Extension Name Only
+    String getFileExtension(String fileName) {
+      int dotIndex = fileName.lastIndexOf('.');
+      if (dotIndex != -1 && dotIndex != fileName.length - 1) {
+        return fileName.substring(dotIndex);
+      }
+      return ''; // No extension found
+    }
+
+    // Usage:
+    String fileExtension = getFileExtension(file.fileName);
+    String extensionWithoutDot = fileExtension.replaceFirst('.', '');  // txt
+
+
+
     final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -306,7 +330,7 @@ class _FileManagementPageState extends State<FileManagementPage>
           ),
         ),
         title: Text(
-          file.originalFilename,
+          baseName,
           style:
               theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.bold,
@@ -331,9 +355,9 @@ class _FileManagementPageState extends State<FileManagementPage>
                 ),
                 Text(' • ', style: theme.textTheme.bodyMedium),
                 Text(
-                  _formatDate(file.createdAt),
-                  style: theme.textTheme.bodyMedium,
-                ),
+                    extensionWithoutDot,
+                    style: theme.textTheme.bodyMedium,
+                )
               ],
             ),
             if (file.description != null && file.description!.isNotEmpty) ...[
@@ -348,7 +372,23 @@ class _FileManagementPageState extends State<FileManagementPage>
           ],
         ),
         trailing: PopupMenuButton<String>(
-          onSelected: (String action) => _handleFileAction(action, file),
+          onSelected: (value) async {
+            switch (value) {
+              case 'download':
+              // TODO: Implement download functionality
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Download file feature coming soon.'), backgroundColor: AppTheme.info,),
+                );
+                break;
+              case 'delete':
+              // TODO: Implement delete functionality
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Delete file feature coming soon.'), backgroundColor: AppTheme.info,),
+                );
+                break;
+            }
+
+          },
           itemBuilder: (BuildContext context) => [
             PopupMenuItem(
               value: 'download',
@@ -367,14 +407,6 @@ class _FileManagementPageState extends State<FileManagementPage>
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
-            PopupMenuItem(
-              value: 'info',
-              child: ListTile(
-                leading: Icon(Icons.info, color: theme.iconTheme.color),
-                title: Text('Info', style: theme.textTheme.bodyMedium),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
             PopupMenuItem(
               value: 'delete',
               child: ListTile(
@@ -418,7 +450,7 @@ class _FileManagementPageState extends State<FileManagementPage>
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Use Quick Upload for fast uploads, Manual Text Entry for notes, or Speech-to-Text to convert voice into text files.',
+                        'Use File Upload for files, Manual Text Entry for notes, or Speech-to-Text to convert voice into text files.',
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                     ),
@@ -427,26 +459,10 @@ class _FileManagementPageState extends State<FileManagementPage>
               ),
             ),
             const SizedBox(height: 24),
-            // Quick Upload Section
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: QuickUploadButtons(
-                  onUploadSuccess: (response) {
-                    _loadFiles();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('File uploaded: ${response.originalFilename}'),
-                        backgroundColor: Theme.of(context).colorScheme.secondary,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
             // File Upload Section
             FileUploadWidget(
+              patientId: _userId,
+              allowedCategories: FileCategory.values,
               onUploadSuccess: (response) {
                 _loadFiles(); // Refresh the files list
               },
@@ -465,16 +481,18 @@ class _FileManagementPageState extends State<FileManagementPage>
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: ManualTextEntryCard(
-                  onSave: (fileName, fileBytes) async {
-                    // await _uploadManualTextFile(fileName, fileBytes);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Manual entry uploaded: $fileName.txt'),
-                        backgroundColor: Theme.of(context).colorScheme.secondary,
-                      ),
-                    );
-                    _loadFiles();
-                  },
+                  patientId: _userId,
+                    onUploadSuccess: (response) {
+                      _loadFiles(); // Refresh the files list
+                    },
+                    onUploadError: (error) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(error),
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                      );
+                    }
                 ),
               ),
             ),
@@ -485,16 +503,18 @@ class _FileManagementPageState extends State<FileManagementPage>
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: SpeechToTextCard(
-                  onSave: (fileName, fileBytes) async {
-                    // await _saveRecognizedTextFile(fileName, fileBytes);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Speech-to-text file saved'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                    _loadFiles();
-                  },
+                    patientId: _userId,
+                    onUploadSuccess: (response) {
+                      _loadFiles(); // Refresh the files list
+                    },
+                    onUploadError: (error) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(error),
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                      );
+                    }
                 ),
               ),
             ),
@@ -618,20 +638,42 @@ class _FileManagementPageState extends State<FileManagementPage>
     try {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Downloading ${file.originalFilename}...'),
+          content: Text('Downloading ${file.fileName}...'),
           duration: const Duration(seconds: 2),
         ),
       );
 
-      final fileData = await EnhancedFileService.downloadFile(file.id);
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final user = userProvider.user;
+      if (user == null) return;
+
+      final fileData = await EnhancedFileService.downloadFileLegacy(user.id, file.fileUrl!);
+
       if (fileData != null) {
-        // In a real app, you'd save the file to the device
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Downloaded ${file.originalFilename}'),
-            backgroundColor: AppTheme.success,
-          ),
-        );
+        // 1. Get device's Download directory
+        Directory? directory;
+        if (Platform.isAndroid || Platform.isIOS) {
+          directory = await getApplicationDocumentsDirectory(); // App-local storage
+        } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+          directory = await getDownloadsDirectory(); // User's Downloads folder
+        }
+
+        if (directory != null) {
+          final filePath = '${directory.path}/${file.fileName}';
+          final newFile = File(filePath);
+
+          // 2. Write bytes to file
+          await newFile.writeAsBytes(fileData);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('File saved to ${newFile.path}'),
+              backgroundColor: AppTheme.success,
+            ),
+          );
+        } else {
+          throw Exception('Could not access device storage');
+        }
       } else {
         throw Exception('Failed to download file');
       }
@@ -663,6 +705,8 @@ class _FileManagementPageState extends State<FileManagementPage>
   }
 
   void _showFileInfo(UserFileDTO file) {
+    String extensionWithoutDot = file.fileName.replaceFirst('.', '');  // txt
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -674,9 +718,10 @@ class _FileManagementPageState extends State<FileManagementPage>
             children: [
               _buildInfoRow('Category', file.categoryDisplayName),
               _buildInfoRow('Size', _formatFileSize(file.fileSize)),
-              _buildInfoRow('Type', file.contentType),
-              _buildInfoRow('Created', _formatDate(file.createdAt)),
-              _buildInfoRow('Updated', _formatDate(file.updatedAt)),
+              _buildInfoRow('Type', extensionWithoutDot),
+              // Comment out created and updated date as they are not passed in from the API for now.
+              // _buildInfoRow('Created', _formatDate(file.createdAt)),
+              // _buildInfoRow('Updated', _formatDate(file.updatedAt)),
               if (file.description != null && file.description!.isNotEmpty)
                 _buildInfoRow('Description', file.description!),
             ],
@@ -767,91 +812,3 @@ class _FileManagementPageState extends State<FileManagementPage>
     return '${date.day}/${date.month}/${date.year}';
   }
 }
-
-/*
-Future<void> _uploadManualTextFile(String fileName, List<int> fileBytes) async {
-  final userSession = await AuthTokenManager.getUserSession();
-  if (userSession == null || userSession['id'] == null) {
-    throw Exception('User session not found');
-  }
-
-  final userRole = userSession['role'] as String? ?? '';
-
-  setState(() {
-    _isPatient = userRole.toUpperCase() == 'PATIENT';
-    _isCaregiver =
-        userRole.toUpperCase() == 'CAREGIVER' ||
-            userRole.toUpperCase() == 'FAMILY_LINK' ||
-            userRole.toUpperCase() == 'ADMIN';
-  });
-
-  try {
-    final userSession = await AuthTokenManager.getUserSession();
-    int? profileId;
-
-    if (_isPatient) {
-      profileId = userSession?['id'] as int?;
-    } else if (_isCaregiver) {
-      profileId = widget.patientUserId;
-    }
-
-    if (profileId == null) {
-      throw Exception("Profile ID not found for the current user role");
-    }
-
-    final response = await ApiService.uploadUserFileFromBytes(
-      userId: profileId,
-      fileBytes: Uint8List.fromList(fileBytes),
-      fileName: '$fileName.txt',
-      category: 'manualTextEntry',
-      role: _isPatient ? 'PATIENT' : 'CAREGIVER',
-    );
-
-    if (response.statusCode == 200) {
-      await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('File Saved'),
-          content: Text('File: $fileName.txt has been uploaded successfully.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Close'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Error'),
-          content: Text('Failed to upload file: $fileName.txt.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Close'),
-            ),
-          ],
-        ),
-      );
-    }
-  } catch (e) {
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Error'),
-        content: Text('Error uploading file: $fileName.txt.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
- */
-
-
