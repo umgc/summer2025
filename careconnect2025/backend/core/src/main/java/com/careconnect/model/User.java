@@ -39,7 +39,7 @@ public class User {
     @Column(name = "login_streak")
     private Integer loginStreak;
 
-    @Column(name = "leaderboard_opt_in", nullable = false)
+    @Column(name = "leaderboard_opt_in", nullable = true)
     private Boolean leaderboardOptIn = true;
 
     @Enumerated(EnumType.STRING)

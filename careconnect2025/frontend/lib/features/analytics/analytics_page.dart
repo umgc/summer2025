@@ -745,16 +745,22 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withOpacity(0.07),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.blue.shade200),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.18),
+                  ),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.lightbulb_outline,
                       size: 16,
-                      color: Colors.blue.shade600,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -762,7 +768,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                         'Click "Ask AI" to start a conversation about the patient\'s health data',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.blue.shade700,
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -830,17 +836,23 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               _onFilterChanged(days);
             }
           },
-          selectedColor: Colors.blue.shade600.withValues(alpha: 0.2),
-          checkmarkColor: Colors.blue.shade600,
+          selectedColor: Theme.of(
+            context,
+          ).colorScheme.primary.withOpacity(0.15),
+          checkmarkColor: Theme.of(context).colorScheme.primary,
           labelStyle: TextStyle(
-            color: isSelected ? Colors.blue.shade600 : Colors.grey.shade600,
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Colors.grey.shade600,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
           backgroundColor: Colors.grey.shade100,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side: BorderSide(
-              color: isSelected ? Colors.blue.shade600 : Colors.grey.shade300,
+              color: isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.grey.shade300,
               width: 1,
             ),
           ),
@@ -859,6 +871,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }) {
     final displaySpots = spots.isEmpty ? [const FlSpot(0, 0)] : spots;
     final bool hasData = spots.isNotEmpty;
+    final themePrimary = Theme.of(context).colorScheme.primary;
+    final themePrimaryLighter = Theme.of(
+      context,
+    ).colorScheme.primary.withOpacity(0.08);
 
     return Card(
       elevation: 4,
@@ -868,10 +884,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
-            colors: [
-              ColorUtils.backgroundPrimary,
-              ColorUtils.getPrimaryLighter(),
-            ],
+            colors: [Colors.white, themePrimaryLighter],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -887,7 +900,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                     width: 4,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: primaryColor ?? ColorUtils.primary,
+                      color: primaryColor ?? themePrimary,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -909,7 +922,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: ColorUtils.getPrimaryWithOpacity(0.1),
+                        color: themePrimary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -917,7 +930,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                         style: TextStyle(
                           fontSize:
                               14, // Increased from 12 for better readability
-                          color: primaryColor ?? ColorUtils.primary,
+                          color: primaryColor ?? themePrimary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -960,22 +973,23 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                         LineChartBarData(
                           spots: spots,
                           isCurved: true,
-                          color: primaryColor ?? Colors.blue.shade600,
+                          color: primaryColor ?? themePrimary,
                           barWidth: 3,
                           dotData: FlDotData(
                             show: spots.length <= 10,
                             getDotPainter: (spot, percent, barData, index) =>
                                 FlDotCirclePainter(
                                   radius: 4,
-                                  color: primaryColor ?? Colors.blue.shade600,
+                                  color: primaryColor ?? themePrimary,
                                   strokeWidth: 2,
                                   strokeColor: Colors.white,
                                 ),
                           ),
                           belowBarData: BarAreaData(
                             show: true,
-                            color: (primaryColor ?? Colors.blue.shade600)
-                                .withValues(alpha: 0.1),
+                            color: (primaryColor ?? themePrimary).withOpacity(
+                              0.1,
+                            ),
                           ),
                         ),
                       ],
@@ -1230,8 +1244,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade700,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,
@@ -1242,7 +1256,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           ),
         ),
         floatingActionButton: FloatingActionButton(
-          backgroundColor: Colors.blue.shade700,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
           child: const Icon(Icons.chat_bubble_outline),
           onPressed: () {
             final double sheetHeight =
@@ -1304,72 +1319,20 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: const CommonDrawer(currentRoute: '/analytics'),
       appBar: AppBar(
-        backgroundColor: Colors.blue.shade900,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Patient Analytics',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
         ),
-        actions: [
-          // Refresh button
-          IconButton(
-            onPressed: loading ? null : fetchAnalytics,
-            icon: Icon(
-              Icons.refresh,
-              color: loading ? Colors.white54 : Colors.white,
-            ),
-            tooltip: 'Refresh Data',
+        title: Text(
+          'Patient Analytics',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
           ),
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            child: ElevatedButton.icon(
-              onPressed: () => exportFile('pdf'),
-              icon: const Icon(Icons.picture_as_pdf, size: 18),
-              label: const Text('PDF'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade600,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                textStyle: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            child: ElevatedButton.icon(
-              onPressed: () => exportFile('csv'),
-              icon: const Icon(Icons.table_chart, size: 18),
-              label: const Text('CSV'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.success,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                textStyle: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
       body: Stack(
         children: [
@@ -1435,8 +1398,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                                 borderRadius: BorderRadius.circular(16),
                                 gradient: LinearGradient(
                                   colors: [
-                                    Colors.blue.shade700,
-                                    Colors.blue.shade500,
+                                    Theme.of(context).colorScheme.primary,
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.primary.withOpacity(0.85),
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
@@ -1452,8 +1417,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                                         Container(
                                           padding: const EdgeInsets.all(12),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withValues(
-                                              alpha: 0.2,
+                                            color: Colors.white.withOpacity(
+                                              0.2,
                                             ),
                                             borderRadius: BorderRadius.circular(
                                               12,
