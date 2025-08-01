@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lottie/lottie.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '/shared/widgets/voice_assistant_lottie.dart';
-
+import 'package:go_router/go_router.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    
     final isMobile = MediaQuery.of(context).size.width < 800;
-    final router = GoRouter.of(context);
-
     return Scaffold(
-      backgroundColor: Colors.white,
-      drawer: isMobile ? _buildDrawer(router) : null,
+      backgroundColor: const Color(0xFFF5F6FA),
+      drawer: isMobile ? _buildDrawer(context) : null,
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 241, 241, 242),
-        automaticallyImplyLeading: isMobile,
-        title: const Text(
-          "DeepTrain Dashboard",
-          style: TextStyle(color: Colors.black),
-        ),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        title: const Text('DeepTrain', style: TextStyle(color: Colors.black)),
         actions: [
+          const Icon(Icons.notifications, color: Colors.black),
+          const SizedBox(width: 16),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.account_circle, color: Colors.black),
+            icon: const CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.grey,
+              child: Icon(Icons.person, color: Colors.white, size: 18),
+            ),
             onSelected: (value) {
               switch (value) {
                 case 'account':
@@ -33,7 +34,7 @@ class AdminDashboardScreen extends StatelessWidget {
                     context: context,
                     builder: (_) => AlertDialog(
                       title: const Text('Account Details'),
-                      content: const Text('Email: user@example.com\nRole: Trainee'),
+                      content: const Text('Email: user@example.com\nRole: Admin'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(),
@@ -68,7 +69,6 @@ class AdminDashboardScreen extends StatelessWidget {
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            
                             Navigator.of(context).pop();
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Password change requested')),
@@ -93,7 +93,6 @@ class AdminDashboardScreen extends StatelessWidget {
                             value: notificationsEnabled,
                             onChanged: (val) {
                               setState(() => notificationsEnabled = val);
-                              // TODO: persist this toggle
                             },
                           ),
                           actions: [
@@ -112,7 +111,9 @@ class AdminDashboardScreen extends StatelessWidget {
                     context: context,
                     builder: (_) => AlertDialog(
                       title: const Text('Privacy & Terms'),
-                      content: const Text('By using this app you agree to our Privacy Policy and Terms of Service.'),
+                      content: const Text(
+                        'By using this app you agree to our Privacy Policy and Terms of Service.',
+                      ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(),
@@ -123,12 +124,12 @@ class AdminDashboardScreen extends StatelessWidget {
                   );
                   break;
                 case 'logout':
-                  router.pop('/');
+                  GoRouter.of(context).go('/');
                   break;
               }
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
+            itemBuilder: (context) => const [
+              PopupMenuItem(
                 value: 'account',
                 child: ListTile(
                   dense: true,
@@ -136,7 +137,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   title: Text('Account Details'),
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'password',
                 child: ListTile(
                   dense: true,
@@ -144,7 +145,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   title: Text('Change Password'),
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'notifications',
                 child: ListTile(
                   dense: true,
@@ -152,7 +153,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   title: Text('Notifications'),
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'privacy',
                 child: ListTile(
                   dense: true,
@@ -160,8 +161,8 @@ class AdminDashboardScreen extends StatelessWidget {
                   title: Text('Privacy & Terms'),
                 ),
               ),
-              const PopupMenuDivider(),
-              const PopupMenuItem(
+              PopupMenuDivider(),
+              PopupMenuItem(
                 value: 'logout',
                 child: ListTile(
                   dense: true,
@@ -171,214 +172,253 @@ class AdminDashboardScreen extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(width: 16),
         ],
       ),
-      body: isMobile ? _buildMobileLayout() : _buildWebLayout(router),
-    );
-  }
-
-  Widget _buildDrawer(GoRouter router) {
-    return Drawer(
-      child: ListView(
+      body: Row(
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Color(0xFF6366F1)),
-            child: Image(
-              image: AssetImage('assets/images/DeepTrain_Logo_small.webp'),
-              height: 60,
-            ),
-          ),
-        
-          ListTile(
-            leading: const Icon(Icons.build),
-            title: const Text("Scenario Builder"),
-            onTap: () => router.push('/scenario'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.smart_toy),
-            title: const Text("Simulator"),
-            onTap: () => router.go('/simulator'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.analytics),
-            title: const Text("KPI Dashboard"),
-            onTap: () => router.go('/kpi'),
-          ),
-          const Divider(),
-         
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMobileLayout() {
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _summaryCard("Tasks Completed", "255"),
-          const SizedBox(height: 16),
-          _summaryCard("Upcoming Tasks", "67"),
-          const SizedBox(height: 16),
-          _chartCard(),
-          const SizedBox(height: 16),
-          _scenariosList(),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: SizedBox(
-              height: 80,
-              width: 80,
-              child: const VoiceAssistantLottie(),
-
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWebLayout(GoRouter router) {
-    return Row(
-      children: [
-        Container(
-          width: 220,
-          color: const Color.fromARGB(255, 241, 241, 242),
-          child: Column(
-            children: [
-              const DrawerHeader(
-                child: Image(
-                  image: AssetImage('assets/images/DeepTrain_Logo_small.webp'),
-                  height: 60,
-                ),
-              ),
-              ListTile(
-                textColor: Colors.black,
-                iconColor: Colors.black,
-                leading: const Icon(Icons.build),
-                title: const Text("Scenario Builder"),
-                onTap: () => router.push('/scenario'),
-              ),
-              ListTile(
-                textColor: Colors.black,
-                iconColor: Colors.black,
-                leading: const Icon(Icons.smart_toy),
-                title: const Text("Simulator"),
-                onTap: () => router.push('/simulator'),
-              ),
-              ListTile(
-                textColor: Colors.black,
-                iconColor: Colors.black,
-                leading: const Icon(Icons.analytics),
-                title: const Text("KPI Dashboard"),
-                onTap: () => router.push('/Kpi'),
-              ),
-              const Divider(color: Colors.white),
-            
-            ],
-          ),
-        ),
-        Expanded(
-          child: Stack(
-            children: [
-              ListView(
-                padding: const EdgeInsets.all(16),
+          if (!isMobile) _buildDrawer(context),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(child: _summaryCard("Tasks Completed", "255")),
-                      const SizedBox(width: 12),
-                      Expanded(child: _summaryCard("Upcoming Tasks", "67")),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _chartCard(),
-                  const SizedBox(height: 16),
-                  _scenariosList(),
+                  _buildStatsGrid(),
+                  const SizedBox(height: 20),
+                  _buildRevenueSection(),
+                  const SizedBox(height: 20),
+                  _buildAvailableDriversTable(),
                 ],
               ),
-              Positioned(
-                bottom: 16,
-                right: 16,
-                child: SizedBox(
-                  height: 80,
-                  width: 80,
-                  child: Lottie.asset('assets/images/deeptrain_animation.json'),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    final router = GoRouter.of(context);
+    return Container(
+      width: 220,
+      color: Colors.white,
+      child: Column(
+        children: [
+          const DrawerHeader(
+            child: Text("Admin Panel", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          ),
+          ListTile(
+            leading: const Icon(Icons.dashboard),
+            title: const Text("Scenario Designer"),
+             onTap: () => router.push('/scenario'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.drive_eta),
+            title: const Text("Simulator"),
+             onTap: () => router.push('/simulator'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.group),
+            title: const Text("KPI Dashboard"),
+            onTap: () => router.push('/Kpi'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsGrid() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildStatCard("Scenario Completed", "7", Colors.orange),
+        _buildStatCard("Simulation Average", "87", Colors.green),
+        _buildStatCard("Simulation in Progress", "3", Colors.red),
+        _buildStatCard("Scheduled Simulations", "13", Colors.purple),
       ],
     );
   }
 
-  Widget _summaryCard(String title, String value) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 8),
-            Text(value, style: const TextStyle(fontSize: 28, color: Color(0xFF6366F1))),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _chartCard() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SizedBox(
-          height: 250,
-          child: LineChart(
-            LineChartData(
-              lineBarsData: [
-                LineChartBarData(
-                  isCurved: true,
-                  color: const Color(0xFF6366F1),
-                  spots: const [
-                    FlSpot(0, 1),
-                    FlSpot(1, 2),
-                    FlSpot(2, 1.5),
-                    FlSpot(3, 3),
-                  ],
-                ),
-              ],
-            ),
+  Widget _buildStatCard(String label, String value, Color color) {
+    return Expanded(
+      child: Card(
+        elevation: 2,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text(value, style: TextStyle(fontSize: 24, color: color, fontWeight: FontWeight.bold)),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _scenariosList() {
+  Widget _buildRevenueSection() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 2,
+          child: Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("Kpi Data Chart", style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 200,
+                    child: LineChart(
+                      LineChartData(
+                        titlesData: FlTitlesData(
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              interval: 500,
+                              getTitlesWidget: (value, _) {
+                                return Text('10', style: const TextStyle(fontSize: 10));
+                              },
+                            ),
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, _) {
+                                switch (value.toInt()) {
+                                  case 0:
+                                    return const Text('Jan');
+                                  case 1:
+                                    return const Text('Feb');
+                                  case 2:
+                                    return const Text('Mar');
+                                  case 3:
+                                    return const Text('Apr');
+                                  case 4:
+                                    return const Text('May');
+                                  default:
+                                    return const Text('');
+                                }
+                              },
+                            ),
+                          ),
+                          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        ),
+                        gridData: FlGridData(show: true),
+                        borderData: FlBorderData(show: true),
+                        lineBarsData: [
+                          LineChartBarData(
+                            isCurved: true,
+                            color: Colors.blue,
+                            spots: const [
+                              FlSpot(0, 1123),
+                              FlSpot(1, 989),
+                              FlSpot(2, 1005),
+                              FlSpot(3, 1540),
+                              FlSpot(4, 1110),
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text("Today's Scores", style: TextStyle(fontWeight: FontWeight.bold)),
+                  SizedBox(height: 4),
+                  Text("%100", style: TextStyle(color: Colors.red, fontSize: 16)),
+                  SizedBox(height: 8),
+                  Text("Last 7 days"),
+                  Text("%87", style: TextStyle(color: Colors.red)),
+                  SizedBox(height: 8),
+                  Text("Last 30 days"),
+                  Text("%91", style: TextStyle(color: Colors.red)),
+                  SizedBox(height: 8),
+                  Text("Last 12 months"),
+                  Text("%90", style: TextStyle(color: Colors.red)),
+                  Text("Last 3 years"),
+                  Text("%0", style: TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget _buildAvailableDriversTable() {
+    final drivers = List.generate(5, (index) => {
+      'name': 'John Doe',
+      'phone': '1234567890',
+      'location': 'New York',
+      'Score': '87'
+    });
+
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: const Padding(
-        padding: EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Scenarios", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            ListTile(
-              leading: Icon(Icons.play_arrow),
-              title: Text("Scenario 1"),
-              subtitle: Text("Last run: 2 days ago"),
-            ),
-            ListTile(
-              leading: Icon(Icons.play_arrow),
-              title: Text("Scenario 2"),
-              subtitle: Text("Last run: 5 days ago"),
+            const Text("Recent Simulations", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 12),
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(2),
+                1: FlexColumnWidth(2),
+                2: FlexColumnWidth(2),
+                3: FlexColumnWidth(1),
+                4: FlexColumnWidth(2),
+              },
+              children: [
+                const TableRow(
+                  decoration: BoxDecoration(color: Color(0xFFEFEFEF)),
+                  children: [
+                    Padding(padding: EdgeInsets.all(8), child: Text("Name")),
+                    Padding(padding: EdgeInsets.all(8), child: Text("Phone")),
+                    Padding(padding: EdgeInsets.all(8), child: Text("Location")),
+                    Padding(padding: EdgeInsets.all(8), child: Text("Score")),
+                    Padding(padding: EdgeInsets.all(8), child: Text("Action")),
+                  ],
+                ),
+                ...drivers.map((driver) => TableRow(
+                  children: [
+                    Padding(padding: const EdgeInsets.all(8), child: Text(driver['name']!)),
+                    Padding(padding: const EdgeInsets.all(8), child: Text(driver['phone']!)),
+                    Padding(padding: const EdgeInsets.all(8), child: Text(driver['location']!)),
+                    Padding(padding: const EdgeInsets.all(8), child: Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.orange, size: 16),
+                        Text(driver['Score']!)
+                      ],
+                    )),
+                    Padding(padding: const EdgeInsets.all(8), child: OutlinedButton(
+                      onPressed: () {},
+                      child: const Text("Load Scenario"),
+                    )),
+                  ]
+                ))
+              ],
             ),
           ],
         ),
