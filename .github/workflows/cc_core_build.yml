@@ -96,7 +96,7 @@ jobs:
           MAIL_SMTP_STARTTLS: ${{secrets.MAIL_SMTP_STARTTLS}}
           MAIL_USERNAME: ${{secrets.MAIL_USERNAME}}
           OPENAI_API_KEY: ${{secrets.OPENAI_API_KEY}}
-          SECURITY_JWT_SECRET: ${{secrets.SECURITY_JWT_SECRET}}
+          SECURITY_JWT_SECRET: AQjXYDSUjpJsV5GWy4gseggg/64egregaegdfgezdge345vfeHEWe=
           SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
           STRIPE_SECRET_KEY: ${{secrets.STRIPE_SECRET_KEY}}
           STRIPE_WEBHOOK_SIGNING_SECRET: ${{secrets.STRIPE_WEBHOOK_SIGNING_SECRET}}
