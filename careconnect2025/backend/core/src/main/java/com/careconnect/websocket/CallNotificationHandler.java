@@ -16,9 +16,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@Slf4j
 @RequiredArgsConstructor
 public class CallNotificationHandler extends TextWebSocketHandler {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CallNotificationHandler.class);
     // Helper to get display name for a user
     private String getUserDisplayName(User user) {
         if (user.getName() != null && !user.getName().isEmpty()) {

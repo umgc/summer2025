@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
 import com.careconnect.model.Patient;
-import com.careconnect.model.PatientAIConfig;
+import com.careconnect.model.UserAIConfig;
 import com.careconnect.repository.PatientRepository;
 import com.careconnect.service.MedicalContextService;
 import com.careconnect.service.PatientContextRetrievalService;
@@ -34,7 +34,13 @@ public class LangChainAIChatService implements AIChatService {
     private final PatientRepository patientRepository;
     private final MedicalContextService medicalContextService;
     private final PatientContextRetrievalService patientContextRetrievalService;
-    private final PatientAIConfigService patientAIConfigService;
+    private final UserAIConfigService userAIConfigService;
+
+    // Add userId field for compatibility
+    private Long userId;
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 
     @Autowired
     public LangChainAIChatService(
@@ -43,7 +49,7 @@ public class LangChainAIChatService implements AIChatService {
             PatientRepository patientRepository,
             MedicalContextService medicalContextService,
             PatientContextRetrievalService patientContextRetrievalService,
-            PatientAIConfigService patientAIConfigService) {
+            UserAIConfigService userAIConfigService) {
         this.modelProvider = modelProvider;
         this.chatModel = OpenAiChatModel.builder()
             .apiKey(openAiApiKey)
@@ -52,7 +58,7 @@ public class LangChainAIChatService implements AIChatService {
         this.patientRepository = patientRepository;
         this.medicalContextService = medicalContextService;
         this.patientContextRetrievalService = patientContextRetrievalService;
-        this.patientAIConfigService = patientAIConfigService;
+        this.userAIConfigService = userAIConfigService;
     }
     private ChatMemory getMemory(Long patientId) {
         // Keep last 20 messages per patient (in-memory, for demo)
@@ -89,6 +95,8 @@ public class LangChainAIChatService implements AIChatService {
             generatedConversationId = null;
         }
         try {
+            // Always set userId from request before using it
+            this.userId = request.getUserId();
             // Defensive: Validate request
             if (request == null) {
                 throw new IllegalArgumentException("ChatRequest cannot be null");
@@ -122,8 +130,56 @@ public class LangChainAIChatService implements AIChatService {
             // Use real repository/service to load patient data
             Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new IllegalArgumentException("Patient not found for ID: " + patientId));
-            var aiConfigDTO = patientAIConfigService.getPatientAIConfig(patientId);
-            PatientAIConfig aiConfig = patientAIConfigService.convertDTOToEntity(aiConfigDTO);
+            UserAIConfig aiConfig;
+            try {
+                var aiConfigDTO = userAIConfigService.getUserAIConfig(userId, patientId);
+                aiConfig = userAIConfigService.convertDTOToEntity(aiConfigDTO);
+                if (aiConfig == null) {
+                    // No config found, create and persist default
+                    aiConfig = UserAIConfig.builder()
+                        .userId(userId)
+                        .patientId(patientId)
+                        .preferredAiProvider(UserAIConfig.AIProvider.OPENAI)
+                        .isActive(true)
+                        .conversationHistoryLimit(20)
+                        .maxTokens(1000)
+                        .temperature(0.7)
+                        .includeVitalsByDefault(false)
+                        .includeMedicationsByDefault(false)
+                        .includeNotesByDefault(false)
+                        .includeMoodPainByDefault(false)
+                        .includeAllergiesByDefault(false)
+                        .systemPrompt(null)
+                        .build();
+                    try {
+                        userAIConfigService.saveUserAIConfig(userAIConfigService.convertToDTO(aiConfig));
+                    } catch (Exception saveEx) {
+                        System.out.println("[AIChat] Failed to persist default config: " + saveEx.getMessage());
+                    }
+                }
+            } catch (Exception ex) {
+                System.out.println("[AIChat] No valid user AI config found, using default config.");
+                aiConfig = UserAIConfig.builder()
+                    .userId(userId)
+                    .patientId(patientId)
+                    .preferredAiProvider(UserAIConfig.AIProvider.OPENAI)
+                    .isActive(true)
+                    .conversationHistoryLimit(20)
+                    .maxTokens(1000)
+                    .temperature(0.7)
+                    .includeVitalsByDefault(true)
+                    .includeMedicationsByDefault(true)
+                    .includeNotesByDefault(true)
+                    .includeMoodPainByDefault(true)
+                    .includeAllergiesByDefault(true)
+                    .systemPrompt(null)
+                    .build();
+                try {
+                    userAIConfigService.saveUserAIConfig(userAIConfigService.convertToDTO(aiConfig));
+                } catch (Exception saveEx) {
+                    System.out.println("[AIChat] Failed to persist default config: " + saveEx.getMessage());
+                }
+            }
             final String CYAN = "\u001B[36;1m";
             final String RESET = "\u001B[0m";
             System.out.println(CYAN + "[DEBUG] Using patientId: " + patientId + RESET);

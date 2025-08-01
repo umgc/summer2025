@@ -81,8 +81,6 @@ public class CaregiverService {
     @Autowired
     private SubscriptionRepository subscriptionRepository;
     
-    @Autowired(required = false)
-    private FirebaseNotificationService notificationService;    // 1. List patients under a caregiver, with optional filtering (ACTIVE links only)
     // public List<Patient> getPatientsByCaregiver(Long caregiverId, String email, String name) {
     //     // Get caregiver user
     //     Caregiver caregiver = getCaregiverById(caregiverId);
@@ -249,36 +247,7 @@ public Patient registerPatient(PatientRegistration reg) {
             password
         );
         
-        // Send Firebase notification to patient about registration
-        try {
-            String caregiverName = reg.getCaregiverId() != null ? 
-                caregiverRepository.findById(reg.getCaregiverId())
-                    .map(c -> c.getFirstName() + " " + c.getLastName())
-                    .orElse("Your caregiver") : "CareConnect";
-            
-            // Send notification only if Firebase is enabled
-            if (notificationService != null) {
-                notificationService.sendNotificationToUser(
-                    savedUser.getId(),
-                    "🎉 Welcome to CareConnect!",
-                    String.format("You've been registered by %s. Please check your email to set up your password.", caregiverName),
-                    "PATIENT_REGISTRATION",
-                    Map.of(
-                        "type", "PATIENT_REGISTRATION",
-                        "caregiverName", caregiverName,
-                        "registeredAt", Instant.now().toString(),
-                    "patientId", savedPatient.getId().toString()
-                )
-            );
-            
-            log.info("Patient registration notification sent to user ID: {}", savedUser.getId());
-            } else {
-                log.info("Firebase notifications disabled - skipping notification for user ID: {}", savedUser.getId());
-            }
-        } catch (Exception e) {
-            log.warn("Failed to send patient registration notification: {}", e.getMessage());
-            // Don't fail the registration if notification fails
-        }
+        // Firebase notification logic removed
         
         return savedPatient;
     } catch (Exception e) {

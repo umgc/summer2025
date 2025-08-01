@@ -6,77 +6,146 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:app_links/app_links.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'firebase_options.dart';
 import 'providers/user_provider.dart';
 import 'providers/theme_provider.dart';
 import 'config/router/app_router.dart';
 import 'services/auth_migration_helper.dart';
 import 'services/messaging_service.dart';
 import 'services/video_call_service.dart';
+import 'services/messaging_service.dart';
 import 'config/theme/app_theme.dart';
 import 'config/utils/responsive_utils.dart';
 import 'config/utils/web_utils.dart';
 
-// Background message handler for Firebase
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  print("Handling a background message: ${message.messageId}");
-}
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Only do critical initialization synchronously
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // Global error handling for Flutter errors
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    // Optionally log to a remote server
+    debugPrint(
+      'FlutterError: \\n${details.exceptionAsString()}\\n${details.stack}',
+    );
+  };
 
-  // Performance optimization: Set preferred orientations
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
+  // Global error handling for unhandled Dart errors
+  runZonedGuarded(
+    () async {
+      // Performance optimization: Set preferred orientations
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
 
-  // Configure URL strategy for web to remove hash from URLs
-  usePathUrlStrategy();
+      // Configure URL strategy for web to remove hash from URLs
+      usePathUrlStrategy();
 
-  // Load environment quickly
-  await dotenv.load();
+      // Load environment quickly
+      await dotenv.load();
 
-  // Create providers (don't initialize them yet)
-  final userProvider = UserProvider();
-  final themeProvider = ThemeProvider();
+      // Create providers (don't initialize them yet)
+      final userProvider = UserProvider();
+      final themeProvider = ThemeProvider();
 
-  // Start the app immediately, initialize services in background
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: userProvider),
-        ChangeNotifierProvider.value(value: themeProvider),
-      ],
-      child: const CareConnectApp(),
-    ),
+      // Start the app immediately, initialize services in background
+      runApp(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: userProvider),
+            ChangeNotifierProvider.value(value: themeProvider),
+          ],
+          child: CareConnectAppWithErrorBoundary(),
+        ),
+      );
+
+      // Initialize heavy services in background after app starts
+      _initializeServicesInBackground(userProvider);
+    },
+    (error, stack) {
+      debugPrint('Uncaught error: $error\\n$stack');
+      // Optionally log to a remote server
+    },
   );
+}
 
-  // Initialize heavy services in background after app starts
-  _initializeServicesInBackground(userProvider);
+/// Top-level error boundary widget for global error UI
+class CareConnectAppWithErrorBoundary extends StatefulWidget {
+  @override
+  State<CareConnectAppWithErrorBoundary> createState() =>
+      _CareConnectAppWithErrorBoundaryState();
+}
+
+class _CareConnectAppWithErrorBoundaryState
+    extends State<CareConnectAppWithErrorBoundary> {
+  @override
+  void initState() {
+    super.initState();
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      // You can customize this error UI as needed
+      return MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error, color: Colors.red, size: 64),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Something went wrong',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    details.exceptionAsString(),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Try to restart the app by popping all routes
+                      runApp(CareConnectAppWithErrorBoundary());
+                    },
+                    child: const Text('Restart App'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const CareConnectApp();
+  }
 }
 
 // Background initialization to not block app startup
 Future<void> _initializeServicesInBackground(UserProvider userProvider) async {
   try {
-    // Run these in parallel for faster initialization
-    await Future.wait([
-      _bootstrap(),
-      MessagingService.initialize(),
-      VideoCallService.initializeService(),
-      userProvider.initializeUser(),
-      _handleAuthMigration(),
-    ], eagerError: false); // Don't stop if one fails
+    await _bootstrap();
+    await userProvider.initializeUser();
+    await VideoCallService.initializeService();
+    await _handleAuthMigration();
+
+    // Only establish the WebSocket connection at this stage
+    try {
+      await MessagingService.initialize();
+      print(
+        '✅ MessagingService WebSocket connection established (user not registered yet)',
+      );
+    } catch (e) {
+      print('⚠️ MessagingService WebSocket connection failed: $e');
+      // Do not rethrow, app should continue running
+    }
 
     print('✅ Background services initialized');
   } catch (e) {
@@ -164,7 +233,9 @@ class _CareConnectAppState extends State<CareConnectApp> {
 
   @override
   void dispose() {
-    _linkSubscription?.cancel();
+    if (_linkSubscription != null) {
+      _linkSubscription!.cancel();
+    }
     super.dispose();
   }
 

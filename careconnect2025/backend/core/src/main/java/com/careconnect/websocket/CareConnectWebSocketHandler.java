@@ -16,9 +16,20 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@Slf4j
 @RequiredArgsConstructor
 public class CareConnectWebSocketHandler extends TextWebSocketHandler {
+    // Register a user for undying HTTP session (for REST registration)
+    public void registerUser(String userId, String userName) {
+        // Create a dummy User object for registration
+        User user = new User();
+        user.setId(Long.valueOf(userId));
+        user.setName(userName);
+        user.setEmail(userName + "@dummy.local");
+        // No WebSocketSession, but store user info for monitoring
+        sessionUsers.put(userId, user);
+        log.info("Registered user {} ({}) for undying HTTP session", userId, userName);
+    }
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CareConnectWebSocketHandler.class);
     // Helper to get display name for a user
     private String getUserDisplayName(User user) {
         if (user.getName() != null && !user.getName().isEmpty()) {

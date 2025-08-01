@@ -46,7 +46,34 @@ class _AIConfigurationPageState extends State<AIConfigurationPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('AI Configuration'),
-        // ...existing code...
+        actions: [
+          TextButton(
+            onPressed: (_isLoading || _isSaving)
+                ? null
+                : () {
+                    // Discard changes and navigate back
+                    context.pop();
+                  },
+            child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: (_isLoading || _isSaving)
+                ? null
+                : () async {
+                    await _saveConfiguration();
+                  },
+            child: _isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Save', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
       drawer: const CommonDrawer(currentRoute: '/ai-configuration'),
       body: _isLoading
@@ -94,33 +121,28 @@ class _AIConfigurationPageState extends State<AIConfigurationPage> {
 
   Future<void> _loadConfiguration() async {
     try {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      final userId = userProvider.user?.id;
+      final config = await AIConfigService.getUserAIConfig(context);
+      if (config != null) {
+        setState(() {
+          _currentConfig = config;
+          _selectedProvider = config.aiProvider;
+          _personality = config.personalityStyle;
+          _contextMemoryEnabled = config.contextMemoryEnabled;
+          _medicalContextEnabled = config.medicalContextEnabled;
+          _emergencyDetection = config.emergencyAlertsEnabled;
+          _maxTokens = config.maxTokensPerSession;
+          _temperature = config.temperature;
+          _language = config.language;
 
-      if (userId != null) {
-        final config = await AIConfigService.getPatientAIConfig(userId);
-        if (config != null) {
-          setState(() {
-            _currentConfig = config;
-            _selectedProvider = config.aiProvider;
-            _personality = config.personalityStyle;
-            _contextMemoryEnabled = config.contextMemoryEnabled;
-            _medicalContextEnabled = config.medicalContextEnabled;
-            _emergencyDetection = config.emergencyAlertsEnabled;
-            _maxTokens = config.maxTokensPerSession;
-            _temperature = config.temperature;
-            _language = config.language;
-
-            // Map enabled features to UI switches
-            _voiceEnabled = config.enabledFeatures.contains('voice');
-            _emotionalSupport = config.enabledFeatures.contains(
-              'emotional_support',
-            );
-            _medicationReminders = config.enabledFeatures.contains(
-              'medication_reminders',
-            );
-          });
-        }
+          // Map enabled features to UI switches (ensure keys match backend DTO)
+          _voiceEnabled = config.enabledFeatures.contains('general_chat');
+          _emotionalSupport = config.enabledFeatures.contains(
+            'mental_health_support',
+          );
+          _medicationReminders = config.enabledFeatures.contains(
+            'medication_reminders',
+          );
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -143,51 +165,53 @@ class _AIConfigurationPageState extends State<AIConfigurationPage> {
 
     try {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      final userId = userProvider.user?.id;
+      final user = userProvider.user;
+      if (user == null) throw Exception('User not found');
 
-      if (userId != null) {
-        // Build enabled features list
-        List<String> enabledFeatures = [];
-        if (_voiceEnabled) enabledFeatures.add('voice');
-        if (_emotionalSupport) enabledFeatures.add('emotional_support');
-        if (_medicationReminders) enabledFeatures.add('medication_reminders');
+      // Build enabled features list from current UI state (use backend keys)
+      List<String> enabledFeatures = [];
+      if (_voiceEnabled) enabledFeatures.add('general_chat');
+      if (_emotionalSupport) enabledFeatures.add('mental_health_support');
+      if (_medicationReminders) enabledFeatures.add('medication_reminders');
 
-        final config = PatientAIConfigDTO(
-          id: _currentConfig?.id,
-          patientId: userId,
-          aiProvider: _selectedProvider,
-          preferences: {
-            'language': _language,
-            'voice_enabled': _voiceEnabled,
-            'emotional_support': _emotionalSupport,
-            'medication_reminders': _medicationReminders,
-          },
-          enabledFeatures: enabledFeatures,
-          maxTokensPerSession: _maxTokens,
-          temperature: _temperature,
-          personalityStyle: _personality,
-          contextMemoryEnabled: _contextMemoryEnabled,
-          medicalContextEnabled: _medicalContextEnabled,
-          language: _language,
-          emergencyAlertsEnabled: _emergencyDetection,
-        );
+      final config = PatientAIConfigDTO(
+        id: _currentConfig?.id,
+        patientId: user.id, // keep for compatibility, not used in logic
+        aiProvider: _selectedProvider,
+        preferences: {
+          'language': _language,
+          'voice_enabled': _voiceEnabled,
+          'emotional_support': _emotionalSupport,
+          'medication_reminders': _medicationReminders,
+        },
+        enabledFeatures: enabledFeatures,
+        maxTokensPerSession: _maxTokens,
+        temperature: _temperature,
+        personalityStyle: _personality,
+        contextMemoryEnabled: _contextMemoryEnabled,
+        medicalContextEnabled: _medicalContextEnabled,
+        language: _language,
+        emergencyAlertsEnabled: _emergencyDetection,
+      );
 
-        final result = await AIConfigService.savePatientAIConfig(config);
+      // Use AIConfigService to update config
+      final savedConfig = await AIConfigService.saveUserAIConfig(
+        config,
+        userId: user.id,
+      );
 
-        if (result != null) {
-          setState(() => _currentConfig = result);
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('AI configuration saved successfully!'),
-                backgroundColor: Theme.of(context).colorScheme.primary,
-              ),
-            );
-          }
-        } else {
-          throw Exception('Failed to save configuration');
+      if (savedConfig != null) {
+        setState(() => _currentConfig = savedConfig);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('AI configuration saved successfully!'),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+            ),
+          );
         }
+      } else {
+        throw Exception('Failed to save configuration');
       }
     } catch (e) {
       if (mounted) {

@@ -5,6 +5,7 @@ import com.careconnect.dto.ChatResponse;
 import com.careconnect.dto.ChatConversationSummary;
 import com.careconnect.dto.ChatMessageSummary;
 import com.careconnect.model.*;
+import com.careconnect.model.UserAIConfig;
 import lombok.Builder;
 import com.careconnect.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -29,16 +30,17 @@ public class DefaultAIChatService implements AIChatService {
     // Use a message window memory for demo (20 messages)
     private final ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(20);
     // Helper: Get or create patient AI config
-    private PatientAIConfig getOrCreatePatientAIConfig(Long patientId) {
-        return patientAIConfigRepository.findByPatientIdAndIsActiveTrue(patientId)
-                .orElseGet(() -> createDefaultAIConfig(patientId));
+    private UserAIConfig getOrCreateUserAIConfig(Long userId, Long patientId) {
+        return userAIConfigRepository.findByUserIdAndPatientIdAndIsActiveTrue(userId, patientId)
+                .orElseGet(() -> createDefaultUserAIConfig(userId, patientId));
     }
 
     // Helper: Create default AI config
-    private PatientAIConfig createDefaultAIConfig(Long patientId) {
-        PatientAIConfig config = PatientAIConfig.builder()
+    private UserAIConfig createDefaultUserAIConfig(Long userId, Long patientId) {
+        UserAIConfig config = UserAIConfig.builder()
+                .userId(userId)
                 .patientId(patientId)
-                .preferredAiProvider(PatientAIConfig.AIProvider.OPENAI)
+                .preferredAiProvider(UserAIConfig.AIProvider.OPENAI)
                 .openaiModel("gpt-3.5-turbo")
                 .deepseekModel("deepseek-chat")
                 .maxTokens(1000)
@@ -52,11 +54,11 @@ public class DefaultAIChatService implements AIChatService {
                 .isActive(true)
                 .systemPrompt("You are a healthcare AI assistant. Carefully analyze and summarize the provided patient data (vitals, labs, medications, allergies, and notes). Clearly state what the data shows about the patient's current health. Do not make up information. If the answer is not in the data, say you do not know. Always recommend consulting a healthcare professional for medical decisions.")
                 .build();
-        return patientAIConfigRepository.save(config);
+        return userAIConfigRepository.save(config);
     }
 
     // Helper: Get or create conversation
-    private ChatConversation getOrCreateConversation(ChatRequest request, PatientAIConfig aiConfig) {
+    private ChatConversation getOrCreateConversation(ChatRequest request, UserAIConfig aiConfig) {
         if (request.getConversationId() != null) {
             Optional<ChatConversation> existing = chatConversationRepository.findByConversationIdAndIsActiveTrue(request.getConversationId());
             if (existing.isPresent()) {
@@ -110,8 +112,8 @@ public class DefaultAIChatService implements AIChatService {
             messages.add(createMessage("system", medicalContext));
         }
         Integer historyLimit = 20;
-        if (conversation.getPatientId() != null) {
-            PatientAIConfig config = getOrCreatePatientAIConfig(conversation.getPatientId());
+        if (conversation.getUserId() != null && conversation.getPatientId() != null) {
+            UserAIConfig config = getOrCreateUserAIConfig(conversation.getUserId(), conversation.getPatientId());
             historyLimit = (config != null && config.getConversationHistoryLimit() != null) ? config.getConversationHistoryLimit() : 20;
         }
         List<ChatMessage> recentMessages = chatMessageRepository
@@ -135,8 +137,8 @@ public class DefaultAIChatService implements AIChatService {
             messages.add(dev.langchain4j.data.message.SystemMessage.from(medicalContext));
         }
         Integer historyLimit = 20;
-        if (conversation.getPatientId() != null) {
-            PatientAIConfig config = getOrCreatePatientAIConfig(conversation.getPatientId());
+        if (conversation.getUserId() != null && conversation.getPatientId() != null) {
+            UserAIConfig config = getOrCreateUserAIConfig(conversation.getUserId(), conversation.getPatientId());
             historyLimit = (config != null && config.getConversationHistoryLimit() != null) ? config.getConversationHistoryLimit() : 20;
         }
         List<ChatMessage> recentMessages = chatMessageRepository
@@ -158,11 +160,11 @@ public class DefaultAIChatService implements AIChatService {
     }
 
     // Helper: Determine model
-    private String determineModel(ChatRequest request, PatientAIConfig aiConfig) {
+    private String determineModel(ChatRequest request, UserAIConfig aiConfig) {
         if (request.getPreferredModel() != null) {
             return request.getPreferredModel();
         }
-        return aiConfig.getPreferredAiProvider() == PatientAIConfig.AIProvider.OPENAI ?
+        return aiConfig.getPreferredAiProvider() == UserAIConfig.AIProvider.OPENAI ?
                 aiConfig.getOpenaiModel() : aiConfig.getDeepseekModel();
     }
 
@@ -323,7 +325,7 @@ public class DefaultAIChatService implements AIChatService {
     // Helper classes
     private static class ChatProcessingContext {
         final Patient patient;
-        final PatientAIConfig aiConfig;
+        final UserAIConfig aiConfig;
         final ChatConversation conversation;
         final List<Object> messages;
         final String model;
@@ -332,7 +334,7 @@ public class DefaultAIChatService implements AIChatService {
         final String medicalContext;
         final long startTime;
 
-        ChatProcessingContext(Patient patient, PatientAIConfig aiConfig, ChatConversation conversation,
+        ChatProcessingContext(Patient patient, UserAIConfig aiConfig, ChatConversation conversation,
                               List<Object> messages, String model, Double temperature, Integer max_tokens,
                               String medicalContext, long startTime) {
             this.patient = patient;
@@ -363,7 +365,7 @@ public class DefaultAIChatService implements AIChatService {
             this.error = error;
         }
     }
-    private final PatientAIConfigRepository patientAIConfigRepository;
+    private final UserAIConfigRepository userAIConfigRepository;
     private final ChatConversationRepository chatConversationRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final PatientRepository patientRepository;
@@ -385,8 +387,8 @@ public class DefaultAIChatService implements AIChatService {
             Patient patient = patientRepository.findById(request.getPatientId())
                     .orElseThrow(() -> new IllegalArgumentException("Patient not found"));
 
-            // Get or create patient AI configuration
-            PatientAIConfig aiConfig = getOrCreatePatientAIConfig(request.getPatientId());
+            // Get or create user AI configuration
+            UserAIConfig aiConfig = getOrCreateUserAIConfig(request.getUserId(), request.getPatientId());
 
             // Get or create conversation
             ChatConversation conversation = getOrCreateConversation(request, aiConfig);

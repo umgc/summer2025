@@ -22,9 +22,6 @@ public class VitalSampleService {
     private final VitalSampleRepository vitalSampleRepository;
     private final PatientRepository patientRepository;
     
-    @Autowired(required = false)
-    private FirebaseNotificationService notificationService;
-    
     /**
      * Create a new vital sample
      */
@@ -259,8 +256,6 @@ public class VitalSampleService {
      * Helper method to send vital alerts only if Firebase is enabled
      */
     private void sendVitalAlertIfEnabled(Long patientId, String type, String value, String alertLevel) {
-        if (notificationService != null) {
-            notificationService.sendVitalAlert(patientId, type, value, alertLevel);
-        }
+        // Firebase notification logic removed
     }
 }

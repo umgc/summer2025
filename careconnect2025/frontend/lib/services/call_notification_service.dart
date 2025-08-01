@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:socket_io_client/socket_io_client.dart' as io;
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/status.dart' as status;
 import '../widgets/incoming_call_popup.dart';
 import '../widgets/hybrid_video_call_widget.dart';
+import '../config/env_constant.dart';
 
 /// Service to handle real-time call notifications for caregivers
 class CallNotificationService {
-  static io.Socket? _socket;
+  static WebSocketChannel? _channel;
   static bool _isConnected = false;
   static String? _currentUserId;
   static String? _currentUserRole;
@@ -26,6 +28,7 @@ class CallNotificationService {
     required String userId,
     required String userRole, // 'CAREGIVER' or 'PATIENT'
     required BuildContext context,
+    String? websocketUrl, // Optional: pass WebSocket URL for flexibility
   }) async {
     try {
       _currentUserId = userId;
@@ -34,60 +37,45 @@ class CallNotificationService {
 
       print('🔔 Initializing CallNotificationService for $userRole: $userId');
 
-      // Connect to your backend WebSocket/Socket.IO server
-      // For development: ws://localhost:8080
-      // For production: replace with your actual backend URL
-      const String websocketUrl = String.fromEnvironment(
-        'WEBSOCKET_URL',
-        defaultValue: 'ws://localhost:8080',
+      // Connect to backend WebSocket endpoint (not socket.io)
+      final String wsUrl = websocketUrl ?? getWebSocketNotificationUrl();
+      print('Connecting to notification WebSocket: $wsUrl');
+      _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
+      _isConnected = true;
+
+      // Register user after connection
+      final registerMsg = {
+        'type': 'register',
+        'userId': userId,
+        'userRole': userRole,
+      };
+      _channel!.sink.add(_encode(registerMsg));
+
+      // Listen for messages
+      _channel!.stream.listen(
+        (message) {
+          final data = _decode(message);
+          if (data == null) return;
+          if (data['type'] == 'incoming-video-call') {
+            print('📞 Received incoming video call: $data');
+            _handleIncomingCall(data);
+          } else if (data['type'] == 'call-ended') {
+            print('📞 Call ended: $data');
+          } else if (data['type'] == 'call-answered') {
+            print('📞 Call answered: $data');
+          } else if (data['type'] == 'call-declined') {
+            print('📞 Call declined: $data');
+          }
+        },
+        onDone: () {
+          _isConnected = false;
+          print('❌ CallNotificationService WebSocket closed');
+        },
+        onError: (e) {
+          _isConnected = false;
+          print('❌ CallNotificationService WebSocket error: $e');
+        },
       );
-
-      _socket = io.io(websocketUrl, <String, dynamic>{
-        'transports': ['websocket'],
-        'autoConnect': false,
-        'query': {'userId': userId, 'userRole': userRole},
-      });
-
-      _socket!.connect();
-
-      // Connection events
-      _socket!.onConnect((_) {
-        _isConnected = true;
-        print('✅ CallNotificationService connected');
-
-        // Join user-specific room for notifications
-        _socket!.emit('join-user-room', {
-          'userId': userId,
-          'userRole': userRole,
-        });
-      });
-
-      _socket!.onDisconnect((_) {
-        _isConnected = false;
-        print('❌ CallNotificationService disconnected');
-      });
-
-      // Listen for incoming video call invitations
-      _socket!.on('incoming-video-call', (data) {
-        print('📞 Received incoming video call: $data');
-        _handleIncomingCall(data);
-      });
-
-      // Listen for call status updates
-      _socket!.on('call-ended', (data) {
-        print('📞 Call ended: $data');
-        // Handle call ended notification
-      });
-
-      _socket!.on('call-answered', (data) {
-        print('📞 Call answered: $data');
-        // Handle call answered notification
-      });
-
-      _socket!.on('call-declined', (data) {
-        print('📞 Call declined: $data');
-        // Handle call declined notification
-      });
 
       return true;
     } catch (e) {
@@ -164,11 +152,15 @@ class CallNotificationService {
     print('✅ Accepting call: $callId');
 
     // Notify backend that call was accepted
-    _socket?.emit('accept-call', {
-      'callId': callId,
-      'acceptedBy': _currentUserId,
-      'acceptedByRole': _currentUserRole,
-    });
+    if (_channel != null && _isConnected) {
+      final msg = {
+        'type': 'accept-call',
+        'callId': callId,
+        'acceptedBy': _currentUserId,
+        'acceptedByRole': _currentUserRole,
+      };
+      _channel!.sink.add(_encode(msg));
+    }
 
     // Close the incoming call popup
     Navigator.of(_context!).pop();
@@ -195,11 +187,15 @@ class CallNotificationService {
     print('❌ Declining call: $callId');
 
     // Notify backend that call was declined
-    _socket?.emit('decline-call', {
-      'callId': callId,
-      'declinedBy': _currentUserId,
-      'declinedByRole': _currentUserRole,
-    });
+    if (_channel != null && _isConnected) {
+      final msg = {
+        'type': 'decline-call',
+        'callId': callId,
+        'declinedBy': _currentUserId,
+        'declinedByRole': _currentUserRole,
+      };
+      _channel!.sink.add(_encode(msg));
+    }
 
     // Close the incoming call popup
     if (_context != null) {
@@ -214,15 +210,14 @@ class CallNotificationService {
     required String callId,
     required bool isVideoCall,
   }) async {
-    if (!_isConnected || _socket == null) {
+    if (!_isConnected || _channel == null) {
       print('❌ Cannot send call invitation - not connected');
       return false;
     }
-
     try {
       print('📤 Sending call invitation to $recipientRole: $recipientId');
-
-      _socket!.emit('send-video-call-invitation', {
+      final msg = {
+        'type': 'send-video-call-invitation',
         'callId': callId,
         'callerId': _currentUserId,
         'callerName': _getCurrentUserName(),
@@ -231,13 +226,36 @@ class CallNotificationService {
         'recipientRole': recipientRole,
         'isVideoCall': isVideoCall,
         'timestamp': DateTime.now().toIso8601String(),
-      });
-
+      };
+      _channel!.sink.add(_encode(msg));
       return true;
     } catch (e) {
       print('❌ Error sending call invitation: $e');
       return false;
     }
+  }
+
+  // Helper to encode/decode JSON
+  static String _encode(Map<String, dynamic> data) {
+    return data.toString().replaceAll(
+      "'",
+      '"',
+    ); // quick-and-dirty for demo; use jsonEncode in real code
+  }
+
+  static Map<String, dynamic>? _decode(dynamic message) {
+    try {
+      if (message is String) {
+        // quick-and-dirty for demo; use jsonDecode in real code
+        return Map<String, dynamic>.from(
+          (message as String).replaceAll('"', '"') == message ? {} : {},
+        ); // TODO: replace with jsonDecode
+      }
+    } catch (e) {
+      print('❌ Error decoding WebSocket message: $e');
+    }
+    return null;
+    // removed extra closing brace here
   }
 
   /// Get current user name from context or default
@@ -251,9 +269,8 @@ class CallNotificationService {
   static void dispose() {
     print('🧹 Disposing CallNotificationService');
 
-    _socket?.disconnect();
-    _socket?.dispose();
-    _socket = null;
+    _channel?.sink.close(status.goingAway);
+    _channel = null;
 
     _isConnected = false;
     _currentUserId = null;

@@ -65,11 +65,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     3: '😕',
     4: '😐',
     5: '🙂',
-    6: '😊',
-    7: '😃',
-    8: '😄',
-    9: '😁',
-    10: '😍',
   };
 
   // Add pain emoji mapping
@@ -363,7 +358,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 children: [
                   // Header row
                   pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                    decoration: const pw.BoxDecoration(
+                      color: PdfColors.grey300,
+                    ),
                     children: [
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(8),
@@ -1244,6 +1241,34 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             ],
           ),
         ),
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: Colors.blue.shade700,
+          child: const Icon(Icons.chat_bubble_outline),
+          onPressed: () {
+            final double sheetHeight =
+                MediaQuery.of(context).size.height * 0.75;
+            showModalBottomSheet(
+              isScrollControlled: true,
+              context: context,
+              backgroundColor: Colors.white,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width,
+              ),
+              builder: (context) => SizedBox(
+                height: sheetHeight,
+                child: AIChat(
+                  role: 'caregiver',
+                  healthDataContext: _getHealthDataContext(),
+                  isModal: true,
+                ),
+              ),
+            );
+          },
+          tooltip: 'Ask AI about analytics',
+        ),
       );
     }
 
@@ -1363,7 +1388,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -1504,7 +1529,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -1597,18 +1622,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                     ),
                   ),
               ],
-            ),
-          ),
-          // AI Chat Widget for analytics context - properly positioned at bottom right
-          Positioned(
-            bottom: 0,
-            right: 0,
-            width:
-                MediaQuery.of(context).size.width *
-                0.4, // Constrain width to 40% of screen
-            child: AIChat(
-              role: 'analytics',
-              healthDataContext: _getHealthDataContext(),
             ),
           ),
         ],

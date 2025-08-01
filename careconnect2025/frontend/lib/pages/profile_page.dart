@@ -76,8 +76,9 @@ class _ProfilePageState extends State<ProfilePage> {
       final user = userProvider.user;
 
       if (user != null) {
-        // Mock profile data for now - replace with actual API call
-        final profile = {
+        // TODO: Replace with actual API call for patient or caregiver
+        // For now, mock address fields for both roles
+        Map<String, dynamic> profile = {
           'name': user.name,
           'email': user.email,
           'phone': '',
@@ -92,6 +93,26 @@ class _ProfilePageState extends State<ProfilePage> {
           'emergencyContact': '',
           'medicalNotes': '',
         };
+
+        // Example: If you fetch from getPatient or getCaregiver API, populate address fields here
+        // if (user.role.toUpperCase() == 'CAREGIVER') {
+        //   final caregiver = await ApiService.getCaregiver(user.id);
+        //   profile['address'] = caregiver.address;
+        //   profile['city'] = caregiver.city;
+        //   profile['state'] = caregiver.state;
+        //   profile['zipCode'] = caregiver.zipCode;
+        //   profile['country'] = caregiver.country;
+        //   // ...other fields
+        // } else if (user.role.toUpperCase() == 'PATIENT') {
+        //   final patient = await ApiService.getPatient(user.id);
+        //   profile['address'] = patient.address;
+        //   profile['city'] = patient.city;
+        //   profile['state'] = patient.state;
+        //   profile['zipCode'] = patient.zipCode;
+        //   profile['country'] = patient.country;
+        //   // ...other fields
+        // }
+
         if (mounted) {
           setState(() {
             _userProfile = profile;
@@ -322,6 +343,27 @@ class _ProfilePageState extends State<ProfilePage> {
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider.user;
 
+    // Fallback avatar logic: show image if picked, else first letter of name, else icon
+    Widget avatarChild;
+    if (_imageFile != null) {
+      avatarChild = const SizedBox.shrink();
+    } else if (user != null && user.name != null && user.name!.isNotEmpty) {
+      avatarChild = Text(
+        user.name![0].toUpperCase(),
+        style: TextStyle(
+          fontSize: 40,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    } else {
+      avatarChild = Icon(
+        Icons.person,
+        size: 60,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -336,15 +378,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     context,
                   ).colorScheme.surfaceContainerHighest,
                   backgroundImage: _imageFile != null
-                      ? FileImage(_imageFile!) as ImageProvider
+                      ? FileImage(_imageFile!)
                       : null,
-                  child: _imageFile == null
-                      ? Icon(
-                          Icons.person,
-                          size: 60,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        )
-                      : null,
+                  child: avatarChild,
                 ),
                 if (_isEditing)
                   Positioned(
@@ -379,7 +415,9 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 16),
             Text(
-              user?.name ?? 'User',
+              (user != null && user.name != null && user.name!.isNotEmpty)
+                  ? user.name!
+                  : 'User',
               style: Theme.of(
                 context,
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
@@ -387,7 +425,7 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 4),
             Chip(
               label: Text(
-                user?.role ?? 'USER',
+                (user != null && user.role.isNotEmpty) ? user.role : 'USER',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onPrimary,
                   fontWeight: FontWeight.bold,

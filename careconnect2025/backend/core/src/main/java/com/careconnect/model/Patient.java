@@ -43,4 +43,7 @@ public class Patient {
     private List<Allergy> allergies = new ArrayList<>();
 
     private String relationship; // e.g. "daughter", "client", etc.
+
+    // Explicit getter for compatibility if Lombok is not processed
+    public User getUser() { return user; }
 }

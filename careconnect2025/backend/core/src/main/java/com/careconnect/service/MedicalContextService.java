@@ -22,7 +22,7 @@ public class MedicalContextService {
     private final VitalsRepository vitalsRepository;
     private final AllergyRepository allergyRepository;
     
-    public String buildPatientContext(Long patientId, ChatRequest request, PatientAIConfig aiConfig) {
+    public String buildPatientContext(Long patientId, ChatRequest request, UserAIConfig aiConfig) {
         StringBuilder context = new StringBuilder();
         
         // Get patient basic info
@@ -86,23 +86,23 @@ public class MedicalContextService {
         return context.toString();
     }
     
-    private boolean shouldIncludeVitals(ChatRequest request, PatientAIConfig aiConfig) {
+    private boolean shouldIncludeVitals(ChatRequest request, UserAIConfig aiConfig) {
         return request.getIncludeVitals() != null ? request.getIncludeVitals() : aiConfig.getIncludeVitalsByDefault();
     }
     
-    private boolean shouldIncludeMedications(ChatRequest request, PatientAIConfig aiConfig) {
+    private boolean shouldIncludeMedications(ChatRequest request, UserAIConfig aiConfig) {
         return request.getIncludeMedications() != null ? request.getIncludeMedications() : aiConfig.getIncludeMedicationsByDefault();
     }
     
-    private boolean shouldIncludeNotes(ChatRequest request, PatientAIConfig aiConfig) {
+    private boolean shouldIncludeNotes(ChatRequest request, UserAIConfig aiConfig) {
         return request.getIncludeNotes() != null ? request.getIncludeNotes() : aiConfig.getIncludeNotesByDefault();
     }
     
-    private boolean shouldIncludeMoodPainLogs(ChatRequest request, PatientAIConfig aiConfig) {
+    private boolean shouldIncludeMoodPainLogs(ChatRequest request, UserAIConfig aiConfig) {
         return request.getIncludeMoodPainLogs() != null ? request.getIncludeMoodPainLogs() : aiConfig.getIncludeMoodPainByDefault();
     }
     
-    private boolean shouldIncludeAllergies(ChatRequest request, PatientAIConfig aiConfig) {
+    private boolean shouldIncludeAllergies(ChatRequest request, UserAIConfig aiConfig) {
         return request.getIncludeAllergies() != null ? request.getIncludeAllergies() : aiConfig.getIncludeAllergiesByDefault();
     }
     

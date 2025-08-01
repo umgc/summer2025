@@ -168,6 +168,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
         // Transform the API response structure to match our model expectations
         if (_isCaregiver) {
+          // Defensive extraction of professional info fields
+          final professional = rawData['professional'] ?? {};
           return {
             'id': rawData['id'] ?? 0,
             'name': '${rawData['firstName'] ?? ''} ${rawData['lastName'] ?? ''}'
@@ -179,17 +181,17 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             'state': rawData['address']?['state'] ?? '',
             'zipCode': rawData['address']?['zip'] ?? '',
             'country': '', // Default to empty as it's not in the response
-            // Extract specialization from the professional object - use yearsExperience as a string
-            'specialization': rawData['professional'] != null
-                ? rawData['professional']['yearsExperience']?.toString() ?? ''
-                : '',
-            // Use caregiverType for organization if available
-            'organization': rawData['caregiverType'] ?? '',
-            // Use license number from the professional object if available
-            'license': rawData['professional'] != null
-                ? rawData['professional']['licenseNumber'] ?? ''
-                : '',
-            'dateOfBirth': rawData['dob'] ?? '', // Added date of birth handling
+            // Professional info fields
+            'specialization':
+                professional['specialization'] ??
+                professional['specialty'] ??
+                professional['yearsExperience']?.toString() ??
+                '',
+            'organization':
+                rawData['caregiverType'] ?? professional['organization'] ?? '',
+            'license':
+                professional['licenseNumber'] ?? professional['license'] ?? '',
+            'dateOfBirth': rawData['dob'] ?? '',
             'profilePictureUrl':
                 rawData['profileImageUrl'] ?? rawData['profilePictureUrl'],
           };
@@ -237,11 +239,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     _zipCodeController.text = profile.zipCode ?? '';
     _countryController.text = profile.country ?? '';
 
-    _specializationController.text = profile.specialization ?? '';
-    _organizationController.text = profile.organization ?? '';
-    _licenseController.text = profile.license ?? '';
-    _dateOfBirthController.text =
-        profile.dateOfBirth ?? ''; // Added date of birth handling
+    _specializationController.text = (profile.specialization ?? '').trim();
+    _organizationController.text = (profile.organization ?? '').trim();
+    _licenseController.text = (profile.license ?? '').trim();
+    _dateOfBirthController.text = (profile.dateOfBirth ?? '').trim();
   }
 
   void _populatePatientFields() {

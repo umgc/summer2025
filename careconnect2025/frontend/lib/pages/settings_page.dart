@@ -13,92 +13,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  @override
-  Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-    final user = userProvider.user;
-    if (user == null) {
-      // Redirect to login if not authenticated
-      Future.microtask(() => context.go('/login'));
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    final isPatient = user.role.toUpperCase() == 'PATIENT';
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        foregroundColor: Theme.of(context).colorScheme.onSurface,
-        elevation: 0,
-        actions: [
-          // Cancel button
-          TextButton(
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/dashboard');
-              }
-            },
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-            ),
-          ),
-          // Save button
-          TextButton(
-            onPressed: _saveSettings,
-            child: Text(
-              'Save',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-      drawer: const CommonDrawer(currentRoute: '/settings'),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // AI Configuration Section (Patient only)
-          if (isPatient) ...[
-            _buildSectionHeader(context, 'AI Assistant'),
-            _buildSettingsCard(
-              context,
-              icon: Icons.smart_toy,
-              title: 'AI Configuration',
-              subtitle: 'Customize your AI assistant settings',
-              onTap: () => context.go('/ai-configuration'),
-            ),
-            const SizedBox(height: 24),
-          ],
-          // ...existing code...
-        ],
-      ),
-    );
-  }
-
-  void _saveSettings() {
-    // Placeholder for save settings functionality
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Settings saved')));
-
-    // Navigate back to dashboard after saving
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (context.mounted) {
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.go('/dashboard');
-        }
-      }
-    });
-  }
-
   Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, left: 4),
@@ -248,7 +162,6 @@ class _SettingsPageState extends State<SettingsPage> {
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              // Implement account deletion logic
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text(
@@ -267,6 +180,122 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.user;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Settings'), actions: const []),
+      drawer: const CommonDrawer(currentRoute: '/settings'),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16.0,
+          ), // Apply horizontal padding
+          child: ListView(
+            children: [
+              Center(
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 36,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.1),
+                      child:
+                          (user != null &&
+                              user.name != null &&
+                              user.name!.isNotEmpty)
+                          ? Text(
+                              user.name![0].toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 32,
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          : Icon(
+                              Icons.person,
+                              size: 32,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      (user != null &&
+                              user.name != null &&
+                              user.name!.isNotEmpty)
+                          ? user.name!
+                          : 'User',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    Text(
+                      (user != null && user.email.isNotEmpty) ? user.email : '',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+              _buildSectionHeader(context, 'Appearance'),
+              _buildThemeCard(context),
+              const SizedBox(height: 24),
+              _buildSectionHeader(context, 'AI Assistant'),
+              _buildSettingsCard(
+                context,
+                icon: Icons.smart_toy,
+                title: 'AI Configuration',
+                subtitle: 'Customize your AI assistant settings',
+                onTap: () => context.push(
+                  '/ai-configuration',
+                ), // Use push for back button support
+              ),
+              const SizedBox(height: 24),
+              _buildSectionHeader(context, 'Subscription'),
+              _buildSettingsCard(
+                context,
+                icon: Icons.subscriptions,
+                title: 'Manage Subscription',
+                subtitle: 'View or update your subscription plan',
+                onTap: () => context.push(
+                  '/select-package',
+                ), // Use push for back button support
+              ),
+              const SizedBox(height: 24),
+              _buildSectionHeader(context, 'General'),
+              _buildSettingsCard(
+                context,
+                icon: Icons.cleaning_services,
+                title: 'Clear Cache',
+                subtitle: 'Remove temporary files and cache data',
+                onTap: () => _showClearCacheDialog(context),
+              ),
+              _buildSettingsCard(
+                context,
+                icon: Icons.logout,
+                title: 'Sign Out',
+                subtitle: 'Sign out of your account',
+                onTap: () => _showSignOutDialog(context),
+                textColor: Theme.of(context).colorScheme.error,
+                iconColor: Theme.of(context).colorScheme.error,
+              ),
+              _buildSettingsCard(
+                context,
+                icon: Icons.delete_forever,
+                title: 'Delete Account',
+                subtitle: 'Permanently delete your account',
+                onTap: () => _showDeleteAccountDialog(context),
+                textColor: Theme.of(context).colorScheme.error,
+                iconColor: Theme.of(context).colorScheme.error,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
