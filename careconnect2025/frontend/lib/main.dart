@@ -248,10 +248,8 @@ class _CareConnectAppState extends State<CareConnectApp> {
       debugShowCheckedModeBanner: false,
       themeMode: themeProvider.themeMode,
       theme: AppTheme.lightTheme.copyWith(
-        // Additional theme customizations
         visualDensity: VisualDensity.adaptivePlatformDensity,
         textTheme: AppTheme.lightTheme.textTheme.apply(fontFamily: 'Roboto'),
-        // Platform-specific theme adjustments
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
@@ -262,7 +260,6 @@ class _CareConnectAppState extends State<CareConnectApp> {
             TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
           },
         ),
-        // Adjust card elevation for iOS vs Android
         cardTheme: CardThemeData(
           elevation: kIsWeb ? 2 : (ResponsiveUtils.isIOS ? 1 : 2),
           shape: RoundedRectangleBorder(
@@ -271,10 +268,8 @@ class _CareConnectAppState extends State<CareConnectApp> {
         ),
       ),
       darkTheme: AppTheme.darkTheme.copyWith(
-        // Additional dark theme customizations
         visualDensity: VisualDensity.adaptivePlatformDensity,
         textTheme: AppTheme.darkTheme.textTheme.apply(fontFamily: 'Roboto'),
-        // Platform-specific theme adjustments
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
@@ -285,7 +280,6 @@ class _CareConnectAppState extends State<CareConnectApp> {
             TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
           },
         ),
-        // Adjust card elevation for iOS vs Android
         cardTheme: CardThemeData(
           elevation: kIsWeb ? 3 : (ResponsiveUtils.isIOS ? 2 : 3),
           shape: RoundedRectangleBorder(
@@ -294,26 +288,17 @@ class _CareConnectAppState extends State<CareConnectApp> {
         ),
       ),
       routerConfig: appRouter,
-      // Performance optimization and responsive behavior
       builder: (context, child) {
-        // Handle text scaling for accessibility
         final mediaQuery = MediaQuery.of(context);
         final textScaleFactor = mediaQuery.textScaleFactor.clamp(0.8, 1.2);
-
-        // Apply platform-specific adjustments
         Widget updatedChild = child!;
-
-        // Apply safe area with platform awareness
         updatedChild = SafeArea(
-          bottom: !ResponsiveUtils.isWeb, // Web doesn't need bottom padding
+          bottom: !ResponsiveUtils.isWeb,
           child: updatedChild,
         );
-
-        // Apply the adjusted MediaQuery
         return MediaQuery(
           data: mediaQuery.copyWith(
             textScaler: TextScaler.linear(textScaleFactor),
-            // Ensure proper viewport settings across devices
             devicePixelRatio: ResponsiveUtils.isWeb
                 ? mediaQuery.devicePixelRatio
                 : mediaQuery.devicePixelRatio.clamp(1.0, 3.0),
