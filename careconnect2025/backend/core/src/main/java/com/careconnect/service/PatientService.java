@@ -30,6 +30,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import com.careconnect.dto.CaregiverPatientLinkResponse;
 
+import com.careconnect.dto.FamilyMemberLinkResponse;
+
+import com.careconnect.service.FamilyMemberService;
+
 @Service
 public class PatientService {
 
@@ -56,6 +60,9 @@ public class PatientService {
 
     @Autowired
     private MoodPainLogService moodPainLogService;
+
+    @Autowired
+    private FamilyMemberService familyMemberService;
 
     // 1. List caregivers associated with a patient (ACTIVE links only)
     public List<Caregiver> getCaregiversByPatient(Long patientId) {
@@ -207,7 +214,14 @@ public class PatientService {
         LatestVitalsDTO latestVitals = getLatestVitals(patientId);
         LatestMoodPainDTO latestMoodPain = getLatestMoodPain(patientId);
         MedicalSummaryDTO medicalSummary = buildMedicalSummary(patientId, allergies, activeMedications, latestVitals, latestMoodPain);
-        
+
+        // Get caregiver and family member link IDs (not user IDs)
+        List<CaregiverPatientLinkResponse> caregiverLinks = caregiverPatientLinkService.getCaregiversByPatient(patient.getUser().getId());
+        Long caregiverId = caregiverLinks.isEmpty() ? null : caregiverLinks.get(0).id();
+
+        List<FamilyMemberLinkResponse> familyLinks = familyMemberService.getFamilyMembersByPatientId(patient.getId());
+        Long familyMemberId = familyLinks.isEmpty() ? null : familyLinks.get(0).id();
+
         return Optional.of(EnhancedPatientProfileDTO.builder()
             .id(patient.getId())
             .firstName(patient.getFirstName())
@@ -223,6 +237,8 @@ public class PatientService {
             .latestVitals(latestVitals)
             .latestMoodPain(latestMoodPain)
             .medicalSummary(medicalSummary)
+            .caregiverId(caregiverId)
+            .familyMemberId(familyMemberId)
             .build());
     }
     
