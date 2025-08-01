@@ -33,56 +33,9 @@ resource "aws_cloudwatch_event_target" "backend_build_drop_target" {
       "bucket"  : "<bucket>",
       "key"     : "<key>",
       "lambda"  : "${var.cc_lamnda_function_name}",
-      "apigwid" : "${var.cc_main_api_id}"
-    }
-    EOF
-  }
-  retry_policy {
-    maximum_event_age_in_seconds = 90
-    maximum_retry_attempts       = 5
-  }
-}
-
-resource "aws_cloudwatch_event_rule" "lambda_updated_rule" {
-  name        = "lambda-version-published-rule"
-  description = "Capture events for Lambda function state changes"
-  event_pattern = jsonencode({
-    source      = ["aws.lambda"]
-    detail-type = ["AWS API Call via CloudTrail"]
-    detail = {
-      eventSource = ["lambda.amazonaws.com"]
-      requestParameters = {
-        functionName = ["${var.cc_lamnda_function_name}"] # Replace with your function name
-      }
-      responseElements = {
-        state = ["Active"]
-        version = [{
-          "numeric" : [">", 0]
-        }]
-      }
-    }
-  })
-  tags = merge(var.default_tags, { Name : "lambda-version-published-rule" })
-}
-
-resource "aws_cloudwatch_event_target" "update_apigw_target" {
-  rule     = aws_cloudwatch_event_rule.lambda_updated_rule.name
-  arn      = var.cc_deployment_sfn_arn
-  role_arn = var.cc_app_role_arn
-  input_transformer {
-    input_paths = {
-      functionName = "$.detail.functionName"
-      functionArn  = "$.detail.functionArn"
-      version      = "$.detail.version"
-    }
-    input_template = <<-EOF
-    {
-      "flow"          : "apigw",
-      "functionArn"   : "<functionArn>",
-      "functionName"  : "<functionName>",
-      "version"       : "<version>",
+      "apigwId" : "${var.cc_main_api_id}",
       "integrationId" : "${var.cc_api_integration_id}",
-      "apigwid"       : "${var.cc_main_api_id}"
+      "apigwRole" : "${var.cc_apigw_role_arn}"
     }
     EOF
   }
@@ -91,3 +44,4 @@ resource "aws_cloudwatch_event_target" "update_apigw_target" {
     maximum_retry_attempts       = 5
   }
 }
+

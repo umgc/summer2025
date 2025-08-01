@@ -115,6 +115,7 @@ resource "aws_iam_role_policy_attachment" "cc_app_role_policy_attach" {
 resource "aws_apigatewayv2_integration" "main" {
   depends_on           = [aws_iam_role_policy_attachment.cc_app_role_policy_attach]
   api_id               = data.terraform_remote_state.cc_common_state.outputs.main_api_id
+  description          = "CC APP Lambda Integration"
   integration_type     = "AWS_PROXY"
   integration_method   = "POST"
   integration_uri      = aws_lambda_function.cc_main_backend_lambda.qualified_arn
@@ -138,6 +139,7 @@ module "deployment" {
   cc_main_api_id               = data.terraform_remote_state.cc_common_state.outputs.main_api_id
   cc_deployment_sfn_arn        = data.terraform_remote_state.cc_common_state.outputs.cc_deployment_sfn_arn
   cc_api_integration_id        = aws_apigatewayv2_integration.main.id
+  cc_apigw_role_arn            = data.terraform_remote_state.cc_common_state.outputs.cc_api_gw_role.arn
   cc_app_role_name             = data.terraform_remote_state.cc_common_state.outputs.cc_app_role_info.name
   cc_main_backend_lambda_arn   = aws_lambda_function.cc_main_backend_lambda.arn
 }

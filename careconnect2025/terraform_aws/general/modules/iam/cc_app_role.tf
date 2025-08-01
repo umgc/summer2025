@@ -84,8 +84,15 @@ resource "aws_iam_policy" "cc_app_role_policy" {
           "iam:PassRole"
         ],
         Resource = [
-          "${aws_iam_role.cc_app_role.arn}"
+          "${aws_iam_role.cc_app_role.arn}",
+          "${aws_iam_role.cc_api_gw_role.arn}"
         ]
+      },
+      {
+        Sid      = "AllowSNSPublish",
+        Effect   = "Allow",
+        Action   = "sns:Publish",
+        Resource = "arn:aws:sns:*:${data.aws_caller_identity.caller.account_id}:main_admin_email"
       },
       {
         Sid      = "AllowAmplifyStartDeployment",

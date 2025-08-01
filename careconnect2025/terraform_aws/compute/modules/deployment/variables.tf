@@ -5,6 +5,14 @@ variable "cc_app_role_arn" {
   type        = string
   description = "The ARN of the IAM role that the Step Function will assume"
 }
+variable "cc_app_role_name" {
+  type        = string
+  description = "The name of the IAM role to add a policy for deployment"
+}
+variable "cc_apigw_role_arn" {
+  type        = string
+  description = "The ARN of the API Gateway role used for integration"
+}
 variable "cc_iac_bucket_name" {
   type        = string
   description = "The name of the internal S3 bucket used for Care Connect"
@@ -32,8 +40,4 @@ variable "cc_deployment_sfn_arn" {
 variable "cc_api_integration_id" {
   type        = string
   description = "The ID of the API Gateway integration for the main backend"
-}
-variable "cc_app_role_name" {
-  type        = string
-  description = "The name of the IAM role to add a policy for deployment"
 }

@@ -1,59 +1,60 @@
 
+data "aws_caller_identity" "caller" {}
+
 resource "aws_sfn_state_machine" "cc_deploy_sfn_state_machine" {
   name     = "cc-deployment-stm"
   role_arn = var.cc_app_role_arn
 
   definition = jsonencode({
     Comment = "State machine for Care Connect deployment"
-    StartAt = "CheckObjectKey"
+    StartAt = "CheckObjectKeyAndFlow"
     States = {
-      CheckObjectKey = {
+      CheckObjectKeyAndFlow = {
         Type = "Choice",
         Choices = [
           {
-            Next = "WrongKeyOrNoMatchingFlow",
+            Next = "UpdateFunctionCode",
             And = [
               {
-                "Not" : {
-                  "Variable" : "$.key",
-                  "IsPresent" : true
-                }
+                "Variable" : "$.key",
+                "IsPresent" : true
               },
               {
-                "Not" : {
-                  "Variable" : "$.key",
-                  "StringMatches" : "*.zip"
-                }
+                "Variable" : "$.key",
+                "StringMatches" : "*.zip"
+              },
+              {
+                "Variable" : "$.flow",
+                "StringEquals" : "lambda"
+              }
+            ]
+          },
+          {
+            Next = "StartAmplifyDeployment",
+            And = [
+              {
+                "Variable" : "$.key",
+                "IsPresent" : true
+              },
+              {
+                "Variable" : "$.key",
+                "StringMatches" : "*.zip"
+              },
+              {
+                "Variable" : "$.flow",
+                "StringEquals" : "ui"
               }
             ]
           }
         ],
-        Default = "ChooseFlow"
-      },
-      ChooseFlow = {
-        Type = "Choice"
-        Choices = [
-          {
-            Variable     = "$.flow"
-            StringEquals = "lambda"
-            Next         = "UpdateFunctionCode"
-          },
-          {
-            Variable     = "$.flow"
-            StringEquals = "ui"
-            Next         = "StartAmplifyDeployment"
-          },
-          {
-            Variable     = "$.flow"
-            StringEquals = "apigw"
-            Next         = "UpdateAPIGWIntegration"
-          }
-        ]
         Default = "WrongKeyOrNoMatchingFlow"
       },
       WrongKeyOrNoMatchingFlow = {
         Type = "Pass",
-        End  = true
+        Next = "SNSPublish",
+        Parameters = {
+          Reason = "Either the S3 key is not correct of the flow is not found in the process."
+        }
       },
       StartAmplifyDeployment = {
         Type = "Task"
@@ -63,7 +64,7 @@ resource "aws_sfn_state_machine" "cc_deploy_sfn_state_machine" {
           "SourceUrl.$" : "States.Format('s3://{}/{}', $.bucket, $.key)"
         },
         Resource = "arn:aws:states:::aws-sdk:amplify:startDeployment",
-        End      = true,
+        Next     = "SNSPublish",
         Catch = [
           {
             "ErrorEquals" : [
@@ -99,9 +100,9 @@ resource "aws_sfn_state_machine" "cc_deploy_sfn_state_machine" {
       PublishVersion = {
         Type = "Task",
         Parameters = {
-          "FunctionName.$" : "$$.Execution.Input.lambda",
           "CodeSha256.$" : "$.CodeSha256",
           "Description.$" : "$$.Execution.Input.key"
+          "FunctionName.$" : "$$.Execution.Input.lambda",
         },
         Resource = "arn:aws:states:::aws-sdk:lambda:publishVersion",
         Retry = [
@@ -124,21 +125,95 @@ resource "aws_sfn_state_machine" "cc_deploy_sfn_state_machine" {
             Next = "Fail"
           }
         ],
+        Next = "LoopPass"
+      },
+      LoopPass = {
+        Type = "Pass",
+        Parameters = {
+          "counter" : 0
+        },
+        ResultPath = "$.loopPass",
+        Next       = "GetFunction"
+      },
+      GetFunction = {
+        Type = "Task",
+        Parameters = {
+          "FunctionName.$" : "$.FunctionName",
+          "Qualifier.$" : "$.Version"
+        },
+        Resource   = "arn:aws:states:::aws-sdk:lambda:getFunction",
+        Next       = "LoopChoice",
+        ResultPath = "$.functionStatus",
+        Retry = [
+          {
+            ErrorEquals = [
+              "States.TaskFailed"
+            ],
+            "BackoffRate" : 2,
+            "IntervalSeconds" : 1,
+            "MaxAttempts" : 3,
+            "Comment" : "RetryOnFailed"
+          }
+        ]
+      },
+      LoopChoice = {
+        Type = "Choice",
+        Choices = [
+          {
+            "Next" : "UpdateAPIGWIntegration",
+            "Variable" : "$.functionStatus.Configuration.State",
+            "StringEquals" : "Active"
+          },
+          {
+            "Next" : "WaitToLoop",
+            "Variable" : "$.loopPass.counter",
+            "NumericLessThan" : 25
+          }
+        ],
+        Default = "TerminateLoop"
+      },
+      WaitToLoop = {
+        Type    = "Wait",
+        Seconds = 15,
+        Next    = "IncrementCounter"
+      },
+      IncrementCounter = {
+        Type = "Pass",
+        Next = "GetFunction",
+        Parameters = {
+          "counter.$" : "States.MathAdd($.loopPass.counter, 1)"
+        },
+        ResultPath = "$.loopPass"
+      },
+      TerminateLoop = {
+        Type = "Pass",
+        Next = "SNSPublish"
+      },
+      SNSPublish = {
+        Type     = "Task",
+        Resource = "arn:aws:states:::sns:publish",
+        Parameters = {
+          TopicArn = "arn:aws:sns:us-east-1:${data.aws_caller_identity.caller.account_id}:main_admin_email"
+
+          "Subject.$" = "States.Format('Updates on recent Deployment for {} flow', $$.Execution.Input.flow)",
+          "Message.$" = "States.Format('Deployment output received on: {}\n{}\n\nFor this original Input:\n{}', $$.State.EnteredTime, States.JsonToString($), States.JsonToString($$.Execution.Input))"
+        },
         End = true
       },
       UpdateAPIGWIntegration = {
         Type = "Task",
         Parameters = {
-          "ApiId.$" : "$$.Execution.Input.apigwid",
+          "ApiId.$" : "$$.Execution.Input.apigwId",
+          "CredentialsArn.$" : "$$.Execution.Input.apigwRole",
+          "Description" : "CC APP Lambda Integration",
           "IntegrationId.$" : "$$.Execution.Input.integrationId",
-          "CredentialsArn.$" : "$.appRole",
-          "Description" : "CC APP",
-          "IntegrationMethod" : "ANY",
+          "IntegrationMethod" : "POST",
           "IntegrationType" : "AWS_PROXY",
+          "IntegrationUri.$" : "$.FunctionArn",
           "PayloadFormatVersion" : "1.0"
         },
         Resource = "arn:aws:states:::aws-sdk:apigatewayv2:updateIntegration",
-        End      = true,
+        Next     = "SNSPublish",
         Catch = [
           {
             ErrorEquals = [
@@ -151,24 +226,6 @@ resource "aws_sfn_state_machine" "cc_deploy_sfn_state_machine" {
       Fail = {
         Type = "Fail"
       }
-      # ,
-      # NotifyDeploymentSuccess = {
-      #   Type     = "Task"
-      #   Resource = "arn:aws:states:::sns:publish"
-      #   Parameters = {
-      #     TopicArn = var.sns_topic_arn
-      #     Subject  = "✅ Deployment done"
-      #     "Message.$" = "States.JsonToString({
-      #       \"functionName\": $.processedEvent.functionName,
-      #       \"version\": $.processedEvent.newVersion,
-      #       \"functionArn\": $.processedEvent.functionArn,
-      #       \"apiId\": var.http_api_id,
-      #       \"deploymentTime\": $.processedEvent.eventTime
-      #       \"finalState\": $.functionStatus.Configuration.State
-      #     })"
-      #   }
-      #   End = true
-      # }
     }
   })
 
