@@ -12,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import jakarta.mail.internet.MimeMessage;
 
 import java.time.Instant;
 import java.util.List;
@@ -26,6 +29,9 @@ public class ConnectionRequestService {
     private final UserRepository userRepo;
     private final CaregiverPatientLinkRepository linkRepo;
     private final EmailService emailService;
+    
+    @Autowired(required = false)
+    private JavaMailSender mail;
     
     @Autowired(required = false)
     private NotificationService notificationService;
@@ -65,7 +71,13 @@ public class ConnectionRequestService {
         connectionRequestRepo.save(request);
         
         // Send email to patient
-        sendConnectionRequestEmail(request);
+        try {
+            sendConnectionRequestEmail(request);
+            System.out.println("✅ Connection request email sent successfully to: " + patient.getEmail());
+        } catch (Exception emailEx) {
+            System.err.println("❌ Failed to send connection request email to " + patient.getEmail() + ": " + emailEx.getMessage());
+            emailEx.printStackTrace();
+        }
         
         // Send Firebase notification to patient about connection request
         try {
@@ -158,121 +170,157 @@ public class ConnectionRequestService {
     }
     
     /**
-     * Send email to patient with connection request
+     * Send email to patient with connection request using JavaMailSender (same logic as PasswordResetService)
      */
     private void sendConnectionRequestEmail(ConnectionRequest request) {
         User caregiver = request.getCaregiver();
         User patient = request.getPatient();
         
-        String subject = "CareConnect: Connection Request from " + caregiver.getName();
-        // Use frontend base URL from application properties
-        String baseUrl = frontendBaseUrl;
+        System.out.println("🔄 Preparing to send connection request email:");
+        System.out.println("  - From caregiver: " + caregiver.getName() + " (" + caregiver.getEmail() + ")");
+        System.out.println("  - To patient: " + patient.getName() + " (" + patient.getEmail() + ")");
+        System.out.println("  - Request token: " + request.getToken());
         
-        String emailBody = """
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #2c3e50; text-align: center;">CareConnect Connection Request</h2>
-                
-                <p style="font-size: 16px; line-height: 1.6; color: #333;">
-                    Hello %s,
-                </p>
-                
-                <p style="font-size: 16px; line-height: 1.6; color: #333;">
-                    %s would like to connect with you on CareConnect as your caregiver.
-                </p>
-                
-                %s
-                
-                <div style="text-align: center; margin: 30px 0;">
-                    <a href="%s/approve-connection?token=%s" 
-                       style="background-color: #2ecc71; 
-                              color: white; 
-                              padding: 10px 20px; 
-                              text-decoration: none; 
-                              border-radius: 5px; 
-                              font-weight: bold; 
-                              margin-right: 10px;">
-                        Approve
-                    </a>
+        if (mail == null) {
+            System.err.println("❌ JavaMailSender not configured, cannot send connection request email");
+            return;
+        }
+        
+        try {
+            MimeMessage message = mail.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(patient.getEmail());
+            helper.setFrom("smpestest@gmail.com"); // Same as PasswordResetService
+            helper.setSubject("CareConnect: Connection Request from " + caregiver.getName());
+            
+            String baseUrl = frontendBaseUrl;
+            String emailBody = """
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #2c3e50; text-align: center;">CareConnect Connection Request</h2>
                     
-                    <a href="%s/reject-connection?token=%s" 
-                       style="background-color: #e74c3c; 
-                              color: white; 
-                              padding: 10px 20px; 
-                              text-decoration: none; 
-                              border-radius: 5px; 
-                              font-weight: bold;">
-                        Reject
-                    </a>
+                    <p style="font-size: 16px; line-height: 1.6; color: #333;">
+                        Hello %s,
+                    </p>
+                    
+                    <p style="font-size: 16px; line-height: 1.6; color: #333;">
+                        %s would like to connect with you on CareConnect as your caregiver.
+                    </p>
+                    
+                    %s
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="%s/approve-connection?token=%s" 
+                           style="background-color: #2ecc71; 
+                                  color: white; 
+                                  padding: 10px 20px; 
+                                  text-decoration: none; 
+                                  border-radius: 5px; 
+                                  font-weight: bold; 
+                                  margin-right: 10px;">
+                            Approve
+                        </a>
+                        
+                        <a href="%s/reject-connection?token=%s" 
+                           style="background-color: #e74c3c; 
+                                  color: white; 
+                                  padding: 10px 20px; 
+                                  text-decoration: none; 
+                                  border-radius: 5px; 
+                                  font-weight: bold;">
+                            Reject
+                        </a>
+                    </div>
+                    
+                    <p style="font-size: 14px; color: #666; text-align: center;">
+                        If you didn't expect this connection request, you can safely ignore it.
+                    </p>
+                    
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    
+                    <p style="font-size: 12px; color: #999; text-align: center;">
+                        This is an automated message from CareConnect. Please do not reply to this email.
+                    </p>
                 </div>
-                
-                <p style="font-size: 14px; color: #666; text-align: center;">
-                    If you didn't expect this connection request, you can safely ignore it.
-                </p>
-                
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                
-                <p style="font-size: 12px; color: #999; text-align: center;">
-                    This is an automated message from CareConnect. Please do not reply to this email.
-                </p>
-            </div>
-            """.formatted(
-                patient.getName(),
-                caregiver.getName(),
-                request.getMessage() != null && !request.getMessage().isEmpty() ? 
-                    "<p style=\"font-size: 16px; line-height: 1.6; color: #333; font-style: italic;\">" + 
-                    "\"" + request.getMessage() + "\"</p>" : "",
-                baseUrl,
-                request.getToken(),
-                baseUrl,
-                request.getToken()
-            );
-        
-        emailService.sendHtmlEmail(patient.getEmail(), subject, emailBody, "html");
+                """.formatted(
+                    patient.getName(),
+                    caregiver.getName(),
+                    request.getMessage() != null && !request.getMessage().isEmpty() ? 
+                        "<p style=\"font-size: 16px; line-height: 1.6; color: #333; font-style: italic;\">" + 
+                        "\"" + request.getMessage() + "\"</p>" : "",
+                    baseUrl,
+                    request.getToken(),
+                    baseUrl,
+                    request.getToken()
+                );
+            
+            helper.setText(emailBody, true);
+            mail.send(message);
+            System.out.println("✅ Connection request email sent successfully!");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send connection request email: " + e.getMessage());
+            throw new RuntimeException("Failed to send connection request email", e);
+        }
     }
     
     /**
-     * Send notification email to caregiver about patient's response
+     * Send notification email to caregiver about patient's response using JavaMailSender
      */
     private void sendResponseNotificationEmail(ConnectionRequest request) {
         User caregiver = request.getCaregiver();
         User patient = request.getPatient();
         boolean accepted = "ACCEPTED".equals(request.getStatus());
         
-        String subject = "CareConnect: Connection Request " + 
-                        (accepted ? "Accepted" : "Declined") + 
-                        " by " + patient.getName();
+        if (mail == null) {
+            System.err.println("❌ JavaMailSender not configured, cannot send response notification email");
+            return;
+        }
         
-        String emailBody = """
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #2c3e50; text-align: center;">Connection Request %s</h2>
-                
-                <p style="font-size: 16px; line-height: 1.6; color: #333;">
-                    Hello %s,
-                </p>
-                
-                <p style="font-size: 16px; line-height: 1.6; color: #333;">
-                    %s has %s your connection request on CareConnect.
-                </p>
-                
-                %s
-                
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                
-                <p style="font-size: 12px; color: #999; text-align: center;">
-                    This is an automated message from CareConnect. Please do not reply to this email.
-                </p>
-            </div>
-            """.formatted(
-                accepted ? "Accepted" : "Declined",
-                caregiver.getName(),
-                patient.getName(),
-                accepted ? "accepted" : "declined",
-                accepted ? 
-                    "<p style=\"font-size: 16px; line-height: 1.6; color: #333;\">You can now see and manage their care through the CareConnect platform.</p>" : 
-                    "<p style=\"font-size: 16px; line-height: 1.6; color: #333;\">If you believe this was a mistake, you may send another request at a later time.</p>"
-            );
-        
-        emailService.sendHtmlEmail(caregiver.getEmail(), subject, emailBody, "html");
+        try {
+            MimeMessage message = mail.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(caregiver.getEmail());
+            helper.setFrom("smpestest@gmail.com"); // Same as PasswordResetService
+            helper.setSubject("CareConnect: Connection Request " + 
+                            (accepted ? "Accepted" : "Declined") + 
+                            " by " + patient.getName());
+            
+            String emailBody = """
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #2c3e50; text-align: center;">Connection Request %s</h2>
+                    
+                    <p style="font-size: 16px; line-height: 1.6; color: #333;">
+                        Hello %s,
+                    </p>
+                    
+                    <p style="font-size: 16px; line-height: 1.6; color: #333;">
+                        %s has %s your connection request on CareConnect.
+                    </p>
+                    
+                    %s
+                    
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    
+                    <p style="font-size: 12px; color: #999; text-align: center;">
+                        This is an automated message from CareConnect. Please do not reply to this email.
+                    </p>
+                </div>
+                """.formatted(
+                    accepted ? "Accepted" : "Declined",
+                    caregiver.getName(),
+                    patient.getName(),
+                    accepted ? "accepted" : "declined",
+                    accepted ? 
+                        "<p style=\"font-size: 16px; line-height: 1.6; color: #333;\">You can now see and manage their care through the CareConnect platform.</p>" : 
+                        "<p style=\"font-size: 16px; line-height: 1.6; color: #333;\">If you believe this was a mistake, you may send another request at a later time.</p>"
+                );
+            
+            helper.setText(emailBody, true);
+            mail.send(message);
+            System.out.println("✅ Response notification email sent successfully to: " + caregiver.getEmail());
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send response notification email: " + e.getMessage());
+            // Don't throw exception here, just log the error
+        }
     }
     
     /**

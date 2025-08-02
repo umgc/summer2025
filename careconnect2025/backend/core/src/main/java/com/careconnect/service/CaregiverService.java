@@ -34,6 +34,9 @@ import java.util.Map;
 import java.util.Objects;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import jakarta.mail.internet.MimeMessage;
 
 import java.util.List;
 import java.util.Optional;
@@ -62,6 +65,9 @@ public class CaregiverService {
 
     @Autowired
     private JwtTokenProvider jwt;
+
+    @Autowired(required = false)
+    private JavaMailSender mail;
 
     @Autowired
     private EmailService emailService;
@@ -239,13 +245,13 @@ public Patient registerPatient(PatientRegistration reg) {
             }
         }
         
-        emailService.sendPasswordSetupEmailWithCredentials(
-            reg.getEmail(),
-            passwordSetupToken,
-            reg.getFirstName(),
-            reg.getEmail(),
-            password
-        );
+        try {
+            sendPasswordSetupEmail(reg.getEmail(), passwordSetupToken, reg.getFirstName(), password);
+            log.info("Password setup email sent successfully to: {}", reg.getEmail());
+        } catch (Exception emailEx) {
+            log.error("Failed to send password setup email to {}: {}", reg.getEmail(), emailEx.getMessage());
+            // Don't fail registration if email fails - just log the error
+        }
         
         // Firebase notification logic removed
         
@@ -266,6 +272,80 @@ public Patient registerPatient(PatientRegistration reg) {
             sb.append(chars.charAt(random.nextInt(chars.length())));
         }
         return sb.toString();
+    }
+
+    /**
+     * Send password setup email using JavaMailSender (same logic as PasswordResetService)
+     */
+    private void sendPasswordSetupEmail(String to, String passwordSetupToken, String firstName, String password) {
+        if (mail == null) {
+            log.warn("JavaMailSender not configured, skipping email to: {}", to);
+            return;
+        }
+        
+        try {
+            MimeMessage message = mail.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(to);
+            helper.setFrom("smpestest@gmail.com"); // Same as PasswordResetService
+            helper.setSubject("Welcome to CareConnect - Complete Your Registration");
+            
+            String setupLink = "http://localhost:3000/setup-password?token=" + passwordSetupToken;
+            boolean isTemporaryPassword = password.length() == 12 && password.matches(".*[A-Z].*[a-z].*[0-9].*[!@#$%^&*()_+\\-=].*");
+            
+            String emailBody = """
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #007bff;">Welcome to CareConnect!</h2>
+                    <p>Hello %s,</p>
+                    <p>Your CareConnect account has been created. Here are your login credentials:</p>
+                    
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        <p><strong>Username:</strong> %s</p>
+                        <p><strong>%s:</strong> %s</p>
+                    </div>
+                    
+                    <p>Please complete your registration by clicking the button below:</p>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="%s" 
+                           style="background-color: #007bff; 
+                                  color: white; 
+                                  padding: 12px 30px; 
+                                  text-decoration: none; 
+                                  border-radius: 5px; 
+                                  font-weight: bold; 
+                                  font-size: 16px;
+                                  display: inline-block;">
+                            Complete Registration
+                        </a>
+                    </div>
+                    
+                    %s
+                    
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    
+                    <p style="font-size: 12px; color: #999; text-align: center;">
+                        This is an automated message from CareConnect. Please do not reply to this email.
+                    </p>
+                </div>
+                """.formatted(
+                    firstName != null ? firstName : "",
+                    to,
+                    isTemporaryPassword ? "Temporary Password" : "Password",
+                    password,
+                    setupLink,
+                    isTemporaryPassword ? 
+                        "<p style=\"color: #dc3545;\"><strong>Important:</strong> For security, please change your password after logging in.</p>" : 
+                        ""
+                );
+            
+            helper.setText(emailBody, true);
+            mail.send(message);
+            log.info("✅ Password setup email sent successfully to: {}", to);
+        } catch (Exception e) {
+            log.error("❌ Failed to send password setup email to {}: {}", to, e.getMessage());
+            throw new RuntimeException("Failed to send password setup email", e);
+        }
     }
 
     @Transactional
