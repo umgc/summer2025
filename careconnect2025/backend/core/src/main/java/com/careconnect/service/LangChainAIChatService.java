@@ -18,8 +18,8 @@ import java.util.Map;
 import com.careconnect.model.Patient;
 import com.careconnect.model.UserAIConfig;
 import com.careconnect.repository.PatientRepository;
-import com.careconnect.service.MedicalContextService;
-import com.careconnect.service.PatientContextRetrievalService;
+import com.careconnect.service.PatientService;
+import com.careconnect.dto.EnhancedPatientProfileDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -32,8 +32,7 @@ public class LangChainAIChatService implements AIChatService {
     private final String modelProvider;
     private final Map<Long, ChatMemory> chatMemories = new ConcurrentHashMap<>();
     private final PatientRepository patientRepository;
-    private final MedicalContextService medicalContextService;
-    private final PatientContextRetrievalService patientContextRetrievalService;
+    private final PatientService patientService;
     private final UserAIConfigService userAIConfigService;
 
     // Add userId field for compatibility
@@ -47,8 +46,7 @@ public class LangChainAIChatService implements AIChatService {
             @Value("${ai.model.provider:openai}") String modelProvider,
             @Value("${openai.api.key:}") String openAiApiKey,
             PatientRepository patientRepository,
-            MedicalContextService medicalContextService,
-            PatientContextRetrievalService patientContextRetrievalService,
+            PatientService patientService,
             UserAIConfigService userAIConfigService) {
         this.modelProvider = modelProvider;
         this.chatModel = OpenAiChatModel.builder()
@@ -56,8 +54,7 @@ public class LangChainAIChatService implements AIChatService {
             .modelName("gpt-3.5-turbo") 
             .build();
         this.patientRepository = patientRepository;
-        this.medicalContextService = medicalContextService;
-        this.patientContextRetrievalService = patientContextRetrievalService;
+        this.patientService = patientService;
         this.userAIConfigService = userAIConfigService;
     }
     private ChatMemory getMemory(Long patientId) {
@@ -115,11 +112,8 @@ public class LangChainAIChatService implements AIChatService {
             if (patientRepository == null) {
                 throw new IllegalStateException("PatientRepository is not configured");
             }
-            if (medicalContextService == null) {
-                throw new IllegalStateException("MedicalContextService is not configured");
-            }
-            if (patientContextRetrievalService == null) {
-                throw new IllegalStateException("PatientContextRetrievalService is not configured");
+            if (patientService == null) {
+                throw new IllegalStateException("PatientService is not configured");
             }
 
             // Use userId to find patient instead of patientId
@@ -188,26 +182,24 @@ public class LangChainAIChatService implements AIChatService {
             System.out.println(CYAN + "[DEBUG] Using patientId: " + patientId + RESET);
             System.out.println(CYAN + "[DEBUG] Patient entity: " + patient + RESET);
 
-            // Build medical context using MedicalContextService
-            String medicalContext = medicalContextService.buildPatientContext(patientId, request, aiConfig);
-            System.out.println(CYAN + "[DEMO] Final context to embed:\n" + medicalContext + RESET);
-            if (!medicalContext.isEmpty()) {
-                try {
-                    System.out.println(CYAN + "[DEMO] Indexing context for embeddings..." + RESET);
-                    patientContextRetrievalService.indexPatientContext(patientId, medicalContext);
-                    System.out.println(CYAN + "[DEMO] Context indexed for embeddings." + RESET);
-                } catch (Exception e) {
-                    System.out.println(CYAN + "[DEMO] Embedding/indexing error: " + e.getMessage() + RESET);
-                }
-            }
-            java.util.List<String> relevantSegments = List.of();
+            // Get enhanced patient profile with all medical data
+            String medicalContext = "";
+            boolean isGeneral = true;
+            
             try {
-                relevantSegments = patientContextRetrievalService.retrieveRelevantContext(request.getMessage(), 3);
-                System.out.println(CYAN + "[DEMO] Retrieved relevant context segments: " + relevantSegments + RESET);
+                var enhancedProfileOpt = patientService.getEnhancedPatientProfile(patientId);
+                if (enhancedProfileOpt.isPresent()) {
+                    EnhancedPatientProfileDTO profile = enhancedProfileOpt.get();
+                    medicalContext = buildMedicalContextFromProfile(profile, aiConfig);
+                    isGeneral = medicalContext.isEmpty();
+                    System.out.println(CYAN + "[DEMO] Enhanced profile retrieved successfully" + RESET);
+                    System.out.println(CYAN + "[DEMO] Medical context built:\n" + medicalContext + RESET);
+                } else {
+                    System.out.println(CYAN + "[DEMO] No enhanced profile found for patient" + RESET);
+                }
             } catch (Exception e) {
-                System.out.println(CYAN + "[DEMO] Error retrieving relevant context: " + e.getMessage() + RESET);
+                System.out.println(CYAN + "[DEMO] Error getting enhanced profile: " + e.getMessage() + RESET);
             }
-            String optimizedContext = medicalContext;
 
             // Chat memory support: always use conversationId (now always present)
             String memoryKey = request.getConversationId();
@@ -253,7 +245,6 @@ public class LangChainAIChatService implements AIChatService {
             }
             promptBuilder.append("USER QUESTION: ").append(request.getMessage());
             String prompt = promptBuilder.toString();
-            boolean isGeneral = optimizedContext.isEmpty();
             System.out.println(CYAN + "[AIChat] Prompt sent to LLM:\n" + prompt + RESET);
 
             String aiResponse;
@@ -278,7 +269,7 @@ public class LangChainAIChatService implements AIChatService {
             memory.add(new AiMessage(aiResponse));
             System.out.println(CYAN + "[AIChat] Chat memory after AI response: " + memory.messages() + RESET);
 
-            // Populate as many fields as possible
+            // Populate response fields
             java.time.LocalDateTime timestamp = java.time.LocalDateTime.now();
             String aiProvider = modelProvider;
             String modelUsed = modelProvider;
@@ -293,7 +284,7 @@ public class LangChainAIChatService implements AIChatService {
                 .modelUsed(modelUsed)
                 .aiProvider(aiProvider)
                 .tokensUsed(null)
-                .contextIncluded(relevantSegments)
+                .contextIncluded(List.of()) // No longer using embedding retrieval
                 .errorMessage(isGeneral ? "No patient context found, processed as a general question." : null)
                 .conversationId(conversationId != null ? conversationId : generatedConversationId)
                 .message(message)
@@ -314,6 +305,114 @@ public class LangChainAIChatService implements AIChatService {
                 .errorCode("LANGCHAIN_ERROR")
                 .build();
         }
+    }
+
+    /**
+     * Build medical context string from enhanced patient profile
+     */
+    private String buildMedicalContextFromProfile(EnhancedPatientProfileDTO profile, UserAIConfig aiConfig) {
+        StringBuilder context = new StringBuilder();
+        
+        // Patient basic information
+        context.append("PATIENT INFORMATION:\n");
+        context.append("Name: ").append(profile.firstName()).append(" ").append(profile.lastName()).append("\n");
+        context.append("Email: ").append(profile.email()).append("\n");
+        if (profile.phone() != null) {
+            context.append("Phone: ").append(profile.phone()).append("\n");
+        }
+        if (profile.dob() != null) {
+            context.append("Date of Birth: ").append(profile.dob()).append("\n");
+        }
+        if (profile.gender() != null) {
+            context.append("Gender: ").append(profile.gender()).append("\n");
+        }
+        context.append("\n");
+
+        // Include medical data based on AI config preferences
+        // Comment out AI config checks - include all enhanced patient data by default
+        if (/* aiConfig.isIncludeAllergiesByDefault() && */ profile.allergies() != null && !profile.allergies().isEmpty()) {
+            context.append("ALLERGIES:\n");
+            for (var allergy : profile.allergies()) {
+                context.append("- ").append(allergy.allergen());
+                if (allergy.severity() != null) {
+                    context.append(" (Severity: ").append(allergy.severity()).append(")");
+                }
+                if (allergy.reaction() != null && !allergy.reaction().trim().isEmpty()) {
+                    context.append(" - Reaction: ").append(allergy.reaction());
+                }
+                context.append("\n");
+            }
+            context.append("\n");
+        }
+
+        if (/* aiConfig.isIncludeMedicationsByDefault() && */ profile.activeMedications() != null && !profile.activeMedications().isEmpty()) {
+            context.append("CURRENT MEDICATIONS:\n");
+            for (var medication : profile.activeMedications()) {
+                context.append("- ").append(medication.medicationName());
+                if (medication.dosage() != null) {
+                    context.append(" - ").append(medication.dosage());
+                }
+                if (medication.frequency() != null) {
+                    context.append(" (").append(medication.frequency()).append(")");
+                }
+                context.append("\n");
+            }
+            context.append("\n");
+        }
+
+        if (/* aiConfig.isIncludeVitalsByDefault() && */ profile.latestVitals() != null) {
+            var vitals = profile.latestVitals();
+            context.append("LATEST VITAL SIGNS:\n");
+            if (vitals.heartRate() != null) {
+                context.append("- Heart Rate: ").append(vitals.heartRate()).append(" bpm\n");
+            }
+            if (vitals.spo2() != null) {
+                context.append("- SpO2: ").append(vitals.spo2()).append("%\n");
+            }
+            if (vitals.systolic() != null && vitals.diastolic() != null) {
+                context.append("- Blood Pressure: ").append(vitals.systolic()).append("/").append(vitals.diastolic()).append(" mmHg\n");
+            }
+            if (vitals.weight() != null) {
+                context.append("- Weight: ").append(vitals.weight()).append(" lbs\n");
+            }
+            if (vitals.timestamp() != null) {
+                context.append("- Recorded: ").append(vitals.timestamp()).append("\n");
+            }
+            context.append("\n");
+        }
+
+        if (/* aiConfig.isIncludeMoodPainByDefault() && */ profile.latestMoodPain() != null) {
+            var moodPain = profile.latestMoodPain();
+            context.append("LATEST MOOD & PAIN:\n");
+            if (moodPain.moodValue() != null) {
+                context.append("- Mood Level: ").append(moodPain.moodValue()).append("/10\n");
+            }
+            if (moodPain.painValue() != null) {
+                context.append("- Pain Level: ").append(moodPain.painValue()).append("/10\n");
+            }
+            if (moodPain.note() != null && !moodPain.note().trim().isEmpty()) {
+                context.append("- Note: ").append(moodPain.note()).append("\n");
+            }
+            if (moodPain.timestamp() != null) {
+                context.append("- Recorded: ").append(moodPain.timestamp()).append("\n");
+            }
+            context.append("\n");
+        }
+
+        // Add medical summary if available
+        if (profile.medicalSummary() != null) {
+            var summary = profile.medicalSummary();
+            context.append("MEDICAL SUMMARY:\n");
+            context.append("- Health Status: ").append(summary.overallHealthStatus()).append("\n");
+            context.append("- Total Allergies: ").append(summary.totalAllergies()).append("\n");
+            context.append("- Active Medications: ").append(summary.activeMedications()).append("\n");
+            if (summary.lastActivityDate() != null) {
+                context.append("- Last Activity: ").append(summary.lastActivityDate()).append("\n");
+            }
+            context.append("\n");
+        }
+
+        return context.toString();
     }
 }
 
