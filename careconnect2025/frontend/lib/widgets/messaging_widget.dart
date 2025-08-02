@@ -78,7 +78,7 @@ class _MessagingWidgetState extends State<MessagingWidget> {
     _messageController.clear();
 
     try {
-      final success = await MessagingService.sendMessage(
+      final bool success = await MessagingService.sendMessage(
         recipientId: widget.recipientId,
         senderId: widget.currentUserId,
         senderName: widget.currentUserName,

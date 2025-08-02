@@ -22,16 +22,50 @@ class Vital {
   });
 
   factory Vital.fromJson(Map<String, dynamic> json) {
+    double _safeDouble(dynamic value, [double defaultValue = 0.0]) {
+      if (value == null) return defaultValue;
+      if (value is num) return value.toDouble();
+      if (value is String) {
+        final parsed = double.tryParse(value);
+        return parsed ?? defaultValue;
+      }
+      return defaultValue;
+    }
+
+    int _safeInt(dynamic value, [int defaultValue = 0]) {
+      if (value == null) return defaultValue;
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      if (value is String) {
+        final parsed = int.tryParse(value);
+        return parsed ?? defaultValue;
+      }
+      return defaultValue;
+    }
+
+    DateTime _safeDate(dynamic value) {
+      if (value == null) return DateTime.now();
+      if (value is DateTime) return value;
+      if (value is String) {
+        try {
+          return DateTime.parse(value);
+        } catch (_) {
+          return DateTime.now();
+        }
+      }
+      return DateTime.now();
+    }
+
     return Vital(
-      patientId: json['id'],
-      timestamp: DateTime.parse(json['timestamp']),
-      heartRate: (json['heartRate'] as num).toDouble(),
-      spo2: (json['spo2'] as num).toDouble(),
-      systolic: json['systolic'] as int,
-      diastolic: json['diastolic'] as int,
-      weight: (json['weight'] as num).toDouble(),
-      moodValue: json['moodValue'] as int?,
-      painValue: json['painValue'] as int?,
+      patientId: _safeInt(json['patientId'] ?? json['id']),
+      timestamp: _safeDate(json['timestamp']),
+      heartRate: _safeDouble(json['heartRate'], 0.0),
+      spo2: _safeDouble(json['spo2'], 0.0),
+      systolic: _safeInt(json['systolic'], 0),
+      diastolic: _safeInt(json['diastolic'], 0),
+      weight: _safeDouble(json['weight'], 0.0),
+      moodValue: json['moodValue'] == null ? null : _safeInt(json['moodValue']),
+      painValue: json['painValue'] == null ? null : _safeInt(json['painValue']),
     );
   }
 }

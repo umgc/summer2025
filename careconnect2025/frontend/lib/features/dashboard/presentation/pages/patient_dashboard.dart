@@ -572,6 +572,20 @@ class _PatientDashboardState extends State<PatientDashboard> {
                                                                 locationStatus =
                                                                     'Location shared and alert sent!';
                                                               });
+                                                              // Hide the status after 2 seconds
+                                                              Future.delayed(
+                                                                const Duration(
+                                                                  seconds: 2,
+                                                                ),
+                                                                () {
+                                                                  if (mounted) {
+                                                                    setState(() {
+                                                                      showLocation =
+                                                                          false;
+                                                                    });
+                                                                  }
+                                                                },
+                                                              );
                                                             },
                                                           ),
                                                           if (showLocation)

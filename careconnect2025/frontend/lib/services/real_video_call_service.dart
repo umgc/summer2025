@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
-import '../config/environment_config.dart';
+import '../config/env_constant.dart';
 import 'messaging_service.dart';
+
+import '../config/environment_config.dart';
 
 class RealVideoCallService {
   static bool _isInitialized = false;
@@ -16,8 +18,8 @@ class RealVideoCallService {
   static MediaStream? _localStream;
 
   // Agora configuration
-  static String get _agoraAppId => EnvironmentConfig.agoraAppId;
-  static const String _agoraToken = ''; // Optional token for production
+  static String get _agoraAppId => getAgoraAppId();
+  static const String _agoraToken = '';
 
   /// Initialize the real video call service
   static Future<void> initialize() async {
@@ -79,10 +81,9 @@ class RealVideoCallService {
   static Future<void> _initializeSignaling() async {
     print('🔄 Connecting to signaling server...');
 
-    // In a real app, you'd have your own signaling server
-    // For now, we'll create a mock connection
+    final signalingUrl = getWebRTCSignalingServerUrl();
     _signalingSocket = io.io(
-      'https://your-signaling-server.com',
+      signalingUrl,
       io.OptionBuilder().setTransports(['websocket']).build(),
     );
 
@@ -163,19 +164,14 @@ class RealVideoCallService {
         }
       }
 
-      // Send call notification
-      final notificationSent = await MessagingService.sendVideoCallInvitation(
+      // Send call notification via WebSocket (fire-and-forget)
+      await MessagingService.sendVideoCallInvitation(
         recipientId: calleeId,
         callerId: callerId,
         callerName: callerName,
         callId: callId,
         isVideoCall: isVideoCall,
       );
-
-      if (!notificationSent) {
-        print('❌ Failed to send call notification');
-        return null;
-      }
 
       return {
         'callId': callId,

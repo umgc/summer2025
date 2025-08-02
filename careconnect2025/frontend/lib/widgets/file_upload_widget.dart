@@ -202,7 +202,7 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
                   _selectedFile != null
                       ? 'File Selected: ${_selectedFile!.path}'
                       : _selectedFileName != null ? 'File Selected: $_selectedFileName' :
-                      _getFileInstructions(),
+                  _getFileInstructions(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: _selectedFile != null
@@ -306,26 +306,26 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
   Widget _buildUploadButton() {
     final canUpload =
         _selectedCategory != null &&
-        (_selectedFile != null ||
-            (_selectedFileBytes != null && _selectedFileName != null))
-        && !_isUploading;
+            (_selectedFile != null ||
+                (_selectedFileBytes != null && _selectedFileName != null))
+            && !_isUploading;
 
     return ElevatedButton.icon(
       onPressed: canUpload ? _uploadFileWeb : null,
       style: canUpload
           ? Theme.of(context).elevatedButtonTheme.style
           : ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).disabledColor,
-              foregroundColor: Theme.of(
-                context,
-              ).colorScheme.onSurface.withOpacity(0.38),
-            ),
+        backgroundColor: Theme.of(context).disabledColor,
+        foregroundColor: Theme.of(
+          context,
+        ).colorScheme.onSurface.withOpacity(0.38),
+      ),
       icon: _isUploading
           ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      )
           : const Icon(Icons.cloud_upload),
       label: Text(_isUploading ? 'Uploading...' : 'Upload File'),
     );
@@ -632,11 +632,11 @@ class QuickUploadButtons extends StatelessWidget {
   }
 
   Widget _buildQuickButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required FileCategory category,
-  }) {
+      BuildContext context, {
+        required IconData icon,
+        required String label,
+        required FileCategory category,
+      }) {
     return ElevatedButton.icon(
       onPressed: () => _showUploadDialog(context, category),
       style: AppTheme.secondaryButtonStyle,

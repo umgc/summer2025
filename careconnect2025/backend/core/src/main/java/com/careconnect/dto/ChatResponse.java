@@ -41,4 +41,6 @@ public class ChatResponse {
     private Boolean success = true;
     private String errorMessage;
     private String errorCode;
+    // Explicit getter for compatibility
+    public Boolean getSuccess() { return success; }
 }

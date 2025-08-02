@@ -77,7 +77,7 @@ public class SecurityConfig {
                         "/v1/api/patients/**"
                 ).authenticated()
 
-                /* ---------- family member endpoints require auth -------- */
+                // /* ---------- family member endpoints require auth -------- */
                 .requestMatchers(
                         "/v1/api/family-members/**"
                 ).authenticated()

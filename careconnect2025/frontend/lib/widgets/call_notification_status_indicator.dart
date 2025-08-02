@@ -21,12 +21,23 @@ class _CallNotificationStatusIndicatorState
   Widget build(BuildContext context) {
     final isConnected = CallNotificationService.isConnected;
 
+    final theme = Theme.of(context);
+    final colorOnline = theme.colorScheme.secondary;
+    final colorConnecting = theme.colorScheme.tertiary;
+    final colorDisabled = theme.disabledColor;
+    final statusColor = _getStatusColor(
+      theme,
+      colorOnline,
+      colorConnecting,
+      colorDisabled,
+    );
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: _getStatusColor().withOpacity(0.1),
+        color: statusColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _getStatusColor().withOpacity(0.3), width: 1),
+        border: Border.all(color: statusColor.withOpacity(0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -35,7 +46,7 @@ class _CallNotificationStatusIndicatorState
             width: 8,
             height: 8,
             decoration: BoxDecoration(
-              color: _getStatusColor(),
+              color: statusColor,
               shape: BoxShape.circle,
             ),
           ),
@@ -43,7 +54,7 @@ class _CallNotificationStatusIndicatorState
           Text(
             _getStatusText(),
             style: TextStyle(
-              color: _getStatusColor(),
+              color: statusColor,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -53,9 +64,14 @@ class _CallNotificationStatusIndicatorState
     );
   }
 
-  Color _getStatusColor() {
-    if (!widget.isInitialized) return Colors.grey;
-    return CallNotificationService.isConnected ? Colors.green : Colors.orange;
+  Color _getStatusColor(
+    ThemeData theme,
+    Color colorOnline,
+    Color colorConnecting,
+    Color colorDisabled,
+  ) {
+    if (!widget.isInitialized) return colorDisabled;
+    return CallNotificationService.isConnected ? colorOnline : colorConnecting;
   }
 
   String _getStatusText() {

@@ -46,8 +46,8 @@ class AIService {
     String role = 'patient',
     AIModel model = AIModel.deepseek,
     String? healthDataContext,
-    int? patientId,
-    int? userId,
+    required int patientId,
+    required int userId,
     BuildContext? context,
   }) async {
     // Check subscription access for caregivers
@@ -97,8 +97,8 @@ class AIService {
 
       final response = await AIChatService.sendMessage(
         message: enhancedMessage,
-        patientId: patientId ?? 1, // Default patient ID if not provided
-        userId: userId ?? 1, // Default user ID if not provided
+        patientId: patientId,
+        userId: userId,
         chatType: chatType,
         preferredModel: model.modelName,
         temperature: 0.7,
@@ -170,7 +170,17 @@ class AIService {
   }
 
   // Legacy method for backward compatibility
-  static Future<String> askHealthQuestion(String question) async {
-    return askAI(question, role: 'patient', model: AIModel.deepseek);
+  static Future<String> askHealthQuestion(
+    String question, {
+    required int patientId,
+    required int userId,
+  }) async {
+    return askAI(
+      question,
+      role: 'patient',
+      model: AIModel.deepseek,
+      patientId: patientId,
+      userId: userId,
+    );
   }
 }

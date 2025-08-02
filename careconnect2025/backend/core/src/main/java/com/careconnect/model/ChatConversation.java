@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.careconnect.model.UserAIConfig;
 
 @Getter
 @Setter
@@ -31,8 +32,8 @@ public class ChatConversation {
     public void setChatType(ChatType chatType) { this.chatType = chatType; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
-    public PatientAIConfig.AIProvider getAiProviderUsed() { return aiProviderUsed; }
-    public void setAiProviderUsed(PatientAIConfig.AIProvider aiProviderUsed) { this.aiProviderUsed = aiProviderUsed; }
+    public UserAIConfig.AIProvider getAiProviderUsed() { return aiProviderUsed; }
+    public void setAiProviderUsed(UserAIConfig.AIProvider aiProviderUsed) { this.aiProviderUsed = aiProviderUsed; }
     public String getAiModelUsed() { return aiModelUsed; }
     public void setAiModelUsed(String aiModelUsed) { this.aiModelUsed = aiModelUsed; }
     public Integer getTotalTokensUsed() { return totalTokensUsed; }
@@ -59,7 +60,7 @@ public class ChatConversation {
     
     @Enumerated(EnumType.STRING)
     @Column(name = "ai_provider_used")
-    private PatientAIConfig.AIProvider aiProviderUsed;
+    private UserAIConfig.AIProvider aiProviderUsed;
     
     @Column(name = "ai_model_used")
     private String aiModelUsed;

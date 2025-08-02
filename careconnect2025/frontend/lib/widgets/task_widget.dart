@@ -28,6 +28,38 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
   late DateTime date;
   TimeOfDay? timeOfDay;
 
+  // Static icon mapping for tree-shaking optimization
+  static const Map<int, IconData> _iconMap = {
+    // Common Material Icons with their code points
+    57344: Icons.task_alt, // task
+    57345: Icons.assignment, // assignment
+    57693: Icons.medical_services, // medical
+    58133: Icons.fitness_center, // fitness
+    58134: Icons.restaurant, // nutrition
+    58135: Icons.bed, // rest
+    58136: Icons.local_pharmacy, // medication
+    58137: Icons.timer, // timer
+    58138: Icons.schedule, // schedule
+    58139: Icons.checklist, // checklist
+    58140: Icons.note_add, // note
+    58141: Icons.health_and_safety, // health
+    58142: Icons.psychology, // mental health
+    58143: Icons.directions_walk, // walking
+    58144: Icons.water_drop, // hydration
+    58145: Icons.self_improvement, // improvement
+    58146: Icons.healing, // healing
+    58147: Icons.monitor_heart, // heart monitor
+    58148: Icons.bloodtype, // blood
+    58149: Icons.thermostat, // temperature
+    // Add more mappings as needed
+  };
+
+  // Helper method to get icon from code with fallback
+  IconData _getIconFromCode(int? iconCode) {
+    if (iconCode == null) return Icons.task_alt;
+    return _iconMap[iconCode] ?? Icons.task_alt;
+  }
+
   // For template selection
   List<Template> templates = [];
   bool loadingTemplates = true;
@@ -59,8 +91,9 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
       templateError = null;
     });
     try {
-      final response = await ApiService.getTaskTemplates(widget.patientId)
-          .timeout(const Duration(seconds: 30));
+      final response = await ApiService.getTaskTemplates(
+        widget.patientId,
+      ).timeout(const Duration(seconds: 30));
       if (response.statusCode == 200) {
         final List data = json.decode(response.body);
         setState(() {
@@ -107,26 +140,31 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
     // If editing or form state is set, show the TaskForm
     if (showForm) {
       return AlertDialog(
-        title: Text(widget.existingTask == null ? 'Add Custom Task' : 'Edit Task'),
+        title: Text(
+          widget.existingTask == null ? 'Add Custom Task' : 'Edit Task',
+        ),
         content: TaskForm(
           key: const ValueKey('custom-task-form'),
-          initialTask: widget.existingTask ??
-            (selectedTemplateForForm != null
-              ? Task(
-                  id: -1,
-                  name: selectedTemplateForForm!.name,
-                  description: selectedTemplateForForm!.description,
-                  date: DateTime.now(),
-                  timeOfDay: selectedTemplateForForm!.timeOfDay,
-                  userId: widget.patientId,
-                  isComplete: false,
-                  notifications: null,
-                  frequency: selectedTemplateForForm!.frequency,
-                  interval: selectedTemplateForForm!.interval,
-                  count: selectedTemplateForForm!.count,
-                  daysOfWeek: selectedTemplateForForm!.daysOfWeek ?? List<bool>.filled(7, false),
-                )
-              : null),
+          initialTask:
+              widget.existingTask ??
+              (selectedTemplateForForm != null
+                  ? Task(
+                      id: -1,
+                      name: selectedTemplateForForm!.name,
+                      description: selectedTemplateForForm!.description,
+                      date: DateTime.now(),
+                      timeOfDay: selectedTemplateForForm!.timeOfDay,
+                      userId: widget.patientId,
+                      isComplete: false,
+                      notifications: null,
+                      frequency: selectedTemplateForForm!.frequency,
+                      interval: selectedTemplateForForm!.interval,
+                      count: selectedTemplateForForm!.count,
+                      daysOfWeek:
+                          selectedTemplateForForm!.daysOfWeek ??
+                          List<bool>.filled(7, false),
+                    )
+                  : null),
           template: selectedTemplateForForm,
           onSaved: (task) {
             setState(() {
@@ -165,76 +203,76 @@ class _TaskFormDialogState extends State<TaskFormDialog> {
       content: loadingTemplates
           ? const SizedBox(
               height: 100,
-              child: Center(child: CircularProgressIndicator()))
+              child: Center(child: CircularProgressIndicator()),
+            )
           : templateError != null
-              ? Text(templateError!)
-              : SizedBox(
-                  width: 350,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Choose a task template or create a custom task.',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 10),
-                      Expanded(
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: templates.length + 1,
-                          itemBuilder: (context, index) {
-                            if (index == 0) {
-                              return Card(
-                                margin:
-                                    const EdgeInsets.symmetric(vertical: 5),
-                                child: ListTile(
-                                  leading: const Icon(Icons.task,
-                                      size: 40, color: Colors.indigo),
-                                  title: const Text('Custom Task'),
-                                  subtitle: const Text(
-                                      'Create a custom task for your patient.'),
-                                  trailing: const Icon(Icons.arrow_forward_ios),
-                                  onTap: () {
-                                    setState(() {
-                                      showForm = true;
-                                      selectedTemplateForForm = null;
-                                    });
-                                  },
-                                ),
-                              );
-                            }
-                            final template = templates[index - 1];
-                            return Card(
-                              margin:
-                                  const EdgeInsets.symmetric(vertical: 5),
-                              child: ListTile(
-                                leading: Icon(
-                                  IconData(template.iconCode, fontFamily: 'MaterialIcons'),
-                                  size: 40,
-                                  color: Colors.indigo,
-                                ),
-                                title: Text(template.name),
-                                subtitle: Text(template.description),
-                                trailing: const Icon(Icons.arrow_forward_ios),
-                                onTap: () {
-                                  setState(() {
-                                    showForm = true;
-                                    selectedTemplateForForm = template;
-                                  });
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+          ? Text(templateError!)
+          : SizedBox(
+              width: 350,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Choose a task template or create a custom task.',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
-                ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: templates.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 5),
+                            child: ListTile(
+                              leading: Icon(
+                                Icons.task,
+                                size: 40,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              title: const Text('Custom Task'),
+                              subtitle: const Text(
+                                'Create a custom task for your patient.',
+                              ),
+                              trailing: const Icon(Icons.arrow_forward_ios),
+                              onTap: () {
+                                setState(() {
+                                  showForm = true;
+                                  selectedTemplateForForm = null;
+                                });
+                              },
+                            ),
+                          );
+                        }
+                        final template = templates[index - 1];
+                        return Card(
+                          margin: const EdgeInsets.symmetric(vertical: 5),
+                          child: ListTile(
+                            leading: Icon(
+                              _getIconFromCode(template.iconCode),
+                              size: 40,
+                              color: Colors.indigo,
+                            ),
+                            title: Text(template.name),
+                            subtitle: Text(template.description),
+                            trailing: const Icon(Icons.arrow_forward_ios),
+                            onTap: () {
+                              setState(() {
+                                showForm = true;
+                                selectedTemplateForForm = template;
+                              });
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
       actions: [
-        TextButton(
-          onPressed: widget.onCancel,
-          child: const Text('Cancel'),
-        ),
+        TextButton(onPressed: widget.onCancel, child: const Text('Cancel')),
       ],
     );
   }
@@ -279,7 +317,8 @@ class _TaskFormState extends State<TaskForm> {
         frequency: widget.initialTask!.frequency,
         interval: widget.initialTask!.interval,
         count: widget.initialTask!.count,
-        daysOfWeek: widget.initialTask!.daysOfWeek ?? List<bool>.filled(7, false),
+        daysOfWeek:
+            widget.initialTask!.daysOfWeek ?? List<bool>.filled(7, false),
       );
     } else if (widget.template != null) {
       task = Task(
@@ -354,9 +393,11 @@ class _TaskFormState extends State<TaskForm> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Time'),
-              subtitle: Text(task.timeOfDay != null
-                  ? '${task.timeOfDay!.hour.toString().padLeft(2, '0')}:${task.timeOfDay!.minute.toString().padLeft(2, '0')}'
-                  : 'Not set'),
+              subtitle: Text(
+                task.timeOfDay != null
+                    ? '${task.timeOfDay!.hour.toString().padLeft(2, '0')}:${task.timeOfDay!.minute.toString().padLeft(2, '0')}'
+                    : 'Not set',
+              ),
               trailing: IconButton(
                 icon: const Icon(Icons.access_time),
                 onPressed: () async {
@@ -377,7 +418,10 @@ class _TaskFormState extends State<TaskForm> {
                 DropdownMenuItem(value: 'WEEKLY', child: Text('Weekly')),
                 DropdownMenuItem(value: 'MONTHLY', child: Text('Monthly')),
                 DropdownMenuItem(value: 'YEARLY', child: Text('Yearly')),
-                DropdownMenuItem(value: 'EVERY_WEEK_DAY', child: Text('Every Week Day')),
+                DropdownMenuItem(
+                  value: 'EVERY_WEEK_DAY',
+                  child: Text('Every Week Day'),
+                ),
               ],
               onChanged: (value) => setState(() => task.frequency = value),
               decoration: const InputDecoration(
@@ -412,11 +456,22 @@ class _TaskFormState extends State<TaskForm> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Days of Week', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  'Days of Week',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 Row(
                   spacing: 4,
                   children: List.generate(7, (i) {
-                    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    const days = [
+                      'Mon',
+                      'Tue',
+                      'Wed',
+                      'Thu',
+                      'Fri',
+                      'Sat',
+                      'Sun',
+                    ];
                     return FilterChip(
                       label: Text(days[i]),
                       selected: task.daysOfWeek?[i] ?? false,
@@ -459,10 +514,16 @@ class TaskInfo extends StatelessWidget {
     if (task.daysOfWeek != null) {
       const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       final selectedDays = <String>[];
-      for (int i = 0; i < task.daysOfWeek!.length && i < dayLabels.length; i++) {
+      for (
+        int i = 0;
+        i < task.daysOfWeek!.length && i < dayLabels.length;
+        i++
+      ) {
         if (task.daysOfWeek![i]) selectedDays.add(dayLabels[i]);
       }
-      daysOfWeekString = selectedDays.isNotEmpty ? selectedDays.join(', ') : 'None';
+      daysOfWeekString = selectedDays.isNotEmpty
+          ? selectedDays.join(', ')
+          : 'None';
     }
 
     return AlertDialog(
@@ -475,22 +536,24 @@ class TaskInfo extends StatelessWidget {
             Text('Description: ${task.description}'),
             Text('Date: ${task.date.toLocal()}'),
             if (task.timeOfDay != null)
-              Text('Time: ${task.timeOfDay!.hour.toString().padLeft(2, '0')}:${task.timeOfDay!.minute.toString().padLeft(2, '0')}'),
+              Text(
+                'Time: ${task.timeOfDay!.hour.toString().padLeft(2, '0')}:${task.timeOfDay!.minute.toString().padLeft(2, '0')}',
+              ),
             Text('Status: ${task.isComplete ? 'Completed' : 'Incomplete'}'),
-            if (task.frequency != null)
-              Text('Frequency: ${task.frequency}'),
-            if (task.interval != null)
-              Text('Interval: ${task.interval}'),
-            if (task.count != null)
-              Text('Count: ${task.count}'),
+            if (task.frequency != null) Text('Frequency: ${task.frequency}'),
+            if (task.interval != null) Text('Interval: ${task.interval}'),
+            if (task.count != null) Text('Count: ${task.count}'),
             if (task.daysOfWeek != null)
               Text('Days of Week: $daysOfWeekString'),
-            if (task.notifications != null && task.notifications!.isNotEmpty)
-              ...[
-                const SizedBox(height: 8),
-                const Text('Notifications:', style: TextStyle(fontWeight: FontWeight.bold)),
-                ...task.notifications!.map((n) => Text(n.toString())),
-              ],
+            if (task.notifications != null &&
+                task.notifications!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              const Text(
+                'Notifications:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              ...task.notifications!.map((n) => Text(n.toString())),
+            ],
           ],
         ),
       ),

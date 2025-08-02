@@ -299,7 +299,7 @@ class _FileManagementPageState extends State<FileManagementPage>
     // Extract filename without extension
     String baseName = (dotIndex != -1)
         ? file.fileName.substring(0, dotIndex)
-        : file.fileName;  // If no dot found, return full filename
+        : file.fileName; // If no dot found, return full filename
 
     // Extension Name Only
     String getFileExtension(String fileName) {
@@ -312,9 +312,7 @@ class _FileManagementPageState extends State<FileManagementPage>
 
     // Usage:
     String fileExtension = getFileExtension(file.fileName);
-    String extensionWithoutDot = fileExtension.replaceFirst('.', '');  // txt
-
-
+    String extensionWithoutDot = fileExtension.replaceFirst('.', ''); // txt
 
     final theme = Theme.of(context);
     return Card(
@@ -354,10 +352,7 @@ class _FileManagementPageState extends State<FileManagementPage>
                   style: theme.textTheme.bodyMedium,
                 ),
                 Text(' • ', style: theme.textTheme.bodyMedium),
-                Text(
-                    extensionWithoutDot,
-                    style: theme.textTheme.bodyMedium,
-                )
+                Text(extensionWithoutDot, style: theme.textTheme.bodyMedium),
               ],
             ),
             if (file.description != null && file.description!.isNotEmpty) ...[
@@ -375,19 +370,24 @@ class _FileManagementPageState extends State<FileManagementPage>
           onSelected: (value) async {
             switch (value) {
               case 'download':
-              // TODO: Implement download functionality
+                // TODO: Implement download functionality
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Download file feature coming soon.'), backgroundColor: AppTheme.info,),
+                  const SnackBar(
+                    content: Text('Download file feature coming soon.'),
+                    backgroundColor: AppTheme.info,
+                  ),
                 );
                 break;
               case 'delete':
-              // TODO: Implement delete functionality
+                // TODO: Implement delete functionality
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Delete file feature coming soon.'), backgroundColor: AppTheme.info,),
+                  const SnackBar(
+                    content: Text('Delete file feature coming soon.'),
+                    backgroundColor: AppTheme.info,
+                  ),
                 );
                 break;
             }
-
           },
           itemBuilder: (BuildContext context) => [
             PopupMenuItem(
@@ -482,17 +482,17 @@ class _FileManagementPageState extends State<FileManagementPage>
                 padding: const EdgeInsets.all(16),
                 child: ManualTextEntryCard(
                   patientId: _userId,
-                    onUploadSuccess: (response) {
-                      _loadFiles(); // Refresh the files list
-                    },
-                    onUploadError: (error) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(error),
-                          backgroundColor: Theme.of(context).colorScheme.error,
-                        ),
-                      );
-                    }
+                  onUploadSuccess: (response) {
+                    _loadFiles(); // Refresh the files list
+                  },
+                  onUploadError: (error) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(error),
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -503,18 +503,18 @@ class _FileManagementPageState extends State<FileManagementPage>
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: SpeechToTextCard(
-                    patientId: _userId,
-                    onUploadSuccess: (response) {
-                      _loadFiles(); // Refresh the files list
-                    },
-                    onUploadError: (error) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(error),
-                          backgroundColor: Theme.of(context).colorScheme.error,
-                        ),
-                      );
-                    }
+                  patientId: _userId,
+                  onUploadSuccess: (response) {
+                    _loadFiles(); // Refresh the files list
+                  },
+                  onUploadError: (error) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(error),
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -647,13 +647,17 @@ class _FileManagementPageState extends State<FileManagementPage>
       final user = userProvider.user;
       if (user == null) return;
 
-      final fileData = await EnhancedFileService.downloadFileLegacy(user.id, file.fileUrl!);
+      final fileData = await EnhancedFileService.downloadFileLegacy(
+        user.id,
+        file.fileUrl!,
+      );
 
       if (fileData != null) {
         // 1. Get device's Download directory
         Directory? directory;
         if (Platform.isAndroid || Platform.isIOS) {
-          directory = await getApplicationDocumentsDirectory(); // App-local storage
+          directory =
+              await getApplicationDocumentsDirectory(); // App-local storage
         } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
           directory = await getDownloadsDirectory(); // User's Downloads folder
         }
@@ -705,7 +709,7 @@ class _FileManagementPageState extends State<FileManagementPage>
   }
 
   void _showFileInfo(UserFileDTO file) {
-    String extensionWithoutDot = file.fileName.replaceFirst('.', '');  // txt
+    String extensionWithoutDot = file.fileName.replaceFirst('.', ''); // txt
 
     showDialog(
       context: context,

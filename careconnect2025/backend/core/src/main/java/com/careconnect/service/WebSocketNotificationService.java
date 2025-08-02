@@ -15,6 +15,13 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 public class WebSocketNotificationService {
+    /**
+     * Register a user for WebSocket notifications via HTTP (undying session)
+     */
+    public void registerUser(String userId, String userName) {
+        careConnectWebSocketHandler.registerUser(userId, userName);
+        log.info("User {} ({}) registered for WebSocket notifications via HTTP", userId, userName);
+    }
 
     private final CallNotificationHandler callNotificationHandler;
     private final CareConnectWebSocketHandler careConnectWebSocketHandler;
