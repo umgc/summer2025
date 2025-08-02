@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/comments")
+@RequestMapping("/v1/api/comments")
 @Tag(name = "Comments", description = "Comment management endpoints for posts")
 @SecurityRequirement(name = "JWT Authentication")
 public class CommentController {

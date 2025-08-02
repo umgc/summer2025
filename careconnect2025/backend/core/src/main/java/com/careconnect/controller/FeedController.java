@@ -78,7 +78,7 @@ public class FeedController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserFeed(@PathVariable Long userId) {
-        
+
         // Get user from JWT token (email is the subject).
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -173,7 +173,7 @@ public class FeedController {
                     username
             );
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(post);
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
 
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
