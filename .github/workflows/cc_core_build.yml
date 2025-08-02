@@ -8,11 +8,6 @@ on:
       - 'care-connect**'
     paths:
       - '**backend/**'
-  pull_request:
-    branches:
-      - 'care-connect**'
-    paths:
-      - '**backend/**'
 
 permissions:
   contents: write  
