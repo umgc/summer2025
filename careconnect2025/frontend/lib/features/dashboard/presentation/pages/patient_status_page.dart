@@ -387,7 +387,7 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBarHelper.createAppBar(context, title: 'Patient Analytics'),
+      appBar: AppBarHelper.createAppBar(context, title: 'Patient Status'),
       drawer: const CommonDrawer(currentRoute: '/patient'),
       body: SingleChildScrollView(
         child: Card(
