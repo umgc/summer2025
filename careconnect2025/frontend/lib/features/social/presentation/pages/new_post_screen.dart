@@ -47,20 +47,15 @@ class _NewPostScreenState extends State<NewPostScreen> {
       final uri = Uri.parse('${getBackendBaseUrl()}/v1/api/feed/create');
       final headers = await ApiService.getAuthHeaders();
 
-      final request = http.MultipartRequest('POST', uri)
-        ..headers.addAll(headers)
-        ..fields['userId'] = userId.toString()
-        ..fields['content'] = content;
+      headers['Content-Type'] = 'application/json';
 
-      if (_selectedImage != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'image',
-          _selectedImage!.path,
-        ));
-      }
+      final body = jsonEncode({
+        'userId': userId,
+        'content': content,
+      });
 
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
+
+      final response = await http.post(uri, headers: headers, body: body);
 
       print('Create post status: ${response.statusCode}');
       print('Create post body: ${response.body}');
