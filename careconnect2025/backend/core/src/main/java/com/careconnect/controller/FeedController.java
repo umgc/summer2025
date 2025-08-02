@@ -78,7 +78,7 @@ public class FeedController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserFeed(@PathVariable Long userId) {
-        
+
         // Get user from JWT token (email is the subject).
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
