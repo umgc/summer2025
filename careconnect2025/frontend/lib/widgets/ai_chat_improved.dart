@@ -232,7 +232,8 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
           ? Provider.of<UserProvider>(context, listen: false)
           : null;
       final currentUserId = widget.userId ?? userProvider?.user?.id ?? 1;
-      final currentPatientId = widget.patientId ?? userProvider?.user?.id ?? 1;
+      // Only use patientId if explicitly provided, never default to user ID
+      final currentPatientId = widget.patientId;
 
       // Prepare uploadedFiles for API if any
       List<Map<String, dynamic>>? uploadedFilesJson;
@@ -259,7 +260,7 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
       // Only these fields are dynamic for the request
       final response = await AIChatService.sendMessage(
         message: userMessage,
-        patientId: currentPatientId,
+        patientId: currentPatientId, // Pass only if explicitly provided
         userId: currentUserId,
         conversationId: _conversationId.isNotEmpty ? _conversationId : null,
         uploadedFiles: uploadedFilesJson,
@@ -271,7 +272,8 @@ class _AIChatState extends State<AIChat> with SingleTickerProviderStateMixin {
           ? response['errorMessage']
           : null;
       // Update conversationId for next request
-      if (response['conversationId'] != null && response['conversationId'] is String) {
+      if (response['conversationId'] != null &&
+          response['conversationId'] is String) {
         _conversationId = response['conversationId'];
       }
       setState(() {

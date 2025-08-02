@@ -101,8 +101,8 @@ public class LangChainAIChatService implements AIChatService {
             if (request == null) {
                 throw new IllegalArgumentException("ChatRequest cannot be null");
             }
-            if (request.getPatientId() == null) {
-                throw new IllegalArgumentException("Patient ID is required");
+            if (request.getUserId() == null) {
+                throw new IllegalArgumentException("User ID is required");
             }
             if (request.getMessage() == null || request.getMessage().trim().isEmpty()) {
                 throw new IllegalArgumentException("Message cannot be empty");
@@ -122,14 +122,17 @@ public class LangChainAIChatService implements AIChatService {
                 throw new IllegalStateException("PatientContextRetrievalService is not configured");
             }
 
-            // Log and validate patient ID
-            Long patientId = request.getPatientId();
-            if (patientId == null) {
-                throw new IllegalArgumentException("Patient ID is required and was null");
+            // Use userId to find patient instead of patientId
+            Long userId = request.getUserId();
+            if (userId == null) {
+                throw new IllegalArgumentException("User ID is required and was null");
             }
-            // Use real repository/service to load patient data
-            Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new IllegalArgumentException("Patient not found for ID: " + patientId));
+            // Find patient by user_id instead of patient_id
+            Patient patient = patientRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Patient not found for user ID: " + userId));
+            
+            // Get the actual patient ID for other operations
+            Long patientId = patient.getId();
             UserAIConfig aiConfig;
             try {
                 var aiConfigDTO = userAIConfigService.getUserAIConfig(userId, patientId);

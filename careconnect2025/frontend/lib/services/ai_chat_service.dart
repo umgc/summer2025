@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart';
 import 'api_service.dart';
 import '../config/env_constant.dart';
 
@@ -11,7 +10,7 @@ class AIChatService {
   /// Send a chat message to the AI through the backend
   static Future<Map<String, dynamic>> sendMessage({
     required String message,
-    required int patientId,
+    int? patientId,
     required int userId,
     String? conversationId,
     String chatType = 'GENERAL_SUPPORT',
@@ -33,7 +32,7 @@ class AIChatService {
 
       final requestBody = {
         'message': message,
-        'patientId': patientId,
+        if (patientId != null) 'patientId': patientId,
         'userId': userId,
         if (conversationId != null) 'conversationId': conversationId,
         'chatType': chatType,
