@@ -173,7 +173,7 @@ public class FeedController {
                     username
             );
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(post);
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
 
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
