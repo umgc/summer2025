@@ -59,6 +59,7 @@ class ResponsiveUtils {
       case DeviceType.tablet:
         return defaultWidth;
       case DeviceType.desktop:
+        return defaultWidth;
       case DeviceType.largeDesktop:
         return defaultWidth;
     }

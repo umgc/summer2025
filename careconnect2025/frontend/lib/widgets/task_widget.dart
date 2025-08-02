@@ -463,17 +463,10 @@ class _TaskFormState extends State<TaskForm> {
                 Row(
                   spacing: 4,
                   children: List.generate(7, (i) {
-                    const days = [
-                      'Mon',
-                      'Tue',
-                      'Wed',
-                      'Thu',
-                      'Fri',
-                      'Sat',
-                      'Sun',
-                    ];
+                    const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
                     return FilterChip(
                       label: Text(days[i]),
+                      showCheckmark: false,
                       selected: task.daysOfWeek?[i] ?? false,
                       onSelected: (selected) {
                         setState(() {

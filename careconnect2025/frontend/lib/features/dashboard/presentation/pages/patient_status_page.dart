@@ -1,3 +1,4 @@
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:care_connect_app/widgets/common_drawer.dart';
 import 'package:provider/provider.dart';
@@ -384,13 +385,16 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
         (user.role.toUpperCase() == 'CAREGIVER' ||
          user.role.toUpperCase() == 'FAMILY_LINK');
 
-    return SingleChildScrollView(
-      child: Card(
-        margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        elevation: 3,
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBarHelper.createAppBar(context, title: 'Patient Analytics'),
+      drawer: const CommonDrawer(currentRoute: '/patient'),
+      body: SingleChildScrollView(
+        child: Card(
+          margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
           padding: EdgeInsets.all(isMobile ? 16 : 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -590,8 +594,9 @@ class _PatientStatusPageState extends State<PatientStatusPage> {
           ),
         ),
       ),
-    );
-  }
+    )
+  );
+}
 
   Widget buildVitalsSummary(DashboardAnalytics? vitals) {
     if (vitals == null) {
