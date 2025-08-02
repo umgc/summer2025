@@ -313,13 +313,12 @@ public class LangChainAIChatService implements AIChatService {
     private String buildMedicalContextFromProfile(EnhancedPatientProfileDTO profile, UserAIConfig aiConfig) {
         StringBuilder context = new StringBuilder();
         
-        // Patient basic information
+        // Add all available metadata scales for AI understanding
+        context.append(buildMetadataContext());
+        context.append("\n");
+        
+        // Patient basic information (excluding name and personal identifiers)
         context.append("PATIENT INFORMATION:\n");
-        context.append("Name: ").append(profile.firstName()).append(" ").append(profile.lastName()).append("\n");
-        context.append("Email: ").append(profile.email()).append("\n");
-        if (profile.phone() != null) {
-            context.append("Phone: ").append(profile.phone()).append("\n");
-        }
         if (profile.dob() != null) {
             context.append("Date of Birth: ").append(profile.dob()).append("\n");
         }
@@ -413,6 +412,108 @@ public class LangChainAIChatService implements AIChatService {
         }
 
         return context.toString();
+    }
+
+    /**
+     * Build comprehensive metadata context for AI understanding
+     * This method is reusable and scalable for adding new metadata types
+     */
+    private String buildMetadataContext() {
+        StringBuilder metadata = new StringBuilder();
+        metadata.append("=== HEALTHCARE SCALES & REFERENCES ===\n\n");
+        
+        // Add all available scales
+        metadata.append(buildMoodScaleMetadata());
+        metadata.append(buildPainScaleMetadata());
+        // Future scales can be easily added here:
+        // metadata.append(buildAnxietyScaleMetadata());
+        // metadata.append(buildFatigueScaleMetadata());
+        // metadata.append(buildSleepQualityScaleMetadata());
+        
+        return metadata.toString();
+    }
+
+    /**
+     * Build mood scale metadata
+     */
+    private String buildMoodScaleMetadata() {
+        // Define mood scale data structure for easy maintenance
+        var moodScale = java.util.List.of(
+            new ScaleItem(0, "😡", "Angry"),
+            new ScaleItem(1, "😐", "Sad"),
+            new ScaleItem(2, "😫", "Tired"),
+            new ScaleItem(3, "😨", "Fearful"),
+            new ScaleItem(4, "😑", "Neutral"),
+            new ScaleItem(5, "😊", "Happy")
+        );
+
+        return buildScaleReference("MOOD SCALE", "(0-5)", moodScale);
+    }
+
+    /**
+     * Build pain scale metadata
+     */
+    private String buildPainScaleMetadata() {
+        // Define pain scale data structure for easy maintenance
+        var painScale = java.util.List.of(
+            new ScaleItem(0, "😊", "No Pain", "No pain"),
+            new ScaleItem(1, "🙂", "Very Mild", "Pain is very mild, barely noticeable"),
+            new ScaleItem(2, "😐", "Minor", "Minor pain, annoying"),
+            new ScaleItem(3, "😕", "Noticeable", "Noticeable pain, may distract you"),
+            new ScaleItem(4, "😒", "Moderate", "Moderate pain, can ignore while active"),
+            new ScaleItem(5, "😞", "Moderately Strong", "Moderately strong pain"),
+            new ScaleItem(6, "😖", "Stronger", "Moderately stronger pain"),
+            new ScaleItem(7, "😫", "Strong", "Strong pain, prevents normal activities"),
+            new ScaleItem(8, "😰", "Very Strong", "Very strong pain, hard to do anything"),
+            new ScaleItem(9, "😭", "Hard to Tolerate", "Very hard to tolerate"),
+            new ScaleItem(10, "😱", "Worst Pain", "Worst pain possible")
+        );
+
+        return buildScaleReference("PAIN SCALE", "(0-10)", painScale);
+    }
+
+    /**
+     * Generic method to build scale reference text
+     */
+    private String buildScaleReference(String scaleName, String range, java.util.List<ScaleItem> items) {
+        StringBuilder scale = new StringBuilder();
+        scale.append(scaleName).append(" REFERENCE ").append(range).append(":\n");
+        
+        for (ScaleItem item : items) {
+            scale.append(item.value).append(": ");
+            if (item.emoji != null) {
+                scale.append(item.emoji).append(" ");
+            }
+            scale.append(item.label);
+            if (item.description != null && !item.description.equals(item.label)) {
+                scale.append(" - ").append(item.description);
+            }
+            scale.append("\n");
+        }
+        scale.append("\n");
+        
+        return scale.toString();
+    }
+
+    /**
+     * Data structure for scale items to make metadata management easier
+     */
+    private static class ScaleItem {
+        final int value;
+        final String emoji;
+        final String label;
+        final String description;
+
+        ScaleItem(int value, String emoji, String label) {
+            this(value, emoji, label, null);
+        }
+
+        ScaleItem(int value, String emoji, String label, String description) {
+            this.value = value;
+            this.emoji = emoji;
+            this.label = label;
+            this.description = description;
+        }
     }
 }
 
