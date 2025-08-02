@@ -16,7 +16,7 @@ class Task {
   String? frequency; // e.g., 'daily', 'weekly', 'monthly'
   int? interval; // e.g., every 2 days, every 3 weeks
   int? count; // Number of occurrences
-  List<bool>? daysOfWeek; // e.g., [true, false, true, false, true, false, false] for Mon, Wed, Fri
+  List<bool>? daysOfWeek; // e.g., [false, true, false, true, false, true, false] for Sun, Mon, Tue, Wed, Thu, Fri, Sat
 
 
 
