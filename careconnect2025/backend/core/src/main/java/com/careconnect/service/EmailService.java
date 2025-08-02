@@ -227,13 +227,14 @@ public class EmailService {
      * Console/Development mode - log email to console
      */
     private void sendConsoleEmail(String recipientEmail, String subject, String content) {
-        System.out.println("🔧 DEV MODE - Email logged to console:");
-        System.out.println("  Provider: " + emailProvider);
-        System.out.println("  To: " + recipientEmail);
-        System.out.println("  From: " + fromEmail);
-        System.out.println("  Subject: " + subject);
-        System.out.println("  Content: " + content);
-        System.out.println("  ===================================");
+        // Console mode disabled - email would be logged here
+        // System.out.println("🔧 DEV MODE - Email logged to console:");
+        // System.out.println("  Provider: " + emailProvider);
+        // System.out.println("  To: " + recipientEmail);
+        // System.out.println("  From: " + fromEmail);
+        // System.out.println("  Subject: " + subject);
+        // System.out.println("  Content: " + content);
+        // System.out.println("  ===================================");
     }
 
     /**
