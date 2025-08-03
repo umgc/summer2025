@@ -32,4 +32,9 @@ output "cc_sensitive_env_variables_name" {
   }
   sensitive = true
 }
-
+output "cc_deployment_sfn_arn" {
+  value = module.sfn_sm.cc_deployment_sfn_arn
+}
+output "internal_s3_bucket" {
+  value = module.s3_internal.internal_s3_bucket.bucket
+}

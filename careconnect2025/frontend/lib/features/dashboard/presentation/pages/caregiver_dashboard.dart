@@ -851,6 +851,9 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
         width: isMobile
             ? screenWidth * 0.85
             : (screenWidth > 600 ? 400.0 : screenWidth * 0.9),
+        width: isMobile
+            ? screenWidth * 0.85
+            : (screenWidth > 600 ? 400.0 : screenWidth * 0.9),
         padding: const EdgeInsets.all(24),
         decoration: !isMobile
             ? BoxDecoration(
@@ -871,6 +874,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           children: [
             Icon(
               Icons.person_search,
+              size: isMobile ? 80.0 : 96.0,
               size: isMobile ? 80.0 : 96.0,
               color: Theme.of(context).disabledColor,
             ),
@@ -893,6 +897,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
             const SizedBox(height: 32),
             SizedBox(
               width: isMobile ? double.infinity : 200.0,
+              width: isMobile ? double.infinity : 200.0,
               child: ElevatedButton.icon(
                 style: AppTheme.primaryButtonStyle.copyWith(
                   // Ensure proper button sizing for touch
@@ -904,6 +909,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                 icon: const Icon(Icons.person_add),
                 label: const Text('Add Patient'),
                 onPressed: () {
+                  print('🔍 Add Patient (empty state) button pressed');
                   print('🔍 Add Patient (empty state) button pressed');
                   try {
                     context.go('/add-patient');
@@ -988,6 +994,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     int crossAxisCount = screenWidth >= 1200 ? 2 : 1;
 
     // Ensure we have at least 1 column and limit based on screen size
+    // Ensure we have at least 1 column and limit based on screen size
     if (crossAxisCount > 2) {
       crossAxisCount =
           2; // Limit to 2 columns max for patient cards to make them wider
@@ -1004,6 +1011,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
       sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: crossAxisCount,
+          childAspectRatio: aspectRatio, // Make cards taller and more readable
           childAspectRatio: aspectRatio, // Make cards taller and more readable
           crossAxisSpacing: 16.0,
           mainAxisSpacing: 16.0,
@@ -1023,6 +1031,62 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isMobile = screenWidth < 500;
+        final isSmallMobile = screenWidth < 350;
+
+        return Container(
+          margin: EdgeInsets.only(right: isMobile ? 6 : 8),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  vertical: isSmallMobile ? 8 : (isMobile ? 10 : 12),
+                  horizontal: isSmallMobile ? 6 : (isMobile ? 8 : 12),
+                ),
+                constraints: BoxConstraints(
+                  minWidth: isSmallMobile ? 60 : (isMobile ? 65 : 75),
+                  maxWidth: isSmallMobile ? 80 : (isMobile ? 90 : 110),
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.2),
+                    width: 0.5,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      icon,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: isSmallMobile ? 18 : (isMobile ? 20 : 22),
+                    ),
+                    SizedBox(height: isSmallMobile ? 3 : 4),
+                    Text(
+                      label,
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: isSmallMobile ? 9 : (isMobile ? 10 : 12),
+                        height: 1.2,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
         final screenWidth = MediaQuery.of(context).size.width;
         final isMobile = screenWidth < 500;
         final isSmallMobile = screenWidth < 350;
@@ -1103,15 +1167,30 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
       margin: isGridView ? EdgeInsets.zero : const EdgeInsets.only(bottom: 16),
       elevation: 3,
       shadowColor: Theme.of(context).shadowColor.withOpacity(0.15),
+      elevation: 3,
+      shadowColor: Theme.of(context).shadowColor.withOpacity(0.15),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
+          color: Theme.of(context).dividerColor.withOpacity(0.1),
+          width: 0.5,
           color: Theme.of(context).dividerColor.withOpacity(0.1),
           width: 0.5,
         ),
       ),
       child: Container(
         constraints: BoxConstraints(maxWidth: maxCardWidth),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Theme.of(context).cardColor,
+              Theme.of(context).cardColor.withOpacity(0.95),
+            ],
+          ),
+        ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
@@ -1152,6 +1231,20 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                   fontSize: 18,
                 ),
               ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 6),
+                  // Action buttons row with responsive overflow handling
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildActionButton(
+                            icon: Icons.message,
+                            label: 'Message',
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1446,7 +1539,16 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
               },
             ),
             // Add visual separator between content and status
+            // Add visual separator between content and status
             Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Divider(
+                height: 1,
+                color: Theme.of(context).dividerColor.withOpacity(0.5),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Divider(
                 height: 1,
@@ -1470,11 +1572,14 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                         size: 16,
                       ),
                       const SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Text(
                         patient.linkStatus == 'ACTIVE'
                             ? 'Active'
                             : patient.linkStatus,
                         style: AppTheme.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                           color: patient.linkStatus == 'ACTIVE'
@@ -1493,3 +1598,4 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     );
   }
 }
+

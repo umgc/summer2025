@@ -8,12 +8,6 @@ on:
         - 'care-connect**'
         paths:
         - '**frontend/**'
-    pull_request:
-        branches:
-        - 'care-connect**'
-        paths:
-        - '**frontend/**'
-        
 
 jobs:
   build-and-deploy:

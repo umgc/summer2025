@@ -8,7 +8,7 @@ variable "default_tags" {
     Purpose    = "capstone at UMGC"
     CourseCode = "SWEN-670"
     Project    = "careconnect"
-    Use        = "IaC"
+    Use        = "IaC with terraform"
   }
 }
 

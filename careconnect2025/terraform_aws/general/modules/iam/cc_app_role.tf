@@ -11,6 +11,7 @@ resource "aws_iam_role" "cc_app_role" {
           "states.amazonaws.com",
           "lambda.amazonaws.com",
           "apigateway.amazonaws.com",
+          "amplify.amazonaws.com"
         ]
       }
       Action = "sts:AssumeRole"
@@ -83,8 +84,21 @@ resource "aws_iam_policy" "cc_app_role_policy" {
           "iam:PassRole"
         ],
         Resource = [
-          "${aws_iam_role.cc_app_role.arn}"
+          "${aws_iam_role.cc_app_role.arn}",
+          "${aws_iam_role.cc_api_gw_role.arn}"
         ]
+      },
+      {
+        Sid      = "AllowSNSPublish",
+        Effect   = "Allow",
+        Action   = "sns:Publish",
+        Resource = "arn:aws:sns:*:${data.aws_caller_identity.caller.account_id}:main_admin_email"
+      },
+      {
+        Sid      = "AllowAmplifyStartDeployment",
+        Effect   = "Allow",
+        Action   = "amplify:StartDeployment",
+        Resource = "arn:aws:amplify:*:${data.aws_caller_identity.caller.account_id}:apps/${var.cc_applify_app_id}/branches/*"
       },
       {
         Sid    = "LambdaGeneralAccess"
@@ -114,4 +128,9 @@ resource "aws_iam_policy" "cc_app_role_policy" {
 resource "aws_iam_role_policy_attachment" "cc_app_role_policy_attach" {
   role       = aws_iam_role.cc_app_role.name
   policy_arn = aws_iam_policy.cc_app_role_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "cc_app_role_api_gw_policy_attach" {
+  role       = aws_iam_role.cc_app_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator"
 }
