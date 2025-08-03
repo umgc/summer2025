@@ -1,4 +1,6 @@
 import 'dart:async';
+
+import '../config/env_constant.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class WebRTCSignalingService {
@@ -7,8 +9,7 @@ class WebRTCSignalingService {
   static final Map<String, StreamController> _eventControllers = {};
 
   // Signaling server URL (you can use socket.io test server or deploy your own)
-  static const String signalingServerUrl =
-      'https://socket.io-chat-e9jt.herokuapp.com';
+  static String get signalingServerUrl => getWebRTCSignalingServerUrl();
 
   // Initialize signaling connection
   static Future<bool> initialize() async {

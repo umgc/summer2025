@@ -3,7 +3,7 @@ package com.careconnect.controller;
 import com.careconnect.dto.*;
 import com.careconnect.model.ChatConversation;
 import com.careconnect.service.AIChatService;
-import com.careconnect.service.PatientAIConfigService;
+import com.careconnect.service.UserAIConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,14 +17,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-@Slf4j
 @RestController
 @RequestMapping("/v1/api/ai-chat")
 @RequiredArgsConstructor
 @Tag(name = "AI Chat", description = "AI-powered chat functionality with medical context")
 public class AIChatController {
     private final AIChatService aiChatService;
-    private final PatientAIConfigService patientAIConfigService;
+    private final UserAIConfigService userAIConfigService;
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AIChatController.class);
 
     @PostMapping("/chat")
     @Operation(
@@ -135,35 +135,33 @@ public class AIChatController {
     }
     
     // AI Configuration endpoints
-    @GetMapping("/config/{patientId}")
+    @GetMapping("/config")
     @Operation(
-        summary = "Get patient AI configuration",
-        description = "Retrieve AI configuration settings for a specific patient"
+        summary = "Get AI configuration",
+        description = "Retrieve AI configuration settings for a user (optionally filtered by patient)"
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Configuration retrieved successfully"),
         @ApiResponse(responseCode = "403", description = "Access denied"),
-        @ApiResponse(responseCode = "404", description = "Patient not found")
+        @ApiResponse(responseCode = "404", description = "Configuration not found")
     })
-    // @PreAuthorize("hasRole('PATIENT') or hasRole('CAREGIVER')")
-    public ResponseEntity<PatientAIConfigDTO> getPatientAIConfig(
-            @Parameter(description = "Patient ID") @PathVariable Long patientId) {
-        
-        log.info("Retrieving AI config for patient: {}", patientId);
-        
+    public ResponseEntity<UserAIConfigDTO> getUserAIConfig(
+            @RequestParam Long userId,
+            @RequestParam(required = false) Long patientId) {
+        log.info("Retrieving AI config for user: {}, patient: {}", userId, patientId);
         try {
-            PatientAIConfigDTO config = patientAIConfigService.getPatientAIConfig(patientId);
+            UserAIConfigDTO config = userAIConfigService.getUserAIConfig(userId, patientId);
             return ResponseEntity.ok(config);
         } catch (Exception e) {
-            log.error("Error retrieving AI config for patient {}: ", patientId, e);
+            log.error("Error retrieving AI config for user: {}, patient: {}: ", userId, patientId, e);
             return ResponseEntity.badRequest().build();
         }
     }
     
     @PostMapping("/config")
     @Operation(
-        summary = "Create or update patient AI configuration",
-        description = "Create or update AI configuration settings for a patient"
+        summary = "Create or update AI configuration",
+        description = "Create or update AI configuration settings for a user (optionally filtered by patient)"
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Configuration updated successfully"),
@@ -171,43 +169,38 @@ public class AIChatController {
         @ApiResponse(responseCode = "400", description = "Invalid configuration data"),
         @ApiResponse(responseCode = "403", description = "Access denied")
     })
-    // @PreAuthorize("hasRole('PATIENT') or hasRole('CAREGIVER')")
-    public ResponseEntity<PatientAIConfigDTO> savePatientAIConfig(
-            @Valid @RequestBody PatientAIConfigDTO configDTO) {
-        
-        log.info("Saving AI config for patient: {}", configDTO.getPatientId());
-        
+    public ResponseEntity<UserAIConfigDTO> saveUserAIConfig(
+            @Valid @RequestBody UserAIConfigDTO configDTO) {
+        log.info("Saving AI config for user: {}, patient: {}", configDTO.getUserId(), configDTO.getPatientId());
         try {
-            PatientAIConfigDTO savedConfig = patientAIConfigService.savePatientAIConfig(configDTO);
+            UserAIConfigDTO savedConfig = userAIConfigService.saveUserAIConfig(configDTO);
             boolean isNew = configDTO.getId() == null;
             return isNew ? ResponseEntity.status(201).body(savedConfig) : ResponseEntity.ok(savedConfig);
         } catch (Exception e) {
-            log.error("Error saving AI config for patient {}: ", configDTO.getPatientId(), e);
+            log.error("Error saving AI config for user: {}, patient: {}: ", configDTO.getUserId(), configDTO.getPatientId(), e);
             return ResponseEntity.badRequest().build();
         }
     }
     
-    @DeleteMapping("/config/{patientId}")
+    @DeleteMapping("/config")
     @Operation(
-        summary = "Deactivate patient AI configuration",
-        description = "Deactivate AI configuration for a patient (soft delete)"
+        summary = "Deactivate AI configuration",
+        description = "Deactivate AI configuration for a user (optionally filtered by patient, soft delete)"
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Configuration deactivated successfully"),
         @ApiResponse(responseCode = "403", description = "Access denied"),
         @ApiResponse(responseCode = "404", description = "Configuration not found")
     })
-    @PreAuthorize("hasRole('PATIENT') or hasRole('CAREGIVER')")
-    public ResponseEntity<Void> deactivatePatientAIConfig(
-            @Parameter(description = "Patient ID") @PathVariable Long patientId) {
-        
-        log.info("Deactivating AI config for patient: {}", patientId);
-        
+    public ResponseEntity<Void> deactivateUserAIConfig(
+            @RequestParam Long userId,
+            @RequestParam(required = false) Long patientId) {
+        log.info("Deactivating AI config for user: {}, patient: {}", userId, patientId);
         try {
-            patientAIConfigService.deactivatePatientAIConfig(patientId);
+            userAIConfigService.deactivateUserAIConfig(userId, patientId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
-            log.error("Error deactivating AI config for patient {}: ", patientId, e);
+            log.error("Error deactivating AI config for user: {}, patient: {}: ", userId, patientId, e);
             return ResponseEntity.badRequest().build();
         }
     }

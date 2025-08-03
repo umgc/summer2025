@@ -5,7 +5,7 @@ public record FamilyMemberRegistration(
     String lastName,
     String email,
     String phone,
-    AddressDto address,
-    String relationship,
+    AddressDto address, // optional
+    String relationship, // optional
     Long patientUserId
 ) {}

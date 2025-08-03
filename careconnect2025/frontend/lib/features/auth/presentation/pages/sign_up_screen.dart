@@ -984,7 +984,10 @@ class _CaregiverRegistrationFlowPageState
     } catch (e) {
       print('Caregiver registration failed: $e');
       if (mounted) {
-        setState(() => _errorMessage = 'Registration error: $e');
+        setState(
+          () => _errorMessage =
+              'We were unable to complete your registration at this time. Our support team has been notified and will reach out to help resolve the issue.',
+        );
       }
     } finally {
       if (mounted) {
@@ -1050,6 +1053,13 @@ class _CaregiverRegistrationFlowPageState
                         _errorMessage!,
                         style: TextStyle(color: theme.colorScheme.error),
                         textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.arrow_back),
+                        label: const Text('Back'),
+                        style: AppTheme.primaryButtonStyle,
+                        onPressed: () => Navigator.of(context).maybePop(),
                       ),
                     ],
                   ],

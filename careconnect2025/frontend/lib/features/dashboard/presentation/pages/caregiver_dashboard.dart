@@ -7,7 +7,6 @@ import 'package:care_connect_app/providers/user_provider.dart';
 import 'package:care_connect_app/services/api_service.dart';
 import 'package:care_connect_app/services/auth_token_manager.dart';
 import 'package:http/http.dart' as http;
-import '../../../../widgets/ai_chat_improved.dart';
 import '../../../../services/subscription_service.dart';
 import '../../../../widgets/responsive_page_wrapper.dart';
 import '../../../../utils/responsive_utils.dart';
@@ -172,7 +171,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                 // Always set relationship from link if present
                 patientJson['relationship'] =
                     patientJson['relationship'] ??
-                        (link['relationship'] ?? 'Patient');
+                    (link['relationship'] ?? 'Patient');
               }
             } else {
               patientJson = Map<String, dynamic>.from(json);
@@ -542,14 +541,14 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
   Widget _buildEmptyStateContent() {
     // Use responsive utils for width calculation
     final isMobile = context.isMobile;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     // Create a container with responsive width
     return Center(
       child: Container(
-        width: context.responsiveValue(
-          mobile: MediaQuery.of(context).size.width * 0.85,
-          tablet: 400.0,
-        ),
+        width: isMobile
+            ? screenWidth * 0.85
+            : (screenWidth > 600 ? 400.0 : screenWidth * 0.9),
         padding: const EdgeInsets.all(24),
         decoration: !isMobile
             ? BoxDecoration(
@@ -570,7 +569,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           children: [
             Icon(
               Icons.person_search,
-              size: context.responsiveValue(mobile: 80.0, tablet: 96.0),
+              size: isMobile ? 80.0 : 96.0,
               color: Theme.of(context).disabledColor,
             ),
             const SizedBox(height: 24),
@@ -591,10 +590,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
             ),
             const SizedBox(height: 32),
             SizedBox(
-              width: context.responsiveValue(
-                mobile: double.infinity,
-                tablet: 200.0,
-              ),
+              width: isMobile ? double.infinity : 200.0,
               child: ElevatedButton.icon(
                 style: AppTheme.primaryButtonStyle.copyWith(
                   // Ensure proper button sizing for touch
@@ -606,9 +602,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                 icon: const Icon(Icons.person_add),
                 label: const Text('Add Patient'),
                 onPressed: () {
-                  print(
-                    '🔍 Add Patient (empty state) button pressed',
-                  ); // Debug print
+                  print('🔍 Add Patient (empty state) button pressed');
                   try {
                     context.go('/add-patient');
                   } catch (e) {
@@ -684,18 +678,24 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     // Use responsive utils to get the grid column count
     int crossAxisCount = context.gridColumns;
 
-    // Ensure we have at least 1 column and limit to 2 columns max for wider patient cards
+    // Ensure we have at least 1 column and limit based on screen size
     if (crossAxisCount > 2) {
       crossAxisCount =
           2; // Limit to 2 columns max for patient cards to make them wider
     }
+    if (crossAxisCount < 1) {
+      crossAxisCount = 1; // Ensure at least 1 column
+    }
+
+    // Calculate aspect ratio based on screen size
+    double aspectRatio = context.isLargeDesktop ? 0.9 : 0.85;
 
     return SliverPadding(
       padding: EdgeInsets.fromLTRB(horizontalMargin, 0, horizontalMargin, 16),
       sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: crossAxisCount,
-          childAspectRatio: 0.85, // Make cards taller and more readable
+          childAspectRatio: aspectRatio, // Make cards taller and more readable
           crossAxisSpacing: 16.0,
           mainAxisSpacing: 16.0,
         ),
@@ -714,41 +714,62 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isMobile = MediaQuery.of(context).size.width < 500;
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isMobile = screenWidth < 500;
+        final isSmallMobile = screenWidth < 350;
 
-        return InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              vertical: isMobile ? 8 : 12,
-              horizontal: isMobile ? 12 : 16,
-            ),
-            constraints: BoxConstraints(
-              minWidth: isMobile ? 70 : 80,
-              maxWidth: isMobile ? 85 : 120,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: isMobile ? 20 : 24,
+        return Container(
+          margin: EdgeInsets.only(right: isMobile ? 6 : 8),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  vertical: isSmallMobile ? 8 : (isMobile ? 10 : 12),
+                  horizontal: isSmallMobile ? 6 : (isMobile ? 8 : 12),
                 ),
-                SizedBox(height: isMobile ? 2 : 4),
-                Text(
-                  label,
-                  style: AppTheme.bodyMedium.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: isMobile ? 11 : 14,
+                constraints: BoxConstraints(
+                  minWidth: isSmallMobile ? 60 : (isMobile ? 65 : 75),
+                  maxWidth: isSmallMobile ? 80 : (isMobile ? 90 : 110),
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.2),
+                    width: 0.5,
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      icon,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: isSmallMobile ? 18 : (isMobile ? 20 : 22),
+                    ),
+                    SizedBox(height: isSmallMobile ? 3 : 4),
+                    Text(
+                      label,
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: isSmallMobile ? 9 : (isMobile ? 10 : 12),
+                        height: 1.2,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         );
@@ -763,21 +784,38 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
       desktop: 45.0,
     );
 
-    // Set a wider max width for desktop/tablet
-    double maxCardWidth = context.isDesktopOrLarger ? 800.0 : 1400.0;
+    // Use flexible max width based on screen size
+    double maxCardWidth = MediaQuery.of(context).size.width;
+    if (context.isDesktopOrLarger) {
+      maxCardWidth = 800.0;
+    } else if (context.isTablet) {
+      maxCardWidth = 600.0;
+    }
 
     return Card(
       margin: isGridView ? EdgeInsets.zero : const EdgeInsets.only(bottom: 16),
-      elevation: 2,
+      elevation: 3,
+      shadowColor: Theme.of(context).shadowColor.withOpacity(0.15),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: Theme.of(context).dividerColor.withOpacity(0.2),
-          width: 1,
+          color: Theme.of(context).dividerColor.withOpacity(0.1),
+          width: 0.5,
         ),
       ),
       child: Container(
         constraints: BoxConstraints(maxWidth: maxCardWidth),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Theme.of(context).cardColor,
+              Theme.of(context).cardColor.withOpacity(0.95),
+            ],
+          ),
+        ),
         child: Column(
           children: [
             ListTile(
@@ -807,22 +845,20 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                   fontSize: 18,
                 ),
               ),
-              subtitle: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: 400),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildActionButton(
-                              icon: Icons.message,
-                              label: 'Message',
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 6),
+                  // Action buttons row with responsive overflow handling
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildActionButton(
+                            icon: Icons.message,
+                            label: 'Message',
                             onPressed: () async {
                               final result = await Navigator.of(context).push(
                                 MaterialPageRoute(
@@ -895,118 +931,128 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                             },
                           ),
                         ],
-                      ),),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.cake,
-                            size: 16,
-                            color: Theme.of(context).hintColor,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            patient.dob.isNotEmpty
-                                ? 'Age ${_calculateAgeFromDob(patient.dob)}'
-                                : 'Age not specified',
-                            style: AppTheme.bodyMedium.copyWith(
-                              color: Theme.of(context).hintColor,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.person,
-                            size: 16,
-                            color: Theme.of(context).hintColor,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            patient.gender?.isNotEmpty == true
-                                ? patient.gender!
-                                : 'Gender not specified',
-                            style: AppTheme.bodyMedium.copyWith(
-                              color: Theme.of(context).hintColor,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.cake,
+                        size: 15,
+                        color: Theme.of(context).hintColor,
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.family_restroom,
-                            size: 16,
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          patient.dob.isNotEmpty
+                              ? 'Age ${_calculateAgeFromDob(patient.dob)}'
+                              : 'Age not specified',
+                          style: AppTheme.bodyMedium.copyWith(
                             color: Theme.of(context).hintColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                              patient.relationship.isNotEmpty
-                                  ? patient.relationship
-                                  : 'Patient',
-                              style: AppTheme.bodyMedium.copyWith(
-                                color: Theme.of(context).hintColor,
-                                fontSize: 14,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.warning_amber,
-                            size: 16,
-                            color: Theme.of(context).hintColor,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            patient.allergies?.isNotEmpty == true
-                                ? 'Allergies: ${patient.allergies!.join(', ')}'
-                                : 'No allergies listed',
-                            style: AppTheme.bodyMedium.copyWith(
-                              color: Theme.of(context).hintColor,
-                                fontSize: 14,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.favorite,
-                            size: 16,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _getVitalConditionsSummary(patient),
-                            style: AppTheme.bodyMedium.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.person,
+                        size: 15,
+                        color: Theme.of(context).hintColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          patient.gender?.isNotEmpty == true
+                              ? patient.gender!
+                              : 'Gender not specified',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: Theme.of(context).hintColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.family_restroom,
+                        size: 15,
+                        color: Theme.of(context).hintColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          patient.relationship.isNotEmpty
+                              ? patient.relationship
+                              : 'Patient',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: Theme.of(context).hintColor,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.warning_amber,
+                        size: 15,
+                        color: Theme.of(context).hintColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          patient.allergies?.isNotEmpty == true
+                              ? 'Allergies: ${patient.allergies!.join(', ')}'
+                              : 'No allergies listed',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: Theme.of(context).hintColor,
+                            fontSize: 13,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.favorite,
+                        size: 15,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _getVitalConditionsSummary(patient),
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
               trailing: PopupMenuButton<String>(
                 icon: Icon(
@@ -1062,9 +1108,9 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                           return;
                         }
                         final response =
-                        await ApiService.suspendCaregiverPatientLink(
-                          linkId,
-                        );
+                            await ApiService.suspendCaregiverPatientLink(
+                              linkId,
+                            );
                         if (response.statusCode == 200) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -1121,9 +1167,9 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                           return;
                         }
                         final response =
-                        await ApiService.reactivateCaregiverPatientLink(
-                          linkId,
-                        );
+                            await ApiService.reactivateCaregiverPatientLink(
+                              linkId,
+                            );
                         if (response.statusCode == 200) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -1208,8 +1254,16 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                 context.go('/patient/${patient.id}');
               },
             ),
+            // Add visual separator between content and status
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Divider(
+                height: 1,
+                color: Theme.of(context).dividerColor.withOpacity(0.5),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -1224,13 +1278,14 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                             : Theme.of(context).disabledColor,
                         size: 16,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
                       Text(
                         patient.linkStatus == 'ACTIVE'
                             ? 'Active'
                             : patient.linkStatus,
                         style: AppTheme.bodyMedium.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
                           color: patient.linkStatus == 'ACTIVE'
                               ? Theme.of(context).colorScheme.secondary
                               : Theme.of(context).disabledColor,

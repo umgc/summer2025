@@ -2,25 +2,22 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:socket_io_client/socket_io_client.dart' as io;
+
+import '../config/env_constant.dart';
+import 'webrtc_signaling.dart';
 
 class WebVideoCallService {
   RTCPeerConnection? _peerConnection;
   MediaStream? _localStream;
   MediaStream? _remoteStream;
-  io.Socket? _socket;
-
   bool _isInCall = false;
   String? _currentCallId;
   String? _currentUserId;
-
   Function(MediaStream)? _onRemoteStreamReceived;
   Function()? _onCallEnded;
-
-  // WebRTC renderers
   late RTCVideoRenderer _localRenderer;
   late RTCVideoRenderer _remoteRenderer;
-
+  late WebRTCSignaling _signaling;
   bool get isInCall => _isInCall;
   String? get currentCallId => _currentCallId;
 
@@ -33,37 +30,8 @@ class WebVideoCallService {
     _currentUserId = userId;
     _onRemoteStreamReceived = onRemoteStreamReceived;
     _onCallEnded = onCallEnded;
-
-    try {
-      // Initialize socket connection for signaling
-      _socket = io.io('ws://localhost:3000', <String, dynamic>{
-        'transports': ['websocket'],
-        'autoConnect': false,
-      });
-
-      _socket!.connect();
-
-      _socket!.on('connect', (_) {
-        print('Connected to signaling server');
-      });
-
-      _socket!.on('offer', (data) async {
-        await _handleOffer(data);
-      });
-
-      _socket!.on('answer', (data) async {
-        await _handleAnswer(data);
-      });
-
-      _socket!.on('ice-candidate', (data) async {
-        await _handleIceCandidate(data);
-      });
-
-      print('WebRTC service initialized for web platform');
-    } catch (e) {
-      print('Error initializing WebRTC: $e');
-      throw Exception('Failed to initialize WebRTC video service: $e');
-    }
+    _signaling = WebRTCSignaling(getWebRTCSignalingServerUrl());
+    print('WebRTC service initialized for web platform (HTTP signaling)');
   }
 
   /// Initialize video renderers for WebRTC
@@ -122,22 +90,20 @@ class WebVideoCallService {
       };
 
       // Handle ICE candidates
-      _peerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
-        _socket!.emit('ice-candidate', {
-          'callId': callId,
-          'candidate': candidate.toMap(),
-        });
+      _peerConnection!.onIceCandidate = (RTCIceCandidate candidate) async {
+        await _signaling.sendSignal(
+          userId: recipientId,
+          message: 'ice-candidate:${candidate.toMap()}',
+        );
       };
 
       // Create and send offer
       RTCSessionDescription offer = await _peerConnection!.createOffer();
       await _peerConnection!.setLocalDescription(offer);
-
-      _socket!.emit('offer', {
-        'callId': callId,
-        'recipientId': recipientId,
-        'offer': offer.toMap(),
-      });
+      await _signaling.sendSignal(
+        userId: recipientId,
+        message: 'offer:${offer.toMap()}',
+      );
 
       return _buildWebRTCVideoWidget();
     } catch (e) {
@@ -151,6 +117,7 @@ class WebVideoCallService {
   /// Join WebRTC call
   Future<Widget> joinCall({
     required String callId,
+    required String recipientId,
     bool isVideoEnabled = true,
     bool isAudioEnabled = true,
   }) async {
@@ -190,15 +157,16 @@ class WebVideoCallService {
         }
       };
 
-      _peerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
-        _socket!.emit('ice-candidate', {
-          'callId': callId,
-          'candidate': candidate.toMap(),
-        });
+      _peerConnection!.onIceCandidate = (RTCIceCandidate candidate) async {
+        // Use recipientId for outgoing ICE candidates in joinCall
+        await _signaling.sendSignal(
+          userId: recipientId,
+          message: 'ice-candidate:${candidate.toMap()}',
+        );
       };
 
-      // Join the call room
-      _socket!.emit('join-call', {'callId': callId});
+      // Notify caller/host via HTTP-based notification if needed (optional)
+      // await _signaling.sendSignal(userId: <callerId>, message: 'Joined video call');
 
       return _buildWebRTCVideoWidget();
     } catch (e) {
@@ -270,55 +238,6 @@ class WebVideoCallService {
   }
 
   /// Handle WebRTC offer
-  Future<void> _handleOffer(dynamic data) async {
-    try {
-      RTCSessionDescription offer = RTCSessionDescription(
-        data['offer']['sdp'],
-        data['offer']['type'],
-      );
-
-      await _peerConnection!.setRemoteDescription(offer);
-
-      RTCSessionDescription answer = await _peerConnection!.createAnswer();
-      await _peerConnection!.setLocalDescription(answer);
-
-      _socket!.emit('answer', {
-        'callId': data['callId'],
-        'answer': answer.toMap(),
-      });
-    } catch (e) {
-      print('Error handling offer: $e');
-    }
-  }
-
-  /// Handle WebRTC answer
-  Future<void> _handleAnswer(dynamic data) async {
-    try {
-      RTCSessionDescription answer = RTCSessionDescription(
-        data['answer']['sdp'],
-        data['answer']['type'],
-      );
-
-      await _peerConnection!.setRemoteDescription(answer);
-    } catch (e) {
-      print('Error handling answer: $e');
-    }
-  }
-
-  /// Handle ICE candidate
-  Future<void> _handleIceCandidate(dynamic data) async {
-    try {
-      RTCIceCandidate candidate = RTCIceCandidate(
-        data['candidate']['candidate'],
-        data['candidate']['sdpMid'],
-        data['candidate']['sdpMLineIndex'],
-      );
-
-      await _peerConnection!.addCandidate(candidate);
-    } catch (e) {
-      print('Error handling ICE candidate: $e');
-    }
-  }
 
   /// Toggle microphone mute
   void _toggleMute() {
@@ -343,15 +262,25 @@ class WebVideoCallService {
         _peerConnection = null;
       }
 
-      // Stop local stream
+      // Stop and disable local stream tracks (especially video)
       if (_localStream != null) {
-        _localStream!.getTracks().forEach((track) => track.stop());
+        for (var track in _localStream!.getTracks()) {
+          try {
+            track.stop();
+            track.enabled = false;
+          } catch (_) {}
+        }
         _localStream = null;
       }
 
-      // Stop remote stream
+      // Stop and disable remote stream tracks
       if (_remoteStream != null) {
-        _remoteStream!.getTracks().forEach((track) => track.stop());
+        for (var track in _remoteStream!.getTracks()) {
+          try {
+            track.stop();
+            track.enabled = false;
+          } catch (_) {}
+        }
         _remoteStream = null;
       }
 
@@ -360,7 +289,13 @@ class WebVideoCallService {
       await _remoteRenderer.dispose();
 
       // Disconnect socket
-      _socket?.emit('end-call', {'callId': _currentCallId});
+      // Notify other party via HTTP-based notification
+      if (_currentCallId != null && _currentUserId != null) {
+        await _signaling.sendSignal(
+          userId: _currentUserId!,
+          message: 'call-ended',
+        );
+      }
     } catch (e) {
       print('Error ending WebRTC call: $e');
     } finally {
@@ -378,7 +313,5 @@ class WebVideoCallService {
   /// Dispose service
   Future<void> dispose() async {
     await endCall();
-    _socket?.disconnect();
-    _socket?.dispose();
   }
 }

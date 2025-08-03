@@ -28,7 +28,7 @@ public class ConnectionRequestService {
     private final EmailService emailService;
     
     @Autowired(required = false)
-    private FirebaseNotificationService notificationService;
+    private NotificationService notificationService;
     
     @Value("${frontend.base-url:http://localhost:3000}")
     private String frontendBaseUrl;

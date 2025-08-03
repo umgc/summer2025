@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart';
 import 'api_service.dart';
 import '../config/env_constant.dart';
 
@@ -11,7 +10,7 @@ class AIChatService {
   /// Send a chat message to the AI through the backend
   static Future<Map<String, dynamic>> sendMessage({
     required String message,
-    required int patientId,
+    int? patientId,
     required int userId,
     String? conversationId,
     String chatType = 'GENERAL_SUPPORT',
@@ -24,6 +23,7 @@ class AIChatService {
     bool includeNotes = false,
     bool includeMoodPainLogs = false,
     bool includeAllergies = false,
+    List<Map<String, dynamic>>? uploadedFiles,
   }) async {
     try {
       final authHeaders = await ApiService.getAuthHeaders();
@@ -32,7 +32,7 @@ class AIChatService {
 
       final requestBody = {
         'message': message,
-        'patientId': patientId,
+        if (patientId != null) 'patientId': patientId,
         'userId': userId,
         if (conversationId != null) 'conversationId': conversationId,
         'chatType': chatType,
@@ -45,6 +45,8 @@ class AIChatService {
         'includeNotes': includeNotes,
         'includeMoodPainLogs': includeMoodPainLogs,
         'includeAllergies': includeAllergies,
+        if (uploadedFiles != null && uploadedFiles.isNotEmpty)
+          'uploadedFiles': uploadedFiles,
       };
 
       print('🤖 Sending AI chat message: ${requestBody['message']}');
@@ -228,85 +230,6 @@ class AIChatService {
     } catch (e) {
       print('❌ Error analyzing file: $e');
       return 'Sorry, I encountered an error analyzing the file. Please try again later.';
-    }
-  }
-
-  /// Get AI configuration for a patient
-  static Future<Map<String, dynamic>?> getAIConfiguration({
-    required int patientId,
-  }) async {
-    try {
-      final authHeaders = await ApiService.getAuthHeaders();
-
-      print('🤖 Getting AI config for patient $patientId');
-
-      final response = await http.get(
-        Uri.parse('$_baseUrl/config/$patientId'),
-        headers: authHeaders,
-      );
-
-      print('🤖 AI config response status: ${response.statusCode}');
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else if (response.statusCode == 404) {
-        print('🤖 No AI config found for patient $patientId');
-        return null;
-      } else {
-        throw Exception(
-          'Failed to get AI configuration: ${response.statusCode}',
-        );
-      }
-    } catch (e) {
-      print('❌ Error getting AI configuration: $e');
-      return null;
-    }
-  }
-
-  /// Update AI configuration for user
-  static Future<bool> updateAIConfiguration({
-    required int patientId,
-    required Map<String, dynamic> configuration,
-  }) async {
-    try {
-      final authHeaders = await ApiService.getAuthHeaders();
-      authHeaders['Content-Type'] = 'application/json';
-      authHeaders['Accept'] = '*/*';
-
-      final requestBody = {
-        'patientId': patientId,
-        'aiProvider': configuration['aiProvider'] ?? 'DEEPSEEK',
-        'openaiModel': configuration['openaiModel'] ?? 'gpt-3.5-turbo',
-        'deepseekModel': configuration['deepseekModel'] ?? 'deepseek-chat',
-        'maxTokens': configuration['maxTokens'] ?? 1000,
-        'temperature': configuration['temperature'] ?? 0.7,
-        'conversationHistoryLimit':
-            configuration['conversationHistoryLimit'] ?? 20,
-        'includeVitalsByDefault':
-            configuration['includeVitalsByDefault'] ?? true,
-        'includeMedicationsByDefault':
-            configuration['includeMedicationsByDefault'] ?? true,
-        'includeNotesByDefault': configuration['includeNotesByDefault'] ?? true,
-        'includeMoodPainLogsByDefault':
-            configuration['includeMoodPainLogsByDefault'] ?? true,
-        'includeAllergiesByDefault':
-            configuration['includeAllergiesByDefault'] ?? true,
-        'isActive': configuration['isActive'] ?? true,
-        'systemPrompt':
-            configuration['systemPrompt'] ??
-            "You are a helpful health assistant for patients. Only answer questions related to health, wellness, psychosocial support, or medical topics. If the question is not related to health, respond with 'I can only assist with health-related questions.'",
-      };
-
-      final response = await http.post(
-        Uri.parse('$_baseUrl/config'),
-        headers: authHeaders,
-        body: jsonEncode(requestBody),
-      );
-
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      print('❌ Error updating AI configuration: $e');
-      return false;
     }
   }
 }

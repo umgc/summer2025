@@ -1,5 +1,8 @@
 package com.careconnect.controller;
 import com.careconnect.dto.PostWithCommentCountDto;
+import com.careconnect.repository.CaregiverRepository;
+import com.careconnect.repository.PatientRepository;
+import com.careconnect.security.Role;
 import org.springframework.beans.factory.annotation.Value;
 import com.careconnect.model.Post;
 import com.careconnect.service.FeedService;
@@ -35,14 +38,18 @@ import java.util.UUID;
 @SecurityRequirement(name = "JWT Authentication")
 public class FeedController {
 
-    @Value("${careconnect.upload.dir}")
-    private String uploadDir;
 
     @Autowired
     private FeedService feedService;
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PatientRepository patientRepository;
+
+    @Autowired
+    private CaregiverRepository caregiverRepository;
 
     @GetMapping("/all")
     @Operation(
@@ -78,7 +85,7 @@ public class FeedController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserFeed(@PathVariable Long userId) {
-        
+
         // Get user from JWT token (email is the subject).
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -111,13 +118,9 @@ public class FeedController {
         return ResponseEntity.ok(posts);
     }
 
-    @PostMapping(value = "/create", consumes = "multipart/form-data")
-    public ResponseEntity<?> createPost(
-            @RequestParam("userId") Long userId,
-            @RequestParam("content") String content,
-            @RequestPart(value = "image", required = false) MultipartFile imageFile
-    ) {
-        
+    @PostMapping(value = "/create", consumes = "application/json")
+    public ResponseEntity<?> createPost(@RequestBody Post postData) {
+
         // Get user from JWT token (email is the subject)
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -125,62 +128,42 @@ public class FeedController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
         }
-        
+
         // Verify the post belongs to the authenticated user
-        if (!user.getId().equals(userId)) {
+        if (!user.getId().equals(postData.getUserId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot create post as another user");
         }
-
         try {
-            String imageUrl = null;
-
-            // Ensure the upload directory exists
-            File uploadFolder = new File(uploadDir);
-            if (!uploadFolder.exists()) {
-                boolean created = uploadFolder.mkdirs();
-                if (!created) {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to create upload directory");
-                }
-            }
-
-            // Handle image upload if present
-            if (imageFile != null && !imageFile.isEmpty()) {
-                String extension = "";
-                String originalName = imageFile.getOriginalFilename();
-                int dotIndex = (originalName != null) ? originalName.lastIndexOf('.') : -1;
-                if (dotIndex > 0) {
-                    extension = originalName.substring(dotIndex);
-                }
-                String filename = UUID.randomUUID() + extension;
-                File destination = new File(uploadFolder, filename);
-                imageFile.transferTo(destination);
-                imageUrl = "/uploads/" + filename; // URL for client
-            }
-
-            Post post = feedService.createPost(userId, content, imageUrl);
-
-            String username = user.getName() != null && !user.getName().isEmpty() ? user.getName() : user.getEmail();
-            int commentCount = 0; // New post, so always 0
+            Post savedPost = feedService.createPost(user.getId(), postData.getContent(), null);
 
             PostWithCommentCountDto dto = new PostWithCommentCountDto(
-                    post.getId(),
-                    post.getUserId(),
-                    post.getContent(),
-                    post.getImageUrl(),
-                    post.getCreatedAt(),
-                    commentCount,
-                    username
+                    savedPost.getId(),
+                    savedPost.getUserId(),
+                    savedPost.getContent(),
+                    null,
+                    savedPost.getCreatedAt(),
+                    0,
+                    resolveDisplayName(user)
             );
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(post);
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
 
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error saving image: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error creating post: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating post: " + e.getMessage());
+        }
+    }
+
+    private String resolveDisplayName(User user) {
+        if (user.getRole() == Role.PATIENT) {
+            return patientRepository.findByUserId(user.getId())
+                    .map(p -> p.getFirstName() + " " + p.getLastName())
+                    .orElse(user.getEmail());
+        } else if (user.getRole() == Role.CAREGIVER) {
+            return caregiverRepository.findByUserId(user.getId())
+                    .map(c -> c.getFirstName() + " " + c.getLastName())
+                    .orElse(user.getEmail());
+        } else {
+            return user.getEmail();
         }
     }
 }

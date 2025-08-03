@@ -209,8 +209,8 @@ public class PatientController {
                 registration.lastName(),
                 registration.email(),
                 registration.phone(),
-                registration.address(),
-                registration.relationship(),
+                registration.address() != null ? registration.address() : null,
+                registration.relationship() != null ? registration.relationship() : null,
                 patient.getUser().getId()  // Use patient's user ID, not patient ID
         );
         

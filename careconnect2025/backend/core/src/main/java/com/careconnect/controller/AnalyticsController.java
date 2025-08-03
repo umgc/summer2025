@@ -48,6 +48,7 @@ import java.util.concurrent.*;
 @RequestMapping("/v1/api/analytics")
 @RequiredArgsConstructor
 public class AnalyticsController {
+    // ...existing code...
 
 
 
@@ -67,7 +68,7 @@ private final PatientCaregiverRepository caregiverPatientLinkRepository;
     @Autowired
 private final FamilyMemberLinkRepository familyMemberPatientLinkRepository;
 
-	@Autowired
+    @Autowired
     private AnalyticsService analyticsService;
     
     @Autowired

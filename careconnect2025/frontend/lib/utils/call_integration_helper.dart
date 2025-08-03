@@ -673,18 +673,6 @@ class CallIntegrationHelper {
         'icon': Icons.psychology,
       },
       {
-        'type': 'CHEST_PAIN',
-        'title': 'Chest Pain',
-        'description': 'Chest pain or heart-related emergency',
-        'icon': Icons.favorite,
-      },
-      {
-        'type': 'BREATHING',
-        'title': 'Breathing Difficulty',
-        'description': 'Difficulty breathing or respiratory emergency',
-        'icon': Icons.air,
-      },
-      {
         'type': 'OTHER',
         'title': 'Other Emergency',
         'description': 'Other type of emergency situation',
@@ -708,7 +696,11 @@ class CallIntegrationHelper {
           // Set a max height to prevent overflow
           child: SingleChildScrollView(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 400),
+              constraints: BoxConstraints(
+                maxHeight:
+                    MediaQuery.of(context).size.height *
+                    0.6, // 60% of screen height
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

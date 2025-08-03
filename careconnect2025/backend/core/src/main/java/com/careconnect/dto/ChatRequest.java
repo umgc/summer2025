@@ -32,10 +32,11 @@ public class ChatRequest {
     public void setPreferredModel(String preferredModel) { this.preferredModel = preferredModel; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+    // Explicit getter for compatibility
+    public List<UploadedFileDTO> getUploadedFiles() { return uploadedFiles; }
     
     private String conversationId; // Optional - will create new if not provided
     
-    @NotNull(message = "Patient ID is required")
     private Long patientId;
     
     @NotNull(message = "User ID is required")

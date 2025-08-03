@@ -3,7 +3,6 @@ package com.careconnect.controller;
 import com.careconnect.dto.FirebaseNotificationRequest;
 import com.careconnect.dto.NotificationResponse;
 import com.careconnect.model.DeviceToken;
-import com.careconnect.service.FirebaseNotificationService;
 import com.careconnect.websocket.NotificationWebSocketHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -27,11 +26,11 @@ import java.util.concurrent.CompletableFuture;
 @ConditionalOnProperty(name = "firebase.enabled", havingValue = "true", matchIfMissing = true)
 public class NotificationController {
 
-    @Autowired(required = false)
-    private FirebaseNotificationService notificationService;
-
     @Autowired
     private NotificationWebSocketHandler notificationWebSocketHandler;
+
+    @Autowired
+    private com.careconnect.service.NotificationService notificationService;
     /**
      * Send a WebSocket notification to a specific user
      */

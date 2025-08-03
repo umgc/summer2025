@@ -1,3 +1,6 @@
+/// Centralized Auth Guard Service for page protection
+import 'package:flutter/widgets.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:app_links/app_links.dart';
@@ -6,6 +9,7 @@ import '../config/env_constant.dart';
 import 'api_service.dart';
 import 'oauth_service.dart';
 import '../providers/user_provider.dart';
+import 'messaging_service.dart';
 import 'auth_token_manager.dart';
 
 class ApiConstants {
@@ -158,6 +162,13 @@ class AuthService {
 
       // Update last activity time to track session freshness
       await AuthTokenManager.updateLastActivity();
+
+      // Register user to WebSocket for notifications
+      try {
+        await MessagingService.registerUser(userId: userSession.id.toString());
+      } catch (e) {
+        print('Warning: Failed to register user to WebSocket: $e');
+      }
 
       print('✅ Login successful: JWT token force-updated');
 
@@ -522,6 +533,18 @@ class AuthService {
   // ✅ UPDATE USER ACTIVITY - For tracking session activity
   static Future<void> updateUserActivity() async {
     await AuthTokenManager.updateLastActivity();
+  }
+
+  static Future<bool> checkAndRedirectIfUnauthenticated(
+    BuildContext context, {
+    String loginRoute = '/login',
+  }) async {
+    final isAuth = await AuthTokenManager.isAuthenticated();
+    if (!isAuth && context.mounted) {
+      context.go(loginRoute);
+      return false;
+    }
+    return true;
   }
 
   // static Future<String> setupPassword({
