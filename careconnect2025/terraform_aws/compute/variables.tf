@@ -25,3 +25,12 @@ variable "cors_allowed_list" {
   type        = string
   default     = "http://localhost:*,http://127.0.0.1:*"
 }
+variable "cc_main_backend_build_prefix" {
+  description = "Prefix for the main backend build files in S3"
+  type        = string
+  default     = "cc-backend-builds/"
+}
+variable "backend_bucket_check" { # That variable is just to ensure that the user has updated the backend S3 bucket name in main.tf
+  description = "Did you update the backend S3 bucket name in the main.tf to your own?\nIt is used to store the Terraform state file."
+  type        = bool  
+}

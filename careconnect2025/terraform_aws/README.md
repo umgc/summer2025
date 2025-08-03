@@ -14,6 +14,7 @@ _Unless you already have your own s3 bucket ready for the state.<br/>In that cas
 1. Change the bucket name if needed in the main.tf of the ***`s3_tfstate`***, because bucket names are unique in S3 accross all AWS accounts.
 1. Execute the scripts under the ***`s3_tfstate`*** folder
 1. Execute the scripts under the ***`general`*** folder 
+1. Execute the scripts under the ***`db`*** folder
 1. Package and upload your backend zip file to AWS S3
 1. Execute the scripts under the ***`compute`*** folder to create the Lambda for compute
 
@@ -23,6 +24,7 @@ _Unless you already have your own s3 bucket ready for the state.<br/>In that cas
 1. Install AWS CLI. Follow this [Install or Update AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 1. [Configure your AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) - to make it simple we suggest you to use environment variables [here is the sub link](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html).
 1. Install & Configure Terraform [Link](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+1. Create a `.tfvars` file specific to each terraform application with the set of variables expected from the application. To identify those variables check the `variables.tf` files.
 
 
 ## Follow through with the instructions inside of each folder. 

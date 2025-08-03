@@ -66,7 +66,9 @@ resource "aws_lambda_function" "cc_main_backend_lambda" {
       data.terraform_remote_state.cc_common_state.outputs.cc_sensitive_env_variables_name,
       data.terraform_remote_state.cc_db_state.outputs.sensitive_params,
       {
-        CC_APP_ROLE           = "${data.terraform_remote_state.cc_common_state.outputs.cc_app_role_arn}"
+        AWS_S3_BUSKET   = data.terraform_remote_state.cc_common_state.outputs.internal_s3_bucket
+        AWS_S3_BASE_URL = "https://${data.terraform_remote_state.cc_common_state.outputs.internal_s3_bucket}.s3.us-east-1.amazonaws.com"
+        CC_APP_ROLE           = "${data.terraform_remote_state.cc_common_state.outputs.cc_app_role_info.arn}"
         APP_FRONTEND_BASE_URL = "https://${data.terraform_remote_state.cc_common_state.outputs.amplify_url}"
         BASE_URL              = "${data.terraform_remote_state.cc_common_state.outputs.main_api_endpoint}"
         CORS_ALLOWED_LIST     = "${var.cors_allowed_list},https://${data.terraform_remote_state.cc_common_state.outputs.amplify_url}"
@@ -91,10 +93,12 @@ resource "aws_iam_policy" "cc_app_role_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "AllowInvokeLambda",
+        Sid    = "AllowLambdaActions",
         Effect = "Allow"
         Action = [
-          "lambda:InvokeFunction"
+          "lambda:InvokeFunction",
+          "lambda:UpdateFunctionCode",
+          "lambda:PublishVersion",
         ]
         Resource = [
           "${aws_lambda_function.cc_main_backend_lambda.arn}",
@@ -113,8 +117,9 @@ resource "aws_iam_role_policy_attachment" "cc_app_role_policy_attach" {
 resource "aws_apigatewayv2_integration" "main" {
   depends_on           = [aws_iam_role_policy_attachment.cc_app_role_policy_attach]
   api_id               = data.terraform_remote_state.cc_common_state.outputs.main_api_id
+  description          = "CC APP Lambda Integration"
   integration_type     = "AWS_PROXY"
-  integration_method   = "ANY"
+  integration_method   = "POST"
   integration_uri      = aws_lambda_function.cc_main_backend_lambda.qualified_arn
   credentials_arn      = data.terraform_remote_state.cc_common_state.outputs.cc_api_gw_role.arn
   timeout_milliseconds = 30000
@@ -124,4 +129,19 @@ resource "aws_apigatewayv2_route" "cc_api_main_proxy" {
   api_id    = data.terraform_remote_state.cc_common_state.outputs.main_api_id
   route_key = "ANY /{proxy+}"
   target    = "integrations/${aws_apigatewayv2_integration.main.id}"
+}
+
+module "deployment" {
+  source                       = "./modules/deployment"
+  default_tags                 = var.default_tags
+  cc_app_role_arn              = data.terraform_remote_state.cc_common_state.outputs.cc_app_role_info.arn
+  cc_iac_bucket_name           = var.iac_cc_s3_bucket_name
+  cc_main_backend_build_prefix = var.cc_main_backend_build_prefix
+  cc_lamnda_function_name      = aws_lambda_function.cc_main_backend_lambda.function_name
+  cc_main_api_id               = data.terraform_remote_state.cc_common_state.outputs.main_api_id
+  cc_deployment_sfn_arn        = data.terraform_remote_state.cc_common_state.outputs.cc_deployment_sfn_arn
+  cc_api_integration_id        = aws_apigatewayv2_integration.main.id
+  cc_apigw_role_arn            = data.terraform_remote_state.cc_common_state.outputs.cc_api_gw_role.arn
+  cc_app_role_name             = data.terraform_remote_state.cc_common_state.outputs.cc_app_role_info.name
+  cc_main_backend_lambda_arn   = aws_lambda_function.cc_main_backend_lambda.arn
 }
