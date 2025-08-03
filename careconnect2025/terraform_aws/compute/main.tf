@@ -66,7 +66,9 @@ resource "aws_lambda_function" "cc_main_backend_lambda" {
       data.terraform_remote_state.cc_common_state.outputs.cc_sensitive_env_variables_name,
       data.terraform_remote_state.cc_db_state.outputs.sensitive_params,
       {
-        CC_APP_ROLE           = "${data.terraform_remote_state.cc_common_state.outputs.cc_app_role_arn}"
+        AWS_S3_BUSKET   = data.terraform_remote_state.cc_common_state.outputs.internal_s3_bucket
+        AWS_S3_BASE_URL = "https://${data.terraform_remote_state.cc_common_state.outputs.internal_s3_bucket}.s3.us-east-1.amazonaws.com"
+        CC_APP_ROLE           = "${data.terraform_remote_state.cc_common_state.outputs.cc_app_role_info.arn}"
         APP_FRONTEND_BASE_URL = "https://${data.terraform_remote_state.cc_common_state.outputs.amplify_url}"
         BASE_URL              = "${data.terraform_remote_state.cc_common_state.outputs.main_api_endpoint}"
         CORS_ALLOWED_LIST     = "${var.cors_allowed_list},https://${data.terraform_remote_state.cc_common_state.outputs.amplify_url}"

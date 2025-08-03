@@ -49,7 +49,7 @@ resource "aws_s3_bucket_policy" "s3_state_access" {
         Effect    = "Deny",
         Principal = "*",
         Action    = "s3:*",
-        Resource  = "arn:aws:s3:::cc-iac-us-east-1-641592448579/*",
+        Resource  = "${aws_s3_bucket.backend_bucket.arn}/*",
         Condition = {
           "Bool" : {
             "aws:SecureTransport" : "false"
@@ -89,7 +89,9 @@ resource "aws_s3_bucket_policy" "s3_state_access" {
         Effect = "Allow",
         Principal = {
           AWS = [
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CCAPPROLE",
+            # This enables the CI/CD pipeline (from the Step Functions) to access the S3 bucket.         
+            # Uncomment the line below after creating the IAM role with the General Application. Then run a terraform apply.
+            # "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CCAPPROLE",
             "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
           ]
         },

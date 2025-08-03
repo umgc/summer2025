@@ -5,16 +5,16 @@ This section has to be executed before all the others.
 - **Make sure that you completed the list of prerequisites from [README](../README.md#pre-requisites) outside of that folder**
 
 ## Run these commands
-**Recomended**: Change directory to the `general` folder. It is better to run those commands from the folder where the `main.tf` file is.<br/>
+**Recomended**: Change directory to the `s3_tfstate` folder. It is better to run those commands from the folder where the `main.tf` file is.<br/>
 
 ```bash
 # On Linux
-cd careconnect2025/terraform_aws/general
+cd careconnect2025/terraform_aws/s3_tfstate
 ```
 
 ```cmd
 # On Windows
-cd careconnect2025\terraform_aws\general
+cd careconnect2025\terraform_aws\s3_tfstate
 ```
 
 You can still use the `-chdir` argument if you are not running the commands from where them `main.tf` file is. [See below](#extra)
