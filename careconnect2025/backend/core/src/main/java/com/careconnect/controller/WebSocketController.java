@@ -22,6 +22,57 @@ import java.util.Map;
 @Tag(name = "WebSocket Management", description = "WebSocket notifications and real-time communication management")
 @SecurityRequirement(name = "Bearer Authentication")
 public class WebSocketController {
+    /**
+     * Initialize WebSocket service (dummy endpoint for client handshake/testing)
+     */
+    @PostMapping("/init")
+    @Operation(
+        summary = "Initialize WebSocket service",
+        description = "Initialize or handshake with the WebSocket service via HTTP"
+    )
+    public ResponseEntity<Map<String, Object>> initializeWebSocketService(@RequestBody(required = false) Map<String, Object> request) {
+        // You can add any initialization logic here if needed
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", "WebSocket service initialized",
+            "timestamp", System.currentTimeMillis()
+        ));
+    }
+
+    /**
+     * Register a user for WebSocket notifications
+     */
+    @PostMapping("/register-user")
+    @Operation(
+        summary = "Register user for WebSocket notifications",
+        description = "Register a user for WebSocket notifications via HTTP"
+    )
+    public ResponseEntity<Map<String, Object>> registerUserForWebSocket(@RequestBody Map<String, Object> request) {
+        try {
+            String userId = (String) request.get("userId");
+            String userName = (String) request.get("userName");
+            if (userId == null || userName == null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Missing required fields: userId and userName are required"
+                ));
+            }
+            // Register user in the WebSocket service (dummy logic, replace with real registration if needed)
+            webSocketNotificationService.registerUser(userId, userName);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "User registered for WebSocket notifications",
+                "userId", userId,
+                "userName", userName
+            ));
+        } catch (Exception e) {
+            log.error("Error registering user for WebSocket", e);
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "Failed to register user: " + e.getMessage()
+            ));
+        }
+    }
 
     private final WebSocketNotificationService webSocketNotificationService;
 

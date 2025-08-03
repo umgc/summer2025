@@ -50,11 +50,55 @@ class _CommonDrawerState extends State<CommonDrawer> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider.user;
+
+    // Only show drawer for logged-in users
+    if (user == null) {
+      return Drawer(
+        child: Container(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.login,
+                  size: 64,
+                  color: Theme.of(context).disabledColor,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Please log in',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).disabledColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'You need to be logged in to access navigation',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).disabledColor,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    context.go('/login');
+                  },
+                  child: const Text('Login'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final isCaregiver =
-        user != null &&
-        (user.role.toUpperCase() == 'CAREGIVER' ||
-            user.role.toUpperCase() == 'FAMILY_LINK' ||
-            user.role.toUpperCase() == 'ADMIN');
+        user.role.toUpperCase() == 'CAREGIVER' ||
+        user.role.toUpperCase() == 'FAMILY_LINK' ||
+        user.role.toUpperCase() == 'ADMIN';
 
     return Drawer(
       child: ListView(
@@ -88,7 +132,7 @@ class _CommonDrawerState extends State<CommonDrawer> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    user?.name ?? 'User',
+                    user.name ?? 'User',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color:
                           Theme.of(context).appBarTheme.foregroundColor ??
@@ -99,7 +143,7 @@ class _CommonDrawerState extends State<CommonDrawer> {
                   Row(
                     children: [
                       Text(
-                        user?.role ?? '',
+                        user.role,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color:
                               (Theme.of(context).appBarTheme.foregroundColor ??
@@ -162,7 +206,7 @@ class _CommonDrawerState extends State<CommonDrawer> {
             isActive: widget.currentRoute == '/social-feed',
             onTap: () {
               Navigator.pop(context);
-              final userId = user?.id ?? 1;
+              final userId = user.id;
               context.go('/social-feed?userId=$userId');
             },
           ),
@@ -184,22 +228,6 @@ class _CommonDrawerState extends State<CommonDrawer> {
             title: 'Wearables',
             route: '/wearables',
             isActive: widget.currentRoute == '/wearables',
-          ),
-
-          _buildDrawerItem(
-            context,
-            icon: Icons.home_outlined,
-            title: 'Home Monitoring',
-            route: '/home-monitoring',
-            isActive: widget.currentRoute == '/home-monitoring',
-          ),
-
-          _buildDrawerItem(
-            context,
-            icon: Icons.devices,
-            title: 'Smart Devices',
-            route: '/smart-devices',
-            isActive: widget.currentRoute == '/smart-devices',
           ),
 
           // Caregiver-specific menu items

@@ -1,4 +1,8 @@
 package com.careconnect.controller;
+import com.careconnect.dto.PostWithCommentCountDto;
+import com.careconnect.repository.CaregiverRepository;
+import com.careconnect.repository.PatientRepository;
+import com.careconnect.security.Role;
 import org.springframework.beans.factory.annotation.Value;
 import com.careconnect.model.Post;
 import com.careconnect.service.FeedService;
@@ -29,19 +33,23 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/feed")
+@RequestMapping("/v1/api/feed")
 @Tag(name = "Feed", description = "Social feed management endpoints for posts and content sharing")
 @SecurityRequirement(name = "JWT Authentication")
 public class FeedController {
 
-    @Value("${careconnect.upload.dir}")
-    private String uploadDir;
 
     @Autowired
     private FeedService feedService;
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PatientRepository patientRepository;
+
+    @Autowired
+    private CaregiverRepository caregiverRepository;
 
     @GetMapping("/all")
     @Operation(
@@ -54,18 +62,7 @@ public class FeedController {
             description = "Global feed retrieved successfully",
             content = @Content(
                 mediaType = "application/json",
-                schema = @Schema(implementation = Post.class, type = "array"),
-                examples = @ExampleObject(value = """
-                    [
-                        {
-                            "id": 1,
-                            "userId": 123,
-                            "content": "Had a great therapy session today!",
-                            "imageUrl": "/uploads/image123.jpg",
-                            "createdAt": "2025-01-15T10:30:00Z"
-                        }
-                    ]
-                    """)
+                    schema = @Schema(implementation = PostWithCommentCountDto.class, type = "array")
             )
         ),
         @ApiResponse(
@@ -82,23 +79,15 @@ public class FeedController {
         )
     })
     public ResponseEntity<?> getGlobalFeed() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
-
-        List<Post> posts = feedService.getAllPosts();
+        List<PostWithCommentCountDto> posts = feedService.getAllPostsWithCommentCount();
         return ResponseEntity.ok(posts);
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserFeed(@PathVariable Long userId) {
+
+        // Get user from JWT token (email is the subject).
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
-        }
-        
-        // Get user from JWT token (email is the subject)
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
@@ -114,65 +103,67 @@ public class FeedController {
         return ResponseEntity.ok(posts);
     }
 
-    @PostMapping(value = "/create", consumes = "multipart/form-data")
-    public ResponseEntity<?> createPost(
-            @RequestParam("userId") Long userId,
-            @RequestParam("content") String content,
-            @RequestPart(value = "image", required = false) MultipartFile imageFile
-    ) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not authenticated");
+    @GetMapping("/friends-feed")
+    public ResponseEntity<?> getFriendsFeed() {
+        // (Updated) Removed manual authentication check
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
         }
-        
+
+        List<PostWithCommentCountDto> posts = feedService.getPostsByUserAndFriends(user.getId());
+        return ResponseEntity.ok(posts);
+    }
+
+    @PostMapping(value = "/create", consumes = "application/json")
+    public ResponseEntity<?> createPost(@RequestBody Post postData) {
+
         // Get user from JWT token (email is the subject)
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
         }
-        
+
         // Verify the post belongs to the authenticated user
-        if (!user.getId().equals(userId)) {
+        if (!user.getId().equals(postData.getUserId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot create post as another user");
         }
-
         try {
-            String imageUrl = null;
+            Post savedPost = feedService.createPost(user.getId(), postData.getContent(), null);
 
-            // Ensure the upload directory exists
-            File uploadFolder = new File(uploadDir);
-            if (!uploadFolder.exists()) {
-                boolean created = uploadFolder.mkdirs();
-                if (!created) {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to create upload directory");
-                }
-            }
+            PostWithCommentCountDto dto = new PostWithCommentCountDto(
+                    savedPost.getId(),
+                    savedPost.getUserId(),
+                    savedPost.getContent(),
+                    null,
+                    savedPost.getCreatedAt(),
+                    0,
+                    resolveDisplayName(user)
+            );
 
-            // Handle image upload if present
-            if (imageFile != null && !imageFile.isEmpty()) {
-                String extension = "";
-                String originalName = imageFile.getOriginalFilename();
-                int dotIndex = (originalName != null) ? originalName.lastIndexOf('.') : -1;
-                if (dotIndex > 0) {
-                    extension = originalName.substring(dotIndex);
-                }
-                String filename = UUID.randomUUID() + extension;
-                File destination = new File(uploadFolder, filename);
-                imageFile.transferTo(destination);
-                imageUrl = "/uploads/" + filename; // URL for client
-            }
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
 
-            Post post = feedService.createPost(userId, content, imageUrl);
-            return ResponseEntity.status(HttpStatus.CREATED).body(post);
-
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error saving image: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error creating post: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating post: " + e.getMessage());
+        }
+    }
+
+    private String resolveDisplayName(User user) {
+        if (user.getRole() == Role.PATIENT) {
+            return patientRepository.findByUserId(user.getId())
+                    .map(p -> p.getFirstName() + " " + p.getLastName())
+                    .orElse(user.getEmail());
+        } else if (user.getRole() == Role.CAREGIVER) {
+            return caregiverRepository.findByUserId(user.getId())
+                    .map(c -> c.getFirstName() + " " + c.getLastName())
+                    .orElse(user.getEmail());
+        } else {
+            return user.getEmail();
         }
     }
 }

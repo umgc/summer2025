@@ -289,10 +289,6 @@ class _PatientFilesPageState extends State<PatientFilesPage>
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-            Text(
-              '${_formatFileSize(file.fileSize)} • ${_formatDate(file.createdAt)}',
-              style: TextStyle(color: Colors.grey[500], fontSize: 12),
-            ),
           ],
         ),
         trailing: PopupMenuButton<String>(

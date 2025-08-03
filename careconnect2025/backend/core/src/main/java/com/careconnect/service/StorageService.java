@@ -1,5 +1,6 @@
 package com.careconnect.service;
 
+import com.careconnect.dto.UserFileDTO;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 

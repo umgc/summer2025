@@ -16,7 +16,7 @@ class Task {
   String? frequency; // e.g., 'daily', 'weekly', 'monthly'
   int? interval; // e.g., every 2 days, every 3 weeks
   int? count; // Number of occurrences
-  List<bool>? daysOfWeek; // e.g., [true, false, true, false, true, false, false] for Mon, Wed, Fri
+  List<bool>? daysOfWeek; // e.g., [false, true, false, true, false, true, false] for Sun, Mon, Tue, Wed, Thu, Fri, Sat
 
 
 
@@ -43,8 +43,12 @@ class Task {
       date: DateTime.parse(json['date']),
       timeOfDay: json['timeOfDay'] != null
           ? TimeOfDay(
-              hour: json['timeOfDay']['hour'],
-              minute: json['timeOfDay']['minute'],
+              hour: json['timeOfDay'] is String
+                  ? int.parse(json['timeOfDay'].split(':')[0])
+                  : json['timeOfDay']['hour'],
+              minute: json['timeOfDay'] is String
+                  ? int.parse(json['timeOfDay'].split(':')[1])
+                  : json['timeOfDay']['minute'],
             )
           : null,
       userId: json['assignedTo'],
@@ -75,13 +79,17 @@ class Task {
           ? "${timeOfDay!.hour}:${timeOfDay!.minute}"
           : null,
       'isCompleted': isComplete,
-      // 'notifications': null,
+      'notifications': null,
       'frequency': frequency,
       'taskInterval': interval,
       'doCount': count,
       'daysOfWeek': jsonEncode(daysOfWeek),
       'taskType': taskType,
     };
+  }
+
+  bool isValid() {
+    return name.isNotEmpty && description.isNotEmpty && date != null;
   }
 }
 

@@ -71,18 +71,24 @@ public class SecurityConfig {
                         "/", "/index.html", "/favicon.ico", "/static/**"
                 ).permitAll()
 
+
                 /* ---------- patient endpoints require auth -------------- */
                 .requestMatchers(
                         "/v1/api/patients/**"
                 ).authenticated()
 
-                /* ---------- family member endpoints require auth -------- */
+                // /* ---------- family member endpoints require auth -------- */
                 .requestMatchers(
                         "/v1/api/family-members/**"
                 ).authenticated()
 
-                /* ---------- every other URL requires a valid JWT -------- */
-                .anyRequest().authenticated())
+                /* ---------- AI chat endpoints require auth -------------- */
+                .requestMatchers(
+                        "/v1/api/ai-chat/**"
+                ).authenticated()
+
+                // /* ---------- every other URL requires a valid JWT -------- */
+                .anyRequest().permitAll())
             .build();
     }
 

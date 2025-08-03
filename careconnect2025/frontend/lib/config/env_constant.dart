@@ -3,6 +3,54 @@ import 'dart:developer' show log;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+// Agora configuration accessors
+String getAgoraAppId() {
+  final appId = dotenv.env['AGORA_APP_ID'];
+  if (appId == null || appId.isEmpty) {
+    throw Exception('AGORA_APP_ID not set in .env');
+  }
+  return appId;
+}
+
+String getAgoraAppCertificate() {
+  // Optional for development
+  return dotenv.env['AGORA_APP_CERTIFICATE'] ?? '';
+}
+
+/// Returns the unified WebSocket server base URL for both signaling and notifications
+///
+/// Set WEBSOCKET_SERVER_URL in your .env file to override the default WebSocket URL.
+/// Example:
+///   WEBSOCKET_SERVER_URL=wss://your-backend-domain/ws
+///
+/// If not set, it will be derived from the backend base URL.
+String _getUnifiedWebSocketBaseUrl() {
+  // Prefer explicit environment variable
+  final url = dotenv.env['WEBSOCKET_SERVER_URL'];
+  if (url != null && url.isNotEmpty) {
+    return url;
+  }
+  // Otherwise, build from backend base URL
+  final base = getBackendBaseUrl();
+  if (base.startsWith('https://')) {
+    return base.replaceFirst('https://', 'wss://');
+  } else if (base.startsWith('http://')) {
+    return base.replaceFirst('http://', 'ws://');
+  }
+  // Fallback
+  return 'ws://localhost:8080';
+}
+
+/// Returns the WebRTC signaling server URL (points to /ws/notifications)
+String getWebRTCSignalingServerUrl() {
+  return '${_getUnifiedWebSocketBaseUrl()}/ws/notifications';
+}
+
+/// Returns the WebSocket notification URL (points to /ws/notifications)
+String getWebSocketNotificationUrl() {
+  return '${_getUnifiedWebSocketBaseUrl()}/ws/notifications';
+}
+
 String getBackendBaseUrl() {
   if (kIsWeb) {
     // For web builds

@@ -16,9 +16,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@Slf4j
 @RequiredArgsConstructor
 public class CallNotificationHandler extends TextWebSocketHandler {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CallNotificationHandler.class);
+    // Helper to get display name for a user
+    private String getUserDisplayName(User user) {
+        if (user.getName() != null && !user.getName().isEmpty()) {
+            return user.getName();
+        }
+        return user.getEmail();
+    }
 
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
@@ -46,11 +53,14 @@ public class CallNotificationHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         try {
-            Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
+            Map<String, Object> payload = objectMapper.readValue(
+                message.getPayload(),
+                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}
+            );
             String type = (String) payload.get("type");
-            
+
             log.info("Received WebSocket message: {} from session: {}", type, session.getId());
-            
+
             switch (type) {
                 case "authenticate":
                     handleAuthentication(session, payload);
@@ -180,7 +190,7 @@ public class CallNotificationHandler extends TextWebSocketHandler {
             Map<String, Object> callNotification = Map.of(
                 "type", "incoming-video-call",
                 "senderId", sender.getId(),
-                "senderName", sender.getFirstName() + " " + sender.getLastName(),
+                "senderName", getUserDisplayName(sender),
                 "senderEmail", sender.getEmail(),
                 "senderRole", sender.getRole().name(),
                 "callId", callId,
@@ -196,7 +206,7 @@ public class CallNotificationHandler extends TextWebSocketHandler {
                 "type", "call-invitation-sent",
                 "callId", callId,
                 "recipientId", recipientId,
-                "recipientName", recipient.getFirstName() + " " + recipient.getLastName(),
+                "recipientName", getUserDisplayName(recipient),
                 "status", "delivered"
             );
             session.sendMessage(new TextMessage(objectMapper.writeValueAsString(senderResponse)));
@@ -242,7 +252,7 @@ public class CallNotificationHandler extends TextWebSocketHandler {
             Map<String, Object> smsNotification = Map.of(
                 "type", "incoming-sms",
                 "senderId", sender.getId(),
-                "senderName", sender.getFirstName() + " " + sender.getLastName(),
+                "senderName", getUserDisplayName(sender),
                 "senderEmail", sender.getEmail(),
                 "senderRole", sender.getRole().name(),
                 "message", message,
@@ -256,7 +266,7 @@ public class CallNotificationHandler extends TextWebSocketHandler {
             Map<String, Object> senderResponse = Map.of(
                 "type", "sms-sent",
                 "recipientId", recipientId,
-                "recipientName", recipient.getFirstName() + " " + recipient.getLastName(),
+                "recipientName", getUserDisplayName(recipient),
                 "status", "delivered"
             );
             session.sendMessage(new TextMessage(objectMapper.writeValueAsString(senderResponse)));
@@ -292,7 +302,7 @@ public class CallNotificationHandler extends TextWebSocketHandler {
                 "type", "call-answered",
                 "callId", callId,
                 "answeredBy", user.getId(),
-                "answeredByName", user.getFirstName() + " " + user.getLastName(),
+                "answeredByName", getUserDisplayName(user),
                 "timestamp", System.currentTimeMillis()
             );
             senderSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(response)));
@@ -319,7 +329,7 @@ public class CallNotificationHandler extends TextWebSocketHandler {
                 "type", "call-declined",
                 "callId", callId,
                 "declinedBy", user.getId(),
-                "declinedByName", user.getFirstName() + " " + user.getLastName(),
+                "declinedByName", getUserDisplayName(user),
                 "reason", reason,
                 "timestamp", System.currentTimeMillis()
             );
@@ -346,7 +356,7 @@ public class CallNotificationHandler extends TextWebSocketHandler {
                 "type", "call-ended",
                 "callId", callId,
                 "endedBy", user.getId(),
-                "endedByName", user.getFirstName() + " " + user.getLastName(),
+                "endedByName", getUserDisplayName(user),
                 "timestamp", System.currentTimeMillis()
             );
             otherSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(response)));

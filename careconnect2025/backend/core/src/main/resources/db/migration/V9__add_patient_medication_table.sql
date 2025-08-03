@@ -1,0 +1,26 @@
+-- Create patient_medication table for storing patient medications
+CREATE TABLE patient_medication (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    patient_id BIGINT NOT NULL,
+    medication_name VARCHAR(255) NOT NULL,
+    dosage VARCHAR(100),
+    frequency VARCHAR(100),
+    route VARCHAR(50),
+    medication_type VARCHAR(50),
+    prescribed_by VARCHAR(255),
+    prescribed_date VARCHAR(50),
+    start_date VARCHAR(50),
+    end_date VARCHAR(50),
+    notes TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_patient_medication_patient FOREIGN KEY (patient_id) REFERENCES patient(id) ON DELETE CASCADE
+);
+
+-- Create indexes for better query performance
+CREATE INDEX idx_patient_medication_patient_id ON patient_medication(patient_id);
+CREATE INDEX idx_patient_medication_active ON patient_medication(patient_id, is_active);
+CREATE INDEX idx_patient_medication_type ON patient_medication(medication_type);
+CREATE INDEX idx_patient_medication_name ON patient_medication(medication_name);
+

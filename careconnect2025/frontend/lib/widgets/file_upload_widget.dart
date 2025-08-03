@@ -1,6 +1,9 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/auth_token_manager.dart';
 import '../services/comprehensive_file_service.dart';
 import '../services/enhanced_file_service.dart';
 import '../providers/user_provider.dart';
@@ -35,6 +38,8 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
   FileCategory? _selectedCategory;
   bool _isUploading = false;
   File? _selectedFile;
+  Uint8List? _selectedFileBytes;
+  String? _selectedFileName;
   final TextEditingController _descriptionController = TextEditingController();
 
   @override
@@ -85,8 +90,9 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
             _buildFileSelector(),
             if (_selectedFile != null) ...[
               const SizedBox(height: 16),
-              _buildFilePreview(),
-              const SizedBox(height: 16),
+              /// Remove build file preview as it is not currently supported
+              /// _buildFilePreview(),
+              /// const SizedBox(height: 16),
               _buildDescriptionField(),
               const SizedBox(height: 16),
             ],
@@ -194,8 +200,9 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
                 const SizedBox(height: 8),
                 Text(
                   _selectedFile != null
-                      ? 'File Selected: ${_selectedFile!.path.split('/').last}'
-                      : _getFileInstructions(),
+                      ? 'File Selected: ${_selectedFile!.path}'
+                      : _selectedFileName != null ? 'File Selected: $_selectedFileName' :
+                  _getFileInstructions(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: _selectedFile != null
@@ -298,24 +305,27 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
 
   Widget _buildUploadButton() {
     final canUpload =
-        _selectedCategory != null && _selectedFile != null && !_isUploading;
+        _selectedCategory != null &&
+            (_selectedFile != null ||
+                (_selectedFileBytes != null && _selectedFileName != null))
+            && !_isUploading;
 
     return ElevatedButton.icon(
-      onPressed: canUpload ? _uploadFile : null,
+      onPressed: canUpload ? _uploadFileWeb : null,
       style: canUpload
           ? Theme.of(context).elevatedButtonTheme.style
           : ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).disabledColor,
-              foregroundColor: Theme.of(
-                context,
-              ).colorScheme.onSurface.withOpacity(0.38),
-            ),
+        backgroundColor: Theme.of(context).disabledColor,
+        foregroundColor: Theme.of(
+          context,
+        ).colorScheme.onSurface.withOpacity(0.38),
+      ),
       icon: _isUploading
           ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      )
           : const Icon(Icons.cloud_upload),
       label: Text(_isUploading ? 'Uploading...' : 'Upload File'),
     );
@@ -385,29 +395,26 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
     }
 
     try {
-      final file = await ComprehensiveFileService.pickFileForCategory(
-        _selectedCategory!,
-      );
-      if (file != null) {
-        // Validate file
-        if (!ComprehensiveFileService.validateFileForCategory(
-          file,
+      if (kIsWeb) {
+        final (Uint8List, String)? webSelectedFile = await ComprehensiveFileService.pickFileForCategoryWeb(
           _selectedCategory!,
-        )) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Invalid file type for ${_selectedCategory!.displayName}',
-              ),
-              backgroundColor: AppTheme.error,
-            ),
-          );
-          return;
+        );
+        if (webSelectedFile != null) {
+          setState(() {
+            _selectedFileBytes = webSelectedFile.$1;
+            _selectedFileName = webSelectedFile.$2;
+          });
         }
-
-        setState(() {
-          _selectedFile = file;
-        });
+      }
+      else {
+        final File? file = await ComprehensiveFileService.pickFileForCategory(
+          _selectedCategory!,
+        );
+        if (file != null) {
+          setState(() {
+            _selectedFile = file;
+          });
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -438,76 +445,13 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
           ? null
           : _descriptionController.text.trim();
 
-      // Upload based on category
-      switch (_selectedCategory!) {
-        case FileCategory.profilePicture:
-          response = await ComprehensiveFileService.uploadProfileImage(
-            userId: user.id,
-            imageFile: _selectedFile!,
-          );
-          break;
-
-        case FileCategory.medicalReport:
-        case FileCategory.labResult:
-          response = await ComprehensiveFileService.uploadMedicalDocument(
-            patientId: widget.patientId ?? user.id,
-            documentFile: _selectedFile!,
-            category: _selectedCategory!,
-            description: description,
-          );
-          break;
-
-        case FileCategory.prescription:
-          response = await ComprehensiveFileService.uploadPrescription(
-            patientId: widget.patientId ?? user.id,
-            prescriptionFile: _selectedFile!,
-            description: description,
-          );
-          break;
-
-        case FileCategory.clinicalNotes:
-          response =
-              await ComprehensiveFileService.uploadClinicalNotesAttachment(
-                patientId: widget.patientId ?? user.id,
-                attachmentFile: _selectedFile!,
-                description: description,
-              );
-          break;
-
-        case FileCategory.aiChatUpload:
-          response = await ComprehensiveFileService.uploadChatFile(
-            chatFile: _selectedFile!,
-            description: description,
-          );
-          break;
-
-        case FileCategory.insuranceDoc:
-          response = await ComprehensiveFileService.uploadInsuranceDocument(
-            patientId: widget.patientId ?? user.id,
-            insuranceFile: _selectedFile!,
-            description: description,
-          );
-          break;
-
-        case FileCategory.emergencyContact:
-          response =
-              await ComprehensiveFileService.uploadEmergencyContactDocument(
-                userId: user.id,
-                documentFile: _selectedFile!,
-                description: description,
-              );
-          break;
-
-        default:
-          // Use the existing enhanced file service for other categories
-          response = await EnhancedFileService.uploadFile(
-            file: _selectedFile!,
-            category: _selectedCategory!.value,
-            description: description,
-            patientId: widget.patientId,
-          );
-          break;
-      }
+      // Use the existing enhanced file service for other categories
+      response = await EnhancedFileService.uploadFile(
+        file: _selectedFile!,
+        category: _selectedCategory!.value,
+        description: description,
+        patientId: widget.patientId,
+      );
 
       if (response != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -547,7 +491,85 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
       });
     }
   }
+
+  Future<void> _uploadFileWeb() async {
+
+    if (_selectedCategory == null ||
+        _selectedFileBytes == null ||
+        _selectedFileName == null) {
+      return;
+    }
+
+    setState(() {
+      _isUploading = true;
+    });
+
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final user = userProvider.user;
+      if (user == null) {
+        throw Exception('User not logged in');
+      }
+
+      FileUploadResponse? response;
+      final description = _descriptionController.text.trim().isEmpty
+          ? null
+          : _descriptionController.text.trim();
+
+      // Use the existing enhanced file service for other categories
+      response = await EnhancedFileService.uploadFileWeb(
+        fileBytes: _selectedFileBytes!,
+        fileName: _selectedFileName!,
+        category: _selectedCategory!.value,
+        description: description,
+        patientId: widget.patientId,
+      );
+
+      if (response != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'File uploaded successfully: ${response.fileName}',
+            ),
+            backgroundColor: AppTheme.success,
+          ),
+        );
+
+        // Reset form
+        setState(() {
+          _selectedFile = null;
+          _selectedFileName = null;
+          _selectedFileBytes = null;
+          _descriptionController.clear();
+        });
+
+        // Callback
+        if (widget.onUploadSuccess != null) {
+          widget.onUploadSuccess!(response);
+        }
+      } else {
+        throw Exception('Upload failed - no response received');
+      }
+    } catch (e, stacktrace) {
+      print('Upload Exception: $e');
+      print('Stacktrace: $stacktrace');
+      final errorMessage = 'Upload failed: $e';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: AppTheme.error),
+      );
+
+      if (widget.onUploadError != null) {
+        widget.onUploadError!(errorMessage);
+      }
+    } finally {
+      setState(() {
+        _isUploading = false;
+      });
+    }
+  }
 }
+
+
 
 /// Quick upload buttons for common file types
 class QuickUploadButtons extends StatelessWidget {
@@ -610,11 +632,11 @@ class QuickUploadButtons extends StatelessWidget {
   }
 
   Widget _buildQuickButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required FileCategory category,
-  }) {
+      BuildContext context, {
+        required IconData icon,
+        required String label,
+        required FileCategory category,
+      }) {
     return ElevatedButton.icon(
       onPressed: () => _showUploadDialog(context, category),
       style: AppTheme.secondaryButtonStyle,

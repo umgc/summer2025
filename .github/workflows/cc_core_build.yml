@@ -8,18 +8,13 @@ on:
       - 'care-connect**'
     paths:
       - '**backend/**'
-  pull_request:
-    branches:
-      - 'care-connect**'
-    paths:
-      - '**backend/**'
 
 permissions:
   contents: write  
 
 jobs:
   build-all:
-    environment: aws
+    environment: cc_aws
     runs-on: ubuntu-latest
     concurrency: 
       group: ${{ github.workflow }}-${{ github.ref }}
@@ -61,8 +56,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: AKIAZKYPD2ZB74YL5WVG
-          aws-secret-access-key: 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
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       - name: Build with Maven
         working-directory: ./careconnect2025/backend/core
@@ -74,6 +69,7 @@ jobs:
           CORS_ALLOWED_LIST: ${{secrets.CORS_ALLOWED_LIST}}
           DB_PASSWORD: root
           DB_USER: root
+          JDBC_URI: jdbc:mysql://127.0.0.1:3306/testdb
           EMAIL_PROVIDER: ${{secrets.EMAIL_PROVIDER}}
           FITBIT_CLIENT_ID: ${{secrets.FITBIT_CLIENT_ID}}
           FITBIT_CLIENT_SECRET: ${{secrets.FITBIT_CLIENT_SECRET}}
@@ -86,7 +82,6 @@ jobs:
           GOOGLE_SCOPE: ${{secrets.GOOGLE_SCOPE}}
           GOOGLE_TOKEN_URI: ${{secrets.GOOGLE_TOKEN_URI}}
           GOOGLE_USERINFO_URI: ${{secrets.GOOGLE_USERINFO_URI}}
-          JDBC_URI: jdbc:mysql://127.0.0.1:3306/testdb
           JWT_EXPIRATION: ${{secrets.JWT_EXPIRATION}}
           LOGGING_LEVEL: ${{secrets.LOGGING_LEVEL}}
           MAIL_HOST: ${{secrets.MAIL_HOST}}
@@ -96,9 +91,8 @@ jobs:
           MAIL_SMTP_STARTTLS: ${{secrets.MAIL_SMTP_STARTTLS}}
           MAIL_USERNAME: ${{secrets.MAIL_USERNAME}}
           OPENAI_API_KEY: ${{secrets.OPENAI_API_KEY}}
-          SECURITY_JWT_SECRET: ${{secrets.SECURITY_JWT_SECRET}}
+          SECURITY_JWT_SECRET: Qq8xdMahA6rgdXTYva96yoc9gneLveOAKfI75l9od5g=
           SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
-          SPRING_JPA_SHOW_SQL: ${{secrets.SPRING_JPA_SHOW_SQL}}
           STRIPE_SECRET_KEY: ${{secrets.STRIPE_SECRET_KEY}}
           STRIPE_WEBHOOK_SIGNING_SECRET: ${{secrets.STRIPE_WEBHOOK_SIGNING_SECRET}}
       

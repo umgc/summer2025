@@ -1,16 +1,20 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../config/theme/app_theme.dart';
+import '../providers/user_provider.dart';
 import '../services/comprehensive_file_service.dart';
-import 'file_upload_widget.dart';
+import '../services/enhanced_file_service.dart';
 
 class SpeechToTextCard extends StatefulWidget {
-  final Future<void> Function(String fileName, Uint8List fileBytes) onSave;
   final List<FileCategory>? allowedCategories;
+  final int? patientId;
+  final Function(FileUploadResponse)? onUploadSuccess;
+  final Function(String)? onUploadError;
 
-  const SpeechToTextCard({super.key, required this.onSave, this.allowedCategories});
+  const SpeechToTextCard({super.key, this.allowedCategories, this.patientId, this.onUploadSuccess, this.onUploadError});
 
   @override
   State<SpeechToTextCard> createState() => _SpeechToTextCardState();
@@ -63,12 +67,10 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
         .trim()
         .isEmpty) return;
 
-    final fileName = 'speech_to_text_${DateTime
-        .now()
-        .millisecondsSinceEpoch}';
+    final fileName = _fileNameController.text.trim();
     final fileBytes = Uint8List.fromList(_recognizedText.codeUnits);
 
-    await widget.onSave(fileName, fileBytes);
+    await _uploadSpeechToTextFileToWeb(fileName, fileBytes);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Speech-to-text file saved')),
@@ -143,6 +145,72 @@ class _SpeechToTextCardState extends State<SpeechToTextCard> {
       );
       return;
     }
+  }
+
+  Future<void> _uploadSpeechToTextFileToWeb(String fileName, List<int> fileBytes) async {
+    if (_selectedCategory == null || fileBytes.isEmpty || fileName.isEmpty) {
+      return;
+    }
+
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final user = userProvider.user;
+      if (user == null) {
+        throw Exception('User not logged in');
+      }
+
+      FileUploadResponse? response;
+
+      // Use the existing enhanced file service for other categories
+      response = await EnhancedFileService.uploadFileWeb(
+        fileBytes: Uint8List.fromList(fileBytes),
+        fileName: '$fileName.txt',
+        category: _selectedCategory!.value,
+        patientId: widget.patientId,
+      );
+
+      if (response != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'File uploaded successfully: ${response.fileName}',
+            ),
+            backgroundColor: AppTheme.success,
+          ),
+        );
+
+        // Reset form
+        setState(() {
+          _selectedCategory = null;
+          _fileNameController.clear();
+          _recognizedText = '';
+          _resetSpeechToText();
+        });
+
+        // Callback
+        if (widget.onUploadSuccess != null) {
+          widget.onUploadSuccess!(response);
+        }
+      } else {
+        throw Exception('Upload failed - no response received');
+      }
+    } catch (e, stacktrace) {
+      print('Upload Exception: $e');
+      print('Stacktrace: $stacktrace');
+      final errorMessage = 'Upload failed: $e';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: AppTheme.error),
+      );
+
+      if (widget.onUploadError != null) {
+        widget.onUploadError!(errorMessage);
+      }
+    }
+  }
+
+  // Speech to Text Capture
+  void _resetSpeechToText() {
+    _speech = stt.SpeechToText();  // Re-initialize the instance
   }
 
     @override

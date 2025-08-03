@@ -69,4 +69,19 @@ public class TemplateService {
             throw new AppException(HttpStatus.NOT_FOUND, "Template not found");
         }
     }
+
+    public Template createTemplate(TemplateDto templateDto) {
+        Template newTemplate = Template.builder()
+                .name(templateDto.getName())
+                .description(templateDto.getDescription())
+                .frequency(templateDto.getFrequency())
+                .taskInterval(templateDto.getInterval())
+                .doCount(templateDto.getCount())
+                .daysOfWeek(templateDto.getDaysOfWeek())
+                .timeOfDay(templateDto.getTimeOfDay())
+                .icon(templateDto.getIcon())
+                .notifications(templateDto.getNotifications())
+                .build();
+        return templateRepository.save(newTemplate);
+    }
 }

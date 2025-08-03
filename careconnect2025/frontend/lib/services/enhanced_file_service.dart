@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
 import 'api_service.dart';
 import 'auth_token_manager.dart';
 
@@ -16,10 +17,14 @@ class UserFileDTO {
   final int ownerId;
   final String ownerType;
   final int? patientId;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
   final String? fileUrl;
   final String? downloadUrl;
+  final List<String>? files;
+  final String? category;
+  final String? s3FullKey;
+  final String fileName;
 
   UserFileDTO({
     required this.id,
@@ -35,6 +40,10 @@ class UserFileDTO {
     required this.updatedAt,
     this.fileUrl,
     this.downloadUrl,
+    this.files,
+    this.category,
+    this.s3FullKey,
+    required this.fileName,
   });
 
   factory UserFileDTO.fromJson(Map<String, dynamic> json) {
@@ -43,15 +52,19 @@ class UserFileDTO {
       originalFilename: json['originalFilename'] ?? '',
       contentType: json['contentType'] ?? 'application/octet-stream',
       fileSize: json['fileSize'] ?? 0,
-      fileCategory: json['fileCategory'] ?? 'OTHER_DOCUMENT',
+      fileCategory: json['fileCategory'] ?? 'documents',
       description: json['description'],
       ownerId: json['ownerId'] ?? 0,
       ownerType: json['ownerType'] ?? '',
       patientId: json['patientId'],
-      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
       fileUrl: json['fileUrl'],
       downloadUrl: json['downloadUrl'],
+      files: json['files'],
+      category: json['category'] ?? '',
+      s3FullKey: json['s3FullKey'],
+      fileName: json['filename'] ?? '[Unnamed File]',
     );
   }
 
@@ -66,10 +79,13 @@ class UserFileDTO {
       'ownerId': ownerId,
       'ownerType': ownerType,
       'patientId': patientId,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
       'fileUrl': fileUrl,
       'downloadUrl': downloadUrl,
+      'files': files,
+      'category': category,
+      's3FullyKey': s3FullKey,
     };
   }
 
@@ -115,6 +131,7 @@ class FileUploadResponse {
   final String fileUrl;
   final String downloadUrl;
   final String message;
+  final String fileName;
 
   FileUploadResponse({
     required this.fileId,
@@ -122,6 +139,7 @@ class FileUploadResponse {
     required this.fileUrl,
     required this.downloadUrl,
     required this.message,
+    required this.fileName,
   });
 
   factory FileUploadResponse.fromJson(Map<String, dynamic> json) {
@@ -131,6 +149,7 @@ class FileUploadResponse {
       fileUrl: json['fileUrl'] ?? '',
       downloadUrl: json['downloadUrl'] ?? '',
       message: json['message'] ?? '',
+      fileName: json['fileName'] ?? '',
     );
   }
 }
@@ -146,11 +165,13 @@ class EnhancedFileService {
   }) async {
     try {
       final headers = await AuthTokenManager.getAuthHeaders();
-      headers.remove('Content-Type'); // Will be set by multipart request
+      // Remove Content-Type as it will be set by multipart request
+      headers.remove('Content-Type');
 
+      // Use users endpoint for file uploads
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('${ApiConstants.files}/upload'),
+        Uri.parse('${ApiConstants.files}/users/$patientId/upload'),
       );
 
       // Add headers
@@ -163,18 +184,14 @@ class EnhancedFileService {
         'file',
         fileStream,
         fileLength,
-        filename: file.path.split('/').last,
+        filename: path.basename(file.path),
       );
 
+      // Add form fields
       request.files.add(multipartFile);
       request.fields['category'] = category;
-      if (description != null) {
-        request.fields['description'] = description;
-      }
-      if (patientId != null) {
-        request.fields['patientId'] = patientId.toString();
-      }
 
+      // Send the request
       var streamedResponse = await request.send().timeout(
         const Duration(seconds: 30),
       );
@@ -187,6 +204,63 @@ class EnhancedFileService {
         final errorData = json.decode(response.body);
         throw Exception(errorData['error'] ?? 'Failed to upload file');
       }
+
+    } catch (e) {
+      print('Error uploading file: $e');
+      return null;
+    }
+  }
+
+  /// Upload a file using the new database-first approach
+  static Future<FileUploadResponse?> uploadFileWeb({
+    required Uint8List fileBytes,
+    required String fileName,
+    required String category,
+    String? description,
+    int? patientId,
+  }) async {
+    try {
+      final headers = await AuthTokenManager.getAuthHeaders();
+      // Remove Content-Type as it will be set by multipart request
+      headers.remove('Content-Type');
+
+      // Use users endpoint for file uploads
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiConstants.files}/users/$patientId/upload'),
+      );
+
+      // Add headers
+      request.headers.addAll(headers);
+
+      // Add file
+      var fileStream = http.ByteStream(Stream.fromIterable([fileBytes]));
+      var fileLength = await fileStream.length;
+      var multipartFile = http.MultipartFile(
+        'file',
+        fileStream,
+        fileLength,
+        filename: path.basename(fileName),
+      );
+
+      // Add form fields
+      request.files.add(multipartFile);
+      request.fields['category'] = category;
+
+      // Send the request
+      var streamedResponse = await request.send().timeout(
+        const Duration(seconds: 30),
+      );
+      print('Trying to upload file now.');
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        return FileUploadResponse.fromJson(responseData);
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to upload file');
+      }
     } catch (e) {
       print('Error uploading file: $e');
       return null;
@@ -194,14 +268,43 @@ class EnhancedFileService {
   }
 
   /// Download file content by file ID
-  static Future<Uint8List?> downloadFile(int fileId) async {
+  static Future<Uint8List?> downloadFile(int userId) async {
     try {
       final headers = await AuthTokenManager.getAuthHeaders();
       final response = await http
           .get(
-            Uri.parse('${ApiConstants.files}/$fileId/download'),
+            Uri.parse('${ApiConstants.files}/users/$userId/download'),
             headers: headers,
           )
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to download file');
+      }
+    } catch (e) {
+      print('Error downloading file: $e');
+      return null;
+    }
+  }
+
+  /// Download file with legacy endpoint with user ID and file path
+  static Future<Uint8List?> downloadFileLegacy(int userId, String filePath) async {
+    try {
+      final headers = await AuthTokenManager.getAuthHeaders();
+
+      // Build URL with userId path and filePath query param
+      final uri = Uri.parse('${ApiConstants.files}/users/$userId/download').replace(
+        queryParameters: {'filePath': filePath},
+      );
+
+      final response = await http
+          .get(
+        uri,
+        headers: headers,
+      )
           .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
@@ -380,6 +483,7 @@ class EnhancedFileService {
       'LAB_RESULT': 'Lab Result',
       'APPOINTMENT': 'Appointment',
       'CARE_NOTE': 'Care Note',
+      'documents': 'General Document'
     };
   }
 }

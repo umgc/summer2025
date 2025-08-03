@@ -23,6 +23,7 @@ import com.careconnect.security.Role;
 import com.careconnect.dto.ProfessionalInfoDto;
 import com.careconnect.dto.AddressDto;
 import com.careconnect.dto.PatientWithLinkDto;
+import com.careconnect.dto.PatientSummaryDTO;
 import com.careconnect.model.Address;
 import com.careconnect.model.Plan;
 import com.careconnect.model.Subscription;
@@ -80,8 +81,6 @@ public class CaregiverService {
     @Autowired
     private SubscriptionRepository subscriptionRepository;
     
-    @Autowired(required = false)
-    private FirebaseNotificationService notificationService;    // 1. List patients under a caregiver, with optional filtering (ACTIVE links only)
     // public List<Patient> getPatientsByCaregiver(Long caregiverId, String email, String name) {
     //     // Get caregiver user
     //     Caregiver caregiver = getCaregiverById(caregiverId);
@@ -131,21 +130,27 @@ public List<PatientWithLinkDto> getPatientsByCaregiver(Long caregiverId, String 
                     Optional<Patient> patientOpt = patientRepository.findByUser(userOpt.get());
                     if (patientOpt.isPresent()) {
                         Patient patient = patientOpt.get();
-                        
-                        // Apply filters
                         if (email != null && !email.isEmpty() && 
                            (patient.getEmail() == null || !patient.getEmail().equalsIgnoreCase(email))) {
                             return null;
                         }
-                        
                         if (name != null && !name.isEmpty() && 
                            !(patient.getFirstName() + " " + patient.getLastName())
                            .toLowerCase().contains(name.toLowerCase())) {
                             return null;
                         }
-                        
-                        // Return combined data
-                        return new PatientWithLinkDto(patient, link);
+                        PatientSummaryDTO summary = PatientSummaryDTO.builder()
+                            .id(patient.getId())
+                            .firstName(patient.getFirstName())
+                            .lastName(patient.getLastName())
+                            .email(patient.getEmail())
+                            .phone(patient.getPhone())
+                            .dob(patient.getDob())
+                            .gender(patient.getGender())
+                            .address(patient.getAddress())
+                            .relationship(patient.getRelationship())
+                            .build();
+                        return new PatientWithLinkDto(summary, link);
                     }
                 }
                 return null;
@@ -187,15 +192,14 @@ public Patient registerPatient(PatientRegistration reg) {
     String encodedPassword = encoder.encode(password);
 
     // Create and save the user first to ensure we have an ID
-    User user = User.builder()
-            .email(reg.getEmail())
-            .password(encodedPassword)
-            .passwordHash(encodedPassword)
-            .role(Role.PATIENT)
-            .isVerified(false)
-            .verificationToken(passwordSetupToken)
-            .createdAt(new java.sql.Timestamp(System.currentTimeMillis()))
-            .build();
+    User user = new User();
+    user.setEmail(reg.getEmail());
+    user.setPassword(encodedPassword);
+    user.setPasswordHash(encodedPassword);
+    user.setIsVerified(false);
+    user.setRole(Role.PATIENT);
+    user.setVerificationToken(passwordSetupToken);
+    user.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
     
     User savedUser = users.save(user); // Save user first to get ID
 
@@ -211,6 +215,7 @@ public Patient registerPatient(PatientRegistration reg) {
             .address(addr)
             .user(savedUser) // Use the saved user with ID
             .relationship(reg.getRelationship())
+            .gender(reg.getGender())
             .build();
 
     try {
@@ -242,36 +247,7 @@ public Patient registerPatient(PatientRegistration reg) {
             password
         );
         
-        // Send Firebase notification to patient about registration
-        try {
-            String caregiverName = reg.getCaregiverId() != null ? 
-                caregiverRepository.findById(reg.getCaregiverId())
-                    .map(c -> c.getFirstName() + " " + c.getLastName())
-                    .orElse("Your caregiver") : "CareConnect";
-            
-            // Send notification only if Firebase is enabled
-            if (notificationService != null) {
-                notificationService.sendNotificationToUser(
-                    savedUser.getId(),
-                    "🎉 Welcome to CareConnect!",
-                    String.format("You've been registered by %s. Please check your email to set up your password.", caregiverName),
-                    "PATIENT_REGISTRATION",
-                    Map.of(
-                        "type", "PATIENT_REGISTRATION",
-                        "caregiverName", caregiverName,
-                        "registeredAt", Instant.now().toString(),
-                    "patientId", savedPatient.getId().toString()
-                )
-            );
-            
-            log.info("Patient registration notification sent to user ID: {}", savedUser.getId());
-            } else {
-                log.info("Firebase notifications disabled - skipping notification for user ID: {}", savedUser.getId());
-            }
-        } catch (Exception e) {
-            log.warn("Failed to send patient registration notification: {}", e.getMessage());
-            // Don't fail the registration if notification fails
-        }
+        // Firebase notification logic removed
         
         return savedPatient;
     } catch (Exception e) {
@@ -348,6 +324,7 @@ public Patient registerPatient(PatientRegistration reg) {
                 .address(addr)
                 .user(user)
                 .caregiverType(caregiverType)
+                .gender(reg.getGender())
                 .build();
 
         try {
@@ -481,7 +458,18 @@ public PatientWithLinkDto getPatientWithLinkById(Long caregiverId, Long patientI
         throw new AppException(HttpStatus.FORBIDDEN, "Caregiver has no active link to this patient");
     }
     
-    // Return combined data
-    return new PatientWithLinkDto(patient, linkOpt.get());
+    // Build summary DTO for consistent API response
+    PatientSummaryDTO summary = PatientSummaryDTO.builder()
+        .id(patient.getId())
+        .firstName(patient.getFirstName())
+        .lastName(patient.getLastName())
+        .email(patient.getEmail())
+        .phone(patient.getPhone())
+        .dob(patient.getDob())
+        .gender(patient.getGender())
+        .address(patient.getAddress())
+        .relationship(patient.getRelationship())
+        .build();
+    return new PatientWithLinkDto(summary, linkOpt.get());
 }
 }

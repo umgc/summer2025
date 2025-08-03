@@ -64,6 +64,9 @@ public class JwtTokenProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
+            System.err.println("[JWT DEBUG] Invalid token: " + e.getMessage());
+            System.err.println("[JWT DEBUG] Secret (base64): " + java.util.Base64.getEncoder().encodeToString(key.getEncoded()));
+            e.printStackTrace();
             return false;
         }
     }

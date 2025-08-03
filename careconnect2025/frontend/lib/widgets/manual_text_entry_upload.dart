@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
 import '../config/theme/app_theme.dart';
+import '../core/services/api_service.dart';
+import '../providers/user_provider.dart';
+import '../services/auth_token_manager.dart';
 import '../services/comprehensive_file_service.dart';
+import '../services/enhanced_file_service.dart';
 
 class ManualTextEntryCard extends StatefulWidget {
-  final Future<void> Function(String fileName, Uint8List fileBytes) onSave;
   final List<FileCategory>? allowedCategories;
+  final int? patientId;
+  final Function(FileUploadResponse)? onUploadSuccess;
+  final Function(String)? onUploadError;
 
-  const ManualTextEntryCard({super.key, required this.onSave, this.allowedCategories});
+  const ManualTextEntryCard({super.key, this.allowedCategories, this.patientId, this.onUploadSuccess, this.onUploadError});
 
   @override
   State<ManualTextEntryCard> createState() => _ManualTextEntryCardState();
@@ -17,8 +24,7 @@ class ManualTextEntryCard extends StatefulWidget {
 
 class _ManualTextEntryCardState extends State<ManualTextEntryCard> {
   final _fileNameController = TextEditingController();
-  final _fileContentController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  late var _fileContentController = TextEditingController();
   FileCategory? _selectedCategory;
 
   List<FileCategory> get _availableCategories {
@@ -90,6 +96,67 @@ class _ManualTextEntryCardState extends State<ManualTextEntryCard> {
     }
   }
 
+  Future<void> _uploadManualTextFileToWeb(String fileName, List<int> fileBytes) async {
+    if (_selectedCategory == null || fileBytes.isEmpty || fileName.isEmpty) {
+      print('Selected category was null..');
+      return;
+    }
+
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final user = userProvider.user;
+      if (user == null) {
+        throw Exception('User not logged in');
+      }
+
+      FileUploadResponse? response;
+
+      // Use the existing enhanced file service for other categories
+      response = await EnhancedFileService.uploadFileWeb(
+        fileBytes: Uint8List.fromList(fileBytes),
+        fileName: '$fileName.txt',
+        category: _selectedCategory!.value,
+        patientId: widget.patientId,
+      );
+
+      if (response != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'File uploaded successfully: ${response.fileName}',
+            ),
+            backgroundColor: AppTheme.success,
+          ),
+        );
+
+        // Reset form
+        setState(() {
+          _selectedCategory = null;
+          _fileNameController.clear();
+          _fileContentController.clear();
+        });
+
+        // Callback
+        if (widget.onUploadSuccess != null) {
+          widget.onUploadSuccess!(response);
+        }
+      } else {
+        throw Exception('Upload failed - no response received');
+      }
+    } catch (e, stacktrace) {
+      print('Upload Exception: $e');
+      print('Stacktrace: $stacktrace');
+      final errorMessage = 'Upload failed: $e';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: AppTheme.error),
+      );
+
+      if (widget.onUploadError != null) {
+        widget.onUploadError!(errorMessage);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -143,13 +210,12 @@ class _ManualTextEntryCardState extends State<ManualTextEntryCard> {
                     _selectCategory();
                   }
 
-                  if (_formKey.currentState!.validate()) {
-                    String fileName = _fileNameController.text.trim();
-                    String content = _fileContentController.text.trim();
+                  String fileName = _fileNameController.text.trim();
+                  String content = _fileContentController.text.trim();
 
-                    final fileBytes = utf8.encode(content);
-                    await widget.onSave(fileName, Uint8List.fromList(fileBytes));
-                  }
+                  final fileBytes = utf8.encode(content);
+                  // Call your upload function (adjust as needed)
+                  await _uploadManualTextFileToWeb(fileName, fileBytes);
                 },
 
                 child: const Text('Save to File'),

@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 import 'api_service.dart';
 import '../config/env_constant.dart';
 
@@ -124,72 +126,49 @@ class PatientAIConfigDTO {
 class AIConfigService {
   static String get baseUrl => '${getBackendBaseUrl()}/v1/api/ai-chat';
 
-  /// Get AI configuration for a patient
-  static Future<PatientAIConfigDTO?> getPatientAIConfig(int patientId) async {
+  /// Create or update AI configuration for a user
+  /// Returns the saved PatientAIConfigDTO or null on failure
+  static Future<PatientAIConfigDTO?> saveUserAIConfig(
+    PatientAIConfigDTO config, {
+    required int userId,
+  }) async {
     try {
       final authHeaders = await ApiService.getAuthHeaders();
+      authHeaders['Content-Type'] = 'application/json';
+      authHeaders['Accept'] = '*/*';
 
-      print(
-        '🤖 Getting AI config for patient $patientId from: $baseUrl/config/$patientId',
-      );
+      // Compose request body to match backend API
+      final requestBody = {
+        'userId': userId,
+        'patientId': config.patientId,
+        'aiProvider': config.aiProvider,
+        'openaiModel': config.preferences['openaiModel'] ?? 'gpt-4',
+        'deepseekModel': config.preferences['deepseekModel'] ?? 'deepseek-chat',
+        'maxTokens': config.maxTokensPerSession,
+        'temperature': config.temperature,
+        'conversationHistoryLimit':
+            config.preferences['conversationHistoryLimit'] ?? 20,
+        'includeVitalsByDefault':
+            config.preferences['includeVitalsByDefault'] ?? true,
+        'includeMedicationsByDefault':
+            config.preferences['includeMedicationsByDefault'] ?? true,
+        'includeNotesByDefault':
+            config.preferences['includeNotesByDefault'] ?? true,
+        'includeMoodPainLogsByDefault':
+            config.preferences['includeMoodPainLogsByDefault'] ?? true,
+        'includeAllergiesByDefault':
+            config.preferences['includeAllergiesByDefault'] ?? true,
+        'isActive': config.isActive,
+        'systemPrompt':
+            config.preferences['systemPrompt'] ??
+            'You are a helpful AI assistant.',
+      };
 
-      final response = await http.get(
-        Uri.parse('$baseUrl/config/$patientId'),
+      final response = await http.post(
+        Uri.parse('$baseUrl/config'),
         headers: authHeaders,
+        body: jsonEncode(requestBody),
       );
-
-      print('🤖 AI config response status: ${response.statusCode}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return PatientAIConfigDTO.fromJson(data);
-      } else if (response.statusCode == 404) {
-        // No configuration found, return default
-        print('🤖 No AI config found for patient $patientId, using default');
-        return _getDefaultConfig(patientId);
-      } else {
-        print('❌ Failed to get AI config: ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      print('❌ Error getting AI config: $e');
-      return null;
-    }
-  }
-
-  /// Save or update AI configuration for a patient
-  static Future<PatientAIConfigDTO?> savePatientAIConfig(
-    PatientAIConfigDTO config,
-  ) async {
-    try {
-      final authHeaders = await ApiService.getAuthHeaders();
-      // Check if config exists for patient
-      final checkResponse = await http.get(
-        Uri.parse('$baseUrl/config/${config.patientId}'),
-        headers: authHeaders,
-      );
-      http.Response response;
-      if (checkResponse.statusCode == 200) {
-        // Config exists, use PUT to update
-        response = await http.put(
-          Uri.parse('$baseUrl/config/${config.patientId}'),
-          headers: authHeaders,
-          body: jsonEncode(config.toJson()),
-        );
-        print(
-          '🤖 Updating AI config for patient ${config.patientId}: ${response.statusCode}',
-        );
-      } else {
-        // Config does not exist, use POST to create
-        response = await http.post(
-          Uri.parse('$baseUrl/config'),
-          headers: authHeaders,
-          body: jsonEncode(config.toJson()),
-        );
-        print(
-          '🤖 Creating AI config for patient ${config.patientId}: ${response.statusCode}',
-        );
-      }
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return PatientAIConfigDTO.fromJson(data);
@@ -203,25 +182,40 @@ class AIConfigService {
     }
   }
 
-  /// Deactivate AI configuration for a patient
-  static Future<bool> deactivatePatientAIConfig(int patientId) async {
+  /// Get AI configuration for the logged-in user
+  /// Usage: AIConfigService.getUserAIConfig(context)
+  static Future<PatientAIConfigDTO?> getUserAIConfig(context) async {
     try {
       final authHeaders = await ApiService.getAuthHeaders();
-      final response = await http.delete(
-        Uri.parse('$baseUrl/config/$patientId'),
-        headers: authHeaders,
-      );
-
-      print(
-        '🤖 Deactivating AI config for patient $patientId: ${response.statusCode}',
-      );
-
-      return response.statusCode == 200;
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final userId = userProvider.user?.id;
+      if (userId == null) {
+        print('❌ No logged-in user found for AI config fetch.');
+        return null;
+      }
+      final uri = Uri.parse(
+        '$baseUrl/config',
+      ).replace(queryParameters: {'userId': userId.toString()});
+      print('🤖 Getting AI config for userId $userId from: $uri');
+      final response = await http.get(uri, headers: authHeaders);
+      print('🤖 AI config response status: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return PatientAIConfigDTO.fromJson(data);
+      } else if (response.statusCode == 404) {
+        print('🤖 No AI config found for userId $userId, using default');
+        return _getDefaultConfig(userId);
+      } else {
+        print('❌ Failed to get AI config: ${response.statusCode}');
+        return null;
+      }
     } catch (e) {
-      print('❌ Error deactivating AI config: $e');
-      return false;
+      print('❌ Error getting AI config: $e');
+      return null;
     }
   }
+
+  // ...keep only DTO and single config logic if needed...
 
   /// Get default AI configuration for a patient
   static PatientAIConfigDTO _getDefaultConfig(int patientId) {
