@@ -7,6 +7,7 @@ import 'package:care_connect_app/providers/user_provider.dart';
 import 'package:care_connect_app/services/api_service.dart';
 import 'package:care_connect_app/services/auth_token_manager.dart';
 import 'package:http/http.dart' as http;
+import '../../../../widgets/ai_chat_modal.dart';
 import '../../../../services/subscription_service.dart';
 import '../../../../widgets/responsive_page_wrapper.dart';
 import '../../../../utils/responsive_utils.dart';
@@ -144,8 +145,6 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
 
       // Get auth headers
       final headers = await AuthTokenManager.getAuthHeaders();
-
-      // Use ApiConstants for the URL
       final baseUrl = ApiConstants.baseUrl;
       final url = Uri.parse('${baseUrl}caregivers/$caregiverId/patients');
       print('🔍 Fetching patients from: $url');
@@ -159,22 +158,37 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
         for (var json in data) {
           try {
             Map<String, dynamic> patientJson;
-            if (json.containsKey('patient') &&
-                json['patient'] is Map<String, dynamic>) {
-              patientJson = Map<String, dynamic>.from(json['patient']);
+            if (json.containsKey('patient') && json['patient'] != null) {
+              // Safely convert to Map<String, dynamic>
+              final patientData = json['patient'];
+              if (patientData is Map) {
+                patientJson = Map<String, dynamic>.from(patientData);
+              } else {
+                print('⚠️ Warning: patient data is not a Map: $patientData');
+                continue;
+              }
+
               // Merge link info
-              if (json.containsKey('link') &&
-                  json['link'] is Map<String, dynamic>) {
-                final link = json['link'] as Map<String, dynamic>;
-                patientJson['linkId'] = link['id'];
-                patientJson['linkStatus'] = link['status'] ?? 'ACTIVE';
-                // Always set relationship from link if present
-                patientJson['relationship'] =
-                    patientJson['relationship'] ??
-                    (link['relationship'] ?? 'Patient');
+              if (json.containsKey('link') && json['link'] != null) {
+                final linkData = json['link'];
+                if (linkData is Map) {
+                  final link = Map<String, dynamic>.from(linkData);
+                  patientJson['linkId'] = link['id'];
+                  patientJson['linkStatus'] = link['status'] ?? 'ACTIVE';
+                  // Always set relationship from link if present
+                  patientJson['relationship'] =
+                      patientJson['relationship'] ??
+                      (link['relationship'] ?? 'Patient');
+                }
               }
             } else {
-              patientJson = Map<String, dynamic>.from(json);
+              // Handle case where json is the patient data directly
+              if (json is Map) {
+                patientJson = Map<String, dynamic>.from(json);
+              } else {
+                print('⚠️ Warning: json data is not a Map: $json');
+                continue;
+              }
             }
             // Ensure null gender is handled
             if (!patientJson.containsKey('gender') ||
@@ -190,6 +204,90 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                 json.containsKey('link')) {
               patientJson['linkStatus'] = json['link']?['status'] ?? 'ACTIVE';
             }
+
+            // Ensure essential fields have default values
+            patientJson['firstName'] =
+                patientJson['firstName']?.toString() ?? '';
+            patientJson['lastName'] = patientJson['lastName']?.toString() ?? '';
+            patientJson['email'] = patientJson['email']?.toString() ?? '';
+            patientJson['phone'] = patientJson['phone']?.toString() ?? '';
+            patientJson['dob'] = patientJson['dob']?.toString() ?? '';
+            patientJson['relationship'] =
+                patientJson['relationship']?.toString() ?? 'Patient';
+
+            // --- Fetch enhanced profile for allergies and vitals ---
+            try {
+              final enhancedRes = await http.get(
+                Uri.parse(
+                  '${ApiConstants.baseUrl}patients/${patientJson['id']}/profile/enhanced',
+                ),
+                headers: headers,
+              );
+              if (enhancedRes.statusCode == 200) {
+                final enhancedJson = jsonDecode(enhancedRes.body);
+                final enhancedData = enhancedJson['data'];
+
+                // Defensive: handle allergies as list of string or objects, or null
+                final allergiesRaw = enhancedData?['allergies'];
+                if (allergiesRaw == null) {
+                  patientJson['allergies'] = [];
+                } else if (allergiesRaw is List) {
+                  // Accept both List<String> and List<Map>
+                  patientJson['allergies'] = List.from(allergiesRaw);
+                } else {
+                  print(
+                    '⚠️ Warning: allergies data is not a List: $allergiesRaw',
+                  );
+                  patientJson['allergies'] = [];
+                }
+
+                // Defensive: handle latestVitals as map or null
+                final vitalsRaw = enhancedData?['latestVitals'];
+                if (vitalsRaw == null) {
+                  patientJson['latestVitals'] = <String, dynamic>{};
+                } else if (vitalsRaw is Map) {
+                  patientJson['latestVitals'] = Map<String, dynamic>.from(
+                    vitalsRaw,
+                  );
+                } else {
+                  print(
+                    '⚠️ Warning: latestVitals data is not a Map: $vitalsRaw',
+                  );
+                  patientJson['latestVitals'] = <String, dynamic>{};
+                }
+
+                // Defensive: handle medications as list or null
+                final medicationsRaw = enhancedData?['medications'];
+                if (medicationsRaw == null) {
+                  patientJson['medications'] = [];
+                } else if (medicationsRaw is List) {
+                  patientJson['medications'] = List.from(medicationsRaw);
+                } else {
+                  print(
+                    '⚠️ Warning: medications data is not a List: $medicationsRaw',
+                  );
+                  patientJson['medications'] = [];
+                }
+              } else {
+                // Set default values if enhanced profile fetch fails
+                patientJson['allergies'] = [];
+                patientJson['latestVitals'] = <String, dynamic>{};
+                patientJson['medications'] = [];
+                print(
+                  '⚠️ Enhanced profile fetch failed with status: ${enhancedRes.statusCode}',
+                );
+              }
+            } catch (e) {
+              print(
+                'Failed to fetch enhanced profile for patient ${patientJson['id']}: $e',
+              );
+              // Set default values on error
+              patientJson['allergies'] = [];
+              patientJson['latestVitals'] = <String, dynamic>{};
+              patientJson['medications'] = [];
+            }
+            // ------------------------------------------------------
+
             final patient = Patient.fromJson(patientJson);
             if (patient.id > 0) {
               parsedPatients.add(patient);
@@ -304,6 +402,15 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
       }
     }
 
+    // Check for systolic/diastolic separately
+    if (vitals.containsKey('systolic') && vitals.containsKey('diastolic')) {
+      final sys = vitals['systolic'];
+      final dia = vitals['diastolic'];
+      if (sys != null && dia != null) {
+        summaryItems.add('BP: $sys/$dia mmHg ✓');
+      }
+    }
+
     // Check for temperature
     if (vitals.containsKey('temperature')) {
       final temp = vitals['temperature'];
@@ -322,10 +429,51 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
       }
     }
 
+    // Check for SpO2 (alternative oxygen saturation field)
+    if (vitals.containsKey('spo2')) {
+      final spo2 = vitals['spo2'];
+      if (spo2 != null) {
+        final status = _getVitalStatus(spo2, 'oxygenSaturation');
+        summaryItems.add('SpO₂: $spo2% $status');
+      }
+    }
+
+    // Check for respiratory rate
+    if (vitals.containsKey('respiratoryRate')) {
+      final rr = vitals['respiratoryRate'];
+      if (rr != null) {
+        final status = _getVitalStatus(rr, 'respiratoryRate');
+        summaryItems.add('RR: $rr/min $status');
+      }
+    }
+
+    // Check for weight
+    if (vitals.containsKey('weight')) {
+      final weight = vitals['weight'];
+      if (weight != null) {
+        summaryItems.add('Weight: $weight lbs');
+      }
+    }
+
+    // Check for height
+    if (vitals.containsKey('height')) {
+      final height = vitals['height'];
+      if (height != null) {
+        summaryItems.add('Height: $height');
+      }
+    }
+
+    // Check for glucose
+    if (vitals.containsKey('glucose')) {
+      final glucose = vitals['glucose'];
+      if (glucose != null) {
+        final status = _getVitalStatus(glucose, 'glucose');
+        summaryItems.add('Glucose: $glucose mg/dL $status');
+      }
+    }
+
     return summaryItems.isNotEmpty
-        ? summaryItems
-              .take(2)
-              .join(', ') // Show max 2 vitals to avoid overcrowding
+        ? summaryItems.join(', ') // Show all available vitals
         : 'Vitals monitoring active';
   }
 
@@ -351,6 +499,16 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
           if (numValue >= 95) return '✓';
           if (numValue < 95) return '⚠️';
           break;
+        case 'respiratoryRate':
+          if (numValue >= 12 && numValue <= 20) return '✓';
+          if (numValue > 20) return '⚠️';
+          if (numValue < 12) return '⚠️';
+          break;
+        case 'glucose':
+          if (numValue >= 70 && numValue <= 140) return '✓';
+          if (numValue > 140) return '⚠️';
+          if (numValue < 70) return '⚠️';
+          break;
         case 'bloodPressure':
           // For blood pressure, we'll just show checkmark for now
           // As it's typically in format "120/80"
@@ -362,6 +520,36 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     }
 
     return '';
+  }
+
+  // Helper method to format allergies summary
+  String _getAllergiesSummary(List<dynamic>? allergies) {
+    if (allergies == null || allergies.isEmpty) {
+      return 'No allergies listed';
+    }
+
+    List<String> allergyStrings = [];
+
+    for (var allergy in allergies) {
+      if (allergy is String) {
+        // Simple string allergy
+        allergyStrings.add(allergy);
+      } else if (allergy is Map<String, dynamic>) {
+        // Object with allergen and severity
+        final allergen = allergy['allergen']?.toString() ?? 'Unknown';
+        final severity = allergy['severity']?.toString();
+
+        if (severity != null && severity.isNotEmpty) {
+          allergyStrings.add('$allergen ($severity)');
+        } else {
+          allergyStrings.add(allergen);
+        }
+      }
+    }
+
+    return allergyStrings.isNotEmpty
+        ? 'Allergies: ${allergyStrings.join(', ')}'
+        : 'No allergies listed';
   }
 
   // Initiate video/audio call with patient
@@ -448,6 +636,120 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     }
   }
 
+  // Helper method to handle suspend action
+  Future<void> _handleSuspendAction(Patient patient) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Suspend Relationship'),
+        content: Text(
+          'Are you sure you want to suspend your relationship with ${patient.firstName} ${patient.lastName}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('CANCEL'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('SUSPEND'),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      try {
+        final linkId = patient.linkId;
+        if (linkId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error: Missing link ID')),
+          );
+          return;
+        }
+        final response = await ApiService.suspendCaregiverPatientLink(linkId);
+        if (response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Relationship with ${patient.firstName} suspended'),
+            ),
+          );
+          fetchPatients();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Failed to suspend relationship: ${response.statusCode}',
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  // Helper method to handle reactivate action
+  Future<void> _handleReactivateAction(Patient patient) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reactivate Relationship'),
+        content: Text(
+          'Do you want to reactivate your relationship with ${patient.firstName} ${patient.lastName}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('CANCEL'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('REACTIVATE'),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      try {
+        final linkId = patient.linkId;
+        if (linkId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error: Missing link ID')),
+          );
+          return;
+        }
+        final response = await ApiService.reactivateCaregiverPatientLink(
+          linkId,
+        );
+        if (response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Relationship with ${patient.firstName} reactivated',
+              ),
+            ),
+          );
+          fetchPatients();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Failed to reactivate relationship: ${response.statusCode}',
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
@@ -456,7 +758,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
       Future.microtask(() => context.go('/login'));
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    final isLargeScreen = context.isLargeDesktop;
+    final isLargeScreen = MediaQuery.of(context).size.width >= 1200;
     return ResponsiveScaffold(
       title: caregiverName != null
           ? 'Welcome, $caregiverName'
@@ -540,7 +842,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
 
   Widget _buildEmptyStateContent() {
     // Use responsive utils for width calculation
-    final isMobile = context.isMobile;
+    final isMobile = MediaQuery.of(context).size.width < 768;
     final screenWidth = MediaQuery.of(context).size.width;
 
     // Create a container with responsive width
@@ -624,8 +926,13 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
   }
 
   Widget _buildPatientListContent() {
-    // Use responsive utils for margins
-    final horizontalMargin = context.horizontalMargin;
+    // Use direct MediaQuery for margins
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalMargin = screenWidth >= 1200
+        ? 32.0
+        : screenWidth >= 768
+        ? 24.0
+        : 16.0;
 
     return RefreshIndicator(
       onRefresh: fetchPatients,
@@ -652,7 +959,8 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
             ),
           ),
           // Use responsive grid for larger screens or list for smaller screens
-          context.isDesktopOrLarger
+          // Use direct screen width check instead of extension
+          MediaQuery.of(context).size.width >= 1024
               ? _buildResponsivePatientGrid(horizontalMargin)
               : SliverPadding(
                   padding: EdgeInsets.fromLTRB(
@@ -675,8 +983,9 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
 
   // New method to create a responsive grid for larger screens
   Widget _buildResponsivePatientGrid(double horizontalMargin) {
-    // Use responsive utils to get the grid column count
-    int crossAxisCount = context.gridColumns;
+    // Use direct MediaQuery instead of extension
+    final screenWidth = MediaQuery.of(context).size.width;
+    int crossAxisCount = screenWidth >= 1200 ? 2 : 1;
 
     // Ensure we have at least 1 column and limit based on screen size
     if (crossAxisCount > 2) {
@@ -688,7 +997,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
     }
 
     // Calculate aspect ratio based on screen size
-    double aspectRatio = context.isLargeDesktop ? 0.9 : 0.85;
+    double aspectRatio = screenWidth >= 1200 ? 0.9 : 0.85;
 
     return SliverPadding(
       padding: EdgeInsets.fromLTRB(horizontalMargin, 0, horizontalMargin, 16),
@@ -778,17 +1087,15 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
   }
 
   Widget _buildPatientCard(Patient patient) {
-    final bool isGridView = context.isDesktopOrLarger;
-    final double avatarSize = context.responsiveValue(
-      mobile: 35.0,
-      desktop: 45.0,
-    );
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool isGridView = screenWidth >= 1024;
+    final double avatarSize = screenWidth >= 1024 ? 45.0 : 35.0;
 
     // Use flexible max width based on screen size
-    double maxCardWidth = MediaQuery.of(context).size.width;
-    if (context.isDesktopOrLarger) {
+    double maxCardWidth = screenWidth;
+    if (screenWidth >= 1024) {
       maxCardWidth = 800.0;
-    } else if (context.isTablet) {
+    } else if (screenWidth >= 768) {
       maxCardWidth = 600.0;
     }
 
@@ -1016,9 +1323,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          patient.allergies?.isNotEmpty == true
-                              ? 'Allergies: ${patient.allergies!.join(', ')}'
-                              : 'No allergies listed',
+                          _getAllergiesSummary(patient.allergies),
                           style: AppTheme.bodyMedium.copyWith(
                             color: Theme.of(context).hintColor,
                             fontSize: 13,
@@ -1063,7 +1368,7 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                onSelected: (value) async {
+                onSelected: (value) {
                   if (patient.id <= 0) {
                     print('⚠️ Warning: Invalid patient ID: ${patient.id}');
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -1077,123 +1382,9 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                     print('✅ Navigating to patient profile: ${patient.id}');
                     context.go('/patient/${patient.id}');
                   } else if (value == 'suspend') {
-                    final bool? confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Suspend Relationship'),
-                        content: Text(
-                          'Are you sure you want to suspend your relationship with ${patient.firstName} ${patient.lastName}?',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(false),
-                            child: const Text('CANCEL'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(true),
-                            child: const Text('SUSPEND'),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirm == true) {
-                      try {
-                        final linkId = patient.linkId;
-                        if (linkId == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Error: Missing link ID'),
-                            ),
-                          );
-                          return;
-                        }
-                        final response =
-                            await ApiService.suspendCaregiverPatientLink(
-                              linkId,
-                            );
-                        if (response.statusCode == 200) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Relationship with ${patient.firstName} suspended',
-                              ),
-                            ),
-                          );
-                          fetchPatients();
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Failed to suspend relationship: ${response.statusCode}',
-                              ),
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                      }
-                    }
+                    _handleSuspendAction(patient);
                   } else if (value == 'reactivate') {
-                    final bool? confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Reactivate Relationship'),
-                        content: Text(
-                          'Do you want to reactivate your relationship with ${patient.firstName} ${patient.lastName}?',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(false),
-                            child: const Text('CANCEL'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(true),
-                            child: const Text('REACTIVATE'),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirm == true) {
-                      try {
-                        final linkId = patient.linkId;
-                        if (linkId == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Error: Missing link ID'),
-                            ),
-                          );
-                          return;
-                        }
-                        final response =
-                            await ApiService.reactivateCaregiverPatientLink(
-                              linkId,
-                            );
-                        if (response.statusCode == 200) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Relationship with ${patient.firstName} reactivated',
-                              ),
-                            ),
-                          );
-                          fetchPatients();
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Failed to reactivate relationship: ${response.statusCode}',
-                              ),
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                      }
-                    }
+                    _handleReactivateAction(patient);
                   }
                 },
                 itemBuilder: (context) => [
