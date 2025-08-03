@@ -35,8 +35,9 @@ class DashboardAnalytics {
       avgSystolic: json['avgSystolic']?.toDouble(),
       avgDiastolic: json['avgDiastolic']?.toDouble(),
       avgWeight: json['avgWeight']?.toDouble(),
-      avgMoodValue: json['avgMoodValue']?.toDouble(),
-      avgPainValue: json['avgPainValue']?.toDouble(),
+      // Map the correct API field names to model properties
+      avgMoodValue: json['avgMood']?.toDouble(),
+      avgPainValue: json['avgPain']?.toDouble(),
       moodValues: json['moodValues'] != null
           ? List<double>.from(
               (json['moodValues'] as List).map((e) => e.toDouble()),
