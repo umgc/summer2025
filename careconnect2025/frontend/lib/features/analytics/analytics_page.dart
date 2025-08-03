@@ -355,9 +355,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                     decoration: const pw.BoxDecoration(
                       color: PdfColors.grey300,
                     ),
-                    decoration: const pw.BoxDecoration(
-                      color: PdfColors.grey300,
-                    ),
                     children: [
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(8),
@@ -1020,10 +1017,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     final themePrimaryLighter = Theme.of(
       context,
     ).colorScheme.primary.withOpacity(0.08);
-    final themePrimary = Theme.of(context).colorScheme.primary;
-    final themePrimaryLighter = Theme.of(
-      context,
-    ).colorScheme.primary.withOpacity(0.08);
 
     return Card(
       elevation: 4,
@@ -1035,7 +1028,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
-            colors: [Colors.white, themePrimaryLighter],
             colors: [Colors.white, themePrimaryLighter],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -1054,7 +1046,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                     width: 4,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: primaryColor ?? themePrimary,
                       color: primaryColor ?? themePrimary,
                       borderRadius: BorderRadius.circular(2),
                     ),
@@ -1083,7 +1074,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                             : 4,
                       ),
                       decoration: BoxDecoration(
-                        color: themePrimary.withOpacity(0.1),
                         color: themePrimary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -1148,7 +1138,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           spots: spots.isNotEmpty ? spots : [FlSpot(0, minY)],
                           isCurved: true,
                           color: primaryColor ?? themePrimary,
-                          color: primaryColor ?? themePrimary,
                           barWidth: 3,
                           dotData: FlDotData(
                             show: spots.length <= 10,
@@ -1156,16 +1145,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                                 FlDotCirclePainter(
                                   radius: 4,
                                   color: primaryColor ?? themePrimary,
-                                  color: primaryColor ?? themePrimary,
                                   strokeWidth: 2,
                                   strokeColor: Colors.white,
                                 ),
                           ),
                           belowBarData: BarAreaData(
                             show: true,
-                            color: (primaryColor ?? themePrimary).withOpacity(
-                              0.1,
-                            ),
                             color: (primaryColor ?? themePrimary).withOpacity(
                               0.1,
                             ),
@@ -1855,8 +1840,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,
@@ -1865,35 +1848,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               ),
             ],
           ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-          child: const Icon(Icons.chat_bubble_outline),
-          onPressed: () {
-            final double sheetHeight =
-                MediaQuery.of(context).size.height * 0.75;
-            showModalBottomSheet(
-              isScrollControlled: true,
-              context: context,
-              backgroundColor: Colors.white,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width,
-              ),
-              builder: (context) => SizedBox(
-                height: sheetHeight,
-                child: AIChat(
-                  role: 'caregiver',
-                  healthDataContext: _getHealthDataContext(),
-                  isModal: true,
-                ),
-              ),
-            );
-          },
-          tooltip: 'Ask AI about analytics',
         ),
         floatingActionButton: FloatingActionButton(
           backgroundColor: Theme.of(context).colorScheme.primary,
@@ -1979,14 +1933,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: const CommonDrawer(currentRoute: '/analytics'),
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        iconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
-        title: Text(
         backgroundColor: Theme.of(context).colorScheme.primary,
         iconTheme: IconThemeData(
           color: Theme.of(context).colorScheme.onPrimary,
@@ -2081,7 +2029,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
                             color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
@@ -2277,7 +2224,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
                             color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
