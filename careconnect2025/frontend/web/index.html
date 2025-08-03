@@ -1,144 +1,115 @@
+
+
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
+    <meta charset="UTF-8" />
+    <title>Emotion Detection App</title>
 
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
+    <!-- Load face-api.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
 
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+    <!-- Your emotion detection logic -->
+    <script defer src="emotion.js"></script>
 
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
+    <style>
+        body {
+          margin: 0;
+          background: #111;
+          font-family: sans-serif;
+          color: white;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
 
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="CareConnect - A comprehensive healthcare management platform for patients and caregivers">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#1976D2">
+        #video-container, #jitsi-container {
+          width: 100%;
+          height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
 
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="CareConnect">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+        video {
+          border-radius: 12px;
+          box-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
 
-  <!-- Add to homescreen for Safari on iOS -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="CareConnect">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <!-- Improved web rendering -->
-  <style>
-    body {
-      background-color: #FFFFFF;
-      height: 100vh;
-      width: 100vw;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      position: fixed;
-    }
-
-    .loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100%;
-      width: 100%;
-      background-color: #FFFFFF;
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 999;
-    }
-
-    .loading img {
-      width: 120px;
-      height: 120px;
-      animation: pulse 1.5s infinite ease-in-out;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(0.95); opacity: 0.7; }
-      50% { transform: scale(1.05); opacity: 1; }
-      100% { transform: scale(0.95); opacity: 0.7; }
-    }
-
-    /* Hardware acceleration for smoother animations */
-    * {
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    /* Better touch handling for mobile web */
-    * {
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-  </style>
-
-  <title>CareConnect</title>
-  <link rel="manifest" href="manifest.json">
+        #join-button {
+          margin-top: 16px;
+          padding: 12px 24px;
+          font-size: 18px;
+          background: #00aaff;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          color: white;
+        }
+    </style>
 </head>
 <body>
-  <!-- Loading indicator that shows until Flutter loads -->
-  <div class="loading" id="loading">
-    <img src="icons/Icon-192.png" alt="Loading CareConnect"/>
-  </div>
 
-  <script>
-    // Add platform detection classes to the body element
-    function detectPlatform() {
-      var userAgent = navigator.userAgent || navigator.vendor || window.opera;
-      var body = document.body;
+<!-- Preview screen -->
+<div id="video-container">
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <video id="emotion-video" width="640" height="480" autoplay muted playsinline></video>
+        <button id="join-button" onclick="startJitsiCall()">Join Call</button>
+    </div>
+</div>
 
-      // Detect iOS
-      if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-        body.classList.add('ios-device');
-      }
-      // Detect Android
-      else if (/android/i.test(userAgent)) {
-        body.classList.add('android-device');
-      }
-      // Detect desktop browsers
-      else if (window.innerWidth >= 1024) {
-        body.classList.add('desktop-browser');
-      }
-      // Detect mobile browsers
-      else {
-        body.classList.add('mobile-browser');
-      }
+<!-- Jitsi screen -->
+<div id="jitsi-container" style="display: none;"></div>
 
-      // Detect touch capability
-      if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-        body.classList.add('touch-device');
-      } else {
-        body.classList.add('no-touch-device');
-      }
-    }
+<!-- Flutter compiled app -->
+<script src="main.dart.js" type="application/javascript"></script>
 
-    // Run platform detection as soon as possible
-    detectPlatform();
-
-    // Hide loading indicator once Flutter is initialized
-    window.addEventListener('flutter-first-frame', function() {
-      var loading = document.getElementById('loading');
-      if (loading) {
-        loading.style.display = 'none';
+<script>
+    window.addEventListener('load', async () => {
+      const video = document.getElementById('emotion-video');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        video.onloadedmetadata = () => {
+          video.play();
+          startEmotionLoop(video); // From emotion.js
+        };
+      } catch (err) {
+        console.error("Camera access failed:", err);
+        alert("Please allow camera access.");
       }
     });
-  </script>
 
-  <script src="flutter_bootstrap.js" async></script>
+    function startJitsiCall() {
+      document.getElementById('video-container').style.display = 'none';
+      document.getElementById('jitsi-container').style.display = 'block';
+
+      const domain = "meet.jit.si";
+      const options = {
+        roomName: "CareConnectRoom",
+        parentNode: document.getElementById("jitsi-container"),
+        configOverwrite: {
+          startWithAudioMuted: false,
+          startWithVideoMuted: false
+        }
+      };
+
+      const api = new JitsiMeetExternalAPI(domain, options);
+
+      api.addEventListener("videoConferenceJoined", () => {
+        console.log(" Jitsi joined");
+        setTimeout(() => {
+          const jitsiVideo = document.querySelector('#jitsi-container video');
+          if (jitsiVideo) {
+            console.log(" Rebinding emotion detection to Jitsi video");
+            startEmotionLoop(jitsiVideo); // Rebind
+          } else {
+            console.warn(" No Jitsi video found");
+          }
+        }, 1000);
+      });
+    }
+</script>
 </body>
 </html>
+

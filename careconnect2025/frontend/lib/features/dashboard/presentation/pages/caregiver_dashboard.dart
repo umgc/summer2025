@@ -8,8 +8,14 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../widgets/ai_chat.dart';
+
+import '../../../calls/presentation/pages/pages/callRequestService.dart';
+import '../../../calls/presentation/pages/pages/navigation_helpers.dart';
 import '../../../social/presentation/pages/main_feed_screen.dart';
 import '../../models/patient_model.dart';
+import '../../../calls/presentation/pages/pages/navigation_helpers.dart';
+
+
 
 class CaregiverDashboard extends StatefulWidget {
   final String userRole;
@@ -592,19 +598,35 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                                         context,
                                                         Icons.call,
                                                         'Call',
-                                                        () {
-                                                          final String
-                                                          patientName =
-                                                              '${patient.firstName} ${patient.lastName}';
-                                                          final String roomId =
-                                                              'room-${patient.id}'; // or any room ID logic you use
+                                                            () {
+                                                          final patientName = '${patient.firstName} ${patient.lastName}';
+                                                          final patientId = patient.userId?.toString() ?? ''; // MATCHES patient listener
+                                                          final roomId = 'room-$patientId';
 
-                                                          context.go(
-                                                            '/mobile-web-call?patientName=${Uri.encodeComponent(patientName)}&roomId=${Uri.encodeComponent(roomId)}',
+                                                          sendCallRequest(
+                                                            fromUserId: widget.caregiverId.toString(),
+                                                            toUserId: patientId,
+                                                            roomId: roomId,
+                                                          );
+
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            SnackBar(content: Text('📞 Calling $patientName...')),
+                                                          );
+
+                                                          navigateToCallPage(
+                                                            context: context,
+                                                            userRole: widget.userRole,
+                                                            userId: widget.caregiverId.toString(),
+                                                            roomId: roomId,
+                                                            displayName: patientName,
                                                           );
                                                         },
                                                       ),
                                                     ),
+
+
+
+
 
                                                     const SizedBox(width: 8),
                                                     Expanded(
@@ -672,24 +694,28 @@ class _CaregiverDashboardState extends State<CaregiverDashboard> {
                                                         ),
                                                   ),
                                                 ),
-                                                const SizedBox(width: 6),
                                                 Expanded(
                                                   child: _dashboardButton(
                                                     context,
                                                     Icons.call,
                                                     'Call',
-                                                    () {
-                                                      final String patientName =
-                                                          '${patient.firstName} ${patient.lastName}';
-                                                      final String roomId =
-                                                          'room-${patient.id}'; // or any room ID logic you use
+                                                        () {
+                                                      final String patientName = '${patient.firstName} ${patient.lastName}';
+                                                      final String roomId = 'room-${patient.id}';
+                                                      final String userRole = widget.userRole; // Should be 'CAREGIVER'
+                                                      final String userId = widget.caregiverId.toString();
 
                                                       context.go(
-                                                        '/mobile-web-call?patientName=${Uri.encodeComponent(patientName)}&roomId=${Uri.encodeComponent(roomId)}',
+                                                          '/call-page/$userRole/${Uri.encodeComponent(userId)}/${Uri.encodeComponent(roomId)}/${Uri.encodeComponent(patientName)}'
                                                       );
                                                     },
                                                   ),
                                                 ),
+
+
+
+
+
 
                                                 const SizedBox(width: 6),
                                                 Expanded(

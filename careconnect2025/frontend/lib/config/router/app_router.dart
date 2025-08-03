@@ -1,10 +1,7 @@
 //import 'package:care_connect_app/features/dashboard/presentation/pages/archive_patient.dart';
 //import 'package:care_connect_app/features/dashboard/presentation/pages/invite_family_member.dart';
 //import 'package:care_connect_app/features/dashboard/presentation/pages/media_upload.dart';
-import 'package:care_connect_app/features/integrations/presentation/pages/home_monitoring_screen.dart';
-import 'package:care_connect_app/features/integrations/presentation/pages/medication_management.dart';
-import 'package:care_connect_app/features/integrations/presentation/pages/smart_devices.dart';
-import 'package:care_connect_app/features/integrations/presentation/pages/wearables_screen.dart';
+
 import 'package:care_connect_app/features/calls/presentation/pages/jitsi_meeting_screen.dart';
 import 'package:care_connect_app/features/notes/healthcare_notes.dart';
 import 'package:care_connect_app/features/profile/presentation/pages/profile_settings_page.dart';
@@ -22,10 +19,12 @@ import '../../features/auth/presentation/pages/oauth_callback_page.dart';
 import '../../features/auth/presentation/pages/password_reset_page.dart';
 import '../../features/auth/presentation/pages/reset_password_screen.dart'; // ADD THIS IMPORT
 import '../../features/auth/presentation/pages/sign_up_screen.dart';
-import '../../features/calls/presentation/pages/mobile_web_call.dart';
+
+import '../../features/calls/presentation/pages/pages/call_page.dart';
 import '../../features/dashboard/presentation/pages/caregiver_dashboard.dart';
 //import '../../features/dashboard/presentation/pages/edit_patient.dart';
 import '../../features/dashboard/presentation/pages/patient_dashboard.dart';
+import '../../features/dashboard/presentation/patient_call.dart' hide CallScreen;
 import '../../features/gamification/presentation/pages/gamification_screen.dart';
 import '../../features/onboarding/presentation/pages/patient_registration.dart';
 import '../../features/payments/models/package_model.dart';
@@ -49,7 +48,7 @@ void navigateToDashboard(BuildContext context, {String? role}) {
   if (userRole == null) {
     // If no role is found, redirect to login with the last known userType if available
     final lastUserType =
-        userProvider.user != null && userProvider.user!.role != null
+    userProvider.user != null && userProvider.user!.role != null
         ? userProvider.user!.role.toLowerCase()
         : 'patient';
     context.go('/login', extra: {'userType': lastUserType});
@@ -108,13 +107,13 @@ final GoRouter appRouter = GoRouter(
 
         switch (userRole.toUpperCase()) {
           case 'PATIENT':
-            return const PatientDashboard();
+            return const PatientDashboard(patientName: '',);
           case 'CAREGIVER':
           case 'FAMILY_LINK':
           case 'ADMIN':
             return const CaregiverDashboard();
           default:
-            // Unknown role, redirect to login
+          // Unknown role, redirect to login
             WidgetsBinding.instance.addPostFrameCallback((_) {
               context.go('/login');
             });
@@ -131,7 +130,7 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final userIdStr = state.uri.queryParameters['userId'];
         final userId = userIdStr != null ? int.tryParse(userIdStr) : null;
-        return PatientDashboard(userId: userId); // Pass userId if provided
+        return PatientDashboard(userId: userId, patientName: '',); // Pass userId if provided
       },
     ),
 
@@ -190,10 +189,10 @@ final GoRouter appRouter = GoRouter(
         final patientIdStr = state.uri.queryParameters['patientUserId'];
 
         if (patientIdStr == null) {
-           return const Scaffold(
-             body: Center(child: Text('No patientUserId provided in the URL.')),
-           );
-         }
+          return const Scaffold(
+            body: Center(child: Text('No patientUserId provided in the URL.')),
+          );
+        }
 
         final patientId = patientIdStr != null
             ? int.tryParse(patientIdStr)
@@ -488,7 +487,11 @@ final GoRouter appRouter = GoRouter(
         return JitsiMeetingScreen(roomName: roomName);
       },
     ),
+
+
+    /*
     GoRoute(
+
       path: '/wearables',
       builder: (_, __) => const WearablesScreen(),
     ),
@@ -504,6 +507,9 @@ final GoRouter appRouter = GoRouter(
       path: '/medication',
       builder: (_, __) => const MedicationManagementScreen(),
     ),
+
+
+
     GoRoute(
       path: '/profile-settings',
       builder: (_, __) => const ProfileSettingsPage(),
@@ -543,40 +549,37 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
-    /*GoRoute(
+    GoRoute(
       path: '/edit',
       builder: (context, state) {
         final patientId = state.uri.queryParameters['patientId'] ?? '';
         return EditScreen(linkId: patientId);
       },
-    ),*/
-    /*GoRoute(
+    ),
+    GoRoute(
       path: '/archive',
       builder: (_, __) => const ArchiveScreen(linkId: ''),
-    ),*/
+    ),
 
-    /*GoRoute(
+     GoRoute(
       path: '/invite_Family_Member',
       builder: (_, __) => const InviteFamilyMemberScreen(),
-    ),*/
-
-    //GoRoute(path: '/MediaScreen', builder: (_, __) => const MediaScreen()),
-    GoRoute(
-      path: '/mobile-web-call',
-      builder: (context, state) {
-        // Retrieve the query parameters
-        final patientName =
-            state.uri.queryParameters['patientName'] ?? 'Unknown';
-        final roomId = state.uri.queryParameters['roomId'] ?? 'Unknown';
-
-        // Return the CallScreen widget and pass the parameters
-        return CallScreen(
-          patientName: patientName,
-          roomId: roomId,
-          isCaller: true, // Adjust this flag as needed
-        );
-      },
     ),
+
+     */
+
+
+    GoRoute(
+      path: '/call-page/:role/:userId/:roomId/:patientName',
+      builder: (context, state) => CallScreen(
+        roomId: Uri.decodeComponent(state.pathParameters['roomId']!),
+        patientName: Uri.decodeComponent(state.pathParameters['patientName']!),
+        userRole: state.pathParameters['role']!, caregiverId: 'caregiverI', displayName: '',
+      ),
+    ),
+
+
+
 
     GoRoute(
       path: '/subscription-management',

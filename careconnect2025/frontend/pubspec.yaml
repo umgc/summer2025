@@ -41,42 +41,44 @@ dependencies:
   crypto: ^3.0.3  # For generating state parameter
   app_links: ^6.3.2  # For handling deep links from OAuth callback (replaced uni_links)
 
-# -- Astha - start
+  # -- Astha - start
   path_provider: ^2.1.2
   mime: ^2.0.0
   image_picker: ^1.0.7  # image upload
 
-  jitsi_meet_flutter_sdk: ^11.2.0
   permission_handler: ^12.0.0+1 # permission for camera
-  
+  #jitsi_meet: ^4.0.0
   intl: ^0.20.2 # data formatting
   camera: ^0.11.1 # emotion detector use
+
   pdf: ^3.10.8 # PDF generation
   # emotion detector use
 
   google_ml_kit: ^0.20.0
   firebase_core: ^3.14.0
   cloud_firestore: ^5.6.9
-# my key storage
+  # my key storage
   flutter_dotenv: ^5.0.2
-# -- Astha - start
-# ag
-  provider: ^6.1.2 
-  go_router: ^13.2.1 
+  # -- Astha - start
+  # ag
+  provider: ^6.1.2
+  go_router: ^13.2.1
   flutter_stripe: ^9.5.0
   geolocator: ^11.0.0
   google_maps_flutter: ^2.6.0
   fl_chart: ^0.66.0
-  
-  # AI Voice Commands 
+
+  # AI Voice Commands
   # ag added as a fix
   porcupine_flutter: ^3.0.2
-  speech_to_text: ^6.6.0
+  speech_to_text: ^6.5.1
 
-  # device integration
-  fitbitter: ^2.0.6
-  health: ^13.1.1
-  mobile_scanner: ^3.5.6
+
+  js: ^0.6.5
+
+
+
+  firebase_database: ^11.3.10
 
 
   flutter:
@@ -90,8 +92,10 @@ dependencies:
   universal_html: ^2.2.4
   flutter_secure_storage: ^9.2.4
 
-
-  google_fonts: ^6.0.0
+  uuid: ^4.0.0
+  html: ^0.15.0
+  jitsi_meet_flutter_sdk: ^11.3.1
+  firebase_auth: ^5.7.0
 
 dev_dependencies:
   flutter_test:
