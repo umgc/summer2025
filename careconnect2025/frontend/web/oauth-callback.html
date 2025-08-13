@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CareConnect - Redirecting...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <h2>CareConnect</h2>
+    <div class="spinner"></div>
+    <p id="status">Redirecting to app...</p>
+    
+    <script>
+        // Extract parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const user = urlParams.get('user');
+        const error = urlParams.get('error');
+        
+        // Build deep link
+        let deepLink = 'careconnect://oauth/callback';
+        if (token && user) {
+            deepLink += `?token=${encodeURIComponent(token)}&user=${encodeURIComponent(user)}`;
+        } else if (error) {
+            deepLink += `?error=${encodeURIComponent(error)}`;
+        }
+        
+        console.log('Attempting to open:', deepLink);
+        
+        // Try to open the app
+        window.location.href = deepLink;
+        
+        // Show fallback message after 3 seconds
+        setTimeout(function() {
+            document.getElementById('status').innerHTML = 
+                'If the app didn\'t open automatically:<br>' +
+                '<a href="' + deepLink + '" style="color: #3498db;">Click here to open CareConnect</a><br>' +
+                '<small>Or manually open the CareConnect app</small>';
+        }, 3000);
+        
+        // For development - also log to console
+        console.log('Token:', token ? 'Present' : 'Missing');
+        console.log('User data:', user ? 'Present' : 'Missing');
+        console.log('Error:', error || 'None');
+    </script>
+</body>
+</html>

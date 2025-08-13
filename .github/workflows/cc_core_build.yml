@@ -1,0 +1,152 @@
+name: CI - CC Spring Boot Backend
+description: This workflow builds the Spring Boot backend for Care Connect and uploads it to S3 depending on the branch name.
+
+on:
+  workflow_dispatch: ~
+  push:
+    branches:
+      - 'care-connect**'
+    paths:
+      - '**backend/**'
+
+permissions:
+  contents: write  
+
+jobs:
+  build-all:
+    environment: cc_aws
+    runs-on: ubuntu-latest
+    concurrency: 
+      group: ${{ github.workflow }}-${{ github.ref }}
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testdb
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    steps:
+      - name: Check out
+        id: checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+          
+      - name: Wait for MySQL to be ready
+        run: |
+            for i in {1..30}; do
+              if mysqladmin ping -h "127.0.0.1" --silent; then
+                echo "MySQL is up!"
+                break
+              fi
+              echo "Waiting for MySQL..."
+              sleep 2
+            done
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Build with Maven
+        working-directory: ./careconnect2025/backend/core
+        shell: bash
+        run: mvn clean package --batch-mode
+        env:
+          APP_FRONTEND_BASE_URL: ${{secrets.APP_FRONTEND_BASE_URL}}
+          BASE_URL: ${{secrets.BASE_URL}}
+          CORS_ALLOWED_LIST: ${{secrets.CORS_ALLOWED_LIST}}
+          DB_PASSWORD: root
+          DB_USER: root
+          JDBC_URI: jdbc:mysql://127.0.0.1:3306/testdb
+          EMAIL_PROVIDER: ${{secrets.EMAIL_PROVIDER}}
+          FITBIT_CLIENT_ID: ${{secrets.FITBIT_CLIENT_ID}}
+          FITBIT_CLIENT_SECRET: ${{secrets.FITBIT_CLIENT_SECRET}}
+          FROM_EMAIL: ${{secrets.FROM_EMAIL }}
+          GOOGLE_AUTH_URI: ${{secrets.GOOGLE_AUTH_URI}}
+          GOOGLE_CLIENT_ID: ${{secrets.GOOGLE_CLIENT_ID}}
+          GOOGLE_CLIENT_NAME: ${{secrets.GOOGLE_CLIENT_NAME}}
+          GOOGLE_CLIENT_SECRET: ${{secrets.GOOGLE_CLIENT_SECRET}}
+          GOOGLE_REDIRECT_URI: ${{secrets.GOOGLE_REDIRECT_URI}}
+          GOOGLE_SCOPE: ${{secrets.GOOGLE_SCOPE}}
+          GOOGLE_TOKEN_URI: ${{secrets.GOOGLE_TOKEN_URI}}
+          GOOGLE_USERINFO_URI: ${{secrets.GOOGLE_USERINFO_URI}}
+          JWT_EXPIRATION: ${{secrets.JWT_EXPIRATION}}
+          LOGGING_LEVEL: ${{secrets.LOGGING_LEVEL}}
+          MAIL_HOST: ${{secrets.MAIL_HOST}}
+          MAIL_PASSWORD: ${{secrets.MAIL_PASSWORD}}
+          MAIL_PORT: ${{secrets.MAIL_PORT}}
+          MAIL_SMTP_AUTH: ${{secrets.MAIL_SMTP_AUTH}}
+          MAIL_SMTP_STARTTLS: ${{secrets.MAIL_SMTP_STARTTLS}}
+          MAIL_USERNAME: ${{secrets.MAIL_USERNAME}}
+          OPENAI_API_KEY: ${{secrets.OPENAI_API_KEY}}
+          SECURITY_JWT_SECRET: Qq8xdMahA6rgdXTYva96yoc9gneLveOAKfI75l9od5g=
+          SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
+          STRIPE_SECRET_KEY: ${{secrets.STRIPE_SECRET_KEY}}
+          STRIPE_WEBHOOK_SIGNING_SECRET: ${{secrets.STRIPE_WEBHOOK_SIGNING_SECRET}}
+      
+      - name: Rename zip
+        id: rename
+        run: mv careconnect2025/backend/core/target/*.zip cc-core-b-for-lambda-v${{ github.run_number }}.zip
+      - name: upload zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: cc-core-backend
+          path: cc-core-b-for-lambda-v${{ github.run_number }}.zip
+          retention-days: 15
+
+      
+  create-release:
+    runs-on: ubuntu-latest
+    environment: aws
+    needs: build-all
+    if: startsWith(github.ref, 'refs/heads/care-connect-')
+
+    steps:
+      - name: Get the Zip
+        uses: actions/download-artifact@v4
+        with:
+          name: cc-core-backend
+
+      - name: Create Release
+        id: release
+        uses: actions/create-release@latest
+        with:
+          tag_name: cc-core-backend-${{ github.ref_name }}-v${{ github.run_number }}
+          release_name: CC-B-${{ github.ref_name }} R-${{ github.run_number }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          release_name: CC-B R-v${{ github.run_number }}
+          asset_path: ./cc-core-b-for-lambda-v${{ github.run_number }}.zip
+          asset_name: cc-core-b-for-lambda-v${{ github.run_number }}.zip
+          asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: AKIAZKYPD2ZB74YL5WVG
+          aws-secret-access-key: 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
+          aws-region: us-east-1
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp cc-core-b-for-lambda-v${{ github.run_number }}.zip s3://cc-iac-us-east-1-641592448579/cc-backend-builds/cc-core-b-for-lambda-v${{ github.run_number }}.zip

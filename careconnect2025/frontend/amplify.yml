@@ -1,0 +1,23 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Installing Flutter SDK"
+        - git clone https://github.com/flutter/flutter.git -b stable
+        - export PATH="$PATH:`pwd`/flutter/bin"
+        - flutter precache
+        - flutter config --enable-web
+    build:
+      commands:
+        - echo "Building Flutter Web App..."
+        - flutter pub get
+        - flutter build web
+  artifacts:
+    baseDirectory: build/web
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - .pub-cache
+      - build
